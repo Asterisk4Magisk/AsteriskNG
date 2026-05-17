@@ -51,7 +51,7 @@ internal class SwitchRunModeUseCase(
         }
 
         if (normalizedTargetMode == RunModeVpnService) {
-            when (val result = tproxyBootScriptUseCase.clearCoreLogFiles()) {
+            when (val result = tproxyBootScriptUseCase.deleteCoreLogFiles()) {
                 TproxyBootScriptResult.Success,
                 TproxyBootScriptResult.MissingServer -> Unit
 

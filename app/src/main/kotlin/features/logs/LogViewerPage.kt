@@ -5,6 +5,7 @@ package features.logs
 import app.LocalIsWideScreen
 import app.LocalNavigator
 import app.LocalAppServices
+import app.LocalAppStateStore
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -52,10 +53,17 @@ fun CoreLogsPage(
     padding: PaddingValues,
 ) {
     val services = LocalAppServices.current
+    val stateStore = LocalAppStateStore.current
     LogViewerPage(
         padding = padding,
         title = stringResource(R.string.core_logs_title),
         repository = services.coreLogRepository,
+        onClear = {
+            services.coreLogClearUseCase.clear(
+                logFile = XrayLogFile.Error,
+                runMode = stateStore.state.value.runMode,
+            )
+        },
     )
 }
 
@@ -64,10 +72,17 @@ fun AccessLogsPage(
     padding: PaddingValues,
 ) {
     val services = LocalAppServices.current
+    val stateStore = LocalAppStateStore.current
     LogViewerPage(
         padding = padding,
         title = stringResource(R.string.access_logs_title),
         repository = services.accessLogRepository,
+        onClear = {
+            services.coreLogClearUseCase.clear(
+                logFile = XrayLogFile.Access,
+                runMode = stateStore.state.value.runMode,
+            )
+        },
     )
 }
 
@@ -90,6 +105,7 @@ private fun LogViewerPage(
     title: String,
     repository: CoreLogRepository,
     showLogMetadata: Boolean = false,
+    onClear: suspend () -> Unit = {},
 ) {
     val isWideScreen = LocalIsWideScreen.current
     val navigator = LocalNavigator.current
@@ -122,8 +138,11 @@ private fun LogViewerPage(
                 actions = {
                     NavigationIcon(
                         onClick = {
-                            repository.clear()
-                            logEntries = emptyList()
+                            scope.launch {
+                                onClear()
+                                repository.clear()
+                                logEntries = emptyList()
+                            }
                         },
                         imageVector = MiuixIcons.Delete,
                     )

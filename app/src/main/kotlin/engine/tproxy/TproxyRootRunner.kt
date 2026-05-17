@@ -21,10 +21,16 @@ internal class TproxyRootRunner(
         runRootCommand(config.startDetachedCommand(), "Failed to start xray-core daemon")
 
         if (!config.waitForTproxyInbound()) {
-            failStartup(config, "xray-core started but tproxy-in port ${config.tproxyPort} is not listening")
+            failStartup(
+                config,
+                "xray-core started but tproxy-in port ${config.tproxyPort} is not listening"
+            )
         }
         if (!isRunning(config.pidPath, config.xrayCorePath)) {
-            failStartup(config, "xray-core process exited or did not match the expected TPROXY runtime state")
+            failStartup(
+                config,
+                "xray-core process exited or did not match the expected TPROXY runtime state"
+            )
         }
 
         runRootCommand(config.installTproxyRulesCommand(), "Failed to install TPROXY rules")
@@ -47,14 +53,31 @@ internal class TproxyRootRunner(
         runRootCommand(config.installBootScriptCommand(), "Failed to install TPROXY boot script")
     }
 
-    suspend fun clearCoreLogFiles(coreLogPaths: XrayCoreLogPaths) = withContext(Dispatchers.IO) {
-        val command = coreLogPaths.clearCoreLogFilesCommand()
+    suspend fun deleteCoreLogFiles(coreLogPaths: XrayCoreLogPaths) = withContext(Dispatchers.IO) {
+        val command = coreLogPaths.logFilePaths().deleteCoreLogFilesCommand()
         if (command.isBlank()) {
             return@withContext
         }
         val result = rootAccess.exec(command)
         if (result.errno != 0) {
-            AndroidAppLogger.warn(LogTag, "Failed to clear xray log files as root:\n${result.stderr.ifBlank { result.stdout }}")
+            AndroidAppLogger.warn(
+                LogTag,
+                "Failed to delete xray log files as root:\n${result.stderr.ifBlank { result.stdout }}"
+            )
+        }
+    }
+
+    suspend fun truncateCoreLogFiles(logPaths: List<String>) = withContext(Dispatchers.IO) {
+        val command = logPaths.truncateCoreLogFilesCommand()
+        if (command.isBlank()) {
+            return@withContext
+        }
+        val result = rootAccess.exec(command)
+        if (result.errno != 0) {
+            AndroidAppLogger.warn(
+                LogTag,
+                "Failed to truncate xray log files as root:\n${result.stderr.ifBlank { result.stdout }}"
+            )
         }
     }
 
@@ -166,14 +189,28 @@ internal class TproxyRootRunner(
         }
     }
 
-    private fun XrayCoreLogPaths.clearCoreLogFilesCommand(): String {
+    private fun List<String>.deleteCoreLogFilesCommand(): String {
         return buildString {
-            logFilePaths().forEach { logPath ->
+            filter(String::isNotBlank).forEach { logPath ->
                 appendScript(
                     """
                     rm -f ${logPath.shellQuote()} 2>/dev/null || true
                     """,
                 )
+            }
+        }
+    }
+
+    private fun List<String>.truncateCoreLogFilesCommand(): String {
+        return buildString {
+            filter(String::isNotBlank).forEach { logPath ->
+                File(logPath).parent?.let { parentPath ->
+                    appendScript(
+                        """
+                        : > ${logPath.shellQuote()}
+                        """,
+                    )
+                }
             }
         }
     }

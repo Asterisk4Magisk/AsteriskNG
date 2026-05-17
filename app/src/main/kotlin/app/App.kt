@@ -18,6 +18,7 @@ import app.effects.TproxyBootScriptSynchronizer
 import features.logs.AndroidAccessLogRepository
 import features.logs.AndroidCoreLogRepository
 import features.logs.AndroidLogcatRepository
+import features.logs.CoreLogClearUseCase
 import data.AndroidAppStateStore
 import engine.proxy.AndroidProxyEngine
 import engine.proxy.latency.AndroidProxyLatencyTester
@@ -99,6 +100,12 @@ fun App(
     }
     val stateStore = remember(appContext) { AndroidAppStateStore.get(appContext) }
     val tipNotifier = remember(appContext) { AndroidToastTipNotifier(appContext) }
+    val coreLogClearUseCase = remember(appContext, rootAccess) {
+        CoreLogClearUseCase(
+            context = appContext,
+            rootAccess = rootAccess,
+        )
+    }
     val services = remember(
         proxyEngine,
         rootAccess,
@@ -113,6 +120,7 @@ fun App(
         switchRunModeUseCase,
         tproxyBootScriptUseCase,
         tipNotifier,
+        coreLogClearUseCase,
     ) {
         AppServices(
             proxyEngine = proxyEngine,
@@ -128,6 +136,7 @@ fun App(
             switchRunModeUseCase = switchRunModeUseCase,
             tproxyBootScriptUseCase = tproxyBootScriptUseCase,
             tipNotifier = tipNotifier,
+            coreLogClearUseCase = coreLogClearUseCase,
             coreLogRepository = AndroidCoreLogRepository,
             accessLogRepository = AndroidAccessLogRepository,
             logcatRepository = AndroidLogcatRepository,

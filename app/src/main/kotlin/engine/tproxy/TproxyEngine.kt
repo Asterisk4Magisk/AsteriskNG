@@ -32,7 +32,7 @@ internal class TproxyEngine(
             File(config.xrayCorePath).setExecutable(true, false)
         }
         clearCoreLogRepositories()
-        rootRunner.clearCoreLogFiles(config.coreLogPaths)
+        rootRunner.deleteCoreLogFiles(config.coreLogPaths)
         logFileTailers = config.coreLogPaths.startCoreLogTailers(config.enableAccessLog)
         runCatching {
             rootRunner.start(config)

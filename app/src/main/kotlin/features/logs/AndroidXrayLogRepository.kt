@@ -33,11 +33,6 @@ internal abstract class AndroidXrayLogRepository(
         restorePreviousLogs()
     }
 
-    override fun clear() {
-        super.clear()
-        fileStore.clear()
-    }
-
     override suspend fun refresh() {
         val context = appContext ?: return
         val restoredLines = withContext(Dispatchers.IO) {

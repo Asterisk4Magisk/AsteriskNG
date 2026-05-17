@@ -54,12 +54,12 @@ internal class TproxyBootScriptUseCase(
         )
     }
 
-    suspend fun clearCoreLogFiles(): TproxyBootScriptResult {
+    suspend fun deleteCoreLogFiles(): TproxyBootScriptResult {
         if (!rootAccess.hasRootAccess()) {
             return TproxyBootScriptResult.RootUnavailable
         }
         return runCatching {
-            rootRunner.clearCoreLogFiles(appContext.prepareXrayCoreLogPaths())
+            rootRunner.deleteCoreLogFiles(appContext.prepareXrayCoreLogPaths())
         }.fold(
             onSuccess = { TproxyBootScriptResult.Success },
             onFailure = TproxyBootScriptResult::Failed,
