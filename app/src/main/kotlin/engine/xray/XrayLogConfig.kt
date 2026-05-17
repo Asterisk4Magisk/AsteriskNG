@@ -1,0 +1,27 @@
+package engine.xray
+
+import app.AppState
+import org.json.JSONObject
+
+internal fun XrayConfigRequest.buildXrayLogConfig(): JSONObject {
+    return JSONObject()
+        .put("loglevel", appState.xrayLogLevel())
+        .put("access", appState.xrayAccessLogPath(coreLogPaths))
+        .put("error", coreLogPaths.errorLogPath)
+}
+
+private fun AppState.xrayLogLevel(): String {
+    return when (coreLogLevel) {
+        0 -> "debug"
+        1 -> "info"
+        2 -> "warning"
+        3 -> "error"
+        4 -> XrayLogDisabled
+        else -> "warning"
+    }
+}
+
+private fun AppState.xrayAccessLogPath(coreLogPaths: XrayCoreLogPaths): String {
+    if (!enableAccessLog) return XrayLogDisabled
+    return coreLogPaths.accessLogPath.ifBlank { XrayLogDisabled }
+}

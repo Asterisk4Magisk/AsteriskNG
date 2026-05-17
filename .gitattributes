@@ -1,0 +1,12 @@
+# Denote all files that are truly binary and should not be modified.
+img/** binary
+module/src/system/** binary
+module/src/xray/bin/** binary
+
+# Declare files that will always have LF line endings on checkout.
+*.prop text eol=lf
+*.sh text eol=lf
+*.md text eol=lf
+module/src/META-INF/** text eol=lf
+module/src/etc/** text eol=lf
+module/src/scripts/** text eol=lf
