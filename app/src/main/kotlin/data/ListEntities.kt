@@ -8,42 +8,6 @@ import app.SubscriptionGroupState
 import features.logs.AndroidAppLogger
 import features.routing.model.RouteRule
 
-@Entity(tableName = "remote_dns_servers")
-internal data class RemoteDnsServerEntity(
-    @PrimaryKey val position: Int,
-    val value: String,
-)
-
-@Entity(tableName = "domestic_dns_servers")
-internal data class DomesticDnsServerEntity(
-    @PrimaryKey val position: Int,
-    val value: String,
-)
-
-@Entity(tableName = "dns_hosts")
-internal data class DnsHostEntity(
-    @PrimaryKey val position: Int,
-    val value: String,
-)
-
-@Entity(tableName = "external_network_interfaces")
-internal data class ExternalNetworkInterfaceEntity(
-    @PrimaryKey val position: Int,
-    val value: String,
-)
-
-@Entity(tableName = "ignored_network_interfaces")
-internal data class IgnoredNetworkInterfaceEntity(
-    @PrimaryKey val position: Int,
-    val value: String,
-)
-
-@Entity(tableName = "tproxy_private_address_cidrs")
-internal data class TproxyPrivateAddressCidrEntity(
-    @PrimaryKey val position: Int,
-    val value: String,
-)
-
 @Entity(
     tableName = "subscription_groups",
     indices = [Index("position")],

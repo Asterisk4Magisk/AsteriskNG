@@ -7,13 +7,6 @@ internal const val AsteriskDatabaseName = "asteriskng.db"
 
 @Database(
     entities = [
-        AppSettingsEntity::class,
-        RemoteDnsServerEntity::class,
-        DomesticDnsServerEntity::class,
-        DnsHostEntity::class,
-        ExternalNetworkInterfaceEntity::class,
-        IgnoredNetworkInterfaceEntity::class,
-        TproxyPrivateAddressCidrEntity::class,
         SubscriptionGroupEntity::class,
         ProxyServerEntity::class,
         RouteRuleEntity::class,

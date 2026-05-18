@@ -23,6 +23,7 @@ class AndroidAppStateStore private constructor(
     private val appContext = context.applicationContext
     private var database = buildDatabase()
     private var dao = database.appStateDao()
+    private val settingsPreferences = AppSettingsPreferences(appContext)
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val updateLock = Any()
     private val saveMutex = Mutex()
@@ -58,25 +59,24 @@ class AndroidAppStateStore private constructor(
 
     private fun loadInitialState(): LoadedAppState {
         return runBlocking(Dispatchers.IO) {
-            runCatching {
-                dao.loadState()?.let { persistedState ->
-                    LoadedAppState(
-                        state = persistedState.toAppState(),
-                        loadedFromDatabase = true,
-                    )
-                } ?: LoadedAppState(
-                    state = AppState(),
-                    loadedFromDatabase = false,
-                )
+            val persistedState = runCatching {
+                dao.loadState()
             }.onFailure { error ->
                 AndroidAppLogger.error(LogTag, "Failed to load app state", error)
                 resetDatabase()
-            }.getOrDefault(
+            }.getOrNull()
+            val settingsState = settingsPreferences.load()
+            if (persistedState?.hasRoomContent() == true) {
                 LoadedAppState(
-                    state = AppState(),
+                    state = persistedState.toAppState(settingsState),
+                    loadedFromDatabase = true,
+                )
+            } else {
+                LoadedAppState(
+                    state = settingsState,
                     loadedFromDatabase = false,
-                ),
-            )
+                )
+            }
         }
     }
 
@@ -87,6 +87,7 @@ class AndroidAppStateStore private constructor(
                     return@withLock
                 }
                 runCatching {
+                    settingsPreferences.save(nextState)
                     dao.saveState(
                         previousState = previousState,
                         nextState = nextState,
@@ -97,6 +98,7 @@ class AndroidAppStateStore private constructor(
                     AndroidAppLogger.error(LogTag, "Failed to persist app state", error)
                     resetDatabase()
                     runCatching {
+                        settingsPreferences.save(nextState)
                         dao.saveState(
                             previousState = AppState(),
                             nextState = nextState,
