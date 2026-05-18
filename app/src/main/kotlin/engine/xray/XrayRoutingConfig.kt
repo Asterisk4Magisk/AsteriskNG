@@ -9,8 +9,8 @@ internal fun buildXrayRouting(
     appState: AppState,
     routeTargets: Map<String, XrayRouteTarget>,
     balancers: List<JSONObject>,
-    routeRemoteDns: Boolean,
-    routeDomesticDns: Boolean,
+    routeProxyDns: Boolean,
+    routeDirectDns: Boolean,
     dnsHijackInboundTags: List<String>,
 ): JSONObject {
     return JSONObject()
@@ -22,7 +22,7 @@ internal fun buildXrayRouting(
                 else -> "IPIfNonMatch"
             },
         )
-        .put("rules", appState.routingRules(routeTargets, routeRemoteDns, routeDomesticDns, dnsHijackInboundTags))
+        .put("rules", appState.routingRules(routeTargets, routeProxyDns, routeDirectDns, dnsHijackInboundTags))
         .apply {
             if (balancers.isNotEmpty()) {
                 put("balancers", balancers.toJsonObjectArray())
@@ -32,17 +32,17 @@ internal fun buildXrayRouting(
 
 private fun AppState.routingRules(
     routeTargets: Map<String, XrayRouteTarget>,
-    routeRemoteDns: Boolean,
-    routeDomesticDns: Boolean,
+    routeProxyDns: Boolean,
+    routeDirectDns: Boolean,
     dnsHijackInboundTags: List<String>,
 ): JSONArray {
     return JSONArray().apply {
         buildDnsHijackRule(dnsHijackInboundTags)?.let(::put)
-        if (routeDomesticDns) {
-            routeTargets[XrayTags.DIRECT]?.let { target -> put(buildDnsUpstreamRoute(XrayTags.DOMESTIC_DNS, target)) }
+        if (routeDirectDns) {
+            routeTargets[XrayTags.DIRECT]?.let { target -> put(buildDnsUpstreamRoute(XrayTags.DIRECT_DNS, target)) }
         }
-        if (routeRemoteDns) {
-            routeTargets[XrayTags.PROXY]?.let { target -> put(buildDnsUpstreamRoute(XrayTags.REMOTE_DNS, target)) }
+        if (routeProxyDns) {
+            routeTargets[XrayTags.PROXY]?.let { target -> put(buildDnsUpstreamRoute(XrayTags.PROXY_DNS, target)) }
         }
         routeRules
             .filter(RouteRule::enabled)

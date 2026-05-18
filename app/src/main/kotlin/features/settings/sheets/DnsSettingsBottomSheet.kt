@@ -42,21 +42,27 @@ internal fun DnsSettingsBottomSheet(
     forceEnableLocalDns: Boolean,
     enableFakeDns: Boolean,
     onEnableVpnLocalDnsChange: (Boolean) -> Unit,
-    remoteDns: List<String>,
-    domesticDns: List<String>,
+    proxyDns: List<String>,
+    directDns: List<String>,
+    directDnsDomains: List<String>,
+    enableDirectDnsForProxyServerDomains: Boolean,
     dnsHosts: List<String>,
     onEnableFakeDnsChange: (Boolean) -> Unit,
-    onRemoteDnsChange: (List<String>) -> Unit,
-    onDomesticDnsChange: (List<String>) -> Unit,
+    onProxyDnsChange: (List<String>) -> Unit,
+    onDirectDnsChange: (List<String>) -> Unit,
+    onDirectDnsDomainsChange: (List<String>) -> Unit,
+    onEnableDirectDnsForProxyServerDomainsChange: (Boolean) -> Unit,
     onDnsHostsChange: (List<String>) -> Unit,
     onDismissRequest: () -> Unit,
-    onSave: (Boolean, Boolean, List<String>, List<String>, List<String>) -> Unit,
+    onSave: (Boolean, Boolean, List<String>, List<String>, List<String>, Boolean, List<String>) -> Unit,
 ) {
-    val remoteDnsEntries = remoteDns.sanitizeDnsServerEntries()
-    val domesticDnsEntries = domesticDns.sanitizeDnsServerEntries()
+    val proxyDnsEntries = proxyDns.sanitizeDnsServerEntries()
+    val directDnsEntries = directDns.sanitizeDnsServerEntries()
+    val directDnsDomainEntries = directDnsDomains.sanitizeDnsDomainEntries()
     val dnsHostsInvalidMessage = stringResource(R.string.settings_dns_hosts_invalid)
     val dnsHostEntries = dnsHosts.sanitizeDnsHostEntries()
     val dnsServerInvalidMessage = stringResource(R.string.settings_dns_server_invalid)
+    val dnsDomainInvalidMessage = stringResource(R.string.settings_dns_domain_invalid)
     val effectiveLocalDnsEnabled = forceEnableLocalDns || enableVpnLocalDns
     val effectiveFakeDnsEnabled = effectiveLocalDnsEnabled && enableFakeDns
     OverlayBottomSheet(
@@ -75,8 +81,10 @@ internal fun DnsSettingsBottomSheet(
                     onSave(
                         enableVpnLocalDns,
                         effectiveFakeDnsEnabled,
-                        remoteDnsEntries,
-                        domesticDnsEntries,
+                        proxyDnsEntries,
+                        directDnsEntries,
+                        directDnsDomainEntries,
+                        enableDirectDnsForProxyServerDomains,
                         dnsHostEntries,
                     )
                 },
@@ -112,25 +120,43 @@ internal fun DnsSettingsBottomSheet(
                     onCheckedChange = onEnableFakeDnsChange,
                 )
             }
+            SwitchPreference(
+                title = stringResource(R.string.settings_direct_dns_resolve_proxy_server_domains),
+                checked = enableDirectDnsForProxyServerDomains,
+                onCheckedChange = onEnableDirectDnsForProxyServerDomainsChange,
+            )
+            Spacer(Modifier.height(8.dp))
             StringListEditor(
-                editorKey = "domestic-dns:$show",
-                title = stringResource(R.string.settings_domestic_dns),
-                inputLabel = stringResource(R.string.settings_domestic_dns_input),
-                values = domesticDnsEntries,
-                onValuesChange = { onDomesticDnsChange(it.sanitizeDnsServerEntries()) },
-                emptyText = stringResource(R.string.settings_domestic_dns_empty),
+                editorKey = "direct-dns:$show",
+                title = stringResource(R.string.settings_direct_dns),
+                inputLabel = stringResource(R.string.settings_direct_dns_input),
+                values = directDnsEntries,
+                onValuesChange = { onDirectDnsChange(it.sanitizeDnsServerEntries()) },
+                emptyText = stringResource(R.string.settings_direct_dns_empty),
                 duplicateText = stringResource(R.string.settings_dns_hosts_duplicate),
                 validateInput = { dnsServerInputError(it, dnsServerInvalidMessage) },
                 modifier = Modifier.fillMaxWidth(),
             )
             Spacer(Modifier.height(8.dp))
             StringListEditor(
-                editorKey = "remote-dns:$show",
-                title = stringResource(R.string.settings_remote_dns),
-                inputLabel = stringResource(R.string.settings_remote_dns_input),
-                values = remoteDnsEntries,
-                onValuesChange = { onRemoteDnsChange(it.sanitizeDnsServerEntries()) },
-                emptyText = stringResource(R.string.settings_remote_dns_empty),
+                editorKey = "direct-dns-domains:$show",
+                title = stringResource(R.string.settings_direct_dns_domains),
+                inputLabel = stringResource(R.string.settings_direct_dns_domains_input),
+                values = directDnsDomainEntries,
+                onValuesChange = { onDirectDnsDomainsChange(it.sanitizeDnsDomainEntries()) },
+                emptyText = stringResource(R.string.settings_direct_dns_domains_empty),
+                duplicateText = stringResource(R.string.settings_dns_hosts_duplicate),
+                validateInput = { dnsDomainInputError(it, dnsDomainInvalidMessage) },
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(Modifier.height(8.dp))
+            StringListEditor(
+                editorKey = "proxy-dns:$show",
+                title = stringResource(R.string.settings_proxy_dns),
+                inputLabel = stringResource(R.string.settings_proxy_dns_input),
+                values = proxyDnsEntries,
+                onValuesChange = { onProxyDnsChange(it.sanitizeDnsServerEntries()) },
+                emptyText = stringResource(R.string.settings_proxy_dns_empty),
                 duplicateText = stringResource(R.string.settings_dns_hosts_duplicate),
                 validateInput = { dnsServerInputError(it, dnsServerInvalidMessage) },
                 modifier = Modifier.fillMaxWidth(),
@@ -157,6 +183,10 @@ private fun List<String>.sanitizeDnsServerEntries(): List<String> {
 }
 
 private fun List<String>.sanitizeDnsHostEntries(): List<String> {
+    return sanitizeStringListItems()
+}
+
+private fun List<String>.sanitizeDnsDomainEntries(): List<String> {
     return sanitizeStringListItems()
 }
 
@@ -211,6 +241,22 @@ private fun isXrayDnsAuthority(authority: String): Boolean {
     return isIpAddress(trimmed)
 }
 
+private fun dnsDomainInputError(input: String, invalidMessage: String): String? {
+    val trimmed = input.trim()
+    if (trimmed.isEmpty() || trimmed.any(Char::isWhitespace)) return invalidMessage
+    if (trimmed.startsWith("regexp:", ignoreCase = true)) {
+        return if (trimmed.substringAfter(":").isBlank()) invalidMessage else null
+    }
+
+    val supportedPrefix = trimmed.substringBefore(":", missingDelimiterValue = "")
+        .lowercase()
+        .takeIf { it in setOf("domain", "full", "keyword", "geosite", "ext") }
+    if (supportedPrefix != null) {
+        return if (trimmed.substringAfter(":").isBlank()) invalidMessage else null
+    }
+
+    return if (trimmed.contains("://") || trimmed.contains("/")) invalidMessage else null
+}
 
 private fun dnsHostInputError(input: String, invalidMessage: String): String? {
     val separatorIndex = input.indexOf(DnsHostSeparator)

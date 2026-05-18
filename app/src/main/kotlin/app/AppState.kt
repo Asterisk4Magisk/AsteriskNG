@@ -5,13 +5,14 @@ package app
 
 import app.modes.ColorModeSystem
 import app.modes.LanguageModeSystem
-import app.modes.ProxyAppListModeBlacklist
+import app.modes.ProxyAppListModeGlobal
 import app.modes.RunModeTproxy
 import app.modes.RunModeVpnService
 import engine.tproxy.DefaultTproxyHttpPort
 import engine.tproxy.DefaultTproxyPort
 import engine.tproxy.DefaultTproxySocks5Port
 import engine.vpn.VpnDefaults
+import engine.xray.DefaultDirectDnsDomains
 import engine.xray.DefaultFragmentInterval
 import engine.xray.DefaultFragmentLength
 import engine.xray.DefaultFragmentPackets
@@ -31,7 +32,7 @@ data class AppState(
     val enableAllProxyGroup: Boolean = false,
 
     val runMode: Int = RunModeVpnService,
-    val enableResolveProxyServerDomain: Boolean = true,
+    val enableResolveProxyServerDomain: Boolean = false,
 
     val enableVpnLocalDns: Boolean = true,
     val localProxyPort: String = VpnDefaults.LOCAL_PROXY_PORT.toString(),
@@ -50,7 +51,7 @@ data class AppState(
     val selectedProxyServerId: Int = 1,
     val proxyRunning: Boolean = false,
 
-    val routeDomainStrategy: Int = 1,
+    val routeDomainStrategy: Int = 0,
     val routeRules: List<RouteRule> = DefaultRouteRules,
     val nextRouteRuleId: Int = 10,
 
@@ -58,7 +59,7 @@ data class AppState(
     val enableAccessLog: Boolean = false,
     val resourceFileSource: Int = ResourceFileSourceLoyalsoldierGithub,
     val enableSniffing: Boolean = true,
-    val enableSniffingRouteOnly: Boolean = false,
+    val enableSniffingRouteOnly: Boolean = true,
 
     val enableMux: Boolean = false,
     val muxConcurrency: String = DefaultMuxConcurrency,
@@ -72,9 +73,11 @@ data class AppState(
 
     val enableIpv6: Boolean = false,
     val enableIpv6Prefer: Boolean = false,
-    val enableFakeDns: Boolean = true,
-    val remoteDns: List<String> = VpnDefaults.REMOTE_DNS_SERVERS,
-    val domesticDns: List<String> = VpnDefaults.DOMESTIC_DNS_SERVERS,
+    val enableFakeDns: Boolean = false,
+    val proxyDns: List<String> = VpnDefaults.PROXY_DNS_SERVERS,
+    val directDns: List<String> = VpnDefaults.DIRECT_DNS_SERVERS,
+    val directDnsDomains: List<String> = DefaultDirectDnsDomains,
+    val enableDirectDnsForProxyServerDomains: Boolean = true,
     val dnsHosts: List<String> = emptyList(),
 
     val transparentProxyPort: String = DefaultTproxyPort.toString(),
@@ -88,7 +91,7 @@ data class AppState(
     val ignoredInterfaces: List<String> = emptyList(),
     val privateAddressCidrs: List<String> = emptyList(),
 
-    val proxyAppListMode: Int = ProxyAppListModeBlacklist,
+    val proxyAppListMode: Int = ProxyAppListModeGlobal,
     val proxyAppListSelectedApps: List<String> = emptyList(),
 )
 

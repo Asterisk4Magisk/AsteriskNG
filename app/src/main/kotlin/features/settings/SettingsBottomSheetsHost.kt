@@ -133,8 +133,10 @@ internal fun SettingsBottomSheetsHost(
         enableVpnLocalDns = sheetState.dnsSettingsDraft.enableVpnLocalDns,
         forceEnableLocalDns = appState.runMode == RunModeTproxy,
         enableFakeDns = sheetState.dnsSettingsDraft.enableFakeDns,
-        remoteDns = sheetState.dnsSettingsDraft.remoteDns,
-        domesticDns = sheetState.dnsSettingsDraft.domesticDns,
+        proxyDns = sheetState.dnsSettingsDraft.proxyDns,
+        directDns = sheetState.dnsSettingsDraft.directDns,
+        directDnsDomains = sheetState.dnsSettingsDraft.directDnsDomains,
+        enableDirectDnsForProxyServerDomains = sheetState.dnsSettingsDraft.enableDirectDnsForProxyServerDomains,
         dnsHosts = sheetState.dnsSettingsDraft.dnsHosts,
         onEnableVpnLocalDnsChange = { enabled ->
             sheetState.dnsSettingsDraft = sheetState.dnsSettingsDraft.copy(
@@ -145,17 +147,27 @@ internal fun SettingsBottomSheetsHost(
         onEnableFakeDnsChange = {
             sheetState.dnsSettingsDraft = sheetState.dnsSettingsDraft.copy(enableFakeDns = it)
         },
-        onRemoteDnsChange = { sheetState.dnsSettingsDraft = sheetState.dnsSettingsDraft.copy(remoteDns = it) },
-        onDomesticDnsChange = { sheetState.dnsSettingsDraft = sheetState.dnsSettingsDraft.copy(domesticDns = it) },
+        onProxyDnsChange = { sheetState.dnsSettingsDraft = sheetState.dnsSettingsDraft.copy(proxyDns = it) },
+        onDirectDnsChange = { sheetState.dnsSettingsDraft = sheetState.dnsSettingsDraft.copy(directDns = it) },
+        onDirectDnsDomainsChange = {
+            sheetState.dnsSettingsDraft = sheetState.dnsSettingsDraft.copy(directDnsDomains = it)
+        },
+        onEnableDirectDnsForProxyServerDomainsChange = {
+            sheetState.dnsSettingsDraft = sheetState.dnsSettingsDraft.copy(
+                enableDirectDnsForProxyServerDomains = it,
+            )
+        },
         onDnsHostsChange = { sheetState.dnsSettingsDraft = sheetState.dnsSettingsDraft.copy(dnsHosts = it) },
         onDismissRequest = { sheetState.showDnsSettings = false },
-        onSave = { enableVpnLocalDns, enableFakeDns, remoteDns, domesticDns, dnsHosts ->
+        onSave = { enableVpnLocalDns, enableFakeDns, proxyDns, directDns, directDnsDomains, enableDirectDnsForProxyServerDomains, dnsHosts ->
             updateAppState { state ->
                 state.copy(
                     enableVpnLocalDns = enableVpnLocalDns,
                     enableFakeDns = enableFakeDns,
-                    remoteDns = remoteDns,
-                    domesticDns = domesticDns,
+                    proxyDns = proxyDns,
+                    directDns = directDns,
+                    directDnsDomains = directDnsDomains,
+                    enableDirectDnsForProxyServerDomains = enableDirectDnsForProxyServerDomains,
                     dnsHosts = dnsHosts,
                 )
             }

@@ -87,8 +87,13 @@ internal class AppSettingsPreferences(
             enableIpv6 = preferences.getBoolean(KeyEnableIpv6, defaults.enableIpv6),
             enableIpv6Prefer = preferences.getBoolean(KeyEnableIpv6Prefer, defaults.enableIpv6Prefer),
             enableFakeDns = preferences.getBoolean(KeyEnableFakeDns, defaults.enableFakeDns),
-            remoteDns = preferences.getStringList(KeyRemoteDns, defaults.remoteDns),
-            domesticDns = preferences.getStringList(KeyDomesticDns, defaults.domesticDns),
+            proxyDns = preferences.getStringList(KeyProxyDns, defaults.proxyDns),
+            directDns = preferences.getStringList(KeyDirectDns, defaults.directDns),
+            directDnsDomains = preferences.getStringList(KeyDirectDnsDomains, defaults.directDnsDomains),
+            enableDirectDnsForProxyServerDomains = preferences.getBoolean(
+                KeyEnableDirectDnsForProxyServerDomains,
+                defaults.enableDirectDnsForProxyServerDomains,
+            ),
             dnsHosts = preferences.getStringList(KeyDnsHosts, defaults.dnsHosts),
             transparentProxyPort = preferences.getString(
                 KeyTransparentProxyPort,
@@ -155,8 +160,10 @@ internal class AppSettingsPreferences(
             .putBoolean(KeyEnableIpv6, state.enableIpv6)
             .putBoolean(KeyEnableIpv6Prefer, state.enableIpv6Prefer)
             .putBoolean(KeyEnableFakeDns, state.enableFakeDns)
-            .putStringList(KeyRemoteDns, state.remoteDns)
-            .putStringList(KeyDomesticDns, state.domesticDns)
+            .putStringList(KeyProxyDns, state.proxyDns)
+            .putStringList(KeyDirectDns, state.directDns)
+            .putStringList(KeyDirectDnsDomains, state.directDnsDomains)
+            .putBoolean(KeyEnableDirectDnsForProxyServerDomains, state.enableDirectDnsForProxyServerDomains)
             .putStringList(KeyDnsHosts, state.dnsHosts)
             .putString(KeyTransparentProxyPort, state.transparentProxyPort)
             .putBoolean(KeyEnableTproxyBootScript, state.enableTproxyBootScript)
@@ -221,8 +228,10 @@ private const val KeyFragmentInterval = "fragment_interval"
 private const val KeyEnableIpv6 = "enable_ipv6"
 private const val KeyEnableIpv6Prefer = "enable_ipv6_prefer"
 private const val KeyEnableFakeDns = "enable_fake_dns"
-private const val KeyRemoteDns = "remote_dns"
-private const val KeyDomesticDns = "domestic_dns"
+private const val KeyProxyDns = "proxy_dns"
+private const val KeyDirectDns = "direct_dns"
+private const val KeyDirectDnsDomains = "direct_dns_domains"
+private const val KeyEnableDirectDnsForProxyServerDomains = "enable_direct_dns_for_proxy_server_domains"
 private const val KeyDnsHosts = "dns_hosts"
 private const val KeyTransparentProxyPort = "transparent_proxy_port"
 private const val KeyEnableTproxyBootScript = "enable_tproxy_boot_script"

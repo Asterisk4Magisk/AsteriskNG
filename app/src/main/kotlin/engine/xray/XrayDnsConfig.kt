@@ -3,21 +3,34 @@ package engine.xray
 import app.AppState
 import app.effectiveFakeDnsEnabled
 import app.effectiveLocalDnsEnabled
-import engine.vpn.VpnDefaults
+import engine.network.isIpAddress
 import engine.network.isIpv4Address
+import engine.vpn.VpnDefaults
+import features.proxy.server.model.normalizedServerHost
+import features.proxy.server.model.serverHost
 import org.json.JSONArray
 import org.json.JSONObject
 
 internal fun buildXrayDnsConfig(
     appState: AppState,
-    remoteDnsServers: List<String>,
-    domesticDnsServers: List<String>,
+    proxyDnsServers: List<String>,
+    directDnsServers: List<String>,
+    directDnsDomains: List<String>,
     dnsHosts: List<String>,
+    startupProxyServerDomains: List<String> = emptyList(),
 ): JSONObject {
     return JSONObject()
-        .put("servers", appState.xrayDnsServers(remoteDnsServers, domesticDnsServers))
+        .put(
+            "servers",
+            appState.xrayDnsServers(
+                proxyDnsServers = proxyDnsServers,
+                directDnsServers = directDnsServers,
+                directDnsDomains = directDnsDomains,
+                startupProxyServerDomains = startupProxyServerDomains,
+            ),
+        )
         .put("queryStrategy", if (appState.enableIpv6) "UseIP" else "UseIPv4")
-        .put("tag", XrayTags.REMOTE_DNS)
+        .put("tag", XrayTags.PROXY_DNS)
         .apply {
             val hosts = dnsHosts.toDnsHostsJson()
             if (hosts.length() > 0) {
@@ -45,15 +58,18 @@ internal fun buildXrayFakeDnsConfig(appState: AppState): Any {
         )
 }
 
-internal fun AppState.xrayRemoteDnsServers(
-    remoteDnsServers: List<String>,
-    domesticDnsServers: List<String>,
+internal fun AppState.xrayProxyDnsServers(
+    proxyDnsServers: List<String>,
+    directDnsServers: List<String>,
+    directDnsDomains: List<String>? = null,
 ): List<String> {
-    val sanitizedRemoteDns = remoteDnsServers.toSanitizedDnsServers()
-    if (sanitizedRemoteDns.isNotEmpty()) {
-        return sanitizedRemoteDns
+    val sanitizedProxyDns = proxyDnsServers.toSanitizedDnsServers()
+    if (sanitizedProxyDns.isNotEmpty()) {
+        return sanitizedProxyDns
     }
-    return if (domesticDnsServers.toSanitizedDnsServers().isEmpty()) {
+    val hasDirectDns = directDnsServers.toSanitizedDnsServers().isNotEmpty() &&
+        (directDnsDomains == null || directDnsDomains.isNotEmpty())
+    return if (!hasDirectDns) {
         listOf(
             vpnDefaultDns.trim()
                 .takeIf(::isIpv4Address)
@@ -64,36 +80,63 @@ internal fun AppState.xrayRemoteDnsServers(
     }
 }
 
-internal fun AppState.xrayDomesticDnsServers(domesticDnsServers: List<String>): List<String> {
-    return domesticDnsServers.toSanitizedDnsServers()
+internal fun AppState.xrayDirectDnsServers(directDnsServers: List<String>): List<String> {
+    return directDnsServers.toSanitizedDnsServers()
+}
+
+internal fun AppState.xrayDirectDnsDomains(
+    directDnsDomains: List<String>,
+    startupProxyServerDomains: List<String> = emptyList(),
+): List<String> {
+    return (directDnsDomains.toSanitizedDnsServers() + startupProxyServerDomains).distinct()
 }
 
 internal fun AppState.shouldUseXrayDnsOutbound(): Boolean {
     return effectiveLocalDnsEnabled
 }
 
+internal fun Iterable<XrayProxyOutboundServer>.startupProxyServerDnsDomains(): List<String> {
+    return mapNotNull { outbound -> outbound.server.toXrayDnsDomainRule() }.distinct()
+}
+
 private fun AppState.xrayDnsServers(
-    remoteDnsServers: List<String>,
-    domesticDnsServers: List<String>,
+    proxyDnsServers: List<String>,
+    directDnsServers: List<String>,
+    directDnsDomains: List<String>,
+    startupProxyServerDomains: List<String>,
 ): JSONArray {
+    val effectiveDirectDnsDomains = xrayDirectDnsDomains(directDnsDomains, startupProxyServerDomains)
+    val effectiveDirectDnsServers = xrayDirectDnsServers(directDnsServers)
+        .takeIf { effectiveDirectDnsDomains.isNotEmpty() }
+        .orEmpty()
     return JSONArray().apply {
         if (effectiveFakeDnsEnabled) {
             put("fakedns")
         }
-        xrayDomesticDnsServers(domesticDnsServers).forEach { server ->
+        effectiveDirectDnsServers.forEach { server ->
             put(
                 JSONObject()
                     .put("address", server)
-                    .put("domains", listOf(XrayDomesticDnsDomain).toJsonStringArray())
+                    .put("domains", effectiveDirectDnsDomains.toJsonStringArray())
                     .put("skipFallback", true)
-                    .put("tag", XrayTags.DOMESTIC_DNS),
+                    .put("tag", XrayTags.DIRECT_DNS),
             )
         }
-        xrayRemoteDnsServers(remoteDnsServers, domesticDnsServers).forEach(::put)
+        xrayProxyDnsServers(
+            proxyDnsServers = proxyDnsServers,
+            directDnsServers = directDnsServers,
+            directDnsDomains = effectiveDirectDnsDomains,
+        ).forEach(::put)
     }
 }
 
-private const val XrayDomesticDnsDomain = "geosite:cn"
+private fun features.proxy.server.model.ProxyServer<*>.toXrayDnsDomainRule(): String? {
+    val host = serverHost().normalizedServerHost()
+    if (host.isBlank() || host.equals("localhost", ignoreCase = true) || isIpAddress(host)) {
+        return null
+    }
+    return "domain:$host"
+}
 
 private fun List<String>.toSanitizedDnsServers(): List<String> {
     return map(String::trim)

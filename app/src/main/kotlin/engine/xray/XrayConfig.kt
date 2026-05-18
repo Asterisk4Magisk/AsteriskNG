@@ -13,8 +13,9 @@ internal data class XrayConfigRequest(
     val selectedServer: ProxyServerState,
     val inbounds: List<JSONObject>,
     val coreLogPaths: XrayCoreLogPaths,
-    val remoteDnsServers: List<String> = appState.remoteDns,
-    val domesticDnsServers: List<String> = appState.domesticDns,
+    val proxyDnsServers: List<String> = appState.proxyDns,
+    val directDnsServers: List<String> = appState.directDns,
+    val directDnsDomains: List<String> = appState.directDnsDomains,
     val dnsHosts: List<String> = appState.dnsHosts,
     val dnsHijackInboundTags: List<String> = listOf(XrayTags.TUN_INBOUND),
 )
@@ -29,12 +30,24 @@ internal data class XrayProxyOutboundServer(
 internal object XrayConfigFactory {
     fun buildXrayConfig(request: XrayConfigRequest): String {
         val outboundPlan = request.appState.buildXrayOutboundPlan(request.selectedServer)
-        val routeRemoteDns = request.appState
-            .xrayRemoteDnsServers(request.remoteDnsServers, request.domesticDnsServers)
+        val startupProxyServerDomains = if (request.appState.enableDirectDnsForProxyServerDomains) {
+            outboundPlan.proxyOutbounds.startupProxyServerDnsDomains()
+        } else {
+            emptyList()
+        }
+        val directDnsDomains = request.appState.xrayDirectDnsDomains(
+            directDnsDomains = request.directDnsDomains,
+            startupProxyServerDomains = startupProxyServerDomains,
+        )
+        val routeProxyDns = request.appState
+            .xrayProxyDnsServers(
+                proxyDnsServers = request.proxyDnsServers,
+                directDnsServers = request.directDnsServers,
+                directDnsDomains = directDnsDomains,
+            )
             .isNotEmpty()
-        val routeDomesticDns = request.appState
-            .xrayDomesticDnsServers(request.domesticDnsServers)
-            .isNotEmpty()
+        val routeDirectDns = directDnsDomains.isNotEmpty() &&
+            request.appState.xrayDirectDnsServers(request.directDnsServers).isNotEmpty()
         val balancers = buildXrayBalancers(outboundPlan.balancers)
 
         val config = JSONObject()
@@ -43,9 +56,11 @@ internal object XrayConfigFactory {
                 "dns",
                 buildXrayDnsConfig(
                     appState = request.appState,
-                    remoteDnsServers = request.remoteDnsServers,
-                    domesticDnsServers = request.domesticDnsServers,
+                    proxyDnsServers = request.proxyDnsServers,
+                    directDnsServers = request.directDnsServers,
+                    directDnsDomains = request.directDnsDomains,
                     dnsHosts = request.dnsHosts,
+                    startupProxyServerDomains = startupProxyServerDomains,
                 ),
             )
             .put("inbounds", request.inbounds.toJsonObjectArray())
@@ -56,8 +71,8 @@ internal object XrayConfigFactory {
                     appState = request.appState,
                     routeTargets = outboundPlan.routeTargets,
                     balancers = balancers,
-                    routeRemoteDns = routeRemoteDns,
-                    routeDomesticDns = routeDomesticDns,
+                    routeProxyDns = routeProxyDns,
+                    routeDirectDns = routeDirectDns,
                     dnsHijackInboundTags = request.dnsHijackInboundTags,
                 ),
             )

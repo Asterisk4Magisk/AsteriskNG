@@ -40,6 +40,7 @@ import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Copy
 import top.yukonga.miuix.kmp.icon.extended.Ok
 import ui.layout.AdaptiveTopAppBar
+import features.proxy.server.display.displayName
 import features.proxy.server.display.displayNameWithGroup
 import features.proxy.server.display.displayNameById
 import ui.layout.pageContentPaddingWithCutout
@@ -84,7 +85,7 @@ fun ProxyServerPage(
                 .map { group ->
                     ProxyServerEditorGroupOption(
                         id = group.id,
-                        label = group.name.ifBlank { defaultGroupName },
+                        label = group.displayName(defaultGroupName).ifBlank { defaultGroupName },
                     )
                 }
     }

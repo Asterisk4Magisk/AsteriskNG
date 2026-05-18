@@ -1,5 +1,6 @@
 package features.proxy.server.qr
 
+import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
@@ -17,18 +18,25 @@ import com.google.zxing.client.android.Intents
 import com.journeyapps.barcodescanner.CaptureActivity
 import com.journeyapps.barcodescanner.DecoratedBarcodeView
 import com.journeyapps.barcodescanner.Size
+import data.AppSettingsPreferences
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import features.settings.locale.localizedAppContext
 import kotlin.math.min
 import kotlin.math.roundToInt
 
 class PortraitQrCaptureActivity : CaptureActivity() {
     private val decodeScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val tipNotifier by lazy { AndroidToastTipNotifier(this) }
+
+    override fun attachBaseContext(newBase: Context) {
+        val languageMode = AppSettingsPreferences(newBase).load().languageMode
+        super.attachBaseContext(newBase.localizedAppContext(languageMode))
+    }
 
     override fun initializeContent(): DecoratedBarcodeView {
         val barcodeView = super.initializeContent()
@@ -151,7 +159,7 @@ class PortraitQrCaptureActivity : CaptureActivity() {
         const val FrameSizeRatio = 0.72f
         const val ImagePickerRequestCode = 2001
         const val AlbumButtonSizeDp = 92
-        const val AlbumButtonOffsetDp = 66
+        const val AlbumButtonOffsetDp = 78
         const val LogTag = "PortraitQrCapture"
     }
 }

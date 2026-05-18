@@ -32,9 +32,7 @@ fun ProvideAppLanguage(
     val context = LocalContext.current
     val languageTag = languageTagForMode(languageMode)
     val locale = remember(languageTag) { languageTag.toAppLocale() }
-    val configuration = remember(context, locale) {
-        context.localizedConfiguration(locale)
-    }
+    val configuration = remember(context, locale) { context.localizedConfiguration(locale) }
     val localizedContext = remember(context, configuration) {
         context.createConfigurationContext(configuration)
     }
@@ -54,6 +52,11 @@ fun ProvideAppLanguage(
 
 private fun String?.toAppLocale(): Locale {
     return this?.let(Locale::forLanguageTag) ?: systemLocale
+}
+
+internal fun Context.localizedAppContext(languageMode: Int): Context {
+    val locale = languageTagForMode(languageMode).toAppLocale()
+    return createConfigurationContext(localizedConfiguration(locale))
 }
 
 private fun Context.localizedConfiguration(locale: Locale): Configuration {
