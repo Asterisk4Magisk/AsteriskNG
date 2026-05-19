@@ -22,6 +22,12 @@
     <string name="resource_file_download_notification_cancelled">Resource file update cancelled</string>
     <string name="resource_file_download_notification_complete">Resource files updated</string>
     <string name="resource_file_download_notification_failed">Resource file update failed: %1$s</string>
+    <string name="quick_settings_tile_label">AsteriskNG</string>
+    <string name="quick_settings_tile_running">Proxy running</string>
+    <string name="quick_settings_tile_stopped">Proxy stopped</string>
+    <string name="quick_settings_tile_processing">Processing...</string>
+    <string name="quick_settings_tile_vpn_permission_required">Grant VPN permission, then tap again to start</string>
+    <string name="quick_settings_tile_toggle_failed">Failed to toggle proxy</string>
 <!-- Common -->
     <string name="common_cancel">Cancel</string>
     <string name="common_save">Save</string>

@@ -32,8 +32,11 @@ class AndroidProxyEngine(
         nextEngine.start(request)
     }
 
-    suspend fun stop(): ProxyEngineStatus = withContext(Dispatchers.Default) {
-        val engine = activeEngine ?: tproxyEngine.takeIf { it.status().running }
+    suspend fun stop(preferredRunMode: Int? = null): ProxyEngineStatus = withContext(Dispatchers.Default) {
+        val engine = activeEngine
+            ?: preferredRunMode?.engine()?.takeIf { it.status().running }
+            ?: tproxyEngine.takeIf { it.status().running }
+            ?: vpnXrayEngine.takeIf { it.status().running }
         val stoppedMode = engine?.runMode
         engine?.stop()
         activeEngine = null
@@ -41,21 +44,45 @@ class AndroidProxyEngine(
     }
 
     suspend fun restart(request: ProxyEngineStartRequest): ProxyEngineStatus {
-        stop()
+        stop(request.appState.runMode)
         return start(request)
     }
 
-    suspend fun status(): ProxyEngineStatus = withContext(Dispatchers.Default) {
+    suspend fun status(preferredRunMode: Int? = null): ProxyEngineStatus = withContext(Dispatchers.Default) {
         val activeStatus = activeEngine?.status()
         if (activeStatus?.running == true) {
             return@withContext activeStatus
         }
-        val tproxyStatus = tproxyEngine.status()
-        if (tproxyStatus.running) {
-            activeEngine = tproxyEngine
-            return@withContext tproxyStatus
+
+        preferredRunMode?.engine()?.let { preferredEngine ->
+            val preferredStatus = preferredEngine.status()
+            if (preferredStatus.running) {
+                activeEngine = preferredEngine
+                return@withContext preferredStatus
+            }
+            if (activeStatus == null) {
+                return@withContext preferredStatus
+            }
         }
-        activeEngine = activeEngine?.takeUnless { it === tproxyEngine }
-        activeStatus ?: ProxyEngineStatus(running = false)
+
+        listOf(tproxyEngine, vpnXrayEngine)
+            .filterNot { engine -> engine.runMode == preferredRunMode }
+            .forEach { engine ->
+                val status = engine.status()
+                if (status.running) {
+                    activeEngine = engine
+                    return@withContext status
+                }
+            }
+
+        activeEngine = null
+        activeStatus ?: ProxyEngineStatus(running = false, runMode = preferredRunMode)
+    }
+
+    private fun Int.engine(): AndroidModeProxyEngine {
+        return when (this) {
+            RunModeTproxy -> tproxyEngine
+            else -> vpnXrayEngine
+        }
     }
 }

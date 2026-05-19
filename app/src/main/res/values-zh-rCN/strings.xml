@@ -22,6 +22,12 @@
     <string name="resource_file_download_notification_cancelled">资源文件更新已取消</string>
     <string name="resource_file_download_notification_complete">资源文件更新完成</string>
     <string name="resource_file_download_notification_failed">资源文件更新失败：%1$s</string>
+    <string name="quick_settings_tile_label">AsteriskNG</string>
+    <string name="quick_settings_tile_running">代理运行中</string>
+    <string name="quick_settings_tile_stopped">代理已停止</string>
+    <string name="quick_settings_tile_processing">正在处理...</string>
+    <string name="quick_settings_tile_vpn_permission_required">授予 VPN 权限后，再次点击即可启动</string>
+    <string name="quick_settings_tile_toggle_failed">代理切换失败</string>
 <!-- Common -->
     <string name="common_cancel">取消</string>
     <string name="common_save">保存</string>

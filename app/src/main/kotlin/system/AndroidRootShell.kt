@@ -9,13 +9,31 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 internal object AndroidRootShell {
+    private val configureLock = Any()
+
+    @Volatile
+    private var configured = false
+
     fun configure() {
-        Shell.enableVerboseLogging = false
-        Shell.setDefaultBuilder(
-            Shell.Builder.create()
-                .setFlags(Shell.FLAG_MOUNT_MASTER)
-                .setTimeout(10),
-        )
+        if (configured) {
+            return
+        }
+        synchronized(configureLock) {
+            if (configured) {
+                return
+            }
+            Shell.enableVerboseLogging = false
+            runCatching {
+                Shell.setDefaultBuilder(
+                    Shell.Builder.create()
+                        .setFlags(Shell.FLAG_MOUNT_MASTER)
+                        .setTimeout(10),
+                )
+            }.onFailure { error ->
+                AndroidAppLogger.warn(LogTag, "Root shell was already initialized; keeping the existing builder", error)
+            }
+            configured = true
+        }
     }
 
     suspend fun exec(command: String, options: ShellExecOptions): ShellExecResult = withContext(Dispatchers.IO) {

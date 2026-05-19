@@ -38,7 +38,8 @@ internal class CoreLogFileTailer(
     private suspend fun tail(logFile: CoreLogFile) {
         val file = File(logFile.path)
         file.parentFile?.mkdirs()
-        var position = file.length()
+        var position = runCatching { file.length() }.getOrDefault(0L)
+        var failureLogged = false
 
         while (scope.isActive) {
             if (!file.exists()) {
@@ -46,18 +47,27 @@ internal class CoreLogFileTailer(
                 continue
             }
 
-            RandomAccessFile(file, "r").use { reader ->
-                if (position > reader.length()) {
-                    position = 0L
-                }
-                reader.seek(position)
+            runCatching {
+                RandomAccessFile(file, "r").use { reader ->
+                    if (position > reader.length()) {
+                        position = 0L
+                    }
+                    reader.seek(position)
 
-                var line = reader.readUtf8Line()
-                while (line != null) {
-                    repository.appendParsedCoreLogLine(line, logFile.defaultLevel)
-                    line = reader.readUtf8Line()
+                    var line = reader.readUtf8Line()
+                    while (line != null) {
+                        repository.appendParsedCoreLogLine(line, logFile.defaultLevel)
+                        line = reader.readUtf8Line()
+                    }
+                    position = reader.filePointer
                 }
-                position = reader.filePointer
+            }.onSuccess {
+                failureLogged = false
+            }.onFailure { error ->
+                if (!failureLogged) {
+                    AndroidAppLogger.warn(LogTag, "Failed to tail xray log file: ${file.absolutePath}", error)
+                    failureLogged = true
+                }
             }
 
             delay(TailIntervalMillis)
@@ -71,6 +81,7 @@ internal class CoreLogFileTailer(
     }
 
     private companion object {
+        private const val LogTag = "CoreLogFileTailer"
         private const val TailIntervalMillis = 500L
     }
 }

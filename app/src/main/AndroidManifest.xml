@@ -48,6 +48,20 @@
             android:exported="false" />
 
         <service
+            android:name="features.quicksettings.ProxyQuickSettingsTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_qs_proxy"
+            android:label="@string/quick_settings_tile_label"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.service.quicksettings.TOGGLEABLE_TILE"
+                android:value="true" />
+        </service>
+
+        <service
             android:name="engine.vpn.AsteriskVpnService"
             android:exported="false"
             android:permission="android.permission.BIND_VPN_SERVICE"
