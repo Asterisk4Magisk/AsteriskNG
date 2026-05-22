@@ -249,6 +249,19 @@ internal fun LazyListScope.vlessProxyServer(vlessEdit: VLESS) {
             onKeyboardAction = { focusManager.clearFocus() },
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
         )
+        TextField(
+            label = stringResource(R.string.proxy_editor_encryption),
+            state = rememberTextFieldState(initialText = vlessEdit.encryption.ifBlank { "none" }),
+            lineLimits = TextFieldLineLimits.SingleLine,
+            inputTransformation = InputTransformation {
+                vlessEdit.encryption = asCharSequence().toString()
+            },
+            modifier = Modifier
+                .padding(horizontal = 12.dp)
+                .padding(bottom = 12.dp),
+            onKeyboardAction = { focusManager.clearFocus() },
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+        )
         OverlayDropdownPreference(
             title = stringResource(R.string.proxy_editor_flow),
             items = flowOptions,

@@ -54,6 +54,9 @@ data class VLESS(
             host = this@VLESS.server
             this@VLESS.port.toIntOrNull()?.let { port = it }
             user = this@VLESS.id
+            if (this@VLESS.encryption.isNotBlank()) {
+                parameters.append("encryption", this@VLESS.encryption)
+            }
             if (this@VLESS.flow.isNotBlank()) {
                 parameters.append("flow", this@VLESS.flow)
             }

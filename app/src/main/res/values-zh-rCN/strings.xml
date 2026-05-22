@@ -409,7 +409,7 @@
     <string name="proxy_validation_json_object_required">{field} 必须是 JSON 对象</string>
     <string name="proxy_validation_reality_public_key_invalid">Reality PublicKey 必须是 32 字节 X25519 公钥的 URL-safe base64</string>
     <string name="proxy_validation_xray_user_id_invalid">用户 ID 必须是 UUID 或小于 {max} 字节的字符串</string>
-    <string name="proxy_validation_invalid_vless_encryption">VLESS 加密格式无效</string>
+    <string name="proxy_validation_invalid_vless_encryption">VLESS 加密方式无效</string>
     <string name="proxy_validation_vless_padding_boundary_invalid">VLESS padding 配置必须以 padding 开始并以 padding 结束</string>
     <string name="proxy_validation_vless_padding_format_invalid" tools:ignore="TypographyDashes">VLESS padding 或 delay 必须为 probability-min-max</string>
     <string name="proxy_validation_vless_padding_range_invalid">VLESS padding 或 delay 范围无效</string>

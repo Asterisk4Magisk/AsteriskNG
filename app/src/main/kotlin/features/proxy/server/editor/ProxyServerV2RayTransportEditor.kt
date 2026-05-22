@@ -480,6 +480,19 @@ internal fun LazyListScope.v2rayServerTransport(params: V2RayParameters) {
                     onKeyboardAction = { focusManager.clearFocus() },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                 )
+                TextField(
+                    label = "VerifyPeerCertByName",
+                    state = rememberTextFieldState(initialText = params.vcn ?: ""),
+                    lineLimits = TextFieldLineLimits.SingleLine,
+                    inputTransformation = InputTransformation {
+                        params.vcn = asCharSequence().toString()
+                    },
+                    modifier = Modifier
+                        .padding(horizontal = 12.dp)
+                        .padding(bottom = 12.dp),
+                    onKeyboardAction = { focusManager.clearFocus() },
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                )
             }
         }
         //reality
