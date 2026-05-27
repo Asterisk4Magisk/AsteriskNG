@@ -1,6 +1,7 @@
 package engine.xray
 
 import app.AppState
+import app.effectiveLocalDnsEnabled
 import features.routing.model.RouteRule
 import org.json.JSONArray
 import org.json.JSONObject
@@ -37,7 +38,9 @@ private fun AppState.routingRules(
     dnsHijackInboundTags: List<String>,
 ): JSONArray {
     return JSONArray().apply {
-        buildDnsHijackRule(dnsHijackInboundTags)?.let(::put)
+        if (effectiveLocalDnsEnabled) {
+            buildXrayDnsHijackRule(dnsHijackInboundTags)?.let(::put)
+        }
         if (routeDirectDns) {
             routeTargets[XrayTags.DIRECT]?.let { target -> put(buildDnsUpstreamRoute(XrayTags.DIRECT_DNS, target)) }
         }
@@ -67,8 +70,7 @@ private fun AppState.defaultRouteTarget(routeTargets: Map<String, XrayRouteTarge
     return defaultTarget ?: routeTargets[XrayTags.PROXY]
 }
 
-private fun AppState.buildDnsHijackRule(inboundTags: List<String>): JSONObject? {
-    if (!shouldUseXrayDnsOutbound()) return null
+internal fun buildXrayDnsHijackRule(inboundTags: List<String>): JSONObject? {
     val tags = inboundTags.map(String::trim).filter(String::isNotEmpty).distinct()
     if (tags.isEmpty()) return null
     return JSONObject()

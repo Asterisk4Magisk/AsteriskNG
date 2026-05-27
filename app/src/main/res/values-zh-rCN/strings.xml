@@ -294,6 +294,7 @@
     <string name="proxy_server_list_import_file">从文件导入</string>
     <string name="proxy_server_list_add_strategy_group">添加 策略组</string>
     <string name="proxy_server_list_add_chain_proxy">添加 链式代理</string>
+    <string name="proxy_server_list_add_custom">添加 Custom</string>
     <string name="proxy_server_list_add_http">添加 HTTP</string>
     <string name="proxy_server_list_add_vmess">添加 VMess</string>
     <string name="proxy_server_list_add_vless">添加 VLESS</string>
@@ -332,6 +333,7 @@
     <string name="proxy_editor_validation_failed">配置校验失败</string>
     <string name="proxy_editor_strategy_group_title">策略组</string>
     <string name="proxy_editor_chain_proxy_title">链式代理</string>
+    <string name="proxy_editor_custom_title">Custom</string>
     <string name="proxy_editor_properties">配置项</string>
     <string name="proxy_editor_remarks">别名</string>
     <string name="proxy_editor_server">服务器地址</string>
@@ -386,6 +388,12 @@
     <string name="proxy_editor_chain_member">成员 {index}</string>
     <string name="proxy_editor_chain_member_unselected">请选择成员</string>
     <string name="proxy_editor_chain_add_member">添加成员</string>
+    <string name="proxy_editor_custom_json">Xray JSON 配置</string>
+    <string name="proxy_editor_custom_json_outbounds">Xray JSON 出站配置</string>
+    <string name="proxy_editor_custom_format_json">格式化 JSON</string>
+    <string name="proxy_editor_custom_json_invalid">JSON 配置无效</string>
+    <string name="proxy_editor_custom_override_inbound_dns">覆写入站设置和 DNS 设置</string>
+    <string name="proxy_editor_custom_override_inbound_dns_summary">使用 AsteriskNG 提供的入站设置和 DNS 设置</string>
     <string name="proxy_validation_required_field">请填写{field}</string>
     <string name="proxy_validation_server_address_contains_invalid_content">服务器地址不能包含协议、路径、空格或用户信息</string>
     <string name="proxy_validation_invalid_server_address">服务器地址无效</string>

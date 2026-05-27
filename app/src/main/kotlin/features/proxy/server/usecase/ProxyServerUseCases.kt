@@ -5,6 +5,7 @@ import app.ProxyServerState
 import app.SubscriptionGroupState
 import features.proxy.server.list.ProxyServerListAddAction
 import features.proxy.server.model.ChainProxy
+import features.proxy.server.model.Custom
 import features.proxy.server.model.HTTP
 import features.proxy.server.model.Hysteria2
 import features.proxy.server.model.ProxyServer
@@ -244,6 +245,8 @@ internal fun createProxyServer(action: ProxyServerListAddAction): ProxyServer<*>
         ProxyServerListAddAction.Hysteria2 -> Hysteria2(port = "")
 
         ProxyServerListAddAction.Wireguard -> Wireguard(port = "", reserved = "", address = "", mtu = "")
+
+        ProxyServerListAddAction.Custom -> Custom()
     }
 }
 

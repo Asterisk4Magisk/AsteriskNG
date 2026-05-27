@@ -30,6 +30,8 @@ internal fun rememberProxyServerValidationMessageResolver(
             "XHTTP Extra" to "XHTTP Extra",
             "encryption method" to stringResource(R.string.proxy_editor_encryption),
             "strategy group type" to stringResource(R.string.proxy_editor_strategy_group_type),
+            "custom JSON" to stringResource(R.string.proxy_editor_custom_json),
+            "custom JSON outbounds" to stringResource(R.string.proxy_editor_custom_json_outbounds),
         ),
         serverAddressContainsInvalidContent =
             stringResource(R.string.proxy_validation_server_address_contains_invalid_content),

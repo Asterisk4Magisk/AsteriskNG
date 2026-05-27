@@ -29,6 +29,7 @@ import app.collectAppState
 import app.proxyServerOutboundTag
 import features.proxy.server.display.displayNameById
 import features.proxy.server.display.displayNameWithGroup
+import features.proxy.server.model.isCustomProxyServer
 import features.routing.model.RouteRule
 import kotlinx.coroutines.launch
 import sh.calvin.reorderable.ReorderableItem
@@ -91,7 +92,9 @@ fun RoutingPage(
         defaultProxyServerTemplate,
     ) {
         val groupNames = appState.subscriptionGroups.displayNameById(defaultGroupName)
-        (fixedOutboundOptions + appState.proxyServers.map { proxyServer ->
+        (fixedOutboundOptions + appState.proxyServers.filterNot { proxyServer ->
+            proxyServer.server.isCustomProxyServer()
+        }.map { proxyServer ->
             RouteRuleOutboundOption(
                 tag = proxyServer.proxyServerOutboundTag(),
                 label = proxyServer.displayNameWithGroup(

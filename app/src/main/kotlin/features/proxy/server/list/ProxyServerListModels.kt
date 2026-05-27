@@ -6,6 +6,7 @@ internal enum class ProxyServerListAddAction {
     File,
     StrategyGroup,
     ChainProxy,
+    Custom,
     HTTP,
     VMess,
     VLESS,

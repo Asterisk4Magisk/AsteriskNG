@@ -421,6 +421,7 @@ private fun proxyServerListAddMenuEntries() = listOf(
     ProxyServerListMenuEntry(stringResource(R.string.proxy_server_list_import_file), ProxyServerListAddAction.File),
     ProxyServerListMenuEntry(stringResource(R.string.proxy_server_list_add_strategy_group), ProxyServerListAddAction.StrategyGroup),
     ProxyServerListMenuEntry(stringResource(R.string.proxy_server_list_add_chain_proxy), ProxyServerListAddAction.ChainProxy),
+    ProxyServerListMenuEntry(stringResource(R.string.proxy_server_list_add_custom), ProxyServerListAddAction.Custom),
     ProxyServerListMenuEntry(stringResource(R.string.proxy_server_list_add_http), ProxyServerListAddAction.HTTP),
     ProxyServerListMenuEntry(stringResource(R.string.proxy_server_list_add_vmess), ProxyServerListAddAction.VMess),
     ProxyServerListMenuEntry(stringResource(R.string.proxy_server_list_add_vless), ProxyServerListAddAction.VLESS),

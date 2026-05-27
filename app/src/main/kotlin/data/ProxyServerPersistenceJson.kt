@@ -1,8 +1,9 @@
 package data
 
+import features.proxy.server.model.ChainProxy
+import features.proxy.server.model.Custom
 import features.proxy.server.model.HTTP
 import features.proxy.server.model.Hysteria2
-import features.proxy.server.model.ChainProxy
 import features.proxy.server.model.ProxyServer
 import features.proxy.server.model.ProxyServerConstants
 import features.proxy.server.model.Shadowsocks
@@ -13,8 +14,6 @@ import features.proxy.server.model.VLESS
 import features.proxy.server.model.VMess
 import features.proxy.server.model.Wireguard
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
@@ -62,6 +61,9 @@ internal fun String.decodePersistedProxyServer(): ProxyServer<*> {
         ProxyServerConstants.PROTOCOL_CHAIN_PROXY ->
             ProxyServer.json.decodeFromJsonElement<ChainProxy>(persistedServer.payload)
 
+        ProxyServerConstants.PROTOCOL_CUSTOM ->
+            ProxyServer.json.decodeFromJsonElement<Custom>(persistedServer.payload)
+
         else -> error("Unsupported persisted proxy server protocol: ${persistedServer.protocol}")
     }
 }
@@ -78,6 +80,7 @@ private fun ProxyServer<*>.toPersistedProxyServer(): PersistedProxyServer {
         is Wireguard -> persisted(ProxyServerConstants.PROTOCOL_WIREGUARD, this)
         is StrategyGroup -> persisted(ProxyServerConstants.PROTOCOL_STRATEGY_GROUP, this)
         is ChainProxy -> persisted(ProxyServerConstants.PROTOCOL_CHAIN_PROXY, this)
+        is Custom -> persisted(ProxyServerConstants.PROTOCOL_CUSTOM, this)
         else -> error("Unsupported proxy server type")
     }
 }

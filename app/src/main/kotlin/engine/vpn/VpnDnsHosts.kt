@@ -4,18 +4,16 @@ import app.AppState
 import features.logs.AndroidAppLogger
 import engine.network.isIpv4Address
 import engine.network.isIpv6Address
-import features.proxy.server.model.ProxyServer
 import features.proxy.server.model.normalizedServerHost
-import features.proxy.server.model.serverHost
 import java.net.InetAddress
 
-internal fun AppState.xrayDnsHosts(proxyServers: List<ProxyServer<*>>): List<String> {
+internal fun AppState.xrayDnsHosts(proxyServerHosts: List<String>): List<String> {
     if (!enableResolveProxyServerDomain) return dnsHosts
-    return (dnsHosts + proxyServers.mapNotNull { server -> server.toResolvedDnsHostEntry() }).distinct()
+    return (dnsHosts + proxyServerHosts.mapNotNull { host -> host.toResolvedDnsHostEntry() }).distinct()
 }
 
-private fun ProxyServer<*>.toResolvedDnsHostEntry(): String? {
-    val host = serverHost().normalizedServerHost()
+private fun String.toResolvedDnsHostEntry(): String? {
+    val host = normalizedServerHost()
     if (host.isBlank() || isIpv4Address(host) || isIpv6Address(host) || host.equals("localhost", ignoreCase = true)) {
         return null
     }

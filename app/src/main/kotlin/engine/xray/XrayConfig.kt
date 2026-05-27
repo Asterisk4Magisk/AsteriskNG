@@ -1,10 +1,12 @@
 package engine.xray
 
 import app.AppState
-import app.effectiveFakeDnsEnabled
+import app.effectiveLocalDnsEnabled
 import app.ProxyServerState
 import features.logs.AndroidAppLogger
+import features.proxy.server.model.Custom
 import features.proxy.server.model.ProxyServer
+import features.proxy.server.model.customXrayConfigProxyServerHosts
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -29,25 +31,23 @@ internal data class XrayProxyOutboundServer(
 
 internal object XrayConfigFactory {
     fun buildXrayConfig(request: XrayConfigRequest): String {
+        val customServer = request.selectedServer.server as? Custom
+        if (customServer != null) {
+            return buildCustomXrayConfig(request, customServer)
+        }
+
         val outboundPlan = request.appState.buildXrayOutboundPlan(request.selectedServer)
         val startupProxyServerDomains = if (request.appState.enableDirectDnsForProxyServerDomains) {
             outboundPlan.proxyOutbounds.startupProxyServerDnsDomains()
         } else {
             emptyList()
         }
-        val directDnsDomains = request.appState.xrayDirectDnsDomains(
+        val dnsRoutingOptions = request.appState.xrayDnsRoutingOptions(
+            proxyDnsServers = request.proxyDnsServers,
+            directDnsServers = request.directDnsServers,
             directDnsDomains = request.directDnsDomains,
             startupProxyServerDomains = startupProxyServerDomains,
         )
-        val routeProxyDns = request.appState
-            .xrayProxyDnsServers(
-                proxyDnsServers = request.proxyDnsServers,
-                directDnsServers = request.directDnsServers,
-                directDnsDomains = directDnsDomains,
-            )
-            .isNotEmpty()
-        val routeDirectDns = directDnsDomains.isNotEmpty() &&
-            request.appState.xrayDirectDnsServers(request.directDnsServers).isNotEmpty()
         val balancers = buildXrayBalancers(outboundPlan.balancers)
 
         val config = JSONObject()
@@ -71,15 +71,13 @@ internal object XrayConfigFactory {
                     appState = request.appState,
                     routeTargets = outboundPlan.routeTargets,
                     balancers = balancers,
-                    routeProxyDns = routeProxyDns,
-                    routeDirectDns = routeDirectDns,
+                    routeProxyDns = dnsRoutingOptions.routeProxyDns,
+                    routeDirectDns = dnsRoutingOptions.routeDirectDns,
                     dnsHijackInboundTags = request.dnsHijackInboundTags,
                 ),
             )
             .apply {
-                if (request.appState.effectiveFakeDnsEnabled) {
-                    put("fakedns", buildXrayFakeDnsConfig(request.appState))
-                }
+                putXrayFakeDnsConfig(request.appState)
                 buildXrayObservatory(outboundPlan.observatorySelectors)?.let { put("observatory", it) }
                 buildXrayBurstObservatory(outboundPlan.burstObservatorySelectors)?.let { put("burstObservatory", it) }
             }
@@ -90,6 +88,11 @@ internal object XrayConfigFactory {
 
 internal object XraySpeedTestConfigFactory {
     fun buildXraySpeedTestConfig(request: XrayConfigRequest): String {
+        val customServer = request.selectedServer.server as? Custom
+        if (customServer != null) {
+            return buildCustomXrayConfig(request, customServer)
+        }
+
         val speedTestState = request.appState.copy(enableMux = false)
         val outboundPlan = speedTestState.buildXrayOutboundPlan(request.selectedServer)
         val config = JSONObject()
@@ -112,6 +115,160 @@ internal object XraySpeedTestConfigFactory {
 
 private const val LogTag = "XrayConfig"
 private const val LogChunkSize = 3500
+
+private fun buildCustomXrayConfig(
+    request: XrayConfigRequest,
+    server: Custom,
+): String {
+    server.check()
+    val config = JSONObject(server.configJson).apply {
+        if (server.overrideAsteriskInboundAndDns) {
+            put("inbounds", request.inbounds.toJsonObjectArray())
+            overwriteCustomInboundDns(request, server)
+        }
+    }
+    logGeneratedXrayConfig(config)
+    return config.toString()
+}
+
+private fun JSONObject.overwriteCustomInboundDns(
+    request: XrayConfigRequest,
+    server: Custom,
+): JSONObject {
+    val startupProxyServerDomains = if (request.appState.enableDirectDnsForProxyServerDomains) {
+        customXrayConfigProxyServerHosts(server.configJson).startupProxyServerHostDnsDomains()
+    } else {
+        emptyList()
+    }
+    val dnsRoutingOptions = request.appState.xrayDnsRoutingOptions(
+        proxyDnsServers = request.proxyDnsServers,
+        directDnsServers = request.directDnsServers,
+        directDnsDomains = request.directDnsDomains,
+        startupProxyServerDomains = startupProxyServerDomains,
+    )
+    val enableLocalDns = request.appState.effectiveLocalDnsEnabled
+    val proxyDnsOutboundTag = overwriteCustomDnsOutbounds(
+        appState = request.appState,
+        enableLocalDns = enableLocalDns,
+    )
+
+    put(
+        "dns",
+        buildXrayDnsConfig(
+            appState = request.appState,
+            proxyDnsServers = request.proxyDnsServers,
+            directDnsServers = request.directDnsServers,
+            directDnsDomains = request.directDnsDomains,
+            dnsHosts = request.dnsHosts,
+            startupProxyServerDomains = startupProxyServerDomains,
+        ),
+    )
+    putXrayFakeDnsConfig(request.appState)
+    overwriteCustomDnsRouting(
+        dnsHijackInboundTags = request.dnsHijackInboundTags,
+        enableLocalDns = enableLocalDns,
+        routeProxyDns = dnsRoutingOptions.routeProxyDns,
+        routeDirectDns = dnsRoutingOptions.routeDirectDns,
+        proxyDnsOutboundTag = proxyDnsOutboundTag,
+    )
+    return this
+}
+
+private fun JSONObject.overwriteCustomDnsOutbounds(
+    appState: AppState,
+    enableLocalDns: Boolean,
+): String? {
+    val outbounds = optJSONArray("outbounds") ?: JSONArray().also { put("outbounds", it) }
+    val proxyOutboundTag = outbounds.customProxyOutboundTag()
+    val rewrittenOutbounds = JSONArray()
+
+    for (index in 0 until outbounds.length()) {
+        val outbound = outbounds.optJSONObject(index) ?: continue
+        when (outbound.optString("tag")) {
+            XrayTags.DNS_OUT -> Unit
+            XrayTags.DIRECT -> Unit
+            else -> rewrittenOutbounds.put(outbound)
+        }
+    }
+
+    rewrittenOutbounds.put(
+        buildFreedomOutbound(
+            tag = XrayTags.DIRECT,
+            domainStrategy = appState.xrayDirectOutboundDomainStrategy(),
+        ),
+    )
+    if (enableLocalDns) {
+        rewrittenOutbounds.put(
+            buildSimpleOutbound(
+                tag = XrayTags.DNS_OUT,
+                protocol = XrayProtocols.DNS,
+            ),
+        )
+    }
+    put("outbounds", rewrittenOutbounds)
+    return proxyOutboundTag
+}
+
+private fun JSONArray.customProxyOutboundTag(): String? {
+    var firstProxyCandidate: JSONObject? = null
+    for (index in 0 until length()) {
+        val outbound = optJSONObject(index) ?: continue
+        val tag = outbound.optString("tag").takeIf(String::isNotBlank)
+        if (tag == XrayTags.PROXY) {
+            return tag
+        }
+        if (tag !in XrayTags.FIXED_OUTBOUND_TAGS) {
+            if (firstProxyCandidate == null) {
+                firstProxyCandidate = outbound
+            }
+        }
+    }
+    firstProxyCandidate?.let { outbound ->
+        val candidateTag = outbound.optString("tag").takeIf(String::isNotBlank)
+        if (candidateTag != null) {
+            return candidateTag
+        }
+        outbound.put("tag", XrayTags.PROXY)
+        return XrayTags.PROXY
+    }
+    return null
+}
+
+private fun JSONObject.overwriteCustomDnsRouting(
+    dnsHijackInboundTags: List<String>,
+    enableLocalDns: Boolean,
+    routeProxyDns: Boolean,
+    routeDirectDns: Boolean,
+    proxyDnsOutboundTag: String?,
+): JSONObject {
+    val routing = optJSONObject("routing") ?: JSONObject().also { put("routing", it) }
+    val existingRules = routing.optJSONArray("rules") ?: JSONArray()
+    val rewrittenRules = JSONArray()
+
+    if (enableLocalDns) {
+        buildXrayDnsHijackRule(dnsHijackInboundTags)?.let(rewrittenRules::put)
+    }
+    if (routeDirectDns) {
+        rewrittenRules.put(buildCustomDnsUpstreamRoute(XrayTags.DIRECT_DNS, XrayTags.DIRECT))
+    }
+    if (routeProxyDns && !proxyDnsOutboundTag.isNullOrBlank()) {
+        rewrittenRules.put(buildCustomDnsUpstreamRoute(XrayTags.PROXY_DNS, proxyDnsOutboundTag))
+    }
+    for (index in 0 until existingRules.length()) {
+        rewrittenRules.put(existingRules.get(index))
+    }
+    routing.put("rules", rewrittenRules)
+    return this
+}
+
+private fun buildCustomDnsUpstreamRoute(
+    inboundTag: String,
+    outboundTag: String,
+): JSONObject {
+    return JSONObject()
+        .put("inboundTag", JSONArray().put(inboundTag))
+        .put("outboundTag", outboundTag)
+}
 
 private fun logGeneratedXrayConfig(config: JSONObject) {
     val json = config.toString(2)

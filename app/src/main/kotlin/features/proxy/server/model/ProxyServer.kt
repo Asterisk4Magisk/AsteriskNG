@@ -20,6 +20,7 @@ object ProxyServerConstants {
     const val PROTOCOL_WIREGUARD = "wireguard"
     const val PROTOCOL_STRATEGY_GROUP = "strategy-group"
     const val PROTOCOL_CHAIN_PROXY = "chain-proxy"
+    const val PROTOCOL_CUSTOM = "custom"
 }
 
 @Serializable
@@ -80,12 +81,20 @@ fun ProxyServer<*>.isCompositeProxyServer(): Boolean {
     return this is StrategyGroup || this is ChainProxy
 }
 
-fun ProxyServer<*>.supportsUrl(): Boolean {
-    return this is UrlProxyServer<*>
+fun ProxyServer<*>.isCustomProxyServer(): Boolean {
+    return this is Custom
 }
 
 fun ProxyServer<*>.getUrlOrNull(): String? {
     return (this as? UrlProxyServer<*>)?.getUrl()
+}
+
+fun ProxyServer<*>.getCopyTextOrNull(): String? {
+    return when (this) {
+        is Custom -> configJson
+        is UrlProxyServer<*> -> getUrl()
+        else -> null
+    }
 }
 
 internal fun proxyServerTypeMismatch(): Nothing {

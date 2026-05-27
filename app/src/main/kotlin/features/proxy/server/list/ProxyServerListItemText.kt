@@ -28,21 +28,40 @@ internal class ProxyServerListItemTextFormatter(
     private val strategyGroupSummaryWithFilterTemplate: String,
     private val chainProxySummaryTemplate: String,
 ) {
-    fun displayOf(serverState: ProxyServerState): ProxyServerListItemDisplayText {
+    fun displayOf(
+        serverState: ProxyServerState,
+        servers: List<ProxyServerState>,
+    ): ProxyServerListItemDisplayText {
         val info = serverState.server.getInfo()
         return ProxyServerListItemDisplayText(
             title = info.remarks.ifBlank { info.protocol },
-            summary = summaryOf(serverState),
+            summary = summaryOf(serverState, servers),
             protocol = info.protocol,
         )
     }
 
-    private fun summaryOf(serverState: ProxyServerState): String {
+    private fun summaryOf(
+        serverState: ProxyServerState,
+        servers: List<ProxyServerState>,
+    ): String {
         return when (val proxyServer = serverState.server) {
             is StrategyGroup -> proxyServer.strategyGroupSummary()
-            is ChainProxy -> chainProxySummaryTemplate.formatTemplate("count" to proxyServer.proxyServerIds.size)
+            is ChainProxy -> proxyServer.chainProxySummary(servers)
             else -> proxyServer.getInfo().address
         }
+    }
+
+    private fun ChainProxy.chainProxySummary(servers: List<ProxyServerState>): String {
+        val serverById = servers.associateBy { server -> server.id }
+        val memberNames = proxyServerIds.mapNotNull { memberId ->
+            serverById[memberId]?.server?.getInfo()?.let { info ->
+                info.remarks.ifBlank { info.protocol }
+            }
+        }
+        return memberNames
+            .takeIf { names -> names.isNotEmpty() }
+            ?.joinToString(" -> ")
+            ?: chainProxySummaryTemplate.formatTemplate("count" to proxyServerIds.size)
     }
 
     private fun StrategyGroup.strategyGroupSummary(): String {

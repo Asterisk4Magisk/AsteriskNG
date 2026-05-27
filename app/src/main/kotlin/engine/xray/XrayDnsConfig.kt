@@ -2,7 +2,6 @@ package engine.xray
 
 import app.AppState
 import app.effectiveFakeDnsEnabled
-import app.effectiveLocalDnsEnabled
 import engine.network.isIpAddress
 import engine.network.isIpv4Address
 import engine.vpn.VpnDefaults
@@ -58,6 +57,41 @@ internal fun buildXrayFakeDnsConfig(appState: AppState): Any {
         )
 }
 
+internal data class XrayDnsRoutingOptions(
+    val routeProxyDns: Boolean,
+    val routeDirectDns: Boolean,
+)
+
+internal fun AppState.xrayDnsRoutingOptions(
+    proxyDnsServers: List<String>,
+    directDnsServers: List<String>,
+    directDnsDomains: List<String>,
+    startupProxyServerDomains: List<String> = emptyList(),
+): XrayDnsRoutingOptions {
+    val effectiveDirectDnsDomains = xrayDirectDnsDomains(
+        directDnsDomains = directDnsDomains,
+        startupProxyServerDomains = startupProxyServerDomains,
+    )
+    return XrayDnsRoutingOptions(
+        routeProxyDns = xrayProxyDnsServers(
+            proxyDnsServers = proxyDnsServers,
+            directDnsServers = directDnsServers,
+            directDnsDomains = effectiveDirectDnsDomains,
+        ).isNotEmpty(),
+        routeDirectDns = effectiveDirectDnsDomains.isNotEmpty() &&
+            xrayDirectDnsServers(directDnsServers).isNotEmpty(),
+    )
+}
+
+internal fun JSONObject.putXrayFakeDnsConfig(appState: AppState): JSONObject {
+    if (appState.effectiveFakeDnsEnabled) {
+        put("fakedns", buildXrayFakeDnsConfig(appState))
+    } else {
+        remove("fakedns")
+    }
+    return this
+}
+
 internal fun AppState.xrayProxyDnsServers(
     proxyDnsServers: List<String>,
     directDnsServers: List<String>,
@@ -91,12 +125,12 @@ internal fun AppState.xrayDirectDnsDomains(
     return (directDnsDomains.toSanitizedDnsServers() + startupProxyServerDomains).distinct()
 }
 
-internal fun AppState.shouldUseXrayDnsOutbound(): Boolean {
-    return effectiveLocalDnsEnabled
+internal fun Iterable<XrayProxyOutboundServer>.startupProxyServerDnsDomains(): List<String> {
+    return map { outbound -> outbound.server.serverHost() }.startupProxyServerHostDnsDomains()
 }
 
-internal fun Iterable<XrayProxyOutboundServer>.startupProxyServerDnsDomains(): List<String> {
-    return mapNotNull { outbound -> outbound.server.toXrayDnsDomainRule() }.distinct()
+internal fun Iterable<String>.startupProxyServerHostDnsDomains(): List<String> {
+    return mapNotNull { host -> host.toXrayDnsDomainRule() }.distinct()
 }
 
 private fun AppState.xrayDnsServers(
@@ -130,8 +164,8 @@ private fun AppState.xrayDnsServers(
     }
 }
 
-private fun features.proxy.server.model.ProxyServer<*>.toXrayDnsDomainRule(): String? {
-    val host = serverHost().normalizedServerHost()
+private fun String.toXrayDnsDomainRule(): String? {
+    val host = normalizedServerHost()
     if (host.isBlank() || host.equals("localhost", ignoreCase = true) || isIpAddress(host)) {
         return null
     }

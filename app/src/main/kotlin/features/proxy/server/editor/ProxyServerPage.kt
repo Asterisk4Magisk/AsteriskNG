@@ -22,11 +22,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.platform.LocalContext
 import app.R
+import features.proxy.server.model.Custom
 import features.proxy.server.model.ProxyServer
-import features.proxy.server.model.getUrlOrNull
+import features.proxy.server.model.isCustomProxyServer
 import features.proxy.server.model.isCompositeProxyServer
-import features.proxy.server.model.supportsUrl
+import features.proxy.server.usecase.proxyServerCopyTextOrNull
 import ui.components.BackNavigationIcon
 import ui.components.NavigationIcon
 import kotlinx.coroutines.launch
@@ -65,6 +67,7 @@ fun ProxyServerPage(
     val navigator = LocalNavigator.current
     val tipNotifier = LocalAppServices.current.tipNotifier
     val clipboard = LocalClipboard.current
+    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val validationFailedMessage = stringResource(R.string.proxy_editor_validation_failed)
     val validationMessageOf = rememberProxyServerValidationMessageResolver(validationFailedMessage)
@@ -92,7 +95,11 @@ fun ProxyServerPage(
     val memberOptions = remember(appState.proxyServers, appState.subscriptionGroups, serverId, unknownGroupName, defaultGroupName) {
         val groupNames = appState.subscriptionGroups.displayNameById(defaultGroupName)
         appState.proxyServers
-            .filter { server -> server.id != serverId && !server.server.isCompositeProxyServer() }
+            .filter { server ->
+                server.id != serverId &&
+                    !server.server.isCompositeProxyServer() &&
+                    !server.server.isCustomProxyServer()
+            }
             .map { server ->
                 ProxyServerEditorMemberOption(
                     id = server.id,
@@ -126,22 +133,23 @@ fun ProxyServerPage(
                 actions = {
                     NavigationIcon(
                         onClick = {
-                            if (!psEdit.supportsUrl()) {
-                                scope.launch {
-                                    tipNotifier.show(unsupportedMessage)
-                                }
-                            } else {
+                            scope.launch {
                                 try {
                                     psEdit.check()
-                                    val url = psEdit.getUrlOrNull() ?: throw IllegalArgumentException()
-                                    scope.launch {
-                                        clipboard.setPlainText(url)
+                                    val copyText = psEdit.proxyServerCopyTextOrNull(
+                                        context = context,
+                                        appState = appState,
+                                        serverId = serverId,
+                                        groupId = groupId,
+                                    )
+                                    if (copyText == null) {
+                                        tipNotifier.show(unsupportedMessage)
+                                    } else {
+                                        clipboard.setPlainText(copyText)
                                         tipNotifier.show(copiedMessage)
                                     }
                                 } catch (e: IllegalArgumentException) {
-                                    scope.launch {
-                                        tipNotifier.show(validationMessageOf(e))
-                                    }
+                                    tipNotifier.show(validationMessageOf(e))
                                 }
                             }
                         },
@@ -183,6 +191,13 @@ fun ProxyServerPage(
             outerPadding = padding,
             isWideScreen = isWideScreen,
         )
+        if (psEdit is Custom) {
+            CustomProxyServerEditor(
+                customEdit = psEdit,
+                contentPadding = contentPadding,
+            )
+            return@Scaffold
+        }
         Box {
             LazyColumn(
                 state = lazyListState,

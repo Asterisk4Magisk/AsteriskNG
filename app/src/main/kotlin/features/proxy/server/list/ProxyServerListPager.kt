@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.Clipboard
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import app.AppState
@@ -26,7 +27,7 @@ import app.collectProxyServerLatency
 import app.navigation.Navigator
 import app.navigation.Route
 import data.AndroidAppStateStore
-import features.proxy.server.model.getUrlOrNull
+import features.proxy.server.usecase.proxyServerCopyTextOrNull
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import sh.calvin.reorderable.ReorderableItem
@@ -68,6 +69,8 @@ internal fun ProxyServerListPager(
     resultKey: String,
     onSelectedServerIdChange: (Int) -> Unit,
 ) {
+    val context = LocalContext.current
+
     HorizontalPager(
         state = groupPagerState,
         modifier = Modifier.fillMaxSize(),
@@ -132,6 +135,7 @@ internal fun ProxyServerListPager(
                         ReorderableItem(reorderableLazyListState.reorderableState, key = server.id) { isDragging ->
                             ProxyServerListItem(
                                 server = server,
+                                servers = servers,
                                 selectedServerId = selectedServerId,
                                 pageIsAllGroupsSelected = pageIsAllGroupsSelected,
                                 pageGroupId = pageGroupId,
@@ -142,6 +146,7 @@ internal fun ProxyServerListPager(
                                 updateAppState = updateAppState,
                                 navigator = navigator,
                                 clipboard = clipboard,
+                                context = context,
                                 tipNotifier = tipNotifier,
                                 scope = scope,
                                 messages = messages,
@@ -175,6 +180,7 @@ internal fun ProxyServerListPager(
 @Composable
 private fun ProxyServerListItem(
     server: ProxyServerState,
+    servers: List<ProxyServerState>,
     selectedServerId: Int,
     pageIsAllGroupsSelected: Boolean,
     pageGroupId: Int,
@@ -185,6 +191,7 @@ private fun ProxyServerListItem(
     updateAppState: ((AppState) -> AppState) -> Unit,
     navigator: Navigator,
     clipboard: Clipboard,
+    context: android.content.Context,
     tipNotifier: AndroidToastTipNotifier,
     scope: CoroutineScope,
     messages: ProxyServerListMessages,
@@ -201,7 +208,7 @@ private fun ProxyServerListItem(
 
     ProxyServerListItemCard(
         latency = latency,
-        displayText = itemTextFormatter.displayOf(server),
+        displayText = itemTextFormatter.displayOf(server, servers),
         selected = selectedServerId == server.id,
         modifier = modifier,
         groupName = if (pageIsAllGroupsSelected) {
@@ -223,11 +230,14 @@ private fun ProxyServerListItem(
         },
         onShare = {
             scope.launch {
-                val url = runCatching { server.server.getUrlOrNull() }.getOrNull()
-                if (url == null) {
+                val copyText = server.proxyServerCopyTextOrNull(
+                    context = context,
+                    appState = stateStore.state.value,
+                )
+                if (copyText == null) {
                     tipNotifier.show(messages.unsupported)
                 } else {
-                    clipboard.setPlainText(url)
+                    clipboard.setPlainText(copyText)
                     tipNotifier.show(messages.copied)
                 }
             }

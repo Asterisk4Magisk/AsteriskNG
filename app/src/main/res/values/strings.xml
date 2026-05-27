@@ -294,6 +294,7 @@
     <string name="proxy_server_list_import_file">Import from file</string>
     <string name="proxy_server_list_add_strategy_group">Add Strategy group</string>
     <string name="proxy_server_list_add_chain_proxy">Add Chain proxy</string>
+    <string name="proxy_server_list_add_custom">Add Custom</string>
     <string name="proxy_server_list_add_http">Add HTTP</string>
     <string name="proxy_server_list_add_vmess">Add VMess</string>
     <string name="proxy_server_list_add_vless">Add VLESS</string>
@@ -332,6 +333,7 @@
     <string name="proxy_editor_validation_failed">Configuration validation failed</string>
     <string name="proxy_editor_strategy_group_title">Strategy group</string>
     <string name="proxy_editor_chain_proxy_title">Chain proxy</string>
+    <string name="proxy_editor_custom_title">Custom</string>
     <string name="proxy_editor_properties">Properties</string>
     <string name="proxy_editor_remarks">Remarks</string>
     <string name="proxy_editor_server">Server address</string>
@@ -386,6 +388,12 @@
     <string name="proxy_editor_chain_member">Member {index}</string>
     <string name="proxy_editor_chain_member_unselected">Select a member</string>
     <string name="proxy_editor_chain_add_member">Add member</string>
+    <string name="proxy_editor_custom_json">Xray JSON config</string>
+    <string name="proxy_editor_custom_json_outbounds">Xray JSON outbounds</string>
+    <string name="proxy_editor_custom_format_json">Format JSON</string>
+    <string name="proxy_editor_custom_json_invalid">Invalid JSON config</string>
+    <string name="proxy_editor_custom_override_inbound_dns">Override inbound and DNS settings</string>
+    <string name="proxy_editor_custom_override_inbound_dns_summary">Use inbound and DNS settings provided by AsteriskNG</string>
     <string name="proxy_validation_required_field">{field} is required</string>
     <string name="proxy_validation_server_address_contains_invalid_content">Server address must not include protocol, path, whitespace, or user info</string>
     <string name="proxy_validation_invalid_server_address">Invalid server address</string>

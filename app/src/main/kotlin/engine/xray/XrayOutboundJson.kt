@@ -1,6 +1,7 @@
 package engine.xray
 
 import app.AppState
+import app.effectiveLocalDnsEnabled
 import engine.network.NetworkDefaults
 import features.proxy.server.model.ProxyServerConstants
 import org.json.JSONArray
@@ -16,7 +17,7 @@ internal fun buildXrayOutbounds(
         }
         put(buildFreedomOutbound(XrayTags.DIRECT, appState.xrayDirectOutboundDomainStrategy()))
         put(buildSimpleOutbound(XrayTags.BLOCK, XrayProtocols.BLACKHOLE))
-        if (appState.shouldUseXrayDnsOutbound()) {
+        if (appState.effectiveLocalDnsEnabled) {
             put(buildSimpleOutbound(XrayTags.DNS_OUT, XrayProtocols.DNS))
         }
         if (appState.enableFragment) {
@@ -104,13 +105,13 @@ private fun JSONObject.applyProxyOutboundDomainStrategy(appState: AppState): JSO
     return this
 }
 
-private fun buildSimpleOutbound(tag: String, protocol: String): JSONObject {
+internal fun buildSimpleOutbound(tag: String, protocol: String): JSONObject {
     return JSONObject()
         .put("tag", tag)
         .put("protocol", protocol)
 }
 
-private fun buildFreedomOutbound(tag: String, domainStrategy: String): JSONObject {
+internal fun buildFreedomOutbound(tag: String, domainStrategy: String): JSONObject {
     return JSONObject()
         .put("tag", tag)
         .put("protocol", XrayProtocols.FREEDOM)

@@ -4,6 +4,7 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
 import app.R
 import features.proxy.server.model.ChainProxy
+import features.proxy.server.model.Custom
 import features.proxy.server.model.HTTP
 import features.proxy.server.model.Hysteria2
 import features.proxy.server.model.ProxyServer
@@ -25,6 +26,7 @@ internal fun ProxyServer<*>.editableCopy(): ProxyServer<*> {
     return when (this) {
         is StrategyGroup -> copy()
         is ChainProxy -> copy()
+        is Custom -> copy()
         is HTTP -> copy()
         is Socks -> copy()
         is Shadowsocks -> copy(parms = parms.copy())
@@ -42,6 +44,7 @@ internal fun ProxyServer<*>.editorTitle(): String {
     return when (this) {
         is StrategyGroup -> stringResource(R.string.proxy_editor_strategy_group_title)
         is ChainProxy -> stringResource(R.string.proxy_editor_chain_proxy_title)
+        is Custom -> stringResource(R.string.proxy_editor_custom_title)
         else -> getInfo().protocol
     }
 }

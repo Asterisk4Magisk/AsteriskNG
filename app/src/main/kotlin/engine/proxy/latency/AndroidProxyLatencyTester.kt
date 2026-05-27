@@ -12,6 +12,7 @@ import engine.xray.prepareXrayCoreLogPaths
 import features.resources.runtime.prepareXrayResourceFilePaths
 import engine.network.NetworkDefaults
 import engine.network.NetworkLimits
+import features.proxy.server.model.Custom
 import features.proxy.server.model.HTTP
 import features.proxy.server.model.Hysteria2
 import features.proxy.server.model.ProxyServer
@@ -21,6 +22,7 @@ import features.proxy.server.model.Trojan
 import features.proxy.server.model.VLESS
 import features.proxy.server.model.VMess
 import features.proxy.server.model.Wireguard
+import features.proxy.server.model.customXrayConfigProxyOutboundEndpoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
@@ -128,6 +130,8 @@ private fun ProxyServer<*>.endpoint(): ProxyServerEndpoint? {
         is VLESS -> endpoint(server, port)
         is VMess -> endpoint(server, port)
         is Wireguard -> endpoint(server, port)
+        is Custom -> customXrayConfigProxyOutboundEndpoint(configJson)
+            ?.let { endpoint -> ProxyServerEndpoint(endpoint.host, endpoint.port) }
         else -> null
     }
 }
