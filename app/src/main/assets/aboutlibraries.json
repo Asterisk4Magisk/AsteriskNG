@@ -248,6 +248,19 @@
             ]
         },
         {
+            "uniqueId": "org.yaml:snakeyaml",
+            "artifactVersion": "2.6",
+            "name": "SnakeYAML",
+            "description": "YAML 1.1 parser and emitter for Java",
+            "website": "https://bitbucket.org/snakeyaml/snakeyaml",
+            "scm": {
+                "url": "https://bitbucket.org/snakeyaml/snakeyaml/src"
+            },
+            "licenses": [
+                "Apache-2.0"
+            ]
+        },
+        {
             "uniqueId": "github:XTLS/Xray-core",
             "artifactVersion": "v26.5.9",
             "name": "xray-core",

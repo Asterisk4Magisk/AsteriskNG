@@ -1,15 +1,17 @@
-package features.proxy.server.usecase
+package features.proxy.server.usecase.importer
 
 import features.logs.AndroidAppLogger
 import features.proxy.server.model.Custom
 import features.proxy.server.model.ProxyServer
 import features.proxy.server.model.formatCustomXrayConfigJson
+import features.proxy.server.usecase.EmptyProxyServerImportResult
+import features.proxy.server.usecase.ProxyServerImportResult
+import features.proxy.server.usecase.ProxyServerImportSource
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 
-private const val JsonByteOrderMark = '\uFEFF'
 private const val LogTag = "ProxyServerJsonImport"
 
 internal fun parseProxyServersFromJsonConfig(
@@ -17,15 +19,15 @@ internal fun parseProxyServersFromJsonConfig(
     source: ProxyServerImportSource,
 ): ProxyServerImportResult {
     val root = runCatching {
-        ProxyServer.json.parseToJsonElement(text.trimStart(JsonByteOrderMark))
-    }.getOrNull() ?: return ProxyServerImportResult(urlCount = 0, servers = emptyList())
+        ProxyServer.json.parseToJsonElement(text.trimStart(ImportByteOrderMark))
+    }.getOrNull() ?: return EmptyProxyServerImportResult
     val configs = when (root) {
         is JsonObject -> listOf(root)
         is JsonArray -> root.mapNotNull { element -> element as? JsonObject }
         else -> emptyList()
     }
     if (configs.isEmpty()) {
-        return ProxyServerImportResult(urlCount = 0, servers = emptyList())
+        return EmptyProxyServerImportResult
     }
 
     var failedCount = 0

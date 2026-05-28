@@ -14,6 +14,7 @@ ktor = "3.5.0"
 libsu = "6.0.0"
 miuix = "0.9.1"
 reorderable = "3.1.0"
+snakeyaml = "2.6"
 zxing-android-embedded = "4.3.0"
 
 [libraries]
@@ -35,6 +36,7 @@ miuix-navigation3-ui = { module = "top.yukonga.miuix.kmp:miuix-navigation3-ui", 
 miuix-preference = { module = "top.yukonga.miuix.kmp:miuix-preference", version.ref = "miuix" }
 miuix-ui = { module = "top.yukonga.miuix.kmp:miuix-ui", version.ref = "miuix" }
 reorderable = { module = "sh.calvin.reorderable:reorderable", version.ref = "reorderable" }
+snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snakeyaml" }
 zxing-android-embedded = { module = "com.journeyapps:zxing-android-embedded", version.ref = "zxing-android-embedded" }
 
 [plugins]

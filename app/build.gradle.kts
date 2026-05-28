@@ -116,6 +116,7 @@ dependencies {
     implementation(libs.miuix.navigation3.ui)
     implementation(libs.miuix.preference)
     implementation(libs.reorderable)
+    implementation(libs.snakeyaml)
     implementation(libs.zxing.android.embedded)
     ksp(libs.androidx.room.compiler)
 }
