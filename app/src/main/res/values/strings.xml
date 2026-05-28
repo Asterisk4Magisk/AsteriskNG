@@ -495,6 +495,12 @@
     <string name="subscription_group_name">Group name</string>
     <string name="subscription_url">Subscription URL, leave empty for manual groups</string>
     <string name="subscription_user_agent">User-Agent</string>
+    <string name="subscription_user_agent_v2rayng">v2rayNG</string>
+    <string name="subscription_user_agent_clash_meta">Clash Meta</string>
+    <string name="subscription_user_agent_flclash_x">FlClash X</string>
+    <string name="subscription_user_agent_custom">Custom</string>
+    <string name="subscription_custom_user_agent">Custom User-Agent</string>
+    <string name="subscription_user_agent_custom_summary">Enter a custom value</string>
     <string name="subscription_user_agent_value">User-Agent: {userAgent}</string>
     <string name="subscription_auto_update_interval">Auto update interval (hours)</string>
     <string name="subscription_update_via_proxy">Update via proxy</string>

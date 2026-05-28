@@ -65,7 +65,17 @@ fun SubscriptionGroupPage(
         )
     }
     var url by remember(groupId) { mutableStateOf(initialGroup?.url ?: "") }
-    var userAgent by remember(groupId) { mutableStateOf(initialGroup?.userAgent ?: DefaultSubscriptionUserAgent) }
+    val initialUserAgent = initialGroup?.userAgent ?: DefaultSubscriptionUserAgent
+    var userAgentSelection by remember(groupId) {
+        mutableStateOf(subscriptionUserAgentSelectionFor(initialUserAgent))
+    }
+    var customUserAgent by remember(groupId) {
+        mutableStateOf(
+            initialUserAgent.takeIf {
+                subscriptionUserAgentSelectionFor(it) == SubscriptionUserAgentSelection.Custom
+            }.orEmpty(),
+        )
+    }
     var interval by remember(groupId) { mutableStateOf(initialGroup?.updateInterval?.filter(Char::isDigit).orEmpty()) }
     var updateViaProxy by remember(groupId) { mutableStateOf(initialGroup?.updateViaProxy ?: false) }
 
@@ -90,11 +100,12 @@ fun SubscriptionGroupPage(
                                 }
                                 if (existing != null) {
                                     val savedUrl = url.trim()
+                                    val savedUserAgent = userAgentSelection.resolveUserAgent(customUserAgent)
                                     val savedGroup = SubscriptionGroupState(
                                         id = existing.id,
                                         name = if (existing.builtIn) existing.name else name.trim().ifBlank { unnamedGroupName },
                                         url = savedUrl,
-                                        userAgent = userAgent.trim().ifBlank { DefaultSubscriptionUserAgent },
+                                        userAgent = savedUserAgent,
                                         updateInterval = interval.trim().takeIf { savedUrl.isNotBlank() }.orEmpty(),
                                         updateViaProxy = updateViaProxy && savedUrl.isNotBlank(),
                                         enabled = existing.enabled,
@@ -108,11 +119,12 @@ fun SubscriptionGroupPage(
                                     )
                                 } else {
                                     val savedUrl = url.trim()
+                                    val savedUserAgent = userAgentSelection.resolveUserAgent(customUserAgent)
                                     val savedGroup = SubscriptionGroupState(
                                         id = state.nextSubscriptionGroupId,
                                         name = name.trim().ifBlank { unnamedGroupName },
                                         url = savedUrl,
-                                        userAgent = userAgent.trim().ifBlank { DefaultSubscriptionUserAgent },
+                                        userAgent = savedUserAgent,
                                         updateInterval = interval.trim().takeIf { savedUrl.isNotBlank() }.orEmpty(),
                                         updateViaProxy = updateViaProxy && savedUrl.isNotBlank(),
                                         enabled = true,
@@ -152,13 +164,20 @@ fun SubscriptionGroupPage(
                     SubscriptionGroupForm(
                         name = name,
                         url = url,
-                        userAgent = userAgent,
+                        userAgentSelection = userAgentSelection,
+                        customUserAgent = customUserAgent,
                         interval = interval,
                         updateViaProxy = updateViaProxy,
                         builtIn = builtIn,
                         onNameChange = { name = it },
                         onUrlChange = { url = it },
-                        onUserAgentChange = { userAgent = it },
+                        onUserAgentSelectionChange = { selection ->
+                            if (selection == SubscriptionUserAgentSelection.Custom && customUserAgent.isBlank()) {
+                                customUserAgent = userAgentSelection.resolveUserAgent(customUserAgent)
+                            }
+                            userAgentSelection = selection
+                        },
+                        onCustomUserAgentChange = { customUserAgent = it },
                         onIntervalChange = { interval = it },
                         onUpdateViaProxyChange = { updateViaProxy = it },
                     )

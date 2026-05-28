@@ -495,6 +495,12 @@
     <string name="subscription_group_name">分组名称</string>
     <string name="subscription_url">订阅地址，手动分组可留空</string>
     <string name="subscription_user_agent">User-Agent</string>
+    <string name="subscription_user_agent_v2rayng">v2rayNG</string>
+    <string name="subscription_user_agent_clash_meta">Clash Meta</string>
+    <string name="subscription_user_agent_flclash_x">FlClash X</string>
+    <string name="subscription_user_agent_custom">自定义</string>
+    <string name="subscription_custom_user_agent">自定义 User-Agent</string>
+    <string name="subscription_user_agent_custom_summary">输入自定义值</string>
     <string name="subscription_user_agent_value">User-Agent：{userAgent}</string>
     <string name="subscription_auto_update_interval">自动更新间隔（小时）</string>
     <string name="subscription_update_via_proxy">使用代理更新</string>
