@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.state.ToggleableState
@@ -233,37 +235,45 @@ private fun InterfaceSelectionBottomSheet(
     onDismissRequest: () -> Unit,
     onSave: (List<String>) -> Unit,
 ) {
+    val latestInterfaces by rememberUpdatedState(interfaces)
+    val latestSelectedInterfaces by rememberUpdatedState(selectedInterfaces)
+    val latestLoading by rememberUpdatedState(loading)
+    val latestErrorMessage by rememberUpdatedState(errorMessage)
+    val latestOnSelectedInterfacesChange by rememberUpdatedState(onSelectedInterfacesChange)
+    val latestOnDismissRequest by rememberUpdatedState(onDismissRequest)
+    val latestOnSave by rememberUpdatedState(onSave)
+
     OverlayBottomSheet(
         show = show,
         title = title,
         startAction = {
             TextButton(
                 text = stringResource(R.string.common_cancel),
-                onClick = onDismissRequest,
+                onClick = latestOnDismissRequest,
             )
         },
         endAction = {
             TextButton(
                 text = stringResource(R.string.common_save),
-                onClick = { onSave(selectedInterfaces) },
+                onClick = { latestOnSave(latestSelectedInterfaces) },
             )
         },
-        onDismissRequest = onDismissRequest,
+        onDismissRequest = latestOnDismissRequest,
         defaultWindowInsetsPadding = false,
     ) {
         SettingsSheetContent {
             SheetStatusText(description)
-            if (loading && loadingMessage != null) {
+            if (latestLoading && loadingMessage != null) {
                 SheetStatusText(loadingMessage)
             }
-            errorMessage?.takeIf(String::isNotBlank)?.let { SheetStatusText(it) }
-            if (!loading && errorMessage == null && interfaces.isEmpty() && emptyMessage != null) {
+            latestErrorMessage?.takeIf(String::isNotBlank)?.let { SheetStatusText(it) }
+            if (!latestLoading && latestErrorMessage == null && latestInterfaces.isEmpty() && emptyMessage != null) {
                 SheetStatusText(emptyMessage)
             }
             InterfaceOptionGrid(
-                interfaces = interfaces,
-                selectedInterfaces = selectedInterfaces,
-                onSelectedInterfacesChange = onSelectedInterfacesChange,
+                interfaces = latestInterfaces,
+                selectedInterfaces = latestSelectedInterfaces,
+                onSelectedInterfacesChange = latestOnSelectedInterfacesChange,
             )
         }
     }
