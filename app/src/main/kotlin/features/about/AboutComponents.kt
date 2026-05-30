@@ -32,7 +32,7 @@ import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 private const val ProjectSourceUri = "https://github.com/Asterisk4Magisk/AsteriskNG"
-private const val TelegramChannelUri = "https://t.me/AsteriskFactory"
+private const val TelegramChannelUri = "https://t.me/Asterisk4Magisk"
 private const val AboutIconForegroundScale = 1.25f
 
 @Composable

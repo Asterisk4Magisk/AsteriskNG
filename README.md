@@ -4,7 +4,7 @@ An Xray client for Android, powered by [Xray-core](https://github.com/XTLS/Xray-
 
 ### Telegram Channel
 
-[AsteriskFactory](https://t.me/AsteriskFactory)
+[Asterisk4Magisk](https://t.me/Asterisk4Magisk)
 
 ### Features
 
