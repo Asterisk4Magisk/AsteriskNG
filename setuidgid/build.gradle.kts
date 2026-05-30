@@ -20,6 +20,10 @@ android {
             variant.sources.jniLibs?.addStaticSourceDirectory("build/generated/jniLibs")
         }
     }
+
+    lint {
+        disable += "ChromeOsAbiSupport"
+    }
 }
 
 val buildSetuidgid by tasks.registering(BuildSetuidgidTask::class) {

@@ -5,6 +5,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,10 +43,10 @@ import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Delete
 import top.yukonga.miuix.kmp.icon.extended.Edit
-import top.yukonga.miuix.kmp.overlay.OverlayDialog
-import top.yukonga.miuix.kmp.preference.OverlaySpinnerPreference
 import top.yukonga.miuix.kmp.preference.SwitchPreference
+import top.yukonga.miuix.kmp.preference.WindowSpinnerPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.window.WindowDialog
 import features.proxy.server.display.displayName
 import ui.text.formatTemplate
 
@@ -64,6 +66,7 @@ internal fun SubscriptionGroupForm(
     onIntervalChange: (String) -> Unit,
     onUpdateViaProxyChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(horizontal = 24.dp, vertical = 12.dp),
 ) {
     var showCustomUserAgentDialog by remember { mutableStateOf(false) }
     val customUserAgentDraftState = rememberTextFieldState(initialText = customUserAgent)
@@ -84,7 +87,7 @@ internal fun SubscriptionGroupForm(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 12.dp),
+            .padding(contentPadding),
     ) {
         TextField(
             value = name,
@@ -106,7 +109,7 @@ internal fun SubscriptionGroupForm(
             exit = shrinkVertically(),
         ) {
             Column {
-                OverlaySpinnerPreference(
+                WindowSpinnerPreference(
                     title = stringResource(R.string.subscription_user_agent),
                     summary = resolvedUserAgent,
                     items = userAgentItems,
@@ -154,22 +157,78 @@ internal fun SubscriptionGroupForm(
 }
 
 @Composable
-private fun CustomUserAgentDialog(
+internal fun SubscriptionGroupEditorDialog(
     show: Boolean,
-    state: TextFieldState,
+    group: SubscriptionGroupState?,
+    nextGroupId: Int,
     onDismissRequest: () -> Unit,
-    onSave: () -> Unit,
+    onDismissFinished: () -> Unit,
+    onSave: (SubscriptionGroupState, isNew: Boolean) -> Unit,
 ) {
-    OverlayDialog(
+    val isEditing = group != null
+    val builtIn = group?.builtIn == true
+    val newGroupName = stringResource(R.string.subscription_new_group)
+    val defaultGroupName = stringResource(R.string.subscription_default_group)
+    val unnamedGroupName = stringResource(R.string.subscription_unnamed_group)
+
+    var name by remember(show, group?.id, newGroupName, defaultGroupName, builtIn) {
+        mutableStateOf(
+            when {
+                builtIn -> group.displayName(defaultGroupName)
+                else -> group?.name ?: newGroupName
+            },
+        )
+    }
+    var url by remember(show, group?.id) { mutableStateOf(group?.url ?: "") }
+    val initialUserAgent = group?.userAgent ?: DefaultSubscriptionUserAgent
+    var userAgentSelection by remember(show, group?.id, initialUserAgent) {
+        mutableStateOf(subscriptionUserAgentSelectionFor(initialUserAgent))
+    }
+    var customUserAgent by remember(show, group?.id, initialUserAgent) {
+        mutableStateOf(
+            initialUserAgent.takeIf {
+                subscriptionUserAgentSelectionFor(it) == SubscriptionUserAgentSelection.Custom
+            }.orEmpty(),
+        )
+    }
+    var interval by remember(show, group?.id) {
+        mutableStateOf(group?.updateInterval?.filter(Char::isDigit).orEmpty())
+    }
+    var updateViaProxy by remember(show, group?.id) {
+        mutableStateOf(group?.updateViaProxy ?: false)
+    }
+
+    WindowDialog(
         show = show,
-        title = stringResource(R.string.subscription_custom_user_agent),
+        title = if (isEditing) stringResource(R.string.subscription_edit) else stringResource(R.string.subscription_add),
         onDismissRequest = onDismissRequest,
-        content = {
-            TextField(
-                state = state,
-                label = stringResource(R.string.subscription_custom_user_agent),
-                lineLimits = TextFieldLineLimits.SingleLine,
-                modifier = Modifier.padding(bottom = 16.dp),
+        onDismissFinished = onDismissFinished,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState()),
+        ) {
+            SubscriptionGroupForm(
+                name = name,
+                url = url,
+                userAgentSelection = userAgentSelection,
+                customUserAgent = customUserAgent,
+                interval = interval,
+                updateViaProxy = updateViaProxy,
+                builtIn = builtIn,
+                onNameChange = { name = it },
+                onUrlChange = { url = it },
+                onUserAgentSelectionChange = { selection ->
+                    if (selection == SubscriptionUserAgentSelection.Custom && customUserAgent.isBlank()) {
+                        customUserAgent = userAgentSelection.resolveUserAgent(customUserAgent)
+                    }
+                    userAgentSelection = selection
+                },
+                onCustomUserAgentChange = { customUserAgent = it },
+                onIntervalChange = { interval = it },
+                onUpdateViaProxyChange = { updateViaProxy = it },
+                contentPadding = PaddingValues(bottom = 16.dp),
             )
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -183,9 +242,77 @@ private fun CustomUserAgentDialog(
                 Spacer(Modifier.width(20.dp))
                 TextButton(
                     text = stringResource(R.string.common_save),
-                    onClick = onSave,
+                    onClick = {
+                        val savedUrl = url.trim()
+                        val savedUserAgent = userAgentSelection.resolveUserAgent(customUserAgent)
+                        val savedGroup = if (group != null) {
+                            group.copy(
+                                name = if (group.builtIn) group.name else name.trim().ifBlank { unnamedGroupName },
+                                url = savedUrl,
+                                userAgent = savedUserAgent,
+                                updateInterval = interval.trim().takeIf { savedUrl.isNotBlank() }.orEmpty(),
+                                updateViaProxy = updateViaProxy && savedUrl.isNotBlank(),
+                            )
+                        } else {
+                            SubscriptionGroupState(
+                                id = nextGroupId,
+                                name = name.trim().ifBlank { unnamedGroupName },
+                                url = savedUrl,
+                                userAgent = savedUserAgent,
+                                updateInterval = interval.trim().takeIf { savedUrl.isNotBlank() }.orEmpty(),
+                                updateViaProxy = updateViaProxy && savedUrl.isNotBlank(),
+                                enabled = true,
+                            )
+                        }
+                        onSave(savedGroup, group == null)
+                        onDismissRequest()
+                    },
                     modifier = Modifier.weight(1f),
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CustomUserAgentDialog(
+    show: Boolean,
+    state: TextFieldState,
+    onDismissRequest: () -> Unit,
+    onSave: () -> Unit,
+) {
+    WindowDialog(
+        show = show,
+        title = stringResource(R.string.subscription_custom_user_agent),
+        onDismissRequest = onDismissRequest,
+        content = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                TextField(
+                    state = state,
+                    label = stringResource(R.string.subscription_custom_user_agent),
+                    lineLimits = TextFieldLineLimits.SingleLine,
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    TextButton(
+                        text = stringResource(R.string.common_cancel),
+                        onClick = onDismissRequest,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Spacer(Modifier.width(20.dp))
+                    TextButton(
+                        text = stringResource(R.string.common_save),
+                        onClick = onSave,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
             }
         },
     )

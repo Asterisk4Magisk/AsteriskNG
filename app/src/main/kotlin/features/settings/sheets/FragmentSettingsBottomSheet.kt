@@ -21,10 +21,10 @@ import app.R
 import androidx.compose.ui.res.stringResource
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.overlay.OverlayBottomSheet
-import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import top.yukonga.miuix.kmp.preference.SwitchPreference
+import top.yukonga.miuix.kmp.preference.WindowDropdownPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.window.WindowBottomSheet
 import ui.text.formatTemplate
 
 @Composable
@@ -67,8 +67,18 @@ internal fun FragmentSettingsBottomSheet(
     val lengthError = enabled && !isFragmentRangeValid(length, min = 1)
     val intervalError = enabled && !isFragmentRangeValid(interval, min = 0)
     val canSave = !enabled || (!lengthError && !intervalError)
+    val saveSettings = {
+        if (canSave) {
+            onSave(
+                enabled,
+                normalizeFragmentPackets(packets),
+                normalizeFragmentRange(length, DefaultFragmentLength, min = 1),
+                normalizeFragmentRange(interval, DefaultFragmentInterval, min = 0),
+            )
+        }
+    }
 
-    OverlayBottomSheet(
+    WindowBottomSheet(
         show = show,
         title = stringResource(R.string.settings_fragment),
         startAction = {
@@ -80,20 +90,10 @@ internal fun FragmentSettingsBottomSheet(
         endAction = {
             TextButton(
                 text = stringResource(R.string.common_save),
-                onClick = {
-                    if (canSave) {
-                        onSave(
-                            enabled,
-                            normalizeFragmentPackets(packets),
-                            normalizeFragmentRange(length, DefaultFragmentLength, min = 1),
-                            normalizeFragmentRange(interval, DefaultFragmentInterval, min = 0),
-                        )
-                    }
-                },
+                onClick = saveSettings,
             )
         },
         onDismissRequest = onDismissRequest,
-        defaultWindowInsetsPadding = false,
     ) {
         key(show) {
             SettingsSheetContent {
@@ -109,7 +109,7 @@ internal fun FragmentSettingsBottomSheet(
                     exit = shrinkVertically() + fadeOut(),
                 ) {
                     Column(modifier = Modifier.fillMaxWidth()) {
-                        OverlayDropdownPreference(
+                        WindowDropdownPreference(
                             title = stringResource(R.string.settings_fragment_packets),
                             items = FragmentPacketsValues,
                             selectedIndex = fragmentPacketsIndex(packets),

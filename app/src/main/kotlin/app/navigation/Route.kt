@@ -37,9 +37,6 @@ sealed interface Route : NavKey {
     data object SubscriptionGroupList : Route
 
     @Serializable
-    data class SubscriptionGroup(val groupId: Int? = null) : Route
-
-    @Serializable
     data class ProxyServerEditor(
         val ps: ProxyServer<*>,
         val serverId: Int? = null,

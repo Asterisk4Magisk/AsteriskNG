@@ -497,9 +497,7 @@
     <string name="subscription_edit">编辑订阅</string>
     <string name="subscription_add">添加订阅</string>
     <string name="subscription_default_group">默认</string>
-    <string name="subscription_group">订阅分组</string>
     <string name="subscription_unnamed_group">未命名分组</string>
-    <string name="subscription_section">订阅</string>
     <string name="subscription_group_name">分组名称</string>
     <string name="subscription_url">订阅地址，手动分组可留空</string>
     <string name="subscription_user_agent">User-Agent</string>

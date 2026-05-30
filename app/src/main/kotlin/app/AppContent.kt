@@ -71,7 +71,6 @@ import features.proxy.server.editor.ProxyServerPage
 import features.routing.RoutingPage
 import features.settings.SettingsPage
 import features.subscription.SubscriptionGroupListPage
-import features.subscription.SubscriptionGroupPage
 import top.yukonga.miuix.kmp.basic.NavigationBar
 import top.yukonga.miuix.kmp.basic.NavigationBarDisplayMode
 import top.yukonga.miuix.kmp.basic.NavigationBarItem
@@ -187,11 +186,6 @@ fun AppContent(
                 entry<Route.SubscriptionGroupList> {
                     key(languageMode) {
                         SubscriptionGroupListPage(padding = padding)
-                    }
-                }
-                entry<Route.SubscriptionGroup> {
-                    key(languageMode) {
-                        SubscriptionGroupPage(padding = padding, groupId = it.groupId)
                     }
                 }
                 entry<Route.ProxyServerEditor> {

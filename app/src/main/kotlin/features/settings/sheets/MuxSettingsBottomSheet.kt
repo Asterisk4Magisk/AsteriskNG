@@ -21,10 +21,10 @@ import app.R
 import androidx.compose.ui.res.stringResource
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.overlay.OverlayBottomSheet
-import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import top.yukonga.miuix.kmp.preference.SwitchPreference
+import top.yukonga.miuix.kmp.preference.WindowDropdownPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.window.WindowBottomSheet
 import ui.text.formatTemplate
 
 @Composable
@@ -71,8 +71,18 @@ internal fun MuxSettingsBottomSheet(
     val concurrencyError = enabled && !isMuxConcurrencyValid(concurrency)
     val xudpConcurrencyError = enabled && !isMuxXudpConcurrencyValid(xudpConcurrency)
     val canSave = !enabled || (!concurrencyError && !xudpConcurrencyError)
+    val saveSettings = {
+        if (canSave) {
+            onSave(
+                enabled,
+                normalizeMuxInteger(concurrency, fallback = DefaultMuxConcurrency),
+                normalizeMuxInteger(xudpConcurrency, fallback = DefaultMuxXudpConcurrency),
+                sanitizeMuxUdp443Index(xudpProxyUdp443),
+            )
+        }
+    }
 
-    OverlayBottomSheet(
+    WindowBottomSheet(
         show = show,
         title = stringResource(R.string.settings_mux),
         startAction = {
@@ -84,20 +94,10 @@ internal fun MuxSettingsBottomSheet(
         endAction = {
             TextButton(
                 text = stringResource(R.string.common_save),
-                onClick = {
-                    if (canSave) {
-                        onSave(
-                            enabled,
-                            normalizeMuxInteger(concurrency, fallback = DefaultMuxConcurrency),
-                            normalizeMuxInteger(xudpConcurrency, fallback = DefaultMuxXudpConcurrency),
-                            sanitizeMuxUdp443Index(xudpProxyUdp443),
-                        )
-                    }
-                },
+                onClick = saveSettings,
             )
         },
         onDismissRequest = onDismissRequest,
-        defaultWindowInsetsPadding = false,
     ) {
         key(show) {
             SettingsSheetContent {
@@ -136,7 +136,7 @@ internal fun MuxSettingsBottomSheet(
                                 null
                             },
                         )
-                        OverlayDropdownPreference(
+                        WindowDropdownPreference(
                             title = stringResource(R.string.settings_mux_udp443),
                             items = muxUdp443Options(),
                             selectedIndex = sanitizeMuxUdp443Index(xudpProxyUdp443),

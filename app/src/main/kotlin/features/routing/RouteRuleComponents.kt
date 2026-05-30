@@ -41,9 +41,10 @@ import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Delete
 import top.yukonga.miuix.kmp.icon.extended.Edit
-import top.yukonga.miuix.kmp.overlay.OverlayBottomSheet
 import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.preference.WindowDropdownPreference
+import top.yukonga.miuix.kmp.window.WindowBottomSheet
 import ui.components.StringListEditor
 import ui.components.StringListStatusText
 import ui.components.draggedCardShadow
@@ -227,7 +228,7 @@ internal fun RouteRuleEditorBottomSheet(
         }
     }
 
-    OverlayBottomSheet(
+    WindowBottomSheet(
         show = show,
         title = if (initialRule == null) {
             stringResource(R.string.routing_add_rule)
@@ -247,7 +248,6 @@ internal fun RouteRuleEditorBottomSheet(
             )
         },
         onDismissRequest = onDismissRequest,
-        defaultWindowInsetsPadding = false,
     ) {
         LazyColumn(
             modifier = Modifier
@@ -436,7 +436,7 @@ private fun RouteRuleEditorContent(
                 modifier = Modifier.padding(bottom = 8.dp),
             )
         }
-        OverlayDropdownPreference(
+        WindowDropdownPreference(
             title = stringResource(R.string.routing_outbound_tag_label),
             items = effectiveOutboundOptions.map { option -> option.label },
             selectedIndex = selectedOutboundIndex,

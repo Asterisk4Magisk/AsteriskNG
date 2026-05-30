@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.dp
 import app.R
 import androidx.compose.ui.res.stringResource
 import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.overlay.OverlayBottomSheet
+import top.yukonga.miuix.kmp.window.WindowBottomSheet
 import top.yukonga.miuix.kmp.preference.SwitchPreference
 
 
@@ -34,7 +34,7 @@ internal fun ProxySettingsBottomSheet(
     onDismissRequest: () -> Unit,
     onSave: (String, Boolean, String, Boolean, String) -> Unit,
 ) {
-    OverlayBottomSheet(
+    WindowBottomSheet(
         show = show,
         title = stringResource(R.string.settings_inbound),
         startAction = {
@@ -58,7 +58,6 @@ internal fun ProxySettingsBottomSheet(
             )
         },
         onDismissRequest = onDismissRequest,
-        defaultWindowInsetsPadding = false,
     ) {
         key(show) {
             SettingsSheetContent {

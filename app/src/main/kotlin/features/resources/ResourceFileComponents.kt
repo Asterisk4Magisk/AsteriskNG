@@ -4,6 +4,7 @@ import app.CustomResourceFileState
 import app.CustomResourceFileStatus
 import app.ResourceFileStatus
 import app.ResourceFileUpdateSource
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -20,6 +21,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,6 +52,7 @@ import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.preference.OverlaySpinnerPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.window.WindowDialog
 import ui.text.formatTemplate
 import java.text.DateFormat
 import java.util.Date
@@ -378,38 +381,44 @@ private fun CustomResourceFileDialog(
     onDismissRequest: () -> Unit,
     onSave: () -> Unit,
 ) {
-    OverlayDialog(
+    WindowDialog(
         show = show,
         title = stringResource(R.string.settings_resource_files_custom_file),
         onDismissRequest = onDismissRequest,
         content = {
-            TextField(
-                state = nameState,
-                label = stringResource(R.string.settings_resource_files_custom_name),
-                lineLimits = TextFieldLineLimits.SingleLine,
-                modifier = Modifier.padding(bottom = 12.dp),
-            )
-            TextField(
-                state = urlState,
-                label = stringResource(R.string.settings_resource_files_custom_url),
-                lineLimits = TextFieldLineLimits.SingleLine,
-                modifier = Modifier.padding(bottom = 16.dp),
-            )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
             ) {
-                TextButton(
-                    text = stringResource(R.string.common_cancel),
-                    onClick = onDismissRequest,
-                    modifier = Modifier.weight(1f),
+                TextField(
+                    state = nameState,
+                    label = stringResource(R.string.settings_resource_files_custom_name),
+                    lineLimits = TextFieldLineLimits.SingleLine,
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
                 )
-                Spacer(Modifier.width(20.dp))
-                TextButton(
-                    text = stringResource(R.string.common_save),
-                    onClick = onSave,
-                    modifier = Modifier.weight(1f),
+                TextField(
+                    state = urlState,
+                    label = stringResource(R.string.settings_resource_files_custom_url),
+                    lineLimits = TextFieldLineLimits.SingleLine,
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
                 )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    TextButton(
+                        text = stringResource(R.string.common_cancel),
+                        onClick = onDismissRequest,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Spacer(Modifier.width(20.dp))
+                    TextButton(
+                        text = stringResource(R.string.common_save),
+                        onClick = onSave,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
             }
         },
     )

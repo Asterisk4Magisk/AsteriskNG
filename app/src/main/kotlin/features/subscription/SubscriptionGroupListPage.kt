@@ -6,6 +6,7 @@ import app.LocalAppStateStore
 import app.LocalIsWideScreen
 import app.LocalNavigator
 import app.LocalUpdateAppState
+import app.SubscriptionGroupState
 import app.collectAppState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -14,12 +15,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import app.R
 import ui.components.BackNavigationIcon
 import ui.components.NavigationIcon
-import app.navigation.Route
 import androidx.compose.ui.res.stringResource
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
@@ -34,6 +36,7 @@ import ui.layout.pageContentPaddingWithCutout
 import ui.layout.pageListPadding
 import ui.layout.pageScrollModifiers
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import top.yukonga.miuix.kmp.interfaces.ExperimentalScrollBarApi
 
 @Composable
@@ -46,6 +49,35 @@ fun SubscriptionGroupListPage(
     val updateAppState = LocalUpdateAppState.current
     val topAppBarScrollBehavior = MiuixScrollBehavior()
     val groups = appState.subscriptionGroups
+    var editingGroupId by remember { mutableStateOf<Int?>(null) }
+    var showGroupEditor by remember { mutableStateOf(false) }
+    val editingGroup = editingGroupId?.let { id -> groups.firstOrNull { it.id == id } }
+
+    fun closeGroupEditor() {
+        showGroupEditor = false
+    }
+
+    fun clearGroupEditor() {
+        editingGroupId = null
+    }
+
+    fun saveGroup(group: SubscriptionGroupState, isNew: Boolean) {
+        updateAppState { state ->
+            if (isNew) {
+                val savedGroup = group.copy(id = state.nextSubscriptionGroupId)
+                state.copy(
+                    subscriptionGroups = state.subscriptionGroups + savedGroup,
+                    nextSubscriptionGroupId = state.nextSubscriptionGroupId + 1,
+                )
+            } else {
+                state.copy(
+                    subscriptionGroups = state.subscriptionGroups.map {
+                        if (it.id == group.id) group else it
+                    },
+                )
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -61,7 +93,10 @@ fun SubscriptionGroupListPage(
                 },
                 actions = {
                     NavigationIcon(
-                        onClick = { navigator.push(Route.SubscriptionGroup()) },
+                        onClick = {
+                            editingGroupId = null
+                            showGroupEditor = true
+                        },
                         imageVector = MiuixIcons.Add,
                     )
                 },
@@ -102,7 +137,10 @@ fun SubscriptionGroupListPage(
                                 )
                             }
                         },
-                        onEdit = { navigator.push(Route.SubscriptionGroup(group.id)) },
+                        onEdit = {
+                            editingGroupId = group.id
+                            showGroupEditor = true
+                        },
                         onDelete = {
                             if (group.builtIn) return@SubscriptionGroupCard
                             updateAppState { state ->
@@ -127,5 +165,13 @@ fun SubscriptionGroupListPage(
                 trackPadding = contentPadding,
             )
         }
+        SubscriptionGroupEditorDialog(
+            show = showGroupEditor,
+            group = editingGroup,
+            nextGroupId = appState.nextSubscriptionGroupId,
+            onDismissRequest = ::closeGroupEditor,
+            onDismissFinished = ::clearGroupEditor,
+            onSave = ::saveGroup,
+        )
     }
 }

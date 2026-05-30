@@ -21,7 +21,7 @@ import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Checkbox
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.overlay.OverlayBottomSheet
+import top.yukonga.miuix.kmp.window.WindowBottomSheet
 import top.yukonga.miuix.kmp.preference.SwitchPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import ui.text.formatTemplate
@@ -140,7 +140,7 @@ internal fun ExternalInterfacesBottomSheet(
     onDismissRequest: () -> Unit,
     onSave: (List<String>) -> Unit,
 ) {
-    OverlayBottomSheet(
+    WindowBottomSheet(
         show = show,
         title = stringResource(R.string.settings_external_interfaces),
         startAction = {
@@ -156,7 +156,6 @@ internal fun ExternalInterfacesBottomSheet(
             )
         },
         onDismissRequest = onDismissRequest,
-        defaultWindowInsetsPadding = false,
     ) {
         SettingsSheetContent {
             SheetStatusText(stringResource(R.string.settings_external_interfaces_summary))
@@ -243,7 +242,7 @@ private fun InterfaceSelectionBottomSheet(
     val latestOnDismissRequest by rememberUpdatedState(onDismissRequest)
     val latestOnSave by rememberUpdatedState(onSave)
 
-    OverlayBottomSheet(
+    WindowBottomSheet(
         show = show,
         title = title,
         startAction = {
@@ -259,7 +258,6 @@ private fun InterfaceSelectionBottomSheet(
             )
         },
         onDismissRequest = latestOnDismissRequest,
-        defaultWindowInsetsPadding = false,
     ) {
         SettingsSheetContent {
             SheetStatusText(description)

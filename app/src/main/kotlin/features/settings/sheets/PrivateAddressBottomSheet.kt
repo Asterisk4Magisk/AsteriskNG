@@ -11,7 +11,7 @@ import ui.components.StringListEditor
 import engine.network.isCidrAddress
 import androidx.compose.ui.res.stringResource
 import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.overlay.OverlayBottomSheet
+import top.yukonga.miuix.kmp.window.WindowBottomSheet
 import ui.text.formatTemplate
 
 @Composable
@@ -41,7 +41,7 @@ internal fun PrivateAddressBottomSheet(
     val sanitizedCidrs = selectedCidrs.sanitizePrivateAddressCidrs()
     val invalidMessage = stringResource(R.string.settings_private_addresses_invalid)
 
-    OverlayBottomSheet(
+    WindowBottomSheet(
         show = show,
         title = stringResource(R.string.settings_private_addresses),
         startAction = {
@@ -57,7 +57,6 @@ internal fun PrivateAddressBottomSheet(
             )
         },
         onDismissRequest = onDismissRequest,
-        defaultWindowInsetsPadding = false,
     ) {
         LazyColumn(
             modifier = Modifier

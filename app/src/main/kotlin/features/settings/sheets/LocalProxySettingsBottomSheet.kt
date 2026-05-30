@@ -5,7 +5,7 @@ import androidx.compose.runtime.key
 import androidx.compose.ui.res.stringResource
 import app.R
 import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.overlay.OverlayBottomSheet
+import top.yukonga.miuix.kmp.window.WindowBottomSheet
 import top.yukonga.miuix.kmp.preference.SwitchPreference
 
 
@@ -27,7 +27,7 @@ internal fun LocalProxySettingsBottomSheet(
 ) {
     val portError = if (isPort(port)) null else stringResource(R.string.settings_local_proxy_port_invalid)
 
-    OverlayBottomSheet(
+    WindowBottomSheet(
         show = show,
         title = stringResource(R.string.settings_local_proxy),
         startAction = {
@@ -53,7 +53,6 @@ internal fun LocalProxySettingsBottomSheet(
             )
         },
         onDismissRequest = onDismissRequest,
-        defaultWindowInsetsPadding = false,
     ) {
         key(show) {
             SettingsSheetContent {

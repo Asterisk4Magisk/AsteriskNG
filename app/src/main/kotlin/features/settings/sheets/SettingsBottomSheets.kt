@@ -8,7 +8,7 @@ import engine.network.isCidrAddress
 import engine.network.isIpAddress
 import engine.vpn.VpnDefaults
 import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.overlay.OverlayBottomSheet
+import top.yukonga.miuix.kmp.window.WindowBottomSheet
 import ui.text.formatTemplate
 
 
@@ -55,7 +55,7 @@ internal fun VpnSettingsBottomSheet(
     }
     val canSave = listOf(mtuError, defaultDnsError, ipv4CidrError, ipv6CidrError).all { it == null }
 
-    OverlayBottomSheet(
+    WindowBottomSheet(
         show = show,
         title = stringResource(R.string.settings_vpn),
         startAction = {
@@ -80,7 +80,6 @@ internal fun VpnSettingsBottomSheet(
             )
         },
         onDismissRequest = onDismissRequest,
-        defaultWindowInsetsPadding = false,
     ) {
         key(show) {
             SettingsSheetContent {

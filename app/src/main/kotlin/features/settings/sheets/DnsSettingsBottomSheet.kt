@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
 import app.R
 import engine.network.isIpAddress
 import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.overlay.OverlayBottomSheet
+import top.yukonga.miuix.kmp.window.WindowBottomSheet
 import top.yukonga.miuix.kmp.preference.SwitchPreference
 import ui.components.StringListEditor
 import ui.components.sanitizeStringListItems
@@ -65,7 +65,7 @@ internal fun DnsSettingsBottomSheet(
     val dnsDomainInvalidMessage = stringResource(R.string.settings_dns_domain_invalid)
     val effectiveLocalDnsEnabled = forceEnableLocalDns || enableVpnLocalDns
     val effectiveFakeDnsEnabled = effectiveLocalDnsEnabled && enableFakeDns
-    OverlayBottomSheet(
+    WindowBottomSheet(
         show = show,
         title = stringResource(R.string.settings_dns),
         startAction = {
@@ -92,7 +92,6 @@ internal fun DnsSettingsBottomSheet(
             )
         },
         onDismissRequest = onDismissRequest,
-        defaultWindowInsetsPadding = false,
     ) {
         SettingsSheetContent {
             SwitchPreference(
