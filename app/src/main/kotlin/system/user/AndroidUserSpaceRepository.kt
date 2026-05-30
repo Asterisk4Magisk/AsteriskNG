@@ -1,3 +1,6 @@
+// Copyright 2026, AsteriskNG contributors
+// SPDX-License-Identifier: GPL-3.0
+
 package system.user
 
 import android.content.Context

@@ -1,3 +1,6 @@
+// Copyright 2026, AsteriskNG contributors
+// SPDX-License-Identifier: GPL-3.0
+
 package features.proxy.server.model
 
 import engine.network.NetworkLimits
@@ -14,7 +17,7 @@ private val UuidRegex = Regex(
 )
 private val WireguardKeyRegex = Regex("[A-Za-z0-9+/]{42}[AEIMQUYcgkosw048]=")
 private val HysteriaBandwidthRegex =
-    Regex("(?:0|[1-9][0-9]*(?:\\.[0-9]+)?(?:\\s*(?:[kKmMgGtT](?:[bB](?:[pP][sS])?)?|[bB](?:[pP][sS])?))?)")
+    Regex("0|[1-9][0-9]*(?:\\.[0-9]+)?(?:\\s*(?:[kKmMgGtT](?:[bB](?:[pP][sS])?)?|[bB](?:[pP][sS])?))?")
 private const val XrayUserIdMaxBytes = 30
 private const val KcpMtuMin = 576
 private const val KcpMtuMax = 1460
