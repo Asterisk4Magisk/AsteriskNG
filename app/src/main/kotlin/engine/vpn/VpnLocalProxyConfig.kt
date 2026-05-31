@@ -11,8 +11,10 @@ import engine.xray.toJsonStringArray
 import engine.xray.xraySniffingDestOverrides
 import engine.network.NetworkDefaults
 import engine.network.toPortOrNull
-import org.json.JSONArray
-import org.json.JSONObject
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import java.net.InetAddress
 import java.net.ServerSocket
 import java.util.concurrent.atomic.AtomicReference
@@ -86,56 +88,62 @@ internal fun AppState.toVpnAppendHttpProxyOptions(localProxyOptions: VpnLocalPro
 internal fun buildVpnLocalSocksInbound(
     appState: AppState,
     options: VpnLocalProxyOptions,
-): JSONObject {
-    return JSONObject()
-        .put("tag", XrayTags.LOCAL_SOCKS_INBOUND)
-        .put("listen", options.listenAddress)
-        .put("port", options.port)
-        .put("protocol", XrayProtocols.SOCKS)
-        .put("settings", options.toSocksInboundSettings())
-        .put(
+): JsonObject {
+    return buildJsonObject {
+        put("tag", XrayTags.LOCAL_SOCKS_INBOUND)
+        put("listen", options.listenAddress)
+        put("port", options.port)
+        put("protocol", XrayProtocols.SOCKS)
+        put("settings", options.toSocksInboundSettings())
+        put(
             "sniffing",
-            JSONObject()
-                .put("enabled", appState.enableSniffing)
-                .put("destOverride", xraySniffingDestOverrides(appState.effectiveFakeDnsEnabled).toJsonStringArray())
-                .put("routeOnly", appState.enableSniffingRouteOnly),
+            buildJsonObject {
+                put("enabled", appState.enableSniffing)
+                put("destOverride", xraySniffingDestOverrides(appState.effectiveFakeDnsEnabled).toJsonStringArray())
+                put("routeOnly", appState.enableSniffingRouteOnly)
+            },
         )
+    }
 }
 
-internal fun buildVpnAppendHttpInbound(options: VpnAppendHttpProxyOptions): JSONObject {
-    return JSONObject()
-        .put("tag", XrayTags.VPN_APPEND_HTTP_INBOUND)
-        .put("listen", LocalProxyLoopbackAddress)
-        .put("port", options.port)
-        .put("protocol", XrayProtocols.HTTP)
-        .put(
+internal fun buildVpnAppendHttpInbound(options: VpnAppendHttpProxyOptions): JsonObject {
+    return buildJsonObject {
+        put("tag", XrayTags.VPN_APPEND_HTTP_INBOUND)
+        put("listen", LocalProxyLoopbackAddress)
+        put("port", options.port)
+        put("protocol", XrayProtocols.HTTP)
+        put(
             "settings",
-            JSONObject()
-                .put("allowTransparent", false)
-                .put("userLevel", 0),
+            buildJsonObject {
+                put("allowTransparent", false)
+                put("userLevel", 0)
+            },
         )
+    }
 }
 
-private fun VpnLocalProxyOptions.toSocksInboundSettings(): JSONObject {
-    return JSONObject()
-        .put("auth", if (username.isBlank()) "noauth" else "password")
-        .put("udp", true)
-        .put("userLevel", 0)
-        .apply {
-            if (listenAddress == LocalProxyLoopbackAddress) {
-                put("ip", LocalProxyLoopbackAddress)
-            }
-            if (username.isNotBlank()) {
-                put(
-                    "users",
-                    JSONArray().put(
-                        JSONObject()
-                            .put("user", username)
-                            .put("pass", password),
-                    ),
-                )
-            }
+private fun VpnLocalProxyOptions.toSocksInboundSettings(): JsonObject {
+    return buildJsonObject {
+        put("auth", if (username.isBlank()) "noauth" else "password")
+        put("udp", true)
+        put("userLevel", 0)
+        if (listenAddress == LocalProxyLoopbackAddress) {
+            put("ip", LocalProxyLoopbackAddress)
         }
+        if (username.isNotBlank()) {
+            put(
+                "users",
+                buildJsonArray {
+                    add(
+                        buildJsonObject {
+                            put("user", username)
+                            put("pass", password)
+                        },
+                    )
+                },
+            )
+        }
+    }
 }
 
 private fun availablePort(

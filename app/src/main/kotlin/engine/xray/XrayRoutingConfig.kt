@@ -6,34 +6,42 @@ package engine.xray
 import app.AppState
 import app.effectiveLocalDnsEnabled
 import features.routing.model.RouteRule
-import org.json.JSONArray
-import org.json.JSONObject
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import utils.toDistinctCsvValues
 import utils.toTrimmedNonEmptyDistinctList
 
-internal fun buildXrayRouting(
-    appState: AppState,
+internal data class XrayRoutingPlan(
+    val domainStrategy: String,
+    val rules: JsonArray,
+    val balancers: List<JsonObject>,
+)
+
+internal fun AppState.buildXrayRoutingPlan(
     routeTargets: Map<String, XrayRouteTarget>,
-    balancers: List<JSONObject>,
+    balancers: List<JsonObject>,
     routeProxyDns: Boolean,
     routeDirectDns: Boolean,
     dnsHijackInboundTags: List<String>,
-): JSONObject {
-    return JSONObject()
-        .put(
-            "domainStrategy",
-            when (appState.routeDomainStrategy) {
-                0 -> "AsIs"
-                2 -> "IPOnDemand"
-                else -> "IPIfNonMatch"
-            },
-        )
-        .put("rules", appState.routingRules(routeTargets, routeProxyDns, routeDirectDns, dnsHijackInboundTags))
-        .apply {
-            if (balancers.isNotEmpty()) {
-                put("balancers", balancers.toJsonObjectArray())
-            }
+): XrayRoutingPlan {
+    return XrayRoutingPlan(
+        domainStrategy = routeDomainStrategy.toXrayRoutingDomainStrategy(),
+        rules = routingRules(routeTargets, routeProxyDns, routeDirectDns, dnsHijackInboundTags),
+        balancers = balancers,
+    )
+}
+
+internal fun buildXrayRouting(plan: XrayRoutingPlan): JsonObject {
+    return buildJsonObject {
+        put("domainStrategy", plan.domainStrategy)
+        put("rules", plan.rules)
+        if (plan.balancers.isNotEmpty()) {
+            put("balancers", plan.balancers.toJsonObjectArray())
         }
+    }
 }
 
 private fun AppState.routingRules(
@@ -41,27 +49,27 @@ private fun AppState.routingRules(
     routeProxyDns: Boolean,
     routeDirectDns: Boolean,
     dnsHijackInboundTags: List<String>,
-): JSONArray {
-    return JSONArray().apply {
+): JsonArray {
+    return buildJsonArray {
         if (effectiveLocalDnsEnabled) {
-            buildXrayDnsHijackRule(dnsHijackInboundTags)?.let(::put)
+            buildXrayDnsHijackRule(dnsHijackInboundTags)?.let(::add)
         }
         if (routeDirectDns) {
-            routeTargets[XrayTags.DIRECT]?.let { target -> put(buildDnsUpstreamRoute(XrayTags.DIRECT_DNS, target)) }
+            routeTargets[XrayTags.DIRECT]?.let { target -> add(buildDnsUpstreamRoute(XrayTags.DIRECT_DNS, target)) }
         }
         if (routeProxyDns) {
-            routeTargets[XrayTags.PROXY]?.let { target -> put(buildDnsUpstreamRoute(XrayTags.PROXY_DNS, target)) }
+            routeTargets[XrayTags.PROXY]?.let { target -> add(buildDnsUpstreamRoute(XrayTags.PROXY_DNS, target)) }
         }
         routeRules
             .filter(RouteRule::enabled)
             .mapNotNull { rule -> rule.toXrayRule(routeTargets) }
-            .forEach(::put)
+            .forEach(::add)
         defaultRouteTarget(routeTargets)?.let { target ->
-            put(
-                target.applyTo(
-                    JSONObject()
-                        .put("network", "tcp,udp"),
-                ),
+            add(
+                buildJsonObject {
+                    target.applyTo(this)
+                    put("network", "tcp,udp")
+                },
             )
         }
     }
@@ -75,54 +83,49 @@ private fun AppState.defaultRouteTarget(routeTargets: Map<String, XrayRouteTarge
     return defaultTarget ?: routeTargets[XrayTags.PROXY]
 }
 
-internal fun buildXrayDnsHijackRule(inboundTags: List<String>): JSONObject? {
+internal fun buildXrayDnsHijackRule(inboundTags: List<String>): JsonObject? {
     val tags = inboundTags.toTrimmedNonEmptyDistinctList()
     if (tags.isEmpty()) return null
-    return JSONObject()
-        .put("inboundTag", tags.toJsonStringArray())
-        .put("network", "tcp,udp")
-        .put("port", "53")
-        .put("outboundTag", XrayTags.DNS_OUT)
+    return buildJsonObject {
+        put("inboundTag", tags.toJsonStringArray())
+        put("network", "tcp,udp")
+        put("port", "53")
+        put("outboundTag", XrayTags.DNS_OUT)
+    }
 }
 
 private fun buildDnsUpstreamRoute(
     inboundTag: String,
     target: XrayRouteTarget,
-): JSONObject {
-    return target.applyTo(
-        JSONObject()
-            .put("inboundTag", JSONArray().put(inboundTag)),
-    )
+): JsonObject {
+    return buildJsonObject {
+        target.applyTo(this)
+        put("inboundTag", listOf(inboundTag).toJsonStringArray())
+    }
 }
 
-private fun RouteRule.toXrayRule(routeTargets: Map<String, XrayRouteTarget>): JSONObject? {
+private fun RouteRule.toXrayRule(routeTargets: Map<String, XrayRouteTarget>): JsonObject? {
     val targetOutboundTag = outboundTag.trim().ifBlank { XrayTags.PROXY }
     val target = routeTargets[targetOutboundTag] ?: return null
-    val rule = target.applyTo(JSONObject())
-    rule.putJsonStringArrayIfNotEmpty("domain", domain)
-    rule.putJsonStringArrayIfNotEmpty("ip", ip)
-    rule.putJsonStringArrayIfNotEmpty("process", process)
-    rule.putIfNotBlank("port", port)
-    rule.putIfNotBlank("network", network)
-    rule.putJsonStringArrayIfNotEmpty("protocol", protocol.toDistinctCsvValues())
-    rule.putIfNotBlank("ruleTag", remarks)
-    return if (rule.length() > 1) rule else null
+    val rule = buildJsonObject {
+        target.applyTo(this)
+        putJsonStringArrayIfNotEmpty("domain", domain.toTrimmedNonEmptyDistinctList())
+        putJsonStringArrayIfNotEmpty("ip", ip.toTrimmedNonEmptyDistinctList())
+        putJsonStringArrayIfNotEmpty("process", process.toTrimmedNonEmptyDistinctList())
+        putIfNotBlank("port", port)
+        putIfNotBlank("network", network)
+        putJsonStringArrayIfNotEmpty("protocol", protocol.toDistinctCsvValues())
+        putIfNotBlank("ruleTag", remarks)
+    }
+    return if (rule.size > 1) rule else null
 }
 
-private fun JSONObject.putIfNotBlank(name: String, value: String): JSONObject {
-    val trimmed = value.trim()
-    if (trimmed.isNotEmpty()) {
-        put(name, trimmed)
+private fun Int.toXrayRoutingDomainStrategy(): String {
+    return when (this) {
+        0 -> "AsIs"
+        2 -> "IPOnDemand"
+        else -> "IPIfNonMatch"
     }
-    return this
-}
-
-private fun JSONObject.putJsonStringArrayIfNotEmpty(name: String, values: List<String>): JSONObject {
-    val sanitized = values.toTrimmedNonEmptyDistinctList()
-    if (sanitized.isNotEmpty()) {
-        put(name, sanitized.toJsonStringArray())
-    }
-    return this
 }
 
 private val ReservedDefaultRouteOutboundTags = setOf(XrayTags.DNS_OUT, XrayTags.FRAGMENT)

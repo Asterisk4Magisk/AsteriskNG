@@ -23,7 +23,9 @@ import engine.xray.prepareXrayCoreLogPaths
 import engine.xray.toJsonStringArray
 import engine.xray.xraySniffingDestOverrides
 import features.resources.runtime.prepareXrayResourceFilePaths
-import org.json.JSONObject
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import java.io.File
 
 internal data class Tun2SocksStartConfig(
@@ -84,7 +86,7 @@ internal fun Context.prepareHevSocks5TunnelConfig(appState: AppState): HevSocks5
     )
 }
 
-private fun AppState.buildTun2SocksInbounds(socks5ProxyPort: Int): List<JSONObject> {
+private fun AppState.buildTun2SocksInbounds(socks5ProxyPort: Int): List<JsonObject> {
     return buildList {
         add(buildTun2SocksInbound(this@buildTun2SocksInbounds, socks5ProxyPort))
         addAll(
@@ -100,27 +102,30 @@ private fun AppState.buildTun2SocksInbounds(socks5ProxyPort: Int): List<JSONObje
 private fun buildTun2SocksInbound(
     appState: AppState,
     port: Int,
-): JSONObject {
-    return JSONObject()
-        .put("tag", XrayTags.TUN2SOCKS_INBOUND)
-        .put("listen", Tun2SocksListenAddress)
-        .put("port", port)
-        .put("protocol", XrayProtocols.SOCKS)
-        .put(
+): JsonObject {
+    return buildJsonObject {
+        put("tag", XrayTags.TUN2SOCKS_INBOUND)
+        put("listen", Tun2SocksListenAddress)
+        put("port", port)
+        put("protocol", XrayProtocols.SOCKS)
+        put(
             "settings",
-            JSONObject()
-                .put("auth", "noauth")
-                .put("udp", true)
-                .put("ip", Tun2SocksListenAddress)
-                .put("userLevel", 0),
+            buildJsonObject {
+                put("auth", "noauth")
+                put("udp", true)
+                put("ip", Tun2SocksListenAddress)
+                put("userLevel", 0)
+            },
         )
-        .put(
+        put(
             "sniffing",
-            JSONObject()
-                .put("enabled", appState.enableSniffing)
-                .put("destOverride", xraySniffingDestOverrides(appState.effectiveFakeDnsEnabled).toJsonStringArray())
-                .put("routeOnly", appState.enableSniffingRouteOnly),
+            buildJsonObject {
+                put("enabled", appState.enableSniffing)
+                put("destOverride", xraySniffingDestOverrides(appState.effectiveFakeDnsEnabled).toJsonStringArray())
+                put("routeOnly", appState.enableSniffingRouteOnly)
+            },
         )
+    }
 }
 
 private fun buildHevSocks5TunnelConfig(

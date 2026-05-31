@@ -4,13 +4,16 @@
 package engine.xray
 
 import app.AppState
-import org.json.JSONObject
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
-internal fun XrayConfigRequest.buildXrayLogConfig(): JSONObject {
-    return JSONObject()
-        .put("loglevel", appState.xrayLogLevel())
-        .put("access", appState.xrayAccessLogPath(coreLogPaths))
-        .put("error", coreLogPaths.errorLogPath)
+internal fun XrayConfigRequest.buildXrayLogConfig(): JsonObject {
+    return buildJsonObject {
+        put("loglevel", appState.xrayLogLevel())
+        put("access", appState.xrayAccessLogPath(coreLogPaths))
+        put("error", coreLogPaths.errorLogPath)
+    }
 }
 
 private fun AppState.xrayLogLevel(): String {

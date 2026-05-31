@@ -15,7 +15,9 @@ import engine.xray.XrayProtocols
 import engine.xray.XrayTags
 import engine.xray.toJsonStringArray
 import engine.xray.xraySniffingDestOverrides
-import org.json.JSONObject
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 internal data class TproxyStartConfig(
     override val root: RootStartConfig,
@@ -45,7 +47,7 @@ internal fun RootConfigBuildContext.buildTproxyStartConfig(): TproxyStartConfig 
     )
 }
 
-private fun AppState.buildTproxyInbounds(tproxyPort: Int): List<JSONObject> {
+private fun AppState.buildTproxyInbounds(tproxyPort: Int): List<JsonObject> {
     return buildList {
         add(buildTproxyTunnelInbound(this@buildTproxyInbounds, tproxyPort))
         addAll(
@@ -60,38 +62,41 @@ private fun AppState.buildTproxyInbounds(tproxyPort: Int): List<JSONObject> {
 private fun buildTproxyTunnelInbound(
     appState: AppState,
     port: Int,
-): JSONObject {
-    return JSONObject()
-        .put("tag", XrayTags.TPROXY_INBOUND)
-        .put("port", port)
-        .put("protocol", XrayProtocols.DOKODEMO_DOOR)
-        .put(
+): JsonObject {
+    return buildJsonObject {
+        put("tag", XrayTags.TPROXY_INBOUND)
+        put("port", port)
+        put("protocol", XrayProtocols.TUNNEL)
+        put(
             "settings",
-            JSONObject()
-                .put("allowedNetwork", "tcp,udp")
-                .put("followRedirect", true)
-                .put("userLevel", 0),
+            buildJsonObject {
+                put("allowedNetwork", "tcp,udp")
+                put("followRedirect", true)
+                put("userLevel", 0)
+            },
         )
-        .put(
+        put(
             "streamSettings",
-            JSONObject()
-                .put(
-                    "sockopt",
-                    JSONObject()
-                        .put("tproxy", "tproxy"),
-                ),
-        )
-        .apply {
-            if (appState.enableSniffing) {
+            buildJsonObject {
                 put(
-                    "sniffing",
-                    JSONObject()
-                        .put("enabled", true)
-                        .put("destOverride", xraySniffingDestOverrides(appState.effectiveFakeDnsEnabled).toJsonStringArray())
-                        .put("routeOnly", appState.enableSniffingRouteOnly),
+                    "sockopt",
+                    buildJsonObject {
+                        put("tproxy", "tproxy")
+                    },
                 )
-            }
+            },
+        )
+        if (appState.enableSniffing) {
+            put(
+                "sniffing",
+                buildJsonObject {
+                    put("enabled", true)
+                    put("destOverride", xraySniffingDestOverrides(appState.effectiveFakeDnsEnabled).toJsonStringArray())
+                    put("routeOnly", appState.enableSniffingRouteOnly)
+                },
+            )
         }
+    }
 }
 
 private fun AppState.tproxyPortValue(): Int {

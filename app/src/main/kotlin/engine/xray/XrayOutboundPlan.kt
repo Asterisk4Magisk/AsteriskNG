@@ -3,7 +3,8 @@
 
 package engine.xray
 
-import org.json.JSONObject
+import kotlinx.serialization.json.JsonObjectBuilder
+import kotlinx.serialization.json.put
 
 internal enum class XrayRouteTargetKind {
     Outbound,
@@ -14,10 +15,10 @@ internal data class XrayRouteTarget(
     val tag: String,
     val kind: XrayRouteTargetKind,
 ) {
-    fun applyTo(rule: JSONObject): JSONObject {
-        return when (kind) {
-            XrayRouteTargetKind.Outbound -> rule.put("outboundTag", tag)
-            XrayRouteTargetKind.Balancer -> rule.put("balancerTag", tag)
+    fun applyTo(builder: JsonObjectBuilder) {
+        when (kind) {
+            XrayRouteTargetKind.Outbound -> builder.put("outboundTag", tag)
+            XrayRouteTargetKind.Balancer -> builder.put("balancerTag", tag)
         }
     }
 }

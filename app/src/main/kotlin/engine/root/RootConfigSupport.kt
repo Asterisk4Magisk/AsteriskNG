@@ -18,7 +18,9 @@ import engine.xray.buildXrayOutboundPlan
 import engine.xray.prepareXrayCoreLogPaths
 import features.resources.runtime.XrayResourceFilePaths
 import features.resources.runtime.prepareXrayResourceFilePaths
-import org.json.JSONObject
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 internal class RootConfigBuildContext(
     private val androidContext: Context,
@@ -29,7 +31,7 @@ internal class RootConfigBuildContext(
     private val dnsHosts: List<String>,
 ) {
     fun buildRootStartConfig(
-        inbounds: List<JSONObject>,
+        inbounds: List<JsonObject>,
         dnsHijackInboundTags: List<String>,
     ): RootStartConfig {
         val xrayConfigJson = XrayConfigFactory.buildXrayConfig(
@@ -98,7 +100,7 @@ internal fun AppState.buildRootSharedProxyInbounds(
     socksInboundTag: String,
     httpInboundTag: String,
     includeSocks5Proxy: Boolean = true,
-): List<JSONObject> {
+): List<JsonObject> {
     return buildList {
         socks5ProxyPort.toPortOrNull()
             ?.takeIf { includeSocks5Proxy && enableSocks5Proxy }
@@ -116,35 +118,39 @@ internal fun AppState.rootSocks5ProxyPortValue(): Int {
 private fun buildRootSocksProxyInbound(
     tag: String,
     port: Int,
-): JSONObject {
-    return JSONObject()
-        .put("tag", tag)
-        .put("listen", RootSharedProxyListenAddress)
-        .put("port", port)
-        .put("protocol", XrayProtocols.SOCKS)
-        .put(
+): JsonObject {
+    return buildJsonObject {
+        put("tag", tag)
+        put("listen", RootSharedProxyListenAddress)
+        put("port", port)
+        put("protocol", XrayProtocols.SOCKS)
+        put(
             "settings",
-            JSONObject()
-                .put("auth", "noauth")
-                .put("udp", true)
-                .put("ip", RootSharedProxyListenAddress)
-                .put("userLevel", 0),
+            buildJsonObject {
+                put("auth", "noauth")
+                put("udp", true)
+                put("ip", RootSharedProxyListenAddress)
+                put("userLevel", 0)
+            },
         )
+    }
 }
 
 private fun buildRootHttpProxyInbound(
     tag: String,
     port: Int,
-): JSONObject {
-    return JSONObject()
-        .put("tag", tag)
-        .put("listen", RootSharedProxyListenAddress)
-        .put("port", port)
-        .put("protocol", XrayProtocols.HTTP)
-        .put(
+): JsonObject {
+    return buildJsonObject {
+        put("tag", tag)
+        put("listen", RootSharedProxyListenAddress)
+        put("port", port)
+        put("protocol", XrayProtocols.HTTP)
+        put(
             "settings",
-            JSONObject()
-                .put("allowTransparent", false)
-                .put("userLevel", 0),
+            buildJsonObject {
+                put("allowTransparent", false)
+                put("userLevel", 0)
+            },
         )
+    }
 }

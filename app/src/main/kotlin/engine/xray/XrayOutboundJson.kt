@@ -7,63 +7,72 @@ import app.AppState
 import app.effectiveLocalDnsEnabled
 import engine.network.NetworkDefaults
 import features.proxy.server.model.ProxyServerConstants
-import org.json.JSONArray
-import org.json.JSONObject
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonObjectBuilder
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import utils.toIntCoercedInOrDefault
 
 internal fun buildXrayOutbounds(
     appState: AppState,
     proxyOutbounds: List<XrayProxyOutboundServer>,
-): JSONArray {
-    return JSONArray().apply {
+): JsonArray {
+    return buildJsonArray {
         proxyOutbounds.forEach { outboundServer ->
-            put(buildProxyOutbound(appState, outboundServer))
+            add(buildProxyOutbound(appState, outboundServer))
         }
-        put(buildFreedomOutbound(XrayTags.DIRECT, appState.xrayDirectOutboundDomainStrategy()))
-        put(buildSimpleOutbound(XrayTags.BLOCK, XrayProtocols.BLACKHOLE))
+        add(buildFreedomOutbound(XrayTags.DIRECT, appState.xrayDirectOutboundDomainStrategy()))
+        add(buildSimpleOutbound(XrayTags.BLOCK, XrayProtocols.BLACKHOLE))
         if (appState.effectiveLocalDnsEnabled) {
-            put(buildSimpleOutbound(XrayTags.DNS_OUT, XrayProtocols.DNS))
+            add(buildSimpleOutbound(XrayTags.DNS_OUT, XrayProtocols.DNS))
         }
         if (appState.enableFragment) {
-            put(buildFragmentOutbound(appState))
+            add(buildFragmentOutbound(appState))
         }
     }
 }
 
-internal fun buildXrayBalancers(plans: List<XrayBalancerPlan>): List<JSONObject> {
+internal fun buildXrayBalancers(plans: List<XrayBalancerPlan>): List<JsonObject> {
     return plans.map { plan ->
-        JSONObject()
-            .put("tag", plan.tag)
-            .put("selector", JSONArray().put(plan.selector))
-            .put(
+        buildJsonObject {
+            put("tag", plan.tag)
+            put("selector", listOf(plan.selector).toJsonStringArray())
+            put(
                 "strategy",
-                JSONObject()
-                    .put("type", plan.strategy),
+                buildJsonObject {
+                    put("type", plan.strategy)
+                },
             )
+        }
     }
 }
 
-internal fun buildXrayObservatory(selectors: List<String>): JSONObject? {
+internal fun buildXrayObservatory(selectors: List<String>): JsonObject? {
     if (selectors.isEmpty()) return null
-    return JSONObject()
-        .put("subjectSelector", JSONArray().apply { selectors.distinct().forEach(::put) })
-        .put("probeUrl", XrayObservatoryProbeUrl)
-        .put("probeInterval", "3m")
-        .put("enableConcurrency", true)
+    return buildJsonObject {
+        put("subjectSelector", selectors.distinct().toJsonStringArray())
+        put("probeUrl", XrayObservatoryProbeUrl)
+        put("probeInterval", "3m")
+        put("enableConcurrency", true)
+    }
 }
 
-internal fun buildXrayBurstObservatory(selectors: List<String>): JSONObject? {
+internal fun buildXrayBurstObservatory(selectors: List<String>): JsonObject? {
     if (selectors.isEmpty()) return null
-    return JSONObject()
-        .put("subjectSelector", JSONArray().apply { selectors.distinct().forEach(::put) })
-        .put(
+    return buildJsonObject {
+        put("subjectSelector", selectors.distinct().toJsonStringArray())
+        put(
             "pingConfig",
-            JSONObject()
-                .put("destination", XrayObservatoryProbeUrl)
-                .put("interval", "5m")
-                .put("sampling", 2)
-                .put("timeout", "30s"),
+            buildJsonObject {
+                put("destination", XrayObservatoryProbeUrl)
+                put("interval", "5m")
+                put("sampling", 2)
+                put("timeout", "30s")
+            },
         )
+    }
 }
 
 internal fun AppState.xrayDirectOutboundDomainStrategy(): String {
@@ -74,89 +83,111 @@ internal fun AppState.xrayDirectOutboundDomainStrategy(): String {
     }
 }
 
-private fun buildProxyOutbound(appState: AppState, outboundServer: XrayProxyOutboundServer): JSONObject {
+private fun buildProxyOutbound(appState: AppState, outboundServer: XrayProxyOutboundServer): JsonObject {
     val tag = outboundServer.tag
     val server = outboundServer.server
-    val outbound = JSONObject(server.toXrayOutbound(tag).toJsonObject().toString())
+    var outbound = server.toXrayOutbound(tag).toJsonObject()
         .applyProxyOutboundDomainStrategy(appState)
-    outbound.put("tag", tag)
+        .updated {
+            put("tag", tag)
+        }
     outboundServer.dialerProxyTag?.let { dialerProxyTag ->
-        outbound.putDialerProxyTag(dialerProxyTag)
+        outbound = outbound.withDialerProxyTag(dialerProxyTag)
     }
     if (appState.enableMux) {
-        outbound.put("mux", buildMuxConfig(appState))
+        outbound = outbound.updated {
+            put("mux", buildMuxConfig(appState))
+        }
     }
     if (appState.enableFragment && outboundServer.allowFragment) {
-        outbound.put(
-            "proxySettings",
-            JSONObject()
-                .put("tag", XrayTags.FRAGMENT),
-        )
+        outbound = outbound.updated {
+            put(
+                "proxySettings",
+                buildJsonObject {
+                    put("tag", XrayTags.FRAGMENT)
+                },
+            )
+        }
     }
     return outbound
 }
 
-private fun JSONObject.applyProxyOutboundDomainStrategy(appState: AppState): JSONObject {
-    if (optString("protocol") == ProxyServerConstants.PROTOCOL_WIREGUARD) {
-        val settings = optJSONObject("settings") ?: JSONObject().also { put("settings", it) }
-        settings.put("domainStrategy", appState.wireguardDomainStrategy())
-        return this
+private fun JsonObject.applyProxyOutboundDomainStrategy(appState: AppState): JsonObject {
+    if (stringValue("protocol") == ProxyServerConstants.PROTOCOL_WIREGUARD) {
+        val settings = objectValue("settings") ?: buildJsonObject {}
+        return updated {
+            put(
+                "settings",
+                settings.updated {
+                    put("domainStrategy", appState.wireguardDomainStrategy())
+                },
+            )
+        }
     }
 
-    val streamSettings = optJSONObject("streamSettings") ?: JSONObject().also { put("streamSettings", it) }
-    val sockopt = streamSettings.optJSONObject("sockopt") ?: JSONObject().also { streamSettings.put("sockopt", it) }
-    sockopt.put("domainStrategy", appState.xrayDirectOutboundDomainStrategy())
-    return this
+    return withSockopt {
+        put("domainStrategy", appState.xrayDirectOutboundDomainStrategy())
+    }
 }
 
-internal fun buildSimpleOutbound(tag: String, protocol: String): JSONObject {
-    return JSONObject()
-        .put("tag", tag)
-        .put("protocol", protocol)
+internal fun buildSimpleOutbound(tag: String, protocol: String): JsonObject {
+    return buildJsonObject {
+        put("tag", tag)
+        put("protocol", protocol)
+    }
 }
 
-internal fun buildFreedomOutbound(tag: String, domainStrategy: String): JSONObject {
-    return JSONObject()
-        .put("tag", tag)
-        .put("protocol", XrayProtocols.FREEDOM)
-        .put(
+internal fun buildFreedomOutbound(tag: String, domainStrategy: String): JsonObject {
+    return buildJsonObject {
+        put("tag", tag)
+        put("protocol", XrayProtocols.FREEDOM)
+        put(
             "settings",
-            JSONObject()
-                .put("domainStrategy", domainStrategy),
+            buildJsonObject {
+                put("domainStrategy", domainStrategy)
+            },
         )
+    }
 }
 
-private fun buildFragmentOutbound(appState: AppState): JSONObject {
-    return JSONObject()
-        .put("tag", XrayTags.FRAGMENT)
-        .put("protocol", XrayProtocols.FREEDOM)
-        .put(
+private fun buildFragmentOutbound(appState: AppState): JsonObject {
+    return buildJsonObject {
+        put("tag", XrayTags.FRAGMENT)
+        put("protocol", XrayProtocols.FREEDOM)
+        put(
             "settings",
-            JSONObject()
-                .put("domainStrategy", appState.xrayDirectOutboundDomainStrategy())
-                .put(
+            buildJsonObject {
+                put("domainStrategy", appState.xrayDirectOutboundDomainStrategy())
+                put(
                     "fragment",
-                    JSONObject()
-                        .put("packets", appState.fragmentPackets.ifBlank { DefaultFragmentPackets })
-                        .put("length", appState.fragmentLength.ifBlank { DefaultFragmentLength })
-                        .put("interval", appState.fragmentInterval.ifBlank { DefaultFragmentInterval }),
-                ),
+                    buildJsonObject {
+                        put("packets", appState.fragmentPackets.ifBlank { DefaultFragmentPackets })
+                        put("length", appState.fragmentLength.ifBlank { DefaultFragmentLength })
+                        put("interval", appState.fragmentInterval.ifBlank { DefaultFragmentInterval })
+                    },
+                )
+            },
         )
+    }
 }
 
-private fun buildMuxConfig(appState: AppState): JSONObject {
-    return JSONObject()
-        .put("enabled", true)
-        .put("concurrency", appState.muxConcurrency.toMuxConcurrency())
-        .put("xudpConcurrency", appState.muxXudpConcurrency.toMuxXudpConcurrency())
-        .put("xudpProxyUDP443", appState.muxXudpProxyUdp443.toMuxUdp443Mode())
+private fun buildMuxConfig(appState: AppState): JsonObject {
+    return buildJsonObject {
+        put("enabled", true)
+        put("concurrency", appState.muxConcurrency.toMuxConcurrency())
+        put("xudpConcurrency", appState.muxXudpConcurrency.toMuxXudpConcurrency())
+        put("xudpProxyUDP443", appState.muxXudpProxyUdp443.toMuxUdp443Mode())
+    }
 }
 
-private fun JSONObject.putDialerProxyTag(tag: String): JSONObject {
-    val streamSettings = optJSONObject("streamSettings") ?: JSONObject().also { put("streamSettings", it) }
-    val sockopt = streamSettings.optJSONObject("sockopt") ?: JSONObject().also { streamSettings.put("sockopt", it) }
-    sockopt.put("dialerProxy", tag)
-    return this
+private fun JsonObject.withDialerProxyTag(tag: String): JsonObject {
+    return withSockopt {
+        put("dialerProxy", tag)
+    }
+}
+
+private fun JsonObject.withSockopt(block: JsonObjectBuilder.() -> Unit): JsonObject {
+    return updatedNestedObject("streamSettings", "sockopt", block)
 }
 
 private fun AppState.wireguardDomainStrategy(): String {

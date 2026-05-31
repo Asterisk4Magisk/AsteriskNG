@@ -13,7 +13,9 @@ import engine.xray.xraySniffingDestOverrides
 import engine.network.NetworkCidrAddress
 import engine.network.isIpv4Address
 import engine.network.parseCidrAddressOrNull
-import org.json.JSONObject
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import utils.toIntInRangeOrDefault
 
 internal val defaultIpv4TunAddress = VpnDefaults.IPV4_CIDR.toNetworkCidrAddress()
@@ -29,33 +31,36 @@ internal data class TunOptions(
 internal fun buildVpnTunInbound(
     appState: AppState,
     tunOptions: TunOptions,
-): JSONObject {
+): JsonObject {
     val gateway = buildList {
         add(tunOptions.ipv4Address.toCidrString())
         if (appState.enableIpv6) {
             add(tunOptions.ipv6Address.toCidrString())
         }
     }
-    val settings = JSONObject()
-        .put("name", "asterisk0")
-        .put("mtu", tunOptions.mtu)
-        .put("gateway", gateway.toJsonStringArray())
-        .put("userLevel", 0)
-    if (appState.effectiveLocalDnsEnabled) {
-        settings.put("dns", tunOptions.dnsServers.toJsonStringArray())
+    val settings = buildJsonObject {
+        put("name", "asterisk0")
+        put("mtu", tunOptions.mtu)
+        put("gateway", gateway.toJsonStringArray())
+        put("userLevel", 0)
+        if (appState.effectiveLocalDnsEnabled) {
+            put("dns", tunOptions.dnsServers.toJsonStringArray())
+        }
     }
 
-    return JSONObject()
-        .put("tag", XrayTags.VPN_TUN_INBOUND)
-        .put("protocol", XrayProtocols.TUN)
-        .put("settings", settings)
-        .put(
+    return buildJsonObject {
+        put("tag", XrayTags.VPN_TUN_INBOUND)
+        put("protocol", XrayProtocols.TUN)
+        put("settings", settings)
+        put(
             "sniffing",
-            JSONObject()
-                .put("enabled", appState.enableSniffing)
-                .put("destOverride", xraySniffingDestOverrides(appState.effectiveFakeDnsEnabled).toJsonStringArray())
-                .put("routeOnly", appState.enableSniffingRouteOnly),
+            buildJsonObject {
+                put("enabled", appState.enableSniffing)
+                put("destOverride", xraySniffingDestOverrides(appState.effectiveFakeDnsEnabled).toJsonStringArray())
+                put("routeOnly", appState.enableSniffingRouteOnly)
+            },
         )
+    }
 }
 
 internal fun AppState.toTunOptions(): TunOptions {
