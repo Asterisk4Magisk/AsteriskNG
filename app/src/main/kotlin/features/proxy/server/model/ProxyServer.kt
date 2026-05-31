@@ -9,7 +9,8 @@ import io.ktor.http.Url
 import io.ktor.http.parsing.ParseException
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import kotlin.io.encoding.Base64
+import utils.decodeUrlSafeBase64OptionalPaddingOrNull
+import utils.encodeUrlSafeBase64OptionalPadding
 
 object ProxyServerConstants {
     const val PROTOCOL_HTTP = "http"
@@ -35,7 +36,6 @@ data class ProxyServerInfo(
 
 interface ProxyServer<T : ProxyServer<T>> {
     companion object {
-        val base64 = Base64.UrlSafe.withPadding(Base64.PaddingOption.ABSENT_OPTIONAL)
         val json = Json {
             ignoreUnknownKeys = true
             encodeDefaults = true
@@ -49,7 +49,7 @@ interface ProxyServer<T : ProxyServer<T>> {
                 ProxyServerConstants.PROTOCOL_SS -> Shadowsocks().parse(url)
                 ProxyServerConstants.PROTOCOL_VMESS -> {
                     if (url.user == null) {
-                        val originJson = base64.decode(url.host).decodeToString()
+                        val originJson = url.host.decodeProxyUrlBase64().decodeToString()
                         json.decodeFromString<LegacyVMess>(originJson).convertToAEAD()
                     } else {
                         VMess().parse(url)
@@ -73,6 +73,15 @@ interface ProxyServer<T : ProxyServer<T>> {
     fun toXrayOutbound(tag: String): OutboundObject
     fun update(other: ProxyServer<*>)
     fun check()
+}
+
+internal fun String.decodeProxyUrlBase64(): ByteArray {
+    return decodeUrlSafeBase64OptionalPaddingOrNull()
+        ?: throw IllegalArgumentException("Bad proxy URL base64")
+}
+
+internal fun ByteArray.encodeProxyUrlBase64(): String {
+    return encodeUrlSafeBase64OptionalPadding()
 }
 
 interface UrlProxyServer<T : UrlProxyServer<T>> : ProxyServer<T> {

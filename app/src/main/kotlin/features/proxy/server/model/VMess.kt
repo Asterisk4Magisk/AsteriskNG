@@ -17,6 +17,7 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import utils.encodeUrlSafeBase64OptionalPadding
 
 @Serializable
 data class LegacyVMess(
@@ -58,14 +59,14 @@ data class LegacyVMess(
     }
 
     override fun parse(url: Url): LegacyVMess {
-        val originJson = ProxyServer.base64.decode(url.host).decodeToString()
+        val originJson = url.host.decodeProxyUrlBase64().decodeToString()
         ProxyServer.json.decodeFromString<LegacyVMess>(originJson).let { this.update(it) }
         return this
     }
 
     override fun getUrl(): String {
         return "${ProxyServerConstants.PROTOCOL_VMESS}://${
-            ProxyServer.base64.encode(ProxyServer.json.encodeToString(this).encodeToByteArray())
+            ProxyServer.json.encodeToString(this).encodeToByteArray().encodeUrlSafeBase64OptionalPadding()
         }"
     }
 

@@ -7,7 +7,8 @@ import engine.network.isPort
 import engine.network.NetworkLimits
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
-import kotlin.io.encoding.Base64
+import utils.decodeUrlSafeBase64NoPaddingOrNull
+import utils.decodeUrlSafeBase64OptionalPaddingOrNull
 import utils.toIntInRangeOrNull
 
 private val DomainLabelRegex = Regex("[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?")
@@ -270,11 +271,7 @@ internal fun validateRealityPublicKey(value: String) {
     val key = value.trim()
     validateRequired(key, "Reality PublicKey")
     val decoded = if (UrlSafeBase64Regex.matches(key)) {
-        runCatching {
-            Base64.UrlSafe
-                .withPadding(Base64.PaddingOption.ABSENT_OPTIONAL)
-                .decode(key)
-        }.getOrNull()
+        key.decodeUrlSafeBase64OptionalPaddingOrNull()
     } else {
         null
     }
@@ -368,11 +365,7 @@ private fun validateOptionalRealityMldsa65Verify(value: String?) {
 
 private fun decodeRawUrlSafeBase64(value: String): ByteArray? {
     if (!RawUrlSafeBase64Regex.matches(value)) return null
-    return runCatching {
-        Base64.UrlSafe
-            .withPadding(Base64.PaddingOption.ABSENT)
-            .decode(value)
-    }.getOrNull()
+    return value.decodeUrlSafeBase64NoPaddingOrNull()
 }
 
 private fun validateOptionalFingerprint(value: String?) {

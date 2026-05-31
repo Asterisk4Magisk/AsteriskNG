@@ -9,7 +9,8 @@ import io.ktor.http.Url
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import kotlin.io.encoding.Base64
+import utils.decodeFlexibleBase64OrNull
+import utils.encodeBase64
 
 @Serializable
 data class Shadowsocks(
@@ -44,7 +45,7 @@ data class Shadowsocks(
         this.port = url.port.toString()
         if (url.port == 0) {
             val full =
-                ProxyServer.base64.decode(url.host).decodeToString()
+                url.host.decodeProxyUrlBase64().decodeToString()
             val infoAndServer = full.split('@')
             if (infoAndServer.size == 2) {
                 val methodAndPassword = infoAndServer[0].split(':')
@@ -60,7 +61,7 @@ data class Shadowsocks(
             }
         } else {
             val info = url.user?.let {
-                ProxyServer.base64.decode(it).decodeToString()
+                it.decodeProxyUrlBase64().decodeToString()
             } ?: throw IllegalArgumentException("Bad Shadowsocks url")
             val pos = info.indexOfFirst { it == ':' }
             if (pos > -1) {
@@ -76,8 +77,7 @@ data class Shadowsocks(
             protocol = URLProtocol.createOrDefault(ProxyServerConstants.PROTOCOL_SS)
             host = this@Shadowsocks.server
             this@Shadowsocks.port.toIntOrNull()?.let { port = it }
-            user = ProxyServer.base64
-                .encode("${this@Shadowsocks.method}:${this@Shadowsocks.password}".toByteArray())
+            user = "${this@Shadowsocks.method}:${this@Shadowsocks.password}".encodeToByteArray().encodeProxyUrlBase64()
             fragment = this@Shadowsocks.remarks
         }.build().toString()
     }
@@ -148,16 +148,14 @@ private fun normalizeShadowsocks2022Key(key: String, validLengths: Set<Int>): St
             validLengths.joinToString(" or "),
         )
     }
-    return Base64.Default.encode(decodedKey)
+    return decodedKey.encodeBase64()
 }
 
 private fun decodeShadowsocks2022Key(key: String): ByteArray? {
     if (key.isBlank()) {
         return null
     }
-    return Shadowsocks2022KeyDecoders.firstNotNullOfOrNull { decoder ->
-        runCatching { decoder.decode(key) }.getOrNull()
-    }
+    return key.decodeFlexibleBase64OrNull()
 }
 
 private val Shadowsocks2022KeyLengths = mapOf(
@@ -166,9 +164,3 @@ private val Shadowsocks2022KeyLengths = mapOf(
     "2022-blake3-chacha20-poly1305" to setOf(32),
 )
 
-private val Shadowsocks2022KeyDecoders = listOf(
-    Base64.Default,
-    Base64.Default.withPadding(Base64.PaddingOption.ABSENT_OPTIONAL),
-    Base64.UrlSafe,
-    Base64.UrlSafe.withPadding(Base64.PaddingOption.ABSENT_OPTIONAL),
-)

@@ -42,7 +42,7 @@ data class Socks(
         this.server = url.host
         this.port = url.port.toString()
         url.user?.let { str ->
-            val info = ProxyServer.base64.decode(str).decodeToString()
+            val info = str.decodeProxyUrlBase64().decodeToString()
             val pos = info.indexOfFirst { it == ':' }
             if (pos > -1) {
                 this.user = info.substring(0, pos)
@@ -58,7 +58,7 @@ data class Socks(
             host = this@Socks.server
             this@Socks.port.toIntOrNull()?.let { port = it }
             if (!this@Socks.user.isNullOrBlank())
-                user = ProxyServer.base64.encode("${this@Socks.user}:${this@Socks.password.orEmpty()}".toByteArray())
+                user = "${this@Socks.user}:${this@Socks.password.orEmpty()}".encodeToByteArray().encodeProxyUrlBase64()
             fragment = this@Socks.remarks
         }.buildString()
     }

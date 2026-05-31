@@ -6,9 +6,9 @@ package engine.xray
 import android.annotation.SuppressLint
 import android.content.Context
 import android.provider.Settings
-import android.util.Base64
 import go.Seq
 import libv2ray.Libv2ray
+import utils.encodeUrlSafeBase64NoPadding
 import java.util.concurrent.atomic.AtomicReference
 
 internal fun Context.initializeAndroidXrayCoreEnvironment(dataDir: String) {
@@ -30,10 +30,9 @@ private fun Context.xrayCoreBaseKey(): String {
     val deviceId = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
         .orEmpty()
         .ifBlank { packageName }
-    return Base64.encodeToString(
-        deviceId.toByteArray(Charsets.UTF_8).copyOf(XrayCoreBaseKeyLength),
-        Base64.NO_PADDING or Base64.NO_WRAP or Base64.URL_SAFE,
-    )
+    return deviceId.toByteArray(Charsets.UTF_8)
+        .copyOf(XrayCoreBaseKeyLength)
+        .encodeUrlSafeBase64NoPadding()
 }
 
 private const val XrayCoreBaseKeyLength = 32

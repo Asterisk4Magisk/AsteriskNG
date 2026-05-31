@@ -42,7 +42,7 @@ data class HTTP(
         this.server = url.host
         this.port = url.port.toString()
         url.user?.let { str ->
-            val info = ProxyServer.base64.decode(str).decodeToString()
+            val info = str.decodeProxyUrlBase64().decodeToString()
             val pos = info.indexOfFirst { it == ':' }
             if (pos > -1) {
                 this.user = info.substring(0, pos)
@@ -58,7 +58,7 @@ data class HTTP(
             host = this@HTTP.server
             this@HTTP.port.toIntOrNull()?.let { port = it }
             if (!this@HTTP.user.isNullOrBlank())
-                user = ProxyServer.base64.encode("${this@HTTP.user}:${this@HTTP.password.orEmpty()}".toByteArray())
+                user = "${this@HTTP.user}:${this@HTTP.password.orEmpty()}".encodeToByteArray().encodeProxyUrlBase64()
             fragment = this@HTTP.remarks
         }.buildString()
     }

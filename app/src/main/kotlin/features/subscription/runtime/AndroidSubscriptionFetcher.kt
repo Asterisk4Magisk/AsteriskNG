@@ -3,13 +3,13 @@
 
 package features.subscription.runtime
 
-import android.util.Base64
 import features.subscription.DefaultSubscriptionUserAgent
 import engine.network.isPort
 import engine.vpn.LocalProxyLoopbackAddress
 import engine.vpn.VpnLocalProxyRuntime
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import utils.encodeBase64
 import java.net.Authenticator
 import java.net.HttpURLConnection
 import java.net.IDN
@@ -142,7 +142,7 @@ private fun HttpURLConnection.setEmbeddedBasicAuth(rawUrl: String) {
     val parts = userInfo.split(":", limit = 2)
     val user = parts.getOrElse(0) { "" }
     val password = parts.getOrElse(1) { "" }
-    val token = Base64.encodeToString("$user:$password".toByteArray(), Base64.NO_WRAP)
+    val token = "$user:$password".encodeToByteArray().encodeBase64()
     setRequestProperty("Authorization", "Basic $token")
 }
 
