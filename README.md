@@ -1,3 +1,5 @@
+English | [简体中文](README_zh_CN.md)
+
 # AsteriskNG
 
 An Xray client for Android, powered by [Xray-core](https://github.com/XTLS/Xray-core), [AndroidLibXrayLite](https://github.com/2dust/AndroidLibXrayLite), and [hev-socks5-tunnel](https://github.com/heiher/hev-socks5-tunnel).
@@ -8,12 +10,21 @@ An Xray client for Android, powered by [Xray-core](https://github.com/XTLS/Xray-
 
 ## Features
 
-- VPN Service, TPROXY(ROOT), and TUN2SOCKS(ROOT) run modes
-- VMess, VLESS, Trojan, Shadowsocks, Socks, HTTP, Hysteria2, WireGuard, strategy group, and chain proxy
-- Subscription groups, QR code import, latency testing, and app proxy modes
-- Resource file management for `geoip.dat`, `geosite.dat`, and the Xray executable
+- VPN Service, TPROXY(ROOT), and TUN2SOCKS(ROOT) run modes support
+- VMess, VLESS, Trojan, Shadowsocks, Socks, HTTP, Hysteria2, WireGuard, strategy group, and chain proxy support
+- v2rayNG, mihomo subscription format support
+- Resource file management for `geoip.dat`, `geosite.dat`, `geoip-only-cn-private.dat`, and the Xray executable
 - ROOT start-on-boot script generation through Magisk `service.d`
 - MIUIX Compose UI
+
+## Screenshots
+
+<p align="center">
+  <img src="image/screenshot/5.jpg" width="24%" alt="Screenshot 1" />
+  <img src="image/screenshot/6.jpg" width="24%" alt="Screenshot 2" />
+  <img src="image/screenshot/7.jpg" width="24%" alt="Screenshot 3" />
+  <img src="image/screenshot/8.jpg" width="24%" alt="Screenshot 4" />
+</p>
 
 ## Run Modes
 
