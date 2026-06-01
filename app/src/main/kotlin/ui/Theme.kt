@@ -36,22 +36,22 @@ fun AppTheme(
             ColorModeThemeSystem -> ThemeController(
                 ColorSchemeMode.MonetSystem,
                 keyColor = keyColor,
-                colorSpec = ThemeColorSpec.Spec2021,
-                paletteStyle = ThemePaletteStyle.Content,
+                colorSpec = AndroidDynamicColorSpec,
+                paletteStyle = AndroidDynamicPaletteStyle,
             )
 
             ColorModeThemeLight -> ThemeController(
                 ColorSchemeMode.MonetLight,
                 keyColor = keyColor,
-                colorSpec = ThemeColorSpec.Spec2021,
-                paletteStyle = ThemePaletteStyle.Content,
+                colorSpec = AndroidDynamicColorSpec,
+                paletteStyle = AndroidDynamicPaletteStyle,
             )
 
             ColorModeThemeDark -> ThemeController(
                 ColorSchemeMode.MonetDark,
                 keyColor = keyColor,
-                colorSpec = ThemeColorSpec.Spec2021,
-                paletteStyle = ThemePaletteStyle.Content,
+                colorSpec = AndroidDynamicColorSpec,
+                paletteStyle = AndroidDynamicPaletteStyle,
             )
 
             else -> ThemeController(ColorSchemeMode.System)
@@ -84,3 +84,6 @@ val KeyColors: List<Color> = listOf(
 )
 
 fun keyColorFor(index: Int): Color? = if (index <= 0) null else KeyColors.getOrNull(index - 1)
+
+private val AndroidDynamicColorSpec = ThemeColorSpec.Spec2025
+private val AndroidDynamicPaletteStyle = ThemePaletteStyle.TonalSpot
