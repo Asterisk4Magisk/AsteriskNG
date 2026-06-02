@@ -30,10 +30,6 @@
             android:exported="true"
             android:launchMode="singleTop">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-            <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 
                 <category android:name="android.intent.category.DEFAULT" />
@@ -71,6 +67,34 @@
                 <data android:host="install-config" />
             </intent-filter>
         </activity>
+
+        <activity-alias
+            android:name=".DefaultLauncherActivity"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/app_name"
+            android:roundIcon="@mipmap/ic_launcher_round"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".MonetLauncherActivity"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_monet"
+            android:label="@string/app_name"
+            android:roundIcon="@mipmap/ic_launcher_monet_round"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
 
         <activity-alias
             android:name="features.quicksettings.ProxyQuickSettingsHomeActivity"

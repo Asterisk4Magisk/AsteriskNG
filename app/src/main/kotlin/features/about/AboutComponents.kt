@@ -19,12 +19,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
+import app.LocalAppChromeState
 import app.R
 import app.ProjectInfo
+import app.modes.ColorModeThemeDark
+import app.modes.ColorModeThemeSystem
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import top.yukonga.miuix.kmp.basic.BasicComponent
@@ -67,23 +71,48 @@ internal fun AboutHeader(
 private fun AboutAppIcon(
     modifier: Modifier = Modifier,
 ) {
+    val iconStyle = aboutIconStyle()
+
     Box(
         modifier = modifier
             .size(88.dp)
             .clip(RoundedCornerShape(22.dp))
-            .background(colorResource(R.color.ic_launcher_background)),
+            .background(MiuixTheme.colorScheme.surface),
         contentAlignment = Alignment.Center,
     ) {
         Image(
-            painter = painterResource(R.mipmap.ic_launcher_foreground),
+            painter = painterResource(iconStyle.foregroundResId),
             contentDescription = ProjectInfo.PROJECT_NAME,
             contentScale = ContentScale.Fit,
+            colorFilter = iconStyle.foregroundTint?.let { tint -> ColorFilter.tint(tint) },
             modifier = Modifier
                 .fillMaxSize()
                 .scale(AboutIconForegroundScale),
         )
     }
 }
+
+@Composable
+private fun aboutIconStyle(): AboutIconStyle {
+    val chromeState = LocalAppChromeState.current
+    val isMonetMode = chromeState.colorMode in ColorModeThemeSystem..ColorModeThemeDark
+    if (!isMonetMode) {
+        return AboutIconStyle(
+            foregroundResId = R.mipmap.ic_launcher_foreground,
+            foregroundTint = null,
+        )
+    }
+
+    return AboutIconStyle(
+        foregroundResId = R.mipmap.ic_launcher_monet_monochrome,
+        foregroundTint = MiuixTheme.colorScheme.primary,
+    )
+}
+
+private data class AboutIconStyle(
+    val foregroundResId: Int,
+    val foregroundTint: Color?,
+)
 
 @Composable
 internal fun AboutRuntimeCard(

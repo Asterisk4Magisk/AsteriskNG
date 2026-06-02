@@ -1,3 +1,5 @@
 <resources>
-    <color name="ic_launcher_background">#2A2036</color>
+    <color name="ic_launcher_background">#E7DCF5</color>
+    <color name="ic_launcher_monet_background">#EDE2F8</color>
+    <color name="ic_launcher_monet_foreground">#7E57C2</color>
 </resources>

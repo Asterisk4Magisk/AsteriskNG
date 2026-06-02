@@ -13,6 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import app.effects.ProxyStatusSynchronizer
+import app.effects.LauncherIconSynchronizer
 import app.effects.ResourceFileSynchronizer
 import app.effects.SubscriptionAutoUpdater
 import app.effects.RootBootScriptSynchronizer
@@ -162,6 +163,10 @@ fun App(
     )
     ResourceFileSynchronizer(
         resourceFileUseCase = resourceFileUseCase,
+    )
+    LauncherIconSynchronizer(
+        context = appContext,
+        stateStore = stateStore,
     )
     SubscriptionAutoUpdater(
         stateStore = stateStore,
