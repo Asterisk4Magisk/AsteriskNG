@@ -92,7 +92,7 @@ private suspend fun updateSubscriptionGroup(
 
 internal fun AppState.toSubscriptionFetchOptions(group: SubscriptionGroupState): AndroidSubscriptionFetchOptions {
     return AndroidSubscriptionFetchOptions(
-        useRunningProxy = group.updateViaProxy,
+        useRunningProxy = group.updateViaProxy && proxyRunning,
         fallbackProxyPort = localProxyPort.toPortOrNull(),
         fallbackProxyUsername = localProxyUsername,
         fallbackProxyPassword = localProxyPassword,

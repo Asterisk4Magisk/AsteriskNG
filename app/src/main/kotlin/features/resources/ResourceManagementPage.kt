@@ -380,7 +380,7 @@ fun ResourceManagementPage(
 
 private fun AppState.resourceFileUpdateOptions(): ResourceFileUpdateOptions {
     return ResourceFileUpdateOptions(
-        useRunningProxy = true,
+        useRunningProxy = proxyRunning,
         fallbackProxyPort = localProxyPort.toPortOrNull(),
         fallbackProxyUsername = localProxyUsername,
         fallbackProxyPassword = localProxyPassword,
