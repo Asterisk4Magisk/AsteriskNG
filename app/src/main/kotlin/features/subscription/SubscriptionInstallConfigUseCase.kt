@@ -27,7 +27,7 @@ internal class SubscriptionInstallConfigUseCase(
     private val subscriptionFetcher: AndroidSubscriptionFetcher,
 ) {
     suspend fun install(config: SubscriptionInstallConfig): ProxyServerListSubscriptionUpdateResult {
-        val group = stateStore.addSubscriptionGroup(config)
+        val group = stateStore.prepareSubscriptionInstallGroup(config)
         val result = updateSubscriptions(
             groups = listOf(group),
             subscriptionFetcher = subscriptionFetcher,
@@ -101,17 +101,38 @@ private fun Url.toRawHttpsSubscriptionInstallConfigOrNull(rawValue: String): Sub
     )
 }
 
-private fun AndroidAppStateStore.addSubscriptionGroup(config: SubscriptionInstallConfig): SubscriptionGroupState {
+private fun AndroidAppStateStore.prepareSubscriptionInstallGroup(
+    config: SubscriptionInstallConfig,
+): SubscriptionGroupState {
     var savedGroup: SubscriptionGroupState? = null
     update { state ->
-        val group = state.newSubscriptionGroup(config)
+        val reusableGroup = state.reusableDefaultSubscriptionGroup()
+        val group = reusableGroup?.copy(
+            url = config.url,
+            userAgent = config.userAgent,
+        ) ?: state.newSubscriptionGroup(config)
         savedGroup = group
-        state.copy(
-            subscriptionGroups = state.subscriptionGroups + group,
-            nextSubscriptionGroupId = state.nextSubscriptionGroupId + 1,
-        )
+        if (reusableGroup == null) {
+            state.copy(
+                subscriptionGroups = state.subscriptionGroups + group,
+                nextSubscriptionGroupId = state.nextSubscriptionGroupId + 1,
+            )
+        } else {
+            state.copy(
+                subscriptionGroups = state.subscriptionGroups.map { existingGroup ->
+                    if (existingGroup.id == group.id) group else existingGroup
+                },
+            )
+        }
     }
     return checkNotNull(savedGroup)
+}
+
+private fun AppState.reusableDefaultSubscriptionGroup(): SubscriptionGroupState? {
+    return subscriptionGroups.firstOrNull { group -> group.id == DefaultSubscriptionGroupId }
+        ?.takeIf {
+            proxyServers.none { server -> server.groupId == DefaultSubscriptionGroupId }
+        }
 }
 
 private fun AppState.newSubscriptionGroup(config: SubscriptionInstallConfig): SubscriptionGroupState {
