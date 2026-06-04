@@ -151,7 +151,6 @@ internal fun SubscriptionGroupEditorDialog(
                             summary = resolvedUserAgent,
                             items = userAgentItems,
                             selectedIndex = selectedUserAgentIndex,
-                            modifier = Modifier.padding(bottom = 12.dp),
                             onSelectedIndexChange = { index ->
                                 val selection = SubscriptionUserAgentSelections[index]
                                 if (selection == SubscriptionUserAgentSelection.Custom) {
