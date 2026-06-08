@@ -152,34 +152,52 @@ fun ProxyServerListPage(
     }
 
     fun deleteProxyServer(server: ProxyServerState) {
+        if (serviceOperationInProgress) return
+        val remarks = server.server.getInfo().remarks
+
+        fun removeServer(stopResult: ProxyServiceResult.Success? = null): Boolean {
+            var deleted = false
+            updateAppState { state ->
+                val nextServers = state.proxyServers.filterNot { it.id == server.id }
+                if (nextServers.size == state.proxyServers.size) {
+                    stopResult?.let { result ->
+                        state.copy(
+                            proxyRunning = result.proxyRunning,
+                            localProxyPort = result.appState?.localProxyPort ?: state.localProxyPort,
+                        )
+                    } ?: state
+                } else {
+                    deleted = true
+                    val selectedProxyServerId = if (state.selectedProxyServerId == server.id) {
+                        nextServers.firstOrNull()?.id ?: state.selectedProxyServerId
+                    } else {
+                        state.selectedProxyServerId
+                    }
+                    state.copy(
+                        proxyServers = nextServers,
+                        selectedProxyServerId = selectedProxyServerId,
+                        proxyRunning = stopResult?.proxyRunning ?: state.proxyRunning,
+                        localProxyPort = stopResult?.appState?.localProxyPort ?: state.localProxyPort,
+                    )
+                }
+            }
+            return deleted
+        }
+
+        val stateSnapshot = stateStore.state.value
+        if (stateSnapshot.selectedProxyServerId != server.id || !stateSnapshot.proxyRunning) {
+            if (removeServer()) {
+                services.appScope.launch {
+                    tipNotifier.show(messages.deletedTemplate.formatTemplate("name" to remarks))
+                }
+            }
+            return
+        }
+
         runProxyServiceOperation {
             when (val stopResult = proxyServiceUseCase.stop(stateStore.state.value.runMode)) {
                 is ProxyServiceResult.Success -> {
-                    val remarks = server.server.getInfo().remarks
-                    var deleted = false
-                    updateAppState { state ->
-                        val nextServers = state.proxyServers.filterNot { it.id == server.id }
-                        if (nextServers.size == state.proxyServers.size) {
-                            state.copy(
-                                proxyRunning = stopResult.proxyRunning,
-                                localProxyPort = stopResult.appState?.localProxyPort ?: state.localProxyPort,
-                            )
-                        } else {
-                            deleted = true
-                            val selectedProxyServerId = if (state.selectedProxyServerId == server.id) {
-                                nextServers.firstOrNull()?.id ?: state.selectedProxyServerId
-                            } else {
-                                state.selectedProxyServerId
-                            }
-                            state.copy(
-                                proxyServers = nextServers,
-                                selectedProxyServerId = selectedProxyServerId,
-                                proxyRunning = stopResult.proxyRunning,
-                                localProxyPort = stopResult.appState?.localProxyPort ?: state.localProxyPort,
-                            )
-                        }
-                    }
-                    if (deleted) {
+                    if (removeServer(stopResult)) {
                         tipNotifier.show(messages.deletedTemplate.formatTemplate("name" to remarks))
                     }
                 }
