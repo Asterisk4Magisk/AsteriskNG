@@ -66,6 +66,7 @@ internal fun ProxyServerListTopBar(
     clipboard: Clipboard,
     tipNotifier: AndroidToastTipNotifier,
     scope: CoroutineScope,
+    backgroundScope: CoroutineScope,
     messages: ProxyServerListMessages,
     resultKey: String,
     serviceOperationInProgress: Boolean,
@@ -92,6 +93,7 @@ internal fun ProxyServerListTopBar(
                     clipboard = clipboard,
                     tipNotifier = tipNotifier,
                     scope = scope,
+                    backgroundScope = backgroundScope,
                     messages = messages,
                     resultKey = resultKey,
                 )
@@ -109,6 +111,7 @@ internal fun ProxyServerListTopBar(
                     clipboard = clipboard,
                     tipNotifier = tipNotifier,
                     scope = scope,
+                    backgroundScope = backgroundScope,
                     messages = messages,
                     serviceOperationInProgress = serviceOperationInProgress,
                     runProxyServiceOperation = runProxyServiceOperation,
@@ -151,6 +154,7 @@ private fun handleProxyServerListAddAction(
     clipboard: Clipboard,
     tipNotifier: AndroidToastTipNotifier,
     scope: CoroutineScope,
+    backgroundScope: CoroutineScope,
     messages: ProxyServerListMessages,
     resultKey: String,
 ) {
@@ -160,24 +164,15 @@ private fun handleProxyServerListAddAction(
                 runCatching { qrScanner() }
                     .onSuccess { scanText ->
                         if (scanText.isNullOrBlank()) return@onSuccess
-                        if (
-                            installSubscriptionFromText(
-                                text = scanText,
-                                stateStore = stateStore,
-                                subscriptionFetcher = subscriptionFetcher,
-                                tipNotifier = tipNotifier,
-                                messages = messages,
-                            )
-                        ) {
-                            return@onSuccess
-                        }
-                        importProxyServers(
+                        importProxyServersInBackground(
                             text = scanText,
                             source = ProxyServerImportSource.QrCode,
                             groupState = groupState,
+                            stateStore = stateStore,
                             subscriptionFetcher = subscriptionFetcher,
                             updateAppState = updateAppState,
                             tipNotifier = tipNotifier,
+                            backgroundScope = backgroundScope,
                             messages = messages,
                         )
                     }
@@ -188,24 +183,15 @@ private fun handleProxyServerListAddAction(
         ProxyServerListAddAction.Clipboard -> {
             scope.launch {
                 val text = clipboard.getPlainText().orEmpty()
-                if (
-                    installSubscriptionFromText(
-                        text = text,
-                        stateStore = stateStore,
-                        subscriptionFetcher = subscriptionFetcher,
-                        tipNotifier = tipNotifier,
-                        messages = messages,
-                    )
-                ) {
-                    return@launch
-                }
-                importProxyServers(
+                importProxyServersInBackground(
                     text = text,
                     source = ProxyServerImportSource.Clipboard,
                     groupState = groupState,
+                    stateStore = stateStore,
                     subscriptionFetcher = subscriptionFetcher,
                     updateAppState = updateAppState,
                     tipNotifier = tipNotifier,
+                    backgroundScope = backgroundScope,
                     messages = messages,
                 )
             }
@@ -213,30 +199,23 @@ private fun handleProxyServerListAddAction(
 
         ProxyServerListAddAction.File -> {
             scope.launch {
-                runCatching {
-                    proxyServerImportFileUseCase.readText()?.let { text ->
-                        if (
-                            installSubscriptionFromText(
-                                text = text,
+                runCatching { proxyServerImportFileUseCase.readText() }
+                    .onSuccess { text ->
+                        text?.let {
+                            importProxyServersInBackground(
+                                text = it,
+                                source = ProxyServerImportSource.File,
+                                groupState = groupState,
                                 stateStore = stateStore,
                                 subscriptionFetcher = subscriptionFetcher,
+                                updateAppState = updateAppState,
                                 tipNotifier = tipNotifier,
+                                backgroundScope = backgroundScope,
                                 messages = messages,
                             )
-                        ) {
-                            return@let
                         }
-                        importProxyServers(
-                            text = text,
-                            source = ProxyServerImportSource.File,
-                            groupState = groupState,
-                            subscriptionFetcher = subscriptionFetcher,
-                            updateAppState = updateAppState,
-                            tipNotifier = tipNotifier,
-                            messages = messages,
-                        )
                     }
-                }.onFailure { error -> tipNotifier.showError(error) }
+                    .onFailure { error -> tipNotifier.showError(error) }
             }
         }
 
@@ -257,6 +236,43 @@ private fun handleProxyServerListAddAction(
                 requestKey = resultKey,
             )
         }
+    }
+}
+
+private fun importProxyServersInBackground(
+    text: String,
+    source: ProxyServerImportSource,
+    groupState: ProxyServerListGroups,
+    stateStore: AndroidAppStateStore,
+    subscriptionFetcher: AndroidSubscriptionFetcher,
+    updateAppState: ((AppState) -> AppState) -> Unit,
+    tipNotifier: AndroidToastTipNotifier,
+    backgroundScope: CoroutineScope,
+    messages: ProxyServerListMessages,
+) {
+    backgroundScope.launch {
+        runCatching {
+            if (
+                installSubscriptionFromText(
+                    text = text,
+                    stateStore = stateStore,
+                    subscriptionFetcher = subscriptionFetcher,
+                    tipNotifier = tipNotifier,
+                    messages = messages,
+                )
+            ) {
+                return@runCatching
+            }
+            importProxyServers(
+                text = text,
+                source = source,
+                groupState = groupState,
+                subscriptionFetcher = subscriptionFetcher,
+                updateAppState = updateAppState,
+                tipNotifier = tipNotifier,
+                messages = messages,
+            )
+        }.onFailure { error -> tipNotifier.showError(error) }
     }
 }
 
@@ -335,6 +351,7 @@ private fun handleProxyServerListToolAction(
     clipboard: Clipboard,
     tipNotifier: AndroidToastTipNotifier,
     scope: CoroutineScope,
+    backgroundScope: CoroutineScope,
     messages: ProxyServerListMessages,
     serviceOperationInProgress: Boolean,
     runProxyServiceOperation: (suspend () -> Unit) -> Unit,
@@ -389,7 +406,7 @@ private fun handleProxyServerListToolAction(
                 updateAppState = updateAppState,
                 subscriptionFetcher = subscriptionFetcher,
                 tipNotifier = tipNotifier,
-                scope = scope,
+                backgroundScope = backgroundScope,
                 messages = messages,
             )
         }
@@ -483,11 +500,11 @@ private fun updateSubscriptionGroups(
     updateAppState: ((AppState) -> AppState) -> Unit,
     subscriptionFetcher: AndroidSubscriptionFetcher,
     tipNotifier: AndroidToastTipNotifier,
-    scope: CoroutineScope,
+    backgroundScope: CoroutineScope,
     messages: ProxyServerListMessages,
 ) {
     val subscriptionGroups = proxyListState.subscriptionGroups.updatableSubscriptionGroups()
-    scope.launch {
+    backgroundScope.launch {
         if (subscriptionGroups.isEmpty()) {
             tipNotifier.show(messages.noSubscriptionUpdates)
             return@launch

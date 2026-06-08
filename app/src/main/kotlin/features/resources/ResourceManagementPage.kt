@@ -31,13 +31,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import app.R
 import ui.components.BackNavigationIcon
 import ui.components.NavigationIcon
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import androidx.compose.ui.res.stringResource
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
@@ -69,7 +70,6 @@ fun ResourceManagementPage(
     val sourceOptions = settingsResourceFileSourceOptions()
     val tipNotifier = services.tipNotifier
     val topAppBarScrollBehavior = MiuixScrollBehavior()
-    val scope = rememberCoroutineScope()
     var status by remember { mutableStateOf(ResourceFilesStatus()) }
     var updating by remember { mutableStateOf(false) }
     val showCustomResourceFileDialog = remember { mutableStateOf(false) }
@@ -89,22 +89,29 @@ fun ResourceManagementPage(
         successMessage: String?,
         failureStatusCustomResourceFiles: (() -> List<CustomResourceFileState>)? = null,
     ) {
-        scope.launch {
-            updating = true
+        updating = true
+        services.appScope.launch {
             try {
                 action()?.let {
-                    status = it
+                    withContext(Dispatchers.Main.immediate) {
+                        status = it
+                    }
                     successMessage?.let { message -> tipNotifier.show(message) }
                 }
             } catch (error: Throwable) {
                 failureStatusCustomResourceFiles?.let { customResourceFiles ->
                     runCatching {
-                        status = resourceFileUseCase.status(customResourceFiles())
+                        val failureStatus = resourceFileUseCase.status(customResourceFiles())
+                        withContext(Dispatchers.Main.immediate) {
+                            status = failureStatus
+                        }
                     }
                 }
                 tipNotifier.showError(error)
             } finally {
-                updating = false
+                withContext(Dispatchers.Main.immediate) {
+                    updating = false
+                }
             }
         }
     }

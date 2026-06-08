@@ -39,7 +39,9 @@ import features.settings.sheets.privateAddressCidrsSummary
 import features.settings.sheets.tunSettingsSummary
 import features.settings.usecase.SwitchRunModeResult
 import features.settings.usecase.RootBootScriptResult
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import app.navigation.Route
 import androidx.compose.ui.res.stringResource
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
@@ -247,10 +249,11 @@ private fun SettingsContent(
                     },
                     onRunModeChange = { index ->
                         if (index != appState.runMode && !runModeSwitchInProgress) {
-                            scope.launch {
-                                runModeSwitchInProgress = true
+                            val currentState = appState
+                            runModeSwitchInProgress = true
+                            services.appScope.launch {
                                 try {
-                                    when (val result = switchRunModeUseCase.switchRunMode(appState, index)) {
+                                    when (val result = switchRunModeUseCase.switchRunMode(currentState, index)) {
                                         is SwitchRunModeResult.Success -> {
                                             updateAppState { state ->
                                                 state.copy(
@@ -271,7 +274,9 @@ private fun SettingsContent(
                                         }
                                     }
                                 } finally {
-                                    runModeSwitchInProgress = false
+                                    withContext(Dispatchers.Main.immediate) {
+                                        runModeSwitchInProgress = false
+                                    }
                                 }
                             }
                         }
@@ -297,13 +302,14 @@ private fun SettingsContent(
                     onOpenProxySettings = { sheetState.openProxySettings(appState) },
                     onEnableRootBootScriptChange = { enabled ->
                         if (!rootBootScriptSwitchInProgress) {
-                            scope.launch {
-                                rootBootScriptSwitchInProgress = true
+                            val currentState = appState
+                            rootBootScriptSwitchInProgress = true
+                            services.appScope.launch {
                                 try {
                                     val bootScriptState = if (enabled) {
-                                        appState.withResolvedDynamicLocalProxyPort()
+                                        currentState.withResolvedDynamicLocalProxyPort()
                                     } else {
-                                        appState
+                                        currentState
                                     }
                                     when (val result = rootBootScriptUseCase.setEnabled(bootScriptState, enabled)) {
                                         RootBootScriptResult.Success -> {
@@ -328,7 +334,9 @@ private fun SettingsContent(
                                         }
                                     }
                                 } finally {
-                                    rootBootScriptSwitchInProgress = false
+                                    withContext(Dispatchers.Main.immediate) {
+                                        rootBootScriptSwitchInProgress = false
+                                    }
                                 }
                             }
                         }

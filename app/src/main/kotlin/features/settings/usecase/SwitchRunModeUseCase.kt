@@ -11,6 +11,7 @@ import app.modes.RunModeVpnService
 import engine.proxy.AndroidProxyEngine
 import engine.tun2socks.deleteHevSocks5TunnelLogFile
 import features.logs.AndroidAppLogger
+import kotlinx.coroutines.CancellationException
 import system.AndroidRootShellGateway
 
 internal class SwitchRunModeUseCase(
@@ -46,7 +47,10 @@ internal class SwitchRunModeUseCase(
 
         val stoppedRunning = if (currentState.proxyRunning) {
             runCatching { proxyEngine.stopCurrentRunMode(currentState.runMode) }
-                .getOrElse { error -> return SwitchRunModeResult.StopFailed(error) }
+                .getOrElse { error ->
+                    if (error is CancellationException) throw error
+                    return SwitchRunModeResult.StopFailed(error)
+                }
                 .running
         } else {
             false

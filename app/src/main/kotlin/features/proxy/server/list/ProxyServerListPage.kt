@@ -38,10 +38,12 @@ import features.proxy.server.usecase.ProxyServiceResult
 import features.proxy.server.usecase.restartProxyServiceAfterSelection
 import features.proxy.server.usecase.runProxyServerLatencyTest
 import features.subscription.DefaultSubscriptionGroupId
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.withContext
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
 import ui.layout.pageContentPaddingWithCutout
@@ -90,12 +92,14 @@ fun ProxyServerListPage(
 
     fun runProxyServiceOperation(operation: suspend () -> Unit) {
         if (serviceOperationInProgress) return
-        scope.launch {
-            serviceOperationInProgress = true
+        serviceOperationInProgress = true
+        services.appScope.launch {
             try {
                 operation()
             } finally {
-                serviceOperationInProgress = false
+                withContext(Dispatchers.Main.immediate) {
+                    serviceOperationInProgress = false
+                }
             }
         }
     }
@@ -136,7 +140,7 @@ fun ProxyServerListPage(
             mode = mode,
             doneTemplate = doneTemplate,
             showSingleResult = showSingleResult,
-            scope = scope,
+            scope = services.appScope,
             stateStore = stateStore,
             updateAppState = updateAppState,
             proxyLatencyTester = proxyLatencyTester,
@@ -153,7 +157,6 @@ fun ProxyServerListPage(
                 is ProxyServiceResult.Success -> {
                     val remarks = server.server.getInfo().remarks
                     var deleted = false
-                    var nextSelectedServerId = stateStore.state.value.selectedProxyServerId
                     updateAppState { state ->
                         val nextServers = state.proxyServers.filterNot { it.id == server.id }
                         if (nextServers.size == state.proxyServers.size) {
@@ -168,7 +171,6 @@ fun ProxyServerListPage(
                             } else {
                                 state.selectedProxyServerId
                             }
-                            nextSelectedServerId = selectedProxyServerId
                             state.copy(
                                 proxyServers = nextServers,
                                 selectedProxyServerId = selectedProxyServerId,
@@ -177,7 +179,6 @@ fun ProxyServerListPage(
                             )
                         }
                     }
-                    selectedServerId = nextSelectedServerId
                     if (deleted) {
                         tipNotifier.show(messages.deletedTemplate.formatTemplate("name" to remarks))
                     }
@@ -269,6 +270,7 @@ fun ProxyServerListPage(
                 clipboard = clipboard,
                 tipNotifier = tipNotifier,
                 scope = scope,
+                backgroundScope = services.appScope,
                 messages = messages,
                 resultKey = ProxyServerEditResultKey,
                 serviceOperationInProgress = serviceOperationInProgress,

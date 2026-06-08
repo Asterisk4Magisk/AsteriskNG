@@ -16,6 +16,7 @@ import engine.tproxy.TproxyRootRunner
 import engine.tproxy.buildTproxyStartConfig
 import engine.tun2socks.Tun2SocksRootRunner
 import engine.tun2socks.buildTun2SocksStartConfig
+import kotlinx.coroutines.CancellationException
 import system.AndroidRootShellGateway
 
 internal class RootBootScriptUseCase(
@@ -62,7 +63,7 @@ internal class RootBootScriptUseCase(
             )
         }.fold(
             onSuccess = { RootBootScriptResult.Success },
-            onFailure = RootBootScriptResult::Failed,
+            onFailure = Throwable::toRootBootScriptResult,
         )
     }
 
@@ -79,7 +80,7 @@ internal class RootBootScriptUseCase(
             }
         }.fold(
             onSuccess = { RootBootScriptResult.Success },
-            onFailure = RootBootScriptResult::Failed,
+            onFailure = Throwable::toRootBootScriptResult,
         )
     }
 
@@ -93,6 +94,13 @@ internal class RootBootScriptUseCase(
             RunModeTun2Socks -> tun2SocksRootRunner.installBootScript(rootContext.buildTun2SocksStartConfig())
         }
     }
+}
+
+private fun Throwable.toRootBootScriptResult(): RootBootScriptResult {
+    if (this is CancellationException) {
+        throw this
+    }
+    return RootBootScriptResult.Failed(this)
 }
 
 internal sealed interface RootBootScriptResult {
