@@ -66,8 +66,8 @@
     <string name="settings_advanced">Advanced settings</string>
     <string name="settings_run_mode">Run mode</string>
     <string name="settings_run_mode_vpn_service">VPN Service</string>
-    <string name="settings_run_mode_tproxy">TPROXY（ROOT）</string>
-    <string name="settings_run_mode_tun2socks">TUN2SOCKS（ROOT）</string>
+    <string name="settings_run_mode_tproxy">TPROXY (ROOT)</string>
+    <string name="settings_run_mode_tun2socks">TUN2SOCKS (ROOT)</string>
     <string name="settings_resolve_proxy_server_domain">Resolve proxy server domains</string>
     <string name="settings_resolve_proxy_server_domain_summary">Write proxy server IPs to DNS hosts</string>
     <string name="settings_root_required">No ROOT access detected!</string>
