@@ -97,6 +97,7 @@ internal fun ProxySettingsBottomSheet(
                     checked = enableHttpProxy,
                     onCheckedChange = onEnableHttpProxyChange,
                     enabled = !lockInboundSettings,
+                    modifier = Modifier.padding(bottom = if (enableHttpProxy) 12.dp else 0.dp),
                 )
                 AnimatedVisibility(
                     visible = enableHttpProxy,

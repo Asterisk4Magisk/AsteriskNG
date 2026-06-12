@@ -59,7 +59,9 @@ internal fun LazyListScope.v2rayServerTransport(params: V2RayParameters) {
             title = stringResource(R.string.proxy_editor_transport_type),
             items = typeOptions,
             selectedIndex = type.intValue,
-            modifier = Modifier.padding(horizontal = 12.dp),
+            modifier = Modifier
+                .padding(horizontal = 12.dp)
+                .padding(bottom = 12.dp),
             onSelectedIndexChange = { newType ->
                 type.intValue = newType
                 params.type = typeOptions[newType]

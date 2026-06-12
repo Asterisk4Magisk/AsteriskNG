@@ -131,7 +131,7 @@ internal fun DnsSettingsBottomSheet(
                 checked = enableDirectDnsForProxyServerDomains,
                 onCheckedChange = onEnableDirectDnsForProxyServerDomainsChange,
             )
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(12.dp))
             StringListEditor(
                 editorKey = "direct-dns:$show",
                 title = stringResource(R.string.settings_direct_dns),

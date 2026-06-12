@@ -117,6 +117,7 @@ internal fun FragmentSettingsBottomSheet(
                             title = stringResource(R.string.settings_fragment_packets),
                             items = FragmentPacketsValues,
                             selectedIndex = fragmentPacketsIndex(packets),
+                            modifier = Modifier.padding(bottom = 12.dp),
                             onSelectedIndexChange = { index ->
                                 onPacketsChange(FragmentPacketsValues[index.coerceIn(FragmentPacketsValues.indices)])
                             },

@@ -111,6 +111,7 @@ internal fun MuxSettingsBottomSheet(
                     summary = stringResource(R.string.settings_mux_enabled_summary),
                     checked = enabled,
                     onCheckedChange = onEnabledChange,
+                    modifier = Modifier.padding(bottom = if (enabled) 12.dp else 0.dp),
                 )
                 AnimatedVisibility(
                     visible = enabled,

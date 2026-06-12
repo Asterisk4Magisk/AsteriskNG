@@ -3,9 +3,12 @@
 
 package features.settings.sheets
 
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import app.R
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.window.WindowBottomSheet
@@ -78,6 +81,7 @@ internal fun LocalProxySettingsBottomSheet(
                     summary = stringResource(R.string.settings_local_proxy_listen_all_interfaces_summary),
                     checked = listenAllInterfaces,
                     onCheckedChange = onListenAllInterfacesChange,
+                    modifier = Modifier.padding(bottom = 12.dp),
                 )
                 SettingsTextField(
                     value = username,

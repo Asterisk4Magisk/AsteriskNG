@@ -179,6 +179,7 @@ internal fun SubscriptionGroupEditorDialog(
                             summary = stringResource(R.string.subscription_update_via_proxy_summary),
                             checked = updateViaProxy,
                             onCheckedChange = { updateViaProxy = it },
+                            modifier = Modifier.padding(bottom = 12.dp),
                         )
                         TextField(
                             value = interval,
