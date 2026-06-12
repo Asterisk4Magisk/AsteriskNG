@@ -297,6 +297,9 @@
     <string name="proxy_server_list_real_connection_test">测试真连接</string>
     <string name="proxy_server_list_sort_by_test_result">按测试结果排序</string>
     <string name="proxy_server_list_copy_all_urls">复制所有节点URL</string>
+    <string name="proxy_server_copy_qr_code">二维码</string>
+    <string name="proxy_server_copy_url">分享 URL</string>
+    <string name="proxy_server_copy_full_json">完整 JSON</string>
     <string name="proxy_server_list_delete_duplicates">删除重复代理节点</string>
     <string name="proxy_server_list_delete_invalid">删除无效代理节点</string>
     <string name="proxy_server_list_start_proxy">启动代理</string>
@@ -341,6 +344,7 @@
     <string name="proxy_server_list_no_duplicates">未发现重复代理节点</string>
     <string name="proxy_server_list_invalid_deleted">已删除 {count} 个无效代理节点</string>
     <string name="proxy_server_list_no_invalid">未发现无效代理节点</string>
+    <string name="proxy_server_qr_generate_failed">二维码生成失败</string>
     <string name="error_proxy_server_import_file_open_failed">无法打开导入文件</string>
 
     <!-- Proxy editor -->

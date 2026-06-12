@@ -17,6 +17,10 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.Clipboard
@@ -30,8 +34,10 @@ import app.collectProxyServerLatency
 import app.navigation.Navigator
 import app.navigation.Route
 import data.AndroidAppStateStore
+import features.proxy.server.model.UrlProxyServer
 import features.proxy.server.validation.rememberProxyServerValidationMessageResolver
 import features.proxy.server.usecase.ProxyServerCopyTextResult
+import features.proxy.server.usecase.ProxyServerCopyTextType
 import features.proxy.server.usecase.proxyServerCopyText
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -75,6 +81,15 @@ internal fun ProxyServerListPager(
     onDeleteServer: (ProxyServerState) -> Unit,
 ) {
     val context = LocalContext.current
+    var qrCodeDialogState by remember { mutableStateOf<ProxyServerQrCodeDialogState?>(null) }
+
+    qrCodeDialogState?.let { state ->
+        ProxyServerQrCodeDialog(
+            title = state.title,
+            text = state.text,
+            onDismissRequest = { qrCodeDialogState = null },
+        )
+    }
 
     HorizontalPager(
         state = groupPagerState,
@@ -158,6 +173,9 @@ internal fun ProxyServerListPager(
                                 resultKey = resultKey,
                                 onSelectedServerIdChange = onSelectedServerIdChange,
                                 onDeleteServer = onDeleteServer,
+                                onShowQrCode = { title, text ->
+                                    qrCodeDialogState = ProxyServerQrCodeDialogState(title, text)
+                                },
                                 isDragging = isDragging,
                                 dragModifier = Modifier.longPressReorderDragHandle(
                                     scope = this,
@@ -204,6 +222,7 @@ private fun ProxyServerListItem(
     resultKey: String,
     onSelectedServerIdChange: (Int) -> Unit,
     onDeleteServer: (ProxyServerState) -> Unit,
+    onShowQrCode: (title: String, text: String) -> Unit,
     isDragging: Boolean,
     modifier: Modifier = Modifier,
     dragModifier: Modifier,
@@ -213,10 +232,20 @@ private fun ProxyServerListItem(
         initialLatency = server.latency,
     ).value
     val validationMessageOf = rememberProxyServerValidationMessageResolver()
+    val displayText = itemTextFormatter.displayOf(server, servers)
+    val copyActions = if (server.server is UrlProxyServer<*>) {
+        listOf(
+            ProxyServerListCopyAction.QrCode,
+            ProxyServerListCopyAction.Url,
+            ProxyServerListCopyAction.FullJson,
+        )
+    } else {
+        listOf(ProxyServerListCopyAction.FullJson)
+    }
 
     ProxyServerListItemCard(
         latency = latency,
-        displayText = itemTextFormatter.displayOf(server, servers),
+        displayText = displayText,
         selected = selectedServerId == server.id,
         modifier = modifier,
         groupName = if (pageIsAllGroupsSelected) {
@@ -236,22 +265,34 @@ private fun ProxyServerListItem(
                 }
             }
         },
-        onShare = {
+        copyActions = copyActions,
+        onCopyAction = { action ->
             scope.launch {
                 val basicIssues = server.server.validateBasic()
                 if (basicIssues.isNotEmpty()) {
                     tipNotifier.show(validationMessageOf(basicIssues.first()))
                     return@launch
                 }
+                val copyTextType = when (action) {
+                    ProxyServerListCopyAction.QrCode,
+                    ProxyServerListCopyAction.Url -> ProxyServerCopyTextType.Url
+
+                    ProxyServerListCopyAction.FullJson -> ProxyServerCopyTextType.FullJson
+                }
                 when (
                     val result = server.proxyServerCopyText(
                         context = context,
                         appState = stateStore.state.value,
+                        type = copyTextType,
                     )
                 ) {
                     is ProxyServerCopyTextResult.Success -> {
-                        clipboard.setPlainText(result.text)
-                        tipNotifier.show(messages.copied)
+                        if (action == ProxyServerListCopyAction.QrCode) {
+                            onShowQrCode(displayText.title, result.text)
+                        } else {
+                            clipboard.setPlainText(result.text)
+                            tipNotifier.show(messages.copied)
+                        }
                     }
 
                     ProxyServerCopyTextResult.Unsupported -> {
@@ -281,6 +322,11 @@ private fun ProxyServerListItem(
         },
     )
 }
+
+private data class ProxyServerQrCodeDialogState(
+    val title: String,
+    val text: String,
+)
 
 private fun List<ProxyServerState>.filterPageServers(
     pageGroupId: Int,

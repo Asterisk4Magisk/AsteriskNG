@@ -297,6 +297,9 @@
     <string name="proxy_server_list_real_connection_test">Real connection test</string>
     <string name="proxy_server_list_sort_by_test_result">Sort by test result</string>
     <string name="proxy_server_list_copy_all_urls">Copy all server URLs</string>
+    <string name="proxy_server_copy_qr_code">QR code</string>
+    <string name="proxy_server_copy_url">Share URL</string>
+    <string name="proxy_server_copy_full_json">Full JSON</string>
     <string name="proxy_server_list_delete_duplicates">Delete duplicate proxy servers</string>
     <string name="proxy_server_list_delete_invalid">Delete invalid proxy servers</string>
     <string name="proxy_server_list_start_proxy">Start proxy</string>
@@ -341,6 +344,7 @@
     <string name="proxy_server_list_no_duplicates">No duplicate proxy servers found</string>
     <string name="proxy_server_list_invalid_deleted">Deleted {count} invalid proxy servers</string>
     <string name="proxy_server_list_no_invalid">No invalid proxy servers found</string>
+    <string name="proxy_server_qr_generate_failed">Unable to generate QR code</string>
     <string name="error_proxy_server_import_file_open_failed">Failed to open import file</string>
 
     <!-- Proxy editor -->

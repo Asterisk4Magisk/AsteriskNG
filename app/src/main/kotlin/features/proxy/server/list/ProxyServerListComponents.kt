@@ -154,7 +154,8 @@ internal fun ProxyServerListItemCard(
     displayText: ProxyServerListItemDisplayText,
     selected: Boolean,
     onSelect: () -> Unit,
-    onShare: () -> Unit,
+    copyActions: List<ProxyServerListCopyAction>,
+    onCopyAction: (ProxyServerListCopyAction) -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     modifier: Modifier = Modifier,
@@ -259,13 +260,12 @@ internal fun ProxyServerListItemCard(
             Row(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                IconButton(onClick = onShare) {
-                    Icon(
-                        imageVector = MiuixIcons.Copy,
-                        contentDescription = stringResource(R.string.common_share),
-                        tint = MiuixTheme.colorScheme.onSurface,
-                    )
-                }
+                IconDropdownMenu(
+                    imageVector = MiuixIcons.Copy,
+                    contentDescription = stringResource(R.string.common_share),
+                    entries = proxyServerListCopyMenuEntries(copyActions),
+                    onAction = onCopyAction,
+                )
                 IconButton(onClick = onEdit) {
                     Icon(
                         imageVector = MiuixIcons.Edit,
@@ -282,6 +282,23 @@ internal fun ProxyServerListItemCard(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun proxyServerListCopyMenuEntries(
+    actions: List<ProxyServerListCopyAction>,
+): List<IconDropdownMenuEntry<ProxyServerListCopyAction>> {
+    return actions.map { action ->
+        IconDropdownMenuEntry(
+            key = action,
+            title = when (action) {
+                ProxyServerListCopyAction.QrCode -> stringResource(R.string.proxy_server_copy_qr_code)
+                ProxyServerListCopyAction.Url -> stringResource(R.string.proxy_server_copy_url)
+                ProxyServerListCopyAction.FullJson -> stringResource(R.string.proxy_server_copy_full_json)
+            },
+            action = action,
+        )
     }
 }
 

@@ -31,6 +31,12 @@ internal enum class ProxyServerListToolAction {
     DeleteInvalidServers,
 }
 
+internal enum class ProxyServerListCopyAction {
+    QrCode,
+    Url,
+    FullJson,
+}
+
 internal data class ProxyServerListMenuEntry(
     val title: String,
     val action: ProxyServerListAddAction,

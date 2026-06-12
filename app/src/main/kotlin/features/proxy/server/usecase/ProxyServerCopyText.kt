@@ -17,14 +17,21 @@ import features.proxy.server.model.ChainProxy
 import features.proxy.server.model.ProxyServer
 import features.proxy.server.model.StrategyGroup
 import features.proxy.server.model.getCopyTextOrNull
+import features.proxy.server.model.getUrlOrNull
 import features.subscription.DefaultSubscriptionGroupId
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import utils.formatJsonText
 
 internal sealed interface ProxyServerCopyTextResult {
     data class Success(val text: String) : ProxyServerCopyTextResult
     data object Unsupported : ProxyServerCopyTextResult
     data object InvalidConfig : ProxyServerCopyTextResult
+}
+
+internal enum class ProxyServerCopyTextType {
+    Url,
+    FullJson,
 }
 
 internal suspend fun ProxyServerState.proxyServerCopyText(
@@ -35,7 +42,7 @@ internal suspend fun ProxyServerState.proxyServerCopyText(
         is ChainProxy,
         is StrategyGroup -> withContext(Dispatchers.IO) {
             runCatching {
-                context.generatedProxyServerXrayConfig(appState, this@proxyServerCopyText)
+                context.generatedProxyServerXrayConfig(appState, this@proxyServerCopyText).formatJsonText()
             }.fold(
                 onSuccess = { text -> ProxyServerCopyTextResult.Success(text) },
                 onFailure = { ProxyServerCopyTextResult.InvalidConfig },
@@ -48,6 +55,30 @@ internal suspend fun ProxyServerState.proxyServerCopyText(
             },
             onFailure = { ProxyServerCopyTextResult.InvalidConfig },
         )
+    }
+}
+
+internal suspend fun ProxyServerState.proxyServerCopyText(
+    context: Context,
+    appState: AppState,
+    type: ProxyServerCopyTextType,
+): ProxyServerCopyTextResult {
+    return when (type) {
+        ProxyServerCopyTextType.Url -> runCatching { server.getUrlOrNull() }.fold(
+            onSuccess = { text ->
+                if (text == null) ProxyServerCopyTextResult.Unsupported else ProxyServerCopyTextResult.Success(text)
+            },
+            onFailure = { ProxyServerCopyTextResult.InvalidConfig },
+        )
+
+        ProxyServerCopyTextType.FullJson -> withContext(Dispatchers.IO) {
+            runCatching {
+                context.generatedProxyServerXrayConfig(appState, this@proxyServerCopyText).formatJsonText()
+            }.fold(
+                onSuccess = { text -> ProxyServerCopyTextResult.Success(text) },
+                onFailure = { ProxyServerCopyTextResult.InvalidConfig },
+            )
+        }
     }
 }
 
