@@ -23,7 +23,10 @@ internal class Tun2SocksRootRunner(
     logTag = LogTag,
 ) {
     override fun buildSetupRulesCommand(config: Tun2SocksStartConfig): String {
-        return config.iptablesConfig.buildSetupRulesCommand(enableIpv6 = config.root.enableIpv6)
+        return config.iptablesConfig.buildSetupRulesCommand(
+            enableIpv6 = config.root.enableIpv6,
+            enableFakeDns = config.root.enableFakeDns,
+        )
     }
 
     override fun buildCleanupRulesCommand(): String {

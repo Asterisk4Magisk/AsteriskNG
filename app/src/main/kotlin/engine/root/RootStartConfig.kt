@@ -13,6 +13,7 @@ internal data class RootStartConfig(
     val setuidgidPath: String,
     val runtimeLayout: RootRuntimeLayout,
     val enableIpv6: Boolean,
+    val enableFakeDns: Boolean,
     val enableAccessLog: Boolean,
     val coreLogPaths: XrayCoreLogPaths,
 ) {

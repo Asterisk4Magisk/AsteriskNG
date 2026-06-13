@@ -6,6 +6,7 @@ package engine.root
 import android.content.Context
 import app.AppState
 import app.ProxyServerState
+import app.effectiveFakeDnsEnabled
 import engine.network.toPortOrNull
 import engine.proxy.ProxyEngineStartRequest
 import engine.tun2socks.DefaultTun2SocksProxyPort
@@ -91,6 +92,7 @@ private fun AppState.toRootStartConfig(
         setuidgidPath = resourceFilePaths.setuidgidPath,
         runtimeLayout = runtimeLayout,
         enableIpv6 = enableIpv6,
+        enableFakeDns = effectiveFakeDnsEnabled,
         enableAccessLog = enableAccessLog,
         coreLogPaths = coreLogPaths,
     )

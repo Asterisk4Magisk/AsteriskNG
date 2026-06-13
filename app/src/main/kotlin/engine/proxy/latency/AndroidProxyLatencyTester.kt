@@ -83,7 +83,10 @@ internal class AndroidProxyLatencyTester(
         }.onSuccess { millis ->
             AndroidAppLogger.debug(LogTag, "Real connection latency test serverId=${server.id} result=${millis}ms")
         }.onFailure { error ->
-            AndroidAppLogger.warn(LogTag, "Real connection latency test failed serverId=${server.id}", error)
+            AndroidAppLogger.warn(
+                LogTag,
+                "Real connection latency test failed serverId=${server.id}: ${error.logSummary()}",
+            )
         }.getOrDefault(FailedDelayMillis)
     }
 
@@ -98,10 +101,19 @@ internal class AndroidProxyLatencyTester(
             when (error) {
                 is UnknownHostException -> AndroidAppLogger.debug(LogTag, "Unknown host for TCP latency test: $host")
                 is IOException -> AndroidAppLogger.debug(LogTag, "TCP latency test IO failure: $host:$port ${error.message}")
-                else -> AndroidAppLogger.warn(LogTag, "TCP latency test failed: $host:$port", error)
+                else -> AndroidAppLogger.warn(LogTag, "TCP latency test failed: $host:$port ${error.logSummary()}")
             }
         }.getOrDefault(FailedDelayMillis)
     }
+}
+
+private fun Throwable.logSummary(): String {
+    val type = this::class.simpleName.orEmpty().ifBlank { "Throwable" }
+    val detail = message
+        ?.replace(WhitespaceRegex, " ")
+        ?.trim()
+        .orEmpty()
+    return if (detail.isEmpty()) type else "$type: $detail"
 }
 
 enum class ProxyServerLatencyTestMode {
@@ -150,3 +162,4 @@ private const val DelayTestUrl = NetworkDefaults.CONNECTIVITY_CHECK_URL
 private const val FailedDelayMillis = -1L
 private const val TcpConnectAttempts = 2
 private const val TcpConnectTimeoutMillis = 3_000
+private val WhitespaceRegex = Regex("\\s+")

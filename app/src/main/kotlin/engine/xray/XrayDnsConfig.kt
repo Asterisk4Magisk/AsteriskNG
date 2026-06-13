@@ -80,26 +80,10 @@ internal fun buildXrayDnsConfig(plan: XrayDnsPlan): JsonObject {
     }
 }
 
-private fun AppState.buildXrayFakeDnsConfig(): JsonElement {
-    if (!enableIpv6) {
-        return buildJsonObject {
-            put("ipPool", XrayFakeDnsIpv4Pool)
-            put("poolSize", XrayFakeDnsIpv4OnlyPoolSize)
-        }
-    }
-    return buildJsonArray {
-        add(
-            buildJsonObject {
-                put("ipPool", XrayFakeDnsIpv4Pool)
-                put("poolSize", XrayFakeDnsDualStackPoolSize)
-            },
-        )
-        add(
-            buildJsonObject {
-                put("ipPool", XrayFakeDnsIpv6Pool)
-                put("poolSize", XrayFakeDnsDualStackPoolSize)
-            },
-        )
+private fun buildXrayFakeDnsConfig(): JsonElement {
+    return buildJsonObject {
+        put("ipPool", XrayFakeDnsIpv4Pool)
+        put("poolSize", XrayFakeDnsIpv4OnlyPoolSize)
     }
 }
 

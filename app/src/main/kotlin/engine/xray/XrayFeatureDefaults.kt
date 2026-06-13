@@ -17,8 +17,6 @@ const val MaxFragmentInputLength = 21
 val FragmentPacketsValues = listOf("tlshello", "1-2", "1-3", "1-5")
 
 const val XrayFakeDnsIpv4Pool = "198.18.0.0/15"
-const val XrayFakeDnsIpv6Pool = "fc00::/18"
 const val XrayFakeDnsIpv4OnlyPoolSize = 65_535
-const val XrayFakeDnsDualStackPoolSize = 32_768
 const val XrayLogDisabled = "none"
 val DefaultDirectDnsDomains = listOf("geosite:cn")
