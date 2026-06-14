@@ -39,6 +39,12 @@ typedef struct {
 } State;
 
 typedef struct {
+    size_t applied;
+    size_t skipped;
+    size_t failed;
+} ActionStats;
+
+typedef struct {
     const char *pid_path;
     const char *log_path;
     FILE *log_file;
@@ -241,40 +247,51 @@ static int should_touch_iface(const char *iface) {
     return 1;
 }
 
-static int record_original_value(Options *options, State *state, const char *iface) {
+static int record_original_value(State *state, const char *iface, char *value) {
+    if (read_disable_ipv6_value(iface, value) != 0) {
+        return -1;
+    }
+
     if (find_state_entry(state, iface) >= 0) {
         return 0;
     }
-
-    char value = '\0';
-    if (read_disable_ipv6_value(iface, &value) != 0) {
-        log_message(options, "skip iface=%s read failed: %s", iface, strerror(errno));
-        return -1;
-    }
-    if (add_state_entry(state, iface, value) != 0) {
-        log_message(options, "skip iface=%s snapshot allocation failed", iface);
+    if (add_state_entry(state, iface, *value) != 0) {
         return -1;
     }
     return 0;
 }
 
-static void disable_iface(Options *options, State *state, const char *iface) {
-    if (record_original_value(options, state, iface) != 0) {
+static void disable_iface(State *state, const char *iface, ActionStats *stats) {
+    char value = '\0';
+    if (record_original_value(state, iface, &value) != 0) {
+        stats->failed++;
+        return;
+    }
+    if (value == '1') {
+        stats->skipped++;
         return;
     }
     if (write_disable_ipv6_value(iface, '1') != 0) {
-        log_message(options, "failed to disable iface=%s: %s", iface, strerror(errno));
+        stats->failed++;
         return;
     }
-    log_message(options, "disabled iface=%s", iface);
+    stats->applied++;
 }
 
 static void sweep_disable_ipv6(Options *options, State *state) {
-    disable_iface(options, state, "default");
+    ActionStats stats = {0};
+    disable_iface(state, "default", &stats);
 
     DIR *dir = opendir(IPV6_CONF_DIR);
     if (dir == NULL) {
-        log_message(options, "failed to list %s: %s", IPV6_CONF_DIR, strerror(errno));
+        stats.failed++;
+        log_message(
+            options,
+            "disable ipv6: applied=%zu skipped=%zu failed=%zu",
+            stats.applied,
+            stats.skipped,
+            stats.failed
+        );
         return;
     }
 
@@ -283,28 +300,49 @@ static void sweep_disable_ipv6(Options *options, State *state) {
         if (!should_touch_iface(entry->d_name)) {
             continue;
         }
-        disable_iface(options, state, entry->d_name);
+        disable_iface(state, entry->d_name, &stats);
     }
     closedir(dir);
+
+    if (stats.applied > 0 || stats.failed > 0) {
+        log_message(
+            options,
+            "disable ipv6: applied=%zu skipped=%zu failed=%zu",
+            stats.applied,
+            stats.skipped,
+            stats.failed
+        );
+    }
 }
 
 static void restore_ipv6(Options *options, const State *state) {
+    ActionStats stats = {0};
     for (size_t i = 0; i < state->count; ++i) {
         const char *iface = state->entries[i].iface;
         char path[PATH_MAX];
         if (build_disable_ipv6_path(iface, path, sizeof(path)) != 0) {
-            log_message(options, "skip restore iface=%s path too long", iface);
+            stats.failed++;
             continue;
         }
         if (access(path, F_OK) != 0) {
-            log_message(options, "skip restore iface=%s missing", iface);
+            stats.skipped++;
             continue;
         }
         if (write_disable_ipv6_value(iface, state->entries[i].value) != 0) {
-            log_message(options, "failed to restore iface=%s: %s", iface, strerror(errno));
+            stats.failed++;
             continue;
         }
-        log_message(options, "restored iface=%s value=%c", iface, state->entries[i].value);
+        stats.applied++;
+    }
+
+    if (stats.applied > 0 || stats.skipped > 0 || stats.failed > 0) {
+        log_message(
+            options,
+            "restore ipv6: applied=%zu skipped=%zu failed=%zu",
+            stats.applied,
+            stats.skipped,
+            stats.failed
+        );
     }
 }
 
