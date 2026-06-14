@@ -45,3 +45,4 @@ dependencyResolutionManagement {
 
 include(":app")
 include(":setuidgid")
+include(":ipv6disabler")

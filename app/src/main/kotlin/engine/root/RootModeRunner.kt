@@ -10,6 +10,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import system.AndroidRootShellGateway
 import system.ShellExecOptions
+import kotlin.time.Duration.Companion.milliseconds
 
 internal data class RootReadinessCheck(
     val description: String,
@@ -28,6 +29,10 @@ internal abstract class RootModeRunner<Config : RootModeStartConfig>(
         writeRootConfigFile(config.root)
         prepareModeRuntimeFiles(config)
         runRootCommand(config.root.buildPrepareRuntimeCommand(), "Failed to prepare $modeName environment")
+        runRootCommandIfNotBlank(
+            command = config.root.buildStartIpv6DisablerCommand(),
+            failureMessage = "Failed to start IPv6 disabler daemon",
+        )
         runRootCommand(config.root.buildStartDaemonCommand(), "Failed to start Xray-core daemon")
         runRootCommandIfNotBlank(
             command = buildPostCoreStartCommand(config),
@@ -154,7 +159,7 @@ internal abstract class RootModeRunner<Config : RootModeStartConfig>(
             if (result.errno == 0) {
                 return true
             }
-            delay(RuntimeReadyIntervalMillis)
+            delay(RuntimeReadyIntervalMillis.milliseconds)
         }
         val result = rootAccess.exec(checkCommand, ShellExecOptions(logFailure = false))
         return result.errno == 0

@@ -78,6 +78,8 @@
     <string name="settings_root_boot_script">Start on boot</string>
     <string name="settings_root_boot_script_summary">Generate service.d startup script</string>
     <string name="settings_root_boot_script_failed">Failed to update start on boot</string>
+    <string name="settings_root_ipv6_disabler">Disable system IPv6</string>
+    <string name="settings_root_ipv6_disabler_summary">Prevent WebRTC IPv6 address leaks</string>
     <string name="settings_vpn_local_dns">Enable local DNS</string>
     <string name="settings_vpn_local_dns_summary">Use the core to handle DNS requests</string>
     <string name="settings_local_proxy">Local proxy settings</string>

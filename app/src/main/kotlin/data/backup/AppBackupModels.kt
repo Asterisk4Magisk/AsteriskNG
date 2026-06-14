@@ -79,6 +79,7 @@ internal data class AppBackupSettings(
     val enableDirectDnsForProxyServerDomains: Boolean = BackupDefaults.enableDirectDnsForProxyServerDomains,
     val dnsHosts: List<String> = BackupDefaults.dnsHosts,
     val transparentProxyPort: String = BackupDefaults.transparentProxyPort,
+    val enableRootIpv6Disabler: Boolean = BackupDefaults.enableRootIpv6Disabler,
     val socks5ProxyPort: String = BackupDefaults.socks5ProxyPort,
     val enableHttpProxy: Boolean = BackupDefaults.enableHttpProxy,
     val httpProxyPort: String = BackupDefaults.httpProxyPort,

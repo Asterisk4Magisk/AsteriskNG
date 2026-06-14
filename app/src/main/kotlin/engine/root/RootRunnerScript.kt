@@ -60,6 +60,7 @@ internal fun buildRootStopCommand(
 ): String {
     return buildString {
         runtimeLayout?.let { paths ->
+            append(paths.buildStopIpv6DisablerCommand())
             appendScript(
                 $$"""
                 pid="$(cat $${paths.pidPath.shellQuote()} 2>/dev/null || true)"

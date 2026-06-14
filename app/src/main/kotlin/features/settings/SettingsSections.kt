@@ -203,7 +203,9 @@ internal fun SettingsProxyModeSections(
     enableVpnAppendHttpProxy: Boolean,
     tunSettingsSummary: String,
     inboundProxySummary: String,
+    enableIpv6: Boolean,
     enableRootBootScript: Boolean,
+    enableRootIpv6Disabler: Boolean,
     externalInterfacesSummary: String,
     ignoredInterfacesSummary: String,
     privateAddressCidrsSummary: String,
@@ -212,6 +214,7 @@ internal fun SettingsProxyModeSections(
     onOpenTunSettings: () -> Unit,
     onOpenProxySettings: () -> Unit,
     onEnableRootBootScriptChange: (Boolean) -> Unit,
+    onEnableRootIpv6DisablerChange: (Boolean) -> Unit,
     onOpenExternalInterfaces: () -> Unit,
     onOpenIgnoredInterfaces: () -> Unit,
     onOpenPrivateAddresses: () -> Unit,
@@ -265,6 +268,18 @@ internal fun SettingsProxyModeSections(
                         summary = stringResource(R.string.settings_root_boot_script_summary),
                         checked = enableRootBootScript,
                         onCheckedChange = onEnableRootBootScriptChange,
+                    )
+                }
+                AnimatedVisibility(
+                    visible = !enableIpv6,
+                    enter = fadeIn() + expandVertically(),
+                    exit = shrinkVertically() + fadeOut(),
+                ) {
+                    SwitchPreference(
+                        title = stringResource(R.string.settings_root_ipv6_disabler),
+                        summary = stringResource(R.string.settings_root_ipv6_disabler_summary),
+                        checked = enableRootIpv6Disabler,
+                        onCheckedChange = onEnableRootIpv6DisablerChange,
                     )
                 }
                 ArrowPreference(

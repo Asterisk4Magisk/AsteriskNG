@@ -13,6 +13,7 @@ internal data class RootStartConfig(
     val setuidgidPath: String,
     val runtimeLayout: RootRuntimeLayout,
     val enableIpv6: Boolean,
+    val enableRootIpv6Disabler: Boolean,
     val enableFakeDns: Boolean,
     val enableAccessLog: Boolean,
     val coreLogPaths: XrayCoreLogPaths,
@@ -37,3 +38,9 @@ internal val RootStartConfig.bootLogPath: String
 
 internal val RootRuntimeLayout.startupScriptPath: String
     get() = File(dataDir, RootStartupScriptFileName).absolutePath
+
+internal val RootRuntimeLayout.ipv6DisablerPidPath: String
+    get() = File(dataDir, RootIpv6DisablerPidFileName).absolutePath
+
+internal val RootStartConfig.ipv6DisablerLogPath: String
+    get() = coreLogPaths.ipv6DisablerLogFile().absolutePath

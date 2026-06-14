@@ -59,6 +59,10 @@ private fun <Config : RootModeStartConfig> Config.buildRootStartupScript(
             appendStartupSummary = appendStartupSummary,
             appendStartupFailureDiagnostics = appendStartupFailureDiagnostics,
         )
+        if (root.shouldStartIpv6Disabler) {
+            appendScript("section \"Start IPv6 disabler\"")
+            append(root.buildStartIpv6DisablerCommand())
+        }
         appendScript("section \"Prepare core logs\"")
         append(root.coreLogPaths.buildPrepareCoreLogFilesCommand())
         appendScript("section \"Start Xray-core\"")
@@ -153,6 +157,15 @@ private fun <Config : RootModeStartConfig> StringBuilder.appendRootStartupPreamb
         """,
     )
     appendStartupFailureDiagnostics(config)
+    if (config.root.shouldStartIpv6Disabler) {
+        appendScript(
+            $$"""
+                echo
+                echo "IPv6 disabler log:"
+                tail -n 80 $${config.root.ipv6DisablerLogPath.shellQuote()} || true
+            """,
+        )
+    }
     appendScript(
         $$"""
             echo
@@ -179,10 +192,12 @@ private fun <Config : RootModeStartConfig> StringBuilder.appendRootStartupPreamb
     appendScript(
         $$"""
         echo "IPv6 enabled: $${config.root.enableIpv6}"
+        echo "IPv6 disabler enabled: $${config.root.shouldStartIpv6Disabler}"
         echo "FakeDNS enabled: $${config.root.enableFakeDns}"
         echo "Access log enabled: $${config.root.enableAccessLog}"
         echo "Core error log: $${config.root.coreLogPaths.errorLogPath.shellQuote()}"
         echo "Core access log: $${config.root.coreLogPaths.accessLogPath.shellQuote()}"
+        echo "IPv6 disabler log: $${config.root.ipv6DisablerLogPath.shellQuote()}"
 
         section "Prepare runtime"
         rm -f $${config.root.runtimeLayout.pidPath.shellQuote()} || true

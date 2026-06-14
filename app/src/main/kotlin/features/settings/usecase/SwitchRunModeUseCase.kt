@@ -9,6 +9,7 @@ import app.modes.RunModeTun2Socks
 import app.modes.RunModeTproxy
 import app.modes.RunModeVpnService
 import engine.proxy.AndroidProxyEngine
+import engine.root.deleteIpv6DisablerLogFile
 import engine.tun2socks.deleteHevSocks5TunnelLogFile
 import features.logs.AndroidAppLogger
 import kotlinx.coroutines.CancellationException
@@ -74,6 +75,9 @@ internal class SwitchRunModeUseCase(
         if (normalizedTargetMode != RunModeTun2Socks) {
             deleteHevSocks5TunnelLog()
         }
+        if (!normalizedTargetMode.isRootRunMode()) {
+            deleteIpv6DisablerLog()
+        }
 
         return SwitchRunModeResult.Success(
             runMode = normalizedTargetMode,
@@ -88,6 +92,11 @@ internal class SwitchRunModeUseCase(
     private fun deleteHevSocks5TunnelLog() {
         runCatching { appContext.deleteHevSocks5TunnelLogFile() }
             .onFailure { error -> AndroidAppLogger.warn(LogTag, "Failed to delete tun2socks log", error) }
+    }
+
+    private fun deleteIpv6DisablerLog() {
+        runCatching { appContext.deleteIpv6DisablerLogFile() }
+            .onFailure { error -> AndroidAppLogger.warn(LogTag, "Failed to delete IPv6 disabler log", error) }
     }
 }
 

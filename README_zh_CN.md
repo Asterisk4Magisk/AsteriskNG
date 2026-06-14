@@ -74,7 +74,7 @@ macOS 或 Linux：
 
 - 使用 Android SDK 和 NDK
 - 下载或准备内置 Xray-core 资源
-- 构建 native `setuidgid` helper
+- 构建 native `setuidgid` 和 `ipv6disabler` helper
 - 为 `arm64-v8a`、`armeabi-v7a`、`x86` 和 `x86_64` 打包 native 运行时组件
 
 如果 Gradle 找不到 Android NDK，请在 `local.properties` 中设置 `ndk.dir`，设置 `ANDROID_NDK_HOME`，或在 Android SDK 下安装 NDK。

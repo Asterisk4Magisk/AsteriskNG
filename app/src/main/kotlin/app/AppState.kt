@@ -92,6 +92,7 @@ data class AppState(
 
     val transparentProxyPort: String = DefaultTproxyPort.toString(),
     val enableRootBootScript: Boolean = false,
+    val enableRootIpv6Disabler: Boolean = false,
     val socks5ProxyPort: String = DefaultTun2SocksProxyPort.toString(),
     val enableHttpProxy: Boolean = false,
     val httpProxyPort: String = DefaultRootHttpProxyPort.toString(),

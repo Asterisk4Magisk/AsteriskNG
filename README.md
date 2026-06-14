@@ -74,7 +74,7 @@ The build:
 
 - uses the Android SDK and NDK
 - downloads or prepares the bundled Xray-core asset
-- builds the native `setuidgid` helper
+- builds the native `setuidgid` and `ipv6disabler` helpers
 - packages native runtime components for `arm64-v8a`, `armeabi-v7a`, `x86`, and `x86_64`
 
 If Gradle cannot find Android NDK, set `ndk.dir` in `local.properties`, set `ANDROID_NDK_HOME`, or install an NDK under the Android SDK.
