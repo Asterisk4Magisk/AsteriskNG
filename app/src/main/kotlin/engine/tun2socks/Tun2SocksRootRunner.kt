@@ -25,6 +25,7 @@ internal class Tun2SocksRootRunner(
     override fun buildSetupRulesCommand(config: Tun2SocksStartConfig): String {
         return config.iptablesConfig.buildSetupRulesCommand(
             enableIpv6 = config.root.enableIpv6,
+            enableLocalDns = config.root.enableLocalDns,
             enableFakeDns = config.root.enableFakeDns,
         )
     }

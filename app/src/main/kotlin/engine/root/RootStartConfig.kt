@@ -14,6 +14,7 @@ internal data class RootStartConfig(
     val runtimeLayout: RootRuntimeLayout,
     val enableIpv6: Boolean,
     val enableRootIpv6Disabler: Boolean,
+    val enableLocalDns: Boolean,
     val enableFakeDns: Boolean,
     val enableAccessLog: Boolean,
     val coreLogPaths: XrayCoreLogPaths,

@@ -22,6 +22,7 @@ import utils.shellQuote
 internal fun RootIptablesConfig.buildSetupRulesCommand(
     port: Int,
     enableIpv6: Boolean,
+    enableLocalDns: Boolean,
     enableFakeDns: Boolean,
 ): String {
     return buildString {
@@ -30,11 +31,14 @@ internal fun RootIptablesConfig.buildSetupRulesCommand(
             config = this@buildSetupRulesCommand,
             variant = ipv4IptablesVariant(),
             port = port,
+            enableLocalDns = enableLocalDns,
         )
         if (enableIpv6) {
-            appendIpv6VariantSetupRules(this@buildSetupRulesCommand, port)
+            appendIpv6VariantSetupRules(this@buildSetupRulesCommand, port, enableLocalDns)
         }
-        appendRootIpv6DnsRejectRules()
+        if (enableLocalDns) {
+            appendRootIpv6DnsRejectRules()
+        }
         if (enableFakeDns) {
             appendRootFakeDnsIcmpReplyRules()
         }
@@ -54,11 +58,12 @@ internal fun RootIptablesConfig.buildCleanupRulesCommand(): String {
 private fun StringBuilder.appendIpv6VariantSetupRules(
     config: RootIptablesConfig,
     port: Int,
+    enableLocalDns: Boolean,
 ) {
     appendScript("if ${buildGlobalIpv6AddressCheckCommand()}; then")
-    appendIptablesVariantSetupRules(config, config.ipv6IptablesVariant(useDummyInterface = false), port)
+    appendIptablesVariantSetupRules(config, config.ipv6IptablesVariant(useDummyInterface = false), port, enableLocalDns)
     appendScript("else")
-    appendIptablesVariantSetupRules(config, config.ipv6IptablesVariant(useDummyInterface = true), port)
+    appendIptablesVariantSetupRules(config, config.ipv6IptablesVariant(useDummyInterface = true), port, enableLocalDns)
     appendScript("fi")
 }
 
@@ -66,6 +71,7 @@ private fun StringBuilder.appendIptablesVariantSetupRules(
     config: RootIptablesConfig,
     variant: TproxyIptablesVariant,
     port: Int,
+    enableLocalDns: Boolean,
 ) {
     if (variant.dummyInterface == null) {
         appendScript(
@@ -85,7 +91,9 @@ private fun StringBuilder.appendIptablesVariantSetupRules(
         ${variant.command} -t mangle -I OUTPUT 1 -j ${variant.outputChain}
         """,
     )
-    appendPreroutingDnsTproxyRules(variant, port, config.mark)
+    if (enableLocalDns) {
+        appendPreroutingDnsTproxyRules(variant, port, config.mark)
+    }
     appendPreroutingPrivateDestinationInterfaceTproxyRules(
         variant = variant,
         interfacePrefixes = config.externalInterfacePrefixes,
@@ -115,7 +123,9 @@ private fun StringBuilder.appendIptablesVariantSetupRules(
         appendDummyPreroutingRules(variant.command, dummyInterface, port)
     }
     appendOutputUidReturnRules(variant.command, variant.outputChain, config.forcedBypassUids)
-    appendUdpDnsMarkRule(variant.command, variant.outputChain, config.mark, ownerBypassGid = RootXrayGid)
+    if (enableLocalDns) {
+        appendUdpDnsMarkRule(variant.command, variant.outputChain, config.mark, ownerBypassGid = RootXrayGid)
+    }
     appendDestinationMarkRules(variant.command, variant.outputChain, variant.proxyPrivateCidrs, config.mark)
     appendOutputApplicationBypassRules(
         command = variant.command,

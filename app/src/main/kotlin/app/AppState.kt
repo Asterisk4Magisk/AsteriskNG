@@ -6,8 +6,6 @@ package app
 import app.modes.ColorModeSystem
 import app.modes.LanguageModeSystem
 import app.modes.ProxyAppListModeGlobal
-import app.modes.RunModeTun2Socks
-import app.modes.RunModeTproxy
 import app.modes.RunModeVpnService
 import engine.root.DefaultRootHttpProxyPort
 import engine.tun2socks.DefaultTun2SocksProxyPort
@@ -106,7 +104,7 @@ data class AppState(
 )
 
 val AppState.effectiveLocalDnsEnabled: Boolean
-    get() = runMode == RunModeTproxy || runMode == RunModeTun2Socks || enableVpnLocalDns
+    get() = enableVpnLocalDns
 
 val AppState.effectiveFakeDnsEnabled: Boolean
     get() = effectiveLocalDnsEnabled && enableFakeDns

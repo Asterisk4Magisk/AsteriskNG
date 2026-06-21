@@ -21,15 +21,26 @@ import utils.shellQuote
 
 internal fun RootIptablesConfig.buildSetupRulesCommand(
     enableIpv6: Boolean,
+    enableLocalDns: Boolean,
     enableFakeDns: Boolean,
 ): String {
     return buildString {
         append(buildCleanupRulesCommand())
-        appendIptablesVariantSetupRules(this@buildSetupRulesCommand, Tun2SocksIptablesVariant.forIpv4(this@buildSetupRulesCommand))
+        appendIptablesVariantSetupRules(
+            config = this@buildSetupRulesCommand,
+            variant = Tun2SocksIptablesVariant.forIpv4(this@buildSetupRulesCommand),
+            enableLocalDns = enableLocalDns,
+        )
         if (enableIpv6) {
-            appendIptablesVariantSetupRules(this@buildSetupRulesCommand, Tun2SocksIptablesVariant.forIpv6(this@buildSetupRulesCommand))
+            appendIptablesVariantSetupRules(
+                config = this@buildSetupRulesCommand,
+                variant = Tun2SocksIptablesVariant.forIpv6(this@buildSetupRulesCommand),
+                enableLocalDns = enableLocalDns,
+            )
         }
-        appendRootIpv6DnsRejectRules()
+        if (enableLocalDns) {
+            appendRootIpv6DnsRejectRules()
+        }
         if (enableFakeDns) {
             appendRootFakeDnsIcmpReplyRules()
         }
@@ -48,6 +59,7 @@ internal fun RootIptablesConfig.buildCleanupRulesCommand(): String {
 private fun StringBuilder.appendIptablesVariantSetupRules(
     config: RootIptablesConfig,
     variant: Tun2SocksIptablesVariant,
+    enableLocalDns: Boolean,
 ) {
     appendScript(
         """
@@ -63,8 +75,8 @@ private fun StringBuilder.appendIptablesVariantSetupRules(
         ${variant.command} -t filter -A ${variant.forwardChain} -o 'asterisk0' -j ACCEPT
         """,
     )
-    appendPreroutingTrafficMarkRules(config, variant)
-    appendOutputTrafficMarkRules(config, variant)
+    appendPreroutingTrafficMarkRules(config, variant, enableLocalDns)
+    appendOutputTrafficMarkRules(config, variant, enableLocalDns)
 }
 
 private fun StringBuilder.appendIptablesVariantCleanupRules(
@@ -98,8 +110,11 @@ private fun StringBuilder.appendIptablesVariantCleanupRules(
 private fun StringBuilder.appendPreroutingTrafficMarkRules(
     config: RootIptablesConfig,
     variant: Tun2SocksIptablesVariant,
+    enableLocalDns: Boolean,
 ) {
-    appendUdpDnsMarkRule(variant.command, variant.preroutingChain, config.mark)
+    if (enableLocalDns) {
+        appendUdpDnsMarkRule(variant.command, variant.preroutingChain, config.mark)
+    }
     appendDestinationMarkRules(
         command = variant.command,
         chain = variant.preroutingChain,
@@ -121,14 +136,17 @@ private fun StringBuilder.appendPreroutingTrafficMarkRules(
 private fun StringBuilder.appendOutputTrafficMarkRules(
     config: RootIptablesConfig,
     variant: Tun2SocksIptablesVariant,
+    enableLocalDns: Boolean,
 ) {
     appendOutputUidReturnRules(variant.command, variant.outputChain, config.forcedBypassUids)
-    appendUdpDnsMarkRule(
-        command = variant.command,
-        chain = variant.outputChain,
-        mark = config.mark,
-        ownerBypassGid = RootXrayGid,
-    )
+    if (enableLocalDns) {
+        appendUdpDnsMarkRule(
+            command = variant.command,
+            chain = variant.outputChain,
+            mark = config.mark,
+            ownerBypassGid = RootXrayGid,
+        )
+    }
     appendDestinationMarkRules(
         command = variant.command,
         chain = variant.outputChain,

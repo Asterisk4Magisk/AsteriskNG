@@ -40,7 +40,6 @@ private val XrayDnsUrlSchemes = setOf(
 internal fun DnsSettingsBottomSheet(
     show: Boolean,
     enableVpnLocalDns: Boolean,
-    forceEnableLocalDns: Boolean,
     enableFakeDns: Boolean,
     enableResolveProxyServerDomain: Boolean,
     onEnableVpnLocalDnsChange: (Boolean) -> Unit,
@@ -66,7 +65,7 @@ internal fun DnsSettingsBottomSheet(
     val dnsHostEntries = dnsHosts.toTrimmedNonEmptyDistinctList()
     val dnsServerInvalidMessage = stringResource(R.string.settings_dns_server_invalid)
     val dnsDomainInvalidMessage = stringResource(R.string.settings_dns_domain_invalid)
-    val effectiveLocalDnsEnabled = forceEnableLocalDns || enableVpnLocalDns
+    val effectiveLocalDnsEnabled = enableVpnLocalDns
     val effectiveFakeDnsEnabled = effectiveLocalDnsEnabled && enableFakeDns
     WindowBottomSheet(
         show = show,
@@ -101,11 +100,7 @@ internal fun DnsSettingsBottomSheet(
                 title = stringResource(R.string.settings_vpn_local_dns),
                 summary = stringResource(R.string.settings_vpn_local_dns_summary),
                 checked = effectiveLocalDnsEnabled,
-                onCheckedChange = { enabled ->
-                    if (!forceEnableLocalDns) {
-                        onEnableVpnLocalDnsChange(enabled)
-                    }
-                },
+                onCheckedChange = onEnableVpnLocalDnsChange,
             )
             AnimatedVisibility(
                 visible = effectiveLocalDnsEnabled,

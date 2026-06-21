@@ -139,7 +139,6 @@ internal fun SettingsBottomSheetsHost(
     DnsSettingsBottomSheet(
         show = sheetState.showDnsSettings,
         enableVpnLocalDns = sheetState.dnsSettingsDraft.enableVpnLocalDns,
-        forceEnableLocalDns = appState.runMode == RunModeTproxy || appState.runMode == RunModeTun2Socks,
         enableFakeDns = sheetState.dnsSettingsDraft.enableFakeDns,
         enableResolveProxyServerDomain = sheetState.dnsSettingsDraft.enableResolveProxyServerDomain,
         proxyDns = sheetState.dnsSettingsDraft.proxyDns,
