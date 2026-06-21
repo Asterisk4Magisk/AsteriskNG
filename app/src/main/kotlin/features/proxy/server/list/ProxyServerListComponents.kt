@@ -10,7 +10,10 @@ import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,9 +27,12 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -37,7 +43,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -65,8 +75,6 @@ import top.yukonga.miuix.kmp.basic.InputField
 import top.yukonga.miuix.kmp.basic.ListPopupDefaults
 import top.yukonga.miuix.kmp.basic.PopupPositionProvider
 import top.yukonga.miuix.kmp.basic.SearchBar
-import top.yukonga.miuix.kmp.basic.TabRowDefaults
-import top.yukonga.miuix.kmp.basic.TabRowWithContour
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Add
@@ -83,6 +91,7 @@ import ui.isInDarkTheme
 import ui.components.IconDropdownMenu
 import ui.components.IconDropdownMenuEntry
 import ui.components.draggedCardShadow
+import kotlin.math.floor
 import kotlin.math.roundToInt
 
 private val proxyServerLatencyNumberRegex = Regex("""\d+""")
@@ -90,6 +99,8 @@ private val ProxyServerListFloatingToolbarButtonSize = 52.dp
 private val ProxyServerListFloatingToolbarVerticalPadding = 8.dp
 private val ProxyServerListFloatingToolbarBottomSpacing = 16.dp
 private val ProxyServerListFloatingToolbarContentGap = 12.dp
+private val ProxyServerListGroupTabHeight = 36.dp
+private val ProxyServerListGroupTabSpacing = 8.dp
 private val ProxyServerListCompactCardHeight = 96.dp
 private val ProxyServerListCompactCardPadding = 10.dp
 internal val ProxyServerListFloatingToolbarReservedBottomPadding =
@@ -99,30 +110,138 @@ internal val ProxyServerListFloatingToolbarReservedBottomPadding =
         ProxyServerListFloatingToolbarBottomSpacing +
         ProxyServerListFloatingToolbarContentGap
 
+private data class ProxyServerListGroupTabBounds(
+    val leftPx: Int,
+    val widthPx: Int,
+)
+
+private fun linearInterpolate(start: Int, end: Int, fraction: Float): Int {
+    return (start + (end - start) * fraction).roundToInt()
+}
+
 @Composable
 internal fun ProxyServerListGroupTabs(
     groups: List<ProxyServerListGroupTabUi>,
     selectedGroupId: Int,
+    pagerPage: Int,
+    pagerOffsetFraction: Float,
     onGroupSelected: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (groups.isEmpty()) return
-
+    val density = LocalDensity.current
+    val tabScrollState = rememberScrollState()
+    var viewportWidthPx by remember { mutableIntStateOf(0) }
+    var tabBounds by remember { mutableStateOf<Map<Int, ProxyServerListGroupTabBounds>>(emptyMap()) }
     val selectedIndex = groups.indexOfFirst { group -> group.id == selectedGroupId }
-        .coerceAtLeast(0)
-    TabRowWithContour(
-        tabs = groups.map { group -> "${group.name} (${group.serverCount})" },
-        selectedTabIndex = selectedIndex,
-        onTabSelected = { index -> onGroupSelected(groups[index].id) },
-        colors = TabRowDefaults.tabRowColors(
-            selectedBackgroundColor = MiuixTheme.colorScheme.primary.copy(alpha = 0.16f),
-            selectedContentColor = MiuixTheme.colorScheme.primary,
-        ),
+    val selectedBounds = tabBounds[selectedGroupId]
+    val pagerPosition = (pagerPage + pagerOffsetFraction)
+        .coerceIn(0f, groups.lastIndex.toFloat())
+    val startIndex = floor(pagerPosition).toInt().coerceIn(0, groups.lastIndex)
+    val endIndex = (startIndex + 1).coerceAtMost(groups.lastIndex)
+    val indicatorStartBounds = tabBounds[groups[startIndex].id]
+    val indicatorEndBounds = tabBounds[groups[endIndex].id] ?: indicatorStartBounds
+    val indicatorFraction = pagerPosition - startIndex
+    val indicatorLeftPx = if (indicatorStartBounds != null && indicatorEndBounds != null) {
+        linearInterpolate(
+            start = indicatorStartBounds.leftPx,
+            end = indicatorEndBounds.leftPx,
+            fraction = indicatorFraction,
+        )
+    } else {
+        selectedBounds?.leftPx
+    }
+    val indicatorWidthPx = if (indicatorStartBounds != null && indicatorEndBounds != null) {
+        linearInterpolate(
+            start = indicatorStartBounds.widthPx,
+            end = indicatorEndBounds.widthPx,
+            fraction = indicatorFraction,
+        )
+    } else {
+        selectedBounds?.widthPx
+    }
+    val indicatorOffset = with(density) { (indicatorLeftPx ?: 0).toDp() }
+    val indicatorWidth = with(density) { (indicatorWidthPx ?: 0).toDp() }
+
+    LaunchedEffect(selectedIndex, selectedBounds, viewportWidthPx) {
+        if (selectedIndex < 0 || selectedBounds == null || viewportWidthPx <= 0) return@LaunchedEffect
+        val visibleStart = tabScrollState.value
+        val visibleEnd = visibleStart + viewportWidthPx
+        val tabStart = selectedBounds.leftPx
+        val tabEnd = selectedBounds.leftPx + selectedBounds.widthPx
+        val targetScroll = when {
+            tabStart < visibleStart -> tabStart
+            tabEnd > visibleEnd -> tabEnd - viewportWidthPx
+            else -> visibleStart
+        }.coerceIn(0, tabScrollState.maxValue)
+        if (targetScroll != visibleStart) {
+            tabScrollState.animateScrollTo(targetScroll)
+        }
+    }
+
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp),
-        maxWidth = 132.dp,
-    )
+            .padding(horizontal = 12.dp)
+            .onSizeChanged { size -> viewportWidthPx = size.width }
+            .horizontalScroll(tabScrollState),
+    ) {
+        if (indicatorWidthPx != null && indicatorWidthPx > 0) {
+            Box(
+                modifier = Modifier
+                    .offset(x = indicatorOffset)
+                    .width(indicatorWidth)
+                    .height(ProxyServerListGroupTabHeight)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(MiuixTheme.colorScheme.primary.copy(alpha = 0.14f)),
+            )
+        }
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(ProxyServerListGroupTabSpacing),
+        ) {
+            groups.forEach { group ->
+                val selected = group.id == selectedGroupId
+                val tabText = "${group.name} (${group.serverCount})"
+                val interactionSource = remember(group.id) { MutableInteractionSource() }
+                Box(
+                    modifier = Modifier
+                        .height(ProxyServerListGroupTabHeight)
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable(
+                            interactionSource = interactionSource,
+                            indication = null,
+                        ) {
+                            onGroupSelected(group.id)
+                        }
+                        .onGloballyPositioned { coordinates ->
+                            val leftPx = coordinates.positionInParent().x.roundToInt()
+                            val bounds = ProxyServerListGroupTabBounds(
+                                leftPx = leftPx,
+                                widthPx = coordinates.size.width,
+                            )
+                            if (tabBounds[group.id] != bounds) {
+                                tabBounds = tabBounds + (group.id to bounds)
+                            }
+                        }
+                        .padding(horizontal = 14.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = tabText,
+                        fontSize = 15.sp,
+                        fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+                        color = if (selected) {
+                            MiuixTheme.colorScheme.primary
+                        } else {
+                            MiuixTheme.colorScheme.onSurface
+                        },
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+        }
+    }
 }
 
 @Composable

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -235,6 +236,9 @@ fun ProxyServerListPage(
         initialPage = groupState.selectedTabIndex,
         pageCount = { groupTabIds.size.coerceAtLeast(1) },
     )
+    val groupPagerOffsetFraction by remember(groupPagerState) {
+        derivedStateOf { groupPagerState.currentPageOffsetFraction }
+    }
 
     LaunchedEffect(groupTabIds) {
         val lastIndex = groupTabIds.lastIndex
@@ -272,6 +276,8 @@ fun ProxyServerListPage(
                 searchValue = searchValue,
                 onSearchValueChange = { searchValue = it },
                 groupState = groupState,
+                groupPagerPage = groupPagerState.currentPage,
+                groupPagerOffsetFraction = groupPagerOffsetFraction,
                 selectedServer = selectedServer,
                 proxyListState = proxyListState,
                 stateStore = stateStore,

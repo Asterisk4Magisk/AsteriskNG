@@ -61,6 +61,8 @@ internal fun ProxyServerListTopBar(
     searchValue: String,
     onSearchValueChange: (String) -> Unit,
     groupState: ProxyServerListGroups,
+    groupPagerPage: Int,
+    groupPagerOffsetFraction: Float,
     selectedServer: ProxyServerState?,
     proxyListState: ProxyServerListState,
     stateStore: AndroidAppStateStore,
@@ -142,6 +144,8 @@ internal fun ProxyServerListTopBar(
                     ProxyServerListGroupTabs(
                         groups = groupState.groupTabs,
                         selectedGroupId = groupState.selectedTabId,
+                        pagerPage = groupPagerPage,
+                        pagerOffsetFraction = groupPagerOffsetFraction,
                         onGroupSelected = onSelectedGroupIdChange,
                         modifier = Modifier.padding(bottom = 12.dp),
                     )
