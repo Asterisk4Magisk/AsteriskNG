@@ -51,6 +51,8 @@ internal data class AppBackupSettings(
     val tunIpv4Cidr: String = BackupDefaults.tunIpv4Cidr,
     val tunIpv6Cidr: String = BackupDefaults.tunIpv6Cidr,
     val selectedProxyServerId: Int = BackupDefaults.selectedProxyServerId,
+    val proxyServerListLayout: Int = BackupDefaults.proxyServerListLayout,
+    val proxyServerListSort: Int = BackupDefaults.proxyServerListSort,
     val routeDomainStrategy: Int = BackupDefaults.routeDomainStrategy,
     val defaultRouteOutboundTag: String = BackupDefaults.defaultRouteOutboundTag,
     val coreLogLevel: Int = BackupDefaults.coreLogLevel,

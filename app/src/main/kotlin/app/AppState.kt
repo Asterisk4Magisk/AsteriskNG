@@ -6,6 +6,8 @@ package app
 import app.modes.ColorModeSystem
 import app.modes.LanguageModeSystem
 import app.modes.ProxyAppListModeGlobal
+import app.modes.ProxyServerListLayoutSingle
+import app.modes.ProxyServerListSortDefault
 import app.modes.RunModeVpnService
 import engine.root.DefaultRootHttpProxyPort
 import engine.tun2socks.DefaultTun2SocksProxyPort
@@ -51,6 +53,8 @@ data class AppState(
     val proxyServers: List<ProxyServerState> = emptyList(),
     val nextProxyServerId: Int = 10,
     val selectedProxyServerId: Int = 1,
+    val proxyServerListLayout: Int = ProxyServerListLayoutSingle,
+    val proxyServerListSort: Int = ProxyServerListSortDefault,
     val proxyRunning: Boolean = false,
 
     val routeDomainStrategy: Int = 0,

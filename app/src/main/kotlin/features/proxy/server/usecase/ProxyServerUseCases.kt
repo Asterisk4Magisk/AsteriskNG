@@ -238,36 +238,6 @@ internal fun AppState.withDeletedProxyServers(deletedServerIds: Set<Int>): AppSt
     )
 }
 
-internal fun List<ProxyServerState>.sortedInGroupByLatencyResult(
-    currentGroupServerIds: Set<Int>,
-): List<ProxyServerState> {
-    if (currentGroupServerIds.size <= 1) {
-        return this
-    }
-
-    val sortedGroupServers = filter { server -> server.id in currentGroupServerIds }
-        .withIndex()
-        .sortedWith(
-            compareBy<IndexedValue<ProxyServerState>> { (_, server) -> server.latency.latencySortKey() }
-                .thenBy { (index, _) -> index },
-        )
-        .map { (_, server) -> server }
-        .iterator()
-
-    var changed = false
-    val sortedServers = map { server ->
-        if (server.id in currentGroupServerIds) {
-            sortedGroupServers.next().also { sortedServer ->
-                changed = changed || sortedServer.id != server.id
-            }
-        } else {
-            server
-        }
-    }
-
-    return if (changed) sortedServers else this
-}
-
 internal fun createProxyServer(action: ProxyServerListAddAction): ProxyServer<*> {
     return when (action) {
         ProxyServerListAddAction.ScanQrCode,
@@ -306,9 +276,4 @@ private fun AppState.selectedProxyServerIdOrFirstAvailable(nextServers: List<Pro
     }
 }
 
-private fun String.latencySortKey(): Int {
-    return latencyResultNumberRegex.find(this)?.value?.toIntOrNull() ?: Int.MAX_VALUE
-}
-
-private val latencyResultNumberRegex = Regex("""\d+""")
 private const val MillisPerHour = 60L * 60L * 1000L

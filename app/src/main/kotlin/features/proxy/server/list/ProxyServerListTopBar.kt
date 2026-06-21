@@ -13,6 +13,12 @@ import app.AppState
 import app.ProxyServerListState
 import app.ProxyServerState
 import app.R
+import app.modes.ProxyServerListLayoutDouble
+import app.modes.ProxyServerListLayoutMultiple
+import app.modes.ProxyServerListLayoutSingle
+import app.modes.ProxyServerListSortDefault
+import app.modes.ProxyServerListSortLatency
+import app.modes.ProxyServerListSortName
 import app.navigation.Navigator
 import app.navigation.Route
 import data.AndroidAppStateStore
@@ -26,7 +32,6 @@ import features.proxy.server.usecase.createProxyServer
 import features.proxy.server.usecase.deleteDuplicateServersInGroup
 import features.proxy.server.usecase.deleteInvalidServersInGroup
 import features.proxy.server.usecase.importProxyServersFromText
-import features.proxy.server.usecase.sortedInGroupByLatencyResult
 import features.proxy.server.usecase.updatableSubscriptionGroups
 import features.proxy.server.usecase.withDeletedProxyServers
 import features.proxy.server.usecase.withImportedProxyServers
@@ -100,7 +105,10 @@ internal fun ProxyServerListTopBar(
                     resultKey = resultKey,
                 )
             }
-            ProxyServerListToolsMenu { action ->
+            ProxyServerListToolsMenu(
+                layout = proxyListState.proxyServerListLayout,
+                sort = proxyListState.proxyServerListSort,
+            ) { action ->
                 handleProxyServerListToolAction(
                     action = action,
                     groupState = groupState,
@@ -391,14 +399,28 @@ private fun handleProxyServerListToolAction(
             )
         }
 
-        ProxyServerListToolAction.SortByTestResult -> {
-            sortCurrentGroupByTestResult(
-                servers = groupState.currentGroupServers,
-                updateAppState = updateAppState,
-                tipNotifier = tipNotifier,
-                scope = scope,
-                messages = messages,
-            )
+        ProxyServerListToolAction.SetLayoutSingle -> {
+            updateAppState { state -> state.copy(proxyServerListLayout = ProxyServerListLayoutSingle) }
+        }
+
+        ProxyServerListToolAction.SetLayoutDouble -> {
+            updateAppState { state -> state.copy(proxyServerListLayout = ProxyServerListLayoutDouble) }
+        }
+
+        ProxyServerListToolAction.SetLayoutMultiple -> {
+            updateAppState { state -> state.copy(proxyServerListLayout = ProxyServerListLayoutMultiple) }
+        }
+
+        ProxyServerListToolAction.SetSortDefault -> {
+            updateAppState { state -> state.copy(proxyServerListSort = ProxyServerListSortDefault) }
+        }
+
+        ProxyServerListToolAction.SetSortName -> {
+            updateAppState { state -> state.copy(proxyServerListSort = ProxyServerListSortName) }
+        }
+
+        ProxyServerListToolAction.SetSortLatency -> {
+            updateAppState { state -> state.copy(proxyServerListSort = ProxyServerListSortLatency) }
         }
 
         ProxyServerListToolAction.UpdateSubscriptions -> {
@@ -464,27 +486,6 @@ private fun handleProxyServerListToolAction(
                 runProxyServiceOperation = runProxyServiceOperation,
             )
         }
-    }
-}
-
-private fun sortCurrentGroupByTestResult(
-    servers: List<ProxyServerState>,
-    updateAppState: ((AppState) -> AppState) -> Unit,
-    tipNotifier: AndroidToastTipNotifier,
-    scope: CoroutineScope,
-    messages: ProxyServerListMessages,
-) {
-    val currentGroupServerIds = servers.map { server -> server.id }.toSet()
-    updateAppState { state ->
-        val sortedServers = state.proxyServers.sortedInGroupByLatencyResult(currentGroupServerIds)
-        if (sortedServers === state.proxyServers) {
-            state
-        } else {
-            state.copy(proxyServers = sortedServers)
-        }
-    }
-    scope.launch {
-        tipNotifier.show(messages.sortDone)
     }
 }
 

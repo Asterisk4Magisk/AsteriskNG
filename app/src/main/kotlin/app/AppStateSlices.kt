@@ -26,6 +26,8 @@ data class ProxyServerListState(
     val proxyServers: List<ProxyServerState>,
     val nextProxyServerId: Int,
     val selectedProxyServerId: Int,
+    val proxyServerListLayout: Int,
+    val proxyServerListSort: Int,
     val proxyRunning: Boolean,
 )
 
@@ -92,6 +94,8 @@ private fun AppState.toProxyServerListState(): ProxyServerListState {
         proxyServers = proxyServers,
         nextProxyServerId = nextProxyServerId,
         selectedProxyServerId = selectedProxyServerId,
+        proxyServerListLayout = proxyServerListLayout,
+        proxyServerListSort = proxyServerListSort,
         proxyRunning = proxyRunning,
     )
 }

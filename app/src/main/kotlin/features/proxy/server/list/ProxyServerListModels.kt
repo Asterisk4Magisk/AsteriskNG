@@ -24,8 +24,13 @@ internal enum class ProxyServerListToolAction {
     RestartService,
     TestLatency,
     TestRealConnection,
-    SortByTestResult,
     UpdateSubscriptions,
+    SetLayoutSingle,
+    SetLayoutDouble,
+    SetLayoutMultiple,
+    SetSortDefault,
+    SetSortName,
+    SetSortLatency,
     CopyAllUrls,
     DeleteDuplicateServers,
     DeleteInvalidServers,
@@ -41,11 +46,6 @@ internal enum class ProxyServerListCopyAction {
 internal data class ProxyServerListMenuEntry(
     val title: String,
     val action: ProxyServerListAddAction,
-)
-
-internal data class ProxyServerListToolMenuEntry(
-    val title: String,
-    val action: ProxyServerListToolAction,
 )
 
 internal data class ProxyServerListGroupTabUi(

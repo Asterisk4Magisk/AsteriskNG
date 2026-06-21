@@ -6,14 +6,20 @@
 package features.proxy.server.list
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.runtime.Composable
@@ -25,8 +31,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.Clipboard
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import app.modes.ProxyServerListSortDefault
 import app.AppState
 import app.ProxyServerState
 import app.R
@@ -50,8 +59,7 @@ import top.yukonga.miuix.kmp.interfaces.ExperimentalScrollBarApi
 import ui.clipboard.setPlainText
 import ui.components.longPressReorderDragHandle
 import ui.components.moveItem
-import ui.components.rememberAsteriskReorderableLazyListState
-import ui.components.rememberReorderableLazyListContentPaddingWithoutTop
+import ui.components.rememberAsteriskReorderableLazyGridState
 import ui.components.rememberReorderableScrollThresholdPadding
 import ui.feedback.AndroidToastTipNotifier
 import ui.layout.pageScrollModifiers
@@ -63,6 +71,8 @@ internal fun ProxyServerListPager(
     searchValue: String,
     servers: List<ProxyServerState>,
     selectedServerId: Int,
+    columns: Int,
+    sort: Int,
     unknownGroupName: String,
     itemTextFormatter: ProxyServerListItemTextFormatter,
     topAppBarScrollBehavior: ScrollBehavior,
@@ -104,100 +114,182 @@ internal fun ProxyServerListPager(
             pageIsAllGroupsSelected = pageIsAllGroupsSelected,
             visibleGroupIds = groupState.visibleGroupIds,
             keyword = keyword,
-        )
-        val lazyListState = rememberLazyListState()
-        val lazyContentPadding = rememberReorderableLazyListContentPaddingWithoutTop(listPadding)
-        val reorderableLazyListState = rememberAsteriskReorderableLazyListState(
-            lazyListState = lazyListState,
-            itemCount = pageServers.size,
-            scrollThresholdPadding = rememberReorderableScrollThresholdPadding(
-                bottom = dragScrollThresholdBottomPadding,
-            ),
-        ) { fromIndex, toIndex ->
-            updateAppState { state ->
-                val currentPageServers = state.proxyServers.filterPageServers(
-                    pageGroupId = pageGroupId,
-                    pageIsAllGroupsSelected = pageIsAllGroupsSelected,
-                    visibleGroupIds = groupState.visibleGroupIds,
-                    keyword = keyword,
-                )
-                val reorderedServers = state.proxyServers.reorderVisibleServer(
-                    pageServers = currentPageServers,
-                    fromIndex = fromIndex,
-                    toIndex = toIndex,
-                )
-                if (reorderedServers === state.proxyServers) {
-                    state
-                } else {
-                    state.copy(proxyServers = reorderedServers)
-                }
-            }
-        }
+        ).sortedForProxyServerList(sort)
+        val reorderEnabled = columns == 1 && sort == ProxyServerListSortDefault
 
         Box(Modifier.fillMaxSize()) {
-            LazyColumn(
-                state = lazyListState,
-                modifier = Modifier
-                    .padding(top = listPadding.calculateTopPadding())
-                    .pageScrollModifiers(topAppBarScrollBehavior),
-                contentPadding = lazyContentPadding,
-            ) {
-                if (pageServers.isEmpty()) {
-                    item(key = "proxy_empty", contentType = "empty") {
-                        ProxyServerListEmptyState(text = stringResource(R.string.common_empty))
-                    }
-                } else {
-                    items(
-                        items = pageServers,
-                        key = { server -> server.id },
-                        contentType = { "proxy_server" },
-                    ) { server ->
-                        ReorderableItem(reorderableLazyListState.reorderableState, key = server.id) { isDragging ->
-                            ProxyServerListItem(
-                                server = server,
-                                servers = servers,
-                                selectedServerId = selectedServerId,
-                                pageIsAllGroupsSelected = pageIsAllGroupsSelected,
-                                pageGroupId = pageGroupId,
-                                unknownGroupName = unknownGroupName,
-                                itemTextFormatter = itemTextFormatter,
-                                groupState = groupState,
-                                stateStore = stateStore,
-                                updateAppState = updateAppState,
-                                navigator = navigator,
-                                clipboard = clipboard,
-                                context = context,
-                                tipNotifier = tipNotifier,
-                                scope = scope,
-                                messages = messages,
-                                resultKey = resultKey,
-                                onSelectedServerIdChange = onSelectedServerIdChange,
-                                onDeleteServer = onDeleteServer,
-                                onShowQrCode = { title, text ->
-                                    qrCodeDialogState = ProxyServerQrCodeDialogState(title, text)
-                                },
-                                isDragging = isDragging,
-                                dragModifier = Modifier.longPressReorderDragHandle(
-                                    scope = this,
-                                    enabled = pageServers.size > 1,
-                                    state = reorderableLazyListState,
-                                ),
-                                modifier = Modifier.animateItem(
-                                    fadeInSpec = null,
-                                    fadeOutSpec = null,
-                                    placementSpec = folmeSpring(damping = 0.9f, response = 0.38f),
-                                ),
-                            )
-                        }
+            ProxyServerLazyGrid(
+                pageServers = pageServers,
+                servers = servers,
+                selectedServerId = selectedServerId,
+                columns = columns,
+                reorderEnabled = reorderEnabled,
+                pageIsAllGroupsSelected = pageIsAllGroupsSelected,
+                pageGroupId = pageGroupId,
+                unknownGroupName = unknownGroupName,
+                itemTextFormatter = itemTextFormatter,
+                groupState = groupState,
+                topAppBarScrollBehavior = topAppBarScrollBehavior,
+                listPadding = listPadding,
+                dragScrollThresholdBottomPadding = dragScrollThresholdBottomPadding,
+                contentPadding = contentPadding,
+                stateStore = stateStore,
+                updateAppState = updateAppState,
+                navigator = navigator,
+                clipboard = clipboard,
+                context = context,
+                tipNotifier = tipNotifier,
+                scope = scope,
+                messages = messages,
+                resultKey = resultKey,
+                onSelectedServerIdChange = onSelectedServerIdChange,
+                onDeleteServer = onDeleteServer,
+                onShowQrCode = { title, text ->
+                    qrCodeDialogState = ProxyServerQrCodeDialogState(title, text)
+                },
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
+    }
+}
+
+@Composable
+private fun ProxyServerLazyGrid(
+    pageServers: List<ProxyServerState>,
+    servers: List<ProxyServerState>,
+    selectedServerId: Int,
+    columns: Int,
+    reorderEnabled: Boolean,
+    pageIsAllGroupsSelected: Boolean,
+    pageGroupId: Int,
+    unknownGroupName: String,
+    itemTextFormatter: ProxyServerListItemTextFormatter,
+    groupState: ProxyServerListGroups,
+    topAppBarScrollBehavior: ScrollBehavior,
+    listPadding: PaddingValues,
+    dragScrollThresholdBottomPadding: Dp,
+    contentPadding: PaddingValues,
+    stateStore: AndroidAppStateStore,
+    updateAppState: ((AppState) -> AppState) -> Unit,
+    navigator: Navigator,
+    clipboard: Clipboard,
+    context: android.content.Context,
+    tipNotifier: AndroidToastTipNotifier,
+    scope: CoroutineScope,
+    messages: ProxyServerListMessages,
+    resultKey: String,
+    onSelectedServerIdChange: (Int) -> Unit,
+    onDeleteServer: (ProxyServerState) -> Unit,
+    onShowQrCode: (title: String, text: String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val gridState = rememberLazyGridState()
+    val layoutDirection = LocalLayoutDirection.current
+    val compact = columns > 1
+    val gridHorizontalExtra = if (compact) ProxyServerListGridSpacing else 0.dp
+    val gridItemSpacing = if (compact) ProxyServerListGridSpacing else 0.dp
+    val gridContentPadding = PaddingValues(
+        start = listPadding.calculateStartPadding(layoutDirection) + gridHorizontalExtra,
+        end = listPadding.calculateEndPadding(layoutDirection) + gridHorizontalExtra,
+        bottom = listPadding.calculateBottomPadding(),
+    )
+    val reorderableLazyGridState = rememberAsteriskReorderableLazyGridState(
+        lazyGridState = gridState,
+        itemCount = pageServers.size,
+        scrollThresholdPadding = rememberReorderableScrollThresholdPadding(
+            bottom = dragScrollThresholdBottomPadding,
+        ),
+    ) { fromIndex, toIndex ->
+        if (!reorderEnabled) return@rememberAsteriskReorderableLazyGridState
+        updateAppState { state ->
+            val reorderedServers = state.proxyServers.reorderVisibleServer(
+                pageServers = pageServers,
+                fromIndex = fromIndex,
+                toIndex = toIndex,
+            )
+            if (reorderedServers === state.proxyServers) {
+                state
+            } else {
+                state.copy(proxyServers = reorderedServers)
+            }
+        }
+    }
+
+    Box(modifier) {
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(columns),
+            state = gridState,
+            modifier = Modifier
+                .padding(top = listPadding.calculateTopPadding())
+                .pageScrollModifiers(topAppBarScrollBehavior),
+            contentPadding = gridContentPadding,
+            verticalArrangement = Arrangement.spacedBy(gridItemSpacing),
+            horizontalArrangement = Arrangement.spacedBy(gridItemSpacing),
+        ) {
+            if (pageServers.isEmpty()) {
+                item(
+                    key = "proxy_empty",
+                    span = { GridItemSpan(maxLineSpan) },
+                    contentType = "empty",
+                ) {
+                    ProxyServerListEmptyState(text = stringResource(R.string.common_empty))
+                }
+            } else {
+                items(
+                    items = pageServers,
+                    key = { server -> server.id },
+                    contentType = { "proxy_server" },
+                ) { server ->
+                    ReorderableItem(
+                        state = reorderableLazyGridState.reorderableState,
+                        key = server.id,
+                        enabled = reorderEnabled,
+                        modifier = Modifier.fillMaxWidth(),
+                        animateItemModifier = Modifier.animateItem(
+                            fadeInSpec = null,
+                            fadeOutSpec = null,
+                            placementSpec = folmeSpring(damping = 0.9f, response = 0.38f),
+                        ),
+                    ) { isDragging ->
+                        ProxyServerListItem(
+                            server = server,
+                            servers = servers,
+                            selectedServerId = selectedServerId,
+                            pageIsAllGroupsSelected = pageIsAllGroupsSelected,
+                            pageGroupId = pageGroupId,
+                            unknownGroupName = unknownGroupName,
+                            itemTextFormatter = itemTextFormatter,
+                            groupState = groupState,
+                            stateStore = stateStore,
+                            updateAppState = updateAppState,
+                            navigator = navigator,
+                            clipboard = clipboard,
+                            context = context,
+                            tipNotifier = tipNotifier,
+                            scope = scope,
+                            messages = messages,
+                            resultKey = resultKey,
+                            onSelectedServerIdChange = onSelectedServerIdChange,
+                            onDeleteServer = onDeleteServer,
+                            onShowQrCode = onShowQrCode,
+                            compact = compact,
+                            isDragging = isDragging && reorderEnabled,
+                            dragModifier = Modifier.longPressReorderDragHandle(
+                                scope = this,
+                                enabled = reorderEnabled && pageServers.size > 1,
+                                state = reorderableLazyGridState,
+                            ),
+                            modifier = Modifier.fillMaxWidth(),
+                        )
                     }
                 }
             }
-            VerticalScrollBar(
-                adapter = rememberScrollBarAdapter(lazyListState),
-                modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
-                trackPadding = contentPadding,
-            )
         }
+        VerticalScrollBar(
+            adapter = rememberScrollBarAdapter(gridState),
+            modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
+            trackPadding = contentPadding,
+        )
     }
 }
 
@@ -223,6 +315,7 @@ private fun ProxyServerListItem(
     onSelectedServerIdChange: (Int) -> Unit,
     onDeleteServer: (ProxyServerState) -> Unit,
     onShowQrCode: (title: String, text: String) -> Unit,
+    compact: Boolean,
     isDragging: Boolean,
     modifier: Modifier = Modifier,
     dragModifier: Modifier,
@@ -253,6 +346,7 @@ private fun ProxyServerListItem(
         } else {
             null
         },
+        compact = compact,
         isDragging = isDragging,
         dragModifier = dragModifier,
         onSelect = {
@@ -360,3 +454,5 @@ private fun List<ProxyServerState>.reorderVisibleServer(
         toIndex = indexOfFirst { server -> server.id == targetServerId },
     )
 }
+
+private val ProxyServerListGridSpacing = 12.dp

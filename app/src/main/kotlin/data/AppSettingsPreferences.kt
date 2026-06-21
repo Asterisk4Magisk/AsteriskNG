@@ -66,6 +66,11 @@ internal class AppSettingsPreferences(
             tunIpv6Cidr = preferences.getString(KeyTunIpv6Cidr, defaults.tunIpv6Cidr) ?: defaults.tunIpv6Cidr,
             nextProxyServerId = preferences.getInt(KeyNextProxyServerId, defaults.nextProxyServerId),
             selectedProxyServerId = preferences.getInt(KeySelectedProxyServerId, defaults.selectedProxyServerId),
+            proxyServerListLayout = preferences.getInt(
+                KeyProxyServerListLayout,
+                defaults.proxyServerListLayout,
+            ),
+            proxyServerListSort = preferences.getInt(KeyProxyServerListSort, defaults.proxyServerListSort),
             routeDomainStrategy = preferences.getInt(KeyRouteDomainStrategy, defaults.routeDomainStrategy),
             defaultRouteOutboundTag = preferences.getString(
                 KeyDefaultRouteOutboundTag,
@@ -175,6 +180,8 @@ internal class AppSettingsPreferences(
             .putString(KeyTunIpv6Cidr, state.tunIpv6Cidr)
             .putInt(KeyNextProxyServerId, state.nextProxyServerId)
             .putInt(KeySelectedProxyServerId, state.selectedProxyServerId)
+            .putInt(KeyProxyServerListLayout, state.proxyServerListLayout)
+            .putInt(KeyProxyServerListSort, state.proxyServerListSort)
             .putInt(KeyRouteDomainStrategy, state.routeDomainStrategy)
             .putString(KeyDefaultRouteOutboundTag, state.defaultRouteOutboundTag)
             .putInt(KeyNextRouteRuleId, state.nextRouteRuleId)
@@ -263,6 +270,8 @@ private const val KeyTunIpv4Cidr = "tun_ipv4_cidr"
 private const val KeyTunIpv6Cidr = "tun_ipv6_cidr"
 private const val KeyNextProxyServerId = "next_proxy_server_id"
 private const val KeySelectedProxyServerId = "selected_proxy_server_id"
+private const val KeyProxyServerListLayout = "proxy_server_list_layout"
+private const val KeyProxyServerListSort = "proxy_server_list_sort"
 private const val KeyRouteDomainStrategy = "route_domain_strategy"
 private const val KeyDefaultRouteOutboundTag = "default_route_outbound_tag"
 private const val KeyNextRouteRuleId = "next_route_rule_id"
