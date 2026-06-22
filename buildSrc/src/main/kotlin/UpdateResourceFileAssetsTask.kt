@@ -22,8 +22,20 @@ abstract class UpdateResourceFileAssetsTask : DefaultTask() {
     @get:Input
     abstract val hevSocks5TunnelVersion: Property<String>
 
+    @get:Input
+    abstract val directCidrIpv4Url: Property<String>
+
+    @get:Input
+    abstract val directCidrIpv6Url: Property<String>
+
     @get:OutputFile
     abstract val xrayCoreFile: RegularFileProperty
+
+    @get:OutputFile
+    abstract val directCidrIpv4File: RegularFileProperty
+
+    @get:OutputFile
+    abstract val directCidrIpv6File: RegularFileProperty
 
     @get:OutputDirectory
     abstract val hevSocks5TunnelJniLibsDir: DirectoryProperty
@@ -39,6 +51,14 @@ abstract class UpdateResourceFileAssetsTask : DefaultTask() {
             url = xrayCoreArchiveUrl(),
             entryName = "xray",
             target = xrayCoreFile.get().asFile,
+        )
+        downloadFile(
+            url = directCidrIpv4Url.get(),
+            target = directCidrIpv4File.get().asFile,
+        )
+        downloadFile(
+            url = directCidrIpv6Url.get(),
+            target = directCidrIpv6File.get().asFile,
         )
         AndroidHevSocks5TunnelAssets.forEach { asset ->
             downloadFile(

@@ -72,6 +72,10 @@ private fun <Config : RootModeStartConfig> Config.buildRootStartupScript(
             appendScript("section \"Start $modeName helper runtime\"")
             append(postCoreStartCommand)
         }
+        rootEbpfConfig?.let { ebpfConfig ->
+            appendScript("section \"Start $modeName eBPF matcher\"")
+            append(ebpfConfig.buildStartCommand())
+        }
         appendRootBootReadinessCheck(
             readinessCheck = buildReadinessCheck(this@buildRootStartupScript),
             attempts = bootReadinessCheckAttempts,
@@ -199,6 +203,7 @@ private fun <Config : RootModeStartConfig> StringBuilder.appendRootStartupPreamb
         echo "Core error log: $${config.root.coreLogPaths.errorLogPath.shellQuote()}"
         echo "Core access log: $${config.root.coreLogPaths.accessLogPath.shellQuote()}"
         echo "IPv6 disabler log: $${config.root.ipv6DisablerLogPath.shellQuote()}"
+        echo "eBPF rules enabled: $${config.rootEbpfConfig != null}"
 
         section "Prepare runtime"
         rm -f $${config.root.runtimeLayout.pidPath.shellQuote()} || true

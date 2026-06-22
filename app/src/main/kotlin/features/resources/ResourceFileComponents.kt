@@ -76,12 +76,16 @@ internal fun ResourceFileSourceCard(
     customGeoIpUrl: String,
     customGeoSiteUrl: String,
     customGeoIpOnlyCnPrivateUrl: String,
+    customDirectCidrIpv4Url: String,
+    customDirectCidrIpv6Url: String,
     updating: Boolean,
     onSourceChange: (Int) -> Unit,
     onCustomSourceChange: (
         geoIpUrl: String,
         geoSiteUrl: String,
         geoIpOnlyCnPrivateUrl: String,
+        directCidrIpv4Url: String,
+        directCidrIpv6Url: String,
     ) -> Unit,
     onUpdate: () -> Unit,
     modifier: Modifier = Modifier,
@@ -90,6 +94,8 @@ internal fun ResourceFileSourceCard(
     val geoIpUrlDraftState = rememberTextFieldState(initialText = customGeoIpUrl)
     val geoSiteUrlDraftState = rememberTextFieldState(initialText = customGeoSiteUrl)
     val geoIpOnlyCnPrivateUrlDraftState = rememberTextFieldState(initialText = customGeoIpOnlyCnPrivateUrl)
+    val directCidrIpv4UrlDraftState = rememberTextFieldState(initialText = customDirectCidrIpv4Url)
+    val directCidrIpv6UrlDraftState = rememberTextFieldState(initialText = customDirectCidrIpv6Url)
     val selectedIndex = selectedSource.takeIf { it in sourceOptions.indices } ?: 0
     val sourceItems = sourceOptions.map { option ->
         DropdownItem(
@@ -118,6 +124,12 @@ internal fun ResourceFileSourceCard(
                     geoIpOnlyCnPrivateUrlDraftState.setTextAndPlaceCursorAtEnd(
                         customGeoIpOnlyCnPrivateUrl.ifBlank { selectedUpdateSource.geoIpOnlyCnPrivateUrl },
                     )
+                    directCidrIpv4UrlDraftState.setTextAndPlaceCursorAtEnd(
+                        customDirectCidrIpv4Url.ifBlank { selectedUpdateSource.directCidrIpv4Url },
+                    )
+                    directCidrIpv6UrlDraftState.setTextAndPlaceCursorAtEnd(
+                        customDirectCidrIpv6Url.ifBlank { selectedUpdateSource.directCidrIpv6Url },
+                    )
                     showCustomSourceDialog = true
                 } else {
                     onSourceChange(index)
@@ -129,6 +141,8 @@ internal fun ResourceFileSourceCard(
             geoIpUrlState = geoIpUrlDraftState,
             geoSiteUrlState = geoSiteUrlDraftState,
             geoIpOnlyCnPrivateUrlState = geoIpOnlyCnPrivateUrlDraftState,
+            directCidrIpv4UrlState = directCidrIpv4UrlDraftState,
+            directCidrIpv6UrlState = directCidrIpv6UrlDraftState,
             onDismissRequest = { showCustomSourceDialog = false },
             onSave = {
                 onCustomSourceChange(
@@ -136,6 +150,10 @@ internal fun ResourceFileSourceCard(
                     geoSiteUrlDraftState.text.toString().trim().ifBlank { selectedUpdateSource.geoSiteUrl },
                     geoIpOnlyCnPrivateUrlDraftState.text.toString().trim()
                         .ifBlank { selectedUpdateSource.geoIpOnlyCnPrivateUrl },
+                    directCidrIpv4UrlDraftState.text.toString().trim()
+                        .ifBlank { selectedUpdateSource.directCidrIpv4Url },
+                    directCidrIpv6UrlDraftState.text.toString().trim()
+                        .ifBlank { selectedUpdateSource.directCidrIpv6Url },
                 )
                 onSourceChange(ResourceFileSourceCustom)
                 showCustomSourceDialog = false
@@ -155,6 +173,8 @@ private fun CustomResourceFileSourceDialog(
     geoIpUrlState: TextFieldState,
     geoSiteUrlState: TextFieldState,
     geoIpOnlyCnPrivateUrlState: TextFieldState,
+    directCidrIpv4UrlState: TextFieldState,
+    directCidrIpv6UrlState: TextFieldState,
     onDismissRequest: () -> Unit,
     onSave: () -> Unit,
 ) {
@@ -183,6 +203,18 @@ private fun CustomResourceFileSourceDialog(
                 TextField(
                     state = geoIpOnlyCnPrivateUrlState,
                     label = ResourceFileGeoIpOnlyCnPrivateName,
+                    lineLimits = TextFieldLineLimits.SingleLine,
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                )
+                TextField(
+                    state = directCidrIpv4UrlState,
+                    label = ResourceFileDirectCidrIpv4Name,
+                    lineLimits = TextFieldLineLimits.SingleLine,
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                )
+                TextField(
+                    state = directCidrIpv6UrlState,
+                    label = ResourceFileDirectCidrIpv6Name,
                     lineLimits = TextFieldLineLimits.SingleLine,
                     modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
                 )

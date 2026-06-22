@@ -12,6 +12,8 @@ import engine.root.RootProxyRouteRulePriority
 import engine.root.RootProxyAppWhitelistSystemUids
 import engine.root.appendDeleteRuleLoop
 import engine.root.appendIpRuleDeleteLoop
+import engine.root.appendRootEbpfXtbpfInterfaceMarkRules
+import engine.root.appendRootEbpfXtbpfMarkRules
 import engine.root.appendRootFakeDnsIcmpReplyCleanupRules
 import engine.root.appendRootFakeDnsIcmpReplyRules
 import engine.root.appendRootIpv6DnsRejectCleanupRules
@@ -75,6 +77,67 @@ private fun StringBuilder.appendIptablesVariantSetupRules(
         ${variant.command} -t filter -A ${variant.forwardChain} -o 'asterisk0' -j ACCEPT
         """,
     )
+    if (config.enableEbpfRules) {
+        if (enableLocalDns) {
+            appendUdpDnsMarkRule(variant.command, variant.preroutingChain, config.mark)
+        }
+        appendDestinationMarkRules(
+            command = variant.command,
+            chain = variant.preroutingChain,
+            cidrs = variant.proxyPrivateCidrs,
+            mark = config.mark,
+        )
+        appendBypassReturnRules(
+            command = variant.command,
+            chain = variant.preroutingChain,
+            cidrs = variant.bypassPrivateCidrs + variant.localInterfaceCidrs,
+            interfaces = emptyList(),
+            input = true,
+        )
+        appendRootEbpfXtbpfInterfaceMarkRules(
+            command = variant.command,
+            chain = variant.preroutingChain,
+            routeMark = config.mark,
+            interfacePrefixes = config.externalInterfacePrefixes,
+        )
+        appendOutputUidReturnRules(variant.command, variant.outputChain, config.forcedBypassUids)
+        if (enableLocalDns) {
+            appendUdpDnsMarkRule(
+                command = variant.command,
+                chain = variant.outputChain,
+                mark = config.mark,
+                ownerBypassGid = RootXrayGid,
+            )
+        }
+        appendDestinationMarkRules(
+            command = variant.command,
+            chain = variant.outputChain,
+            cidrs = variant.proxyPrivateCidrs,
+            mark = config.mark,
+        )
+        appendScript("${variant.command} -t mangle -A ${variant.outputChain} -o 'asterisk0' -j RETURN")
+        appendBypassReturnRules(
+            command = variant.command,
+            chain = variant.outputChain,
+            cidrs = emptyList(),
+            interfaces = config.ignoredInterfaces,
+            input = false,
+        )
+        appendBypassReturnRules(
+            command = variant.command,
+            chain = variant.outputChain,
+            cidrs = variant.bypassPrivateCidrs + variant.localInterfaceCidrs,
+            interfaces = emptyList(),
+            input = false,
+        )
+        appendRootEbpfXtbpfMarkRules(
+            command = variant.command,
+            chain = variant.outputChain,
+            routeMark = config.mark,
+            ownerBypassGid = RootXrayGid,
+        )
+        return
+    }
     appendPreroutingTrafficMarkRules(config, variant, enableLocalDns)
     appendOutputTrafficMarkRules(config, variant, enableLocalDns)
 }

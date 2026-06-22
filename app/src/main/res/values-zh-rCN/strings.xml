@@ -78,6 +78,12 @@
     <string name="settings_root_boot_script">开机自启</string>
     <string name="settings_root_boot_script_summary">生成 service.d 启动脚本</string>
     <string name="settings_root_boot_script_failed">开机自启设置失败</string>
+    <string name="settings_root_ebpf_matcher">使用 eBPF 匹配器</string>
+    <string name="settings_root_ebpf_matcher_summary">提高大应用清单性能，并提供地址过滤支持</string>
+    <string name="settings_root_ebpf_bypass_direct_cidrs">绕过直连地址</string>
+    <string name="settings_root_ebpf_bypass_direct_cidrs_summary">默认为中国地址列表，可在资源管理中调整</string>
+    <string name="settings_root_ebpf_matcher_failed">eBPF 匹配器支持探测失败</string>
+    <string name="settings_root_ebpf_matcher_unsupported">当前设备不支持 eBPF 匹配器</string>
     <string name="settings_root_ipv6_disabler">禁用系统 IPv6</string>
     <string name="settings_root_ipv6_disabler_summary">防止 WebRTC 泄露 IPv6 地址</string>
     <string name="settings_vpn_local_dns">启用本地 DNS</string>

@@ -12,6 +12,8 @@ import engine.root.RootProxyRouteRulePriority
 import engine.root.RootProxyAppWhitelistSystemUids
 import engine.root.appendDeleteRuleLoop
 import engine.root.appendIpRuleDeleteLoop
+import engine.root.appendRootEbpfXtbpfInterfaceTproxyRules
+import engine.root.appendRootEbpfXtbpfMarkRules
 import engine.root.appendRootFakeDnsIcmpReplyCleanupRules
 import engine.root.appendRootFakeDnsIcmpReplyRules
 import engine.root.appendRootIpv6DnsRejectCleanupRules
@@ -91,6 +93,70 @@ private fun StringBuilder.appendIptablesVariantSetupRules(
         ${variant.command} -t mangle -I OUTPUT 1 -j ${variant.outputChain}
         """,
     )
+    if (config.enableEbpfRules) {
+        if (enableLocalDns) {
+            appendPreroutingDnsTproxyRules(variant, port, config.mark)
+        }
+        appendPreroutingPrivateDestinationInterfaceTproxyRules(
+            variant = variant,
+            interfacePrefixes = config.externalInterfacePrefixes,
+            port = port,
+            mark = config.mark,
+        )
+        appendPreroutingPrivateDestinationMarkedTproxyRules(variant, port, config.mark)
+        appendBypassReturnRules(
+            command = variant.command,
+            chain = variant.preroutingChain,
+            cidrs = variant.bypassPrivateCidrs,
+            interfaces = emptyList(),
+            input = true,
+        )
+        appendBypassReturnRules(
+            command = variant.command,
+            chain = variant.preroutingChain,
+            cidrs = variant.localInterfaceCidrs,
+            interfaces = emptyList(),
+            input = true,
+        )
+        appendPreroutingMarkedTproxyRules(variant, port, config.mark)
+        appendEbpfPreroutingRules(config, variant, port)
+        appendOutputUidReturnRules(variant.command, variant.outputChain, config.forcedBypassUids)
+        if (enableLocalDns) {
+            appendUdpDnsMarkRule(variant.command, variant.outputChain, config.mark, ownerBypassGid = RootXrayGid)
+        }
+        appendDestinationMarkRules(variant.command, variant.outputChain, variant.proxyPrivateCidrs, config.mark)
+        variant.dummyInterface?.let { dummyInterface ->
+            appendScript("${variant.command} -t mangle -A ${variant.outputChain} -o ${dummyInterface.device.shellQuote()} -j RETURN")
+        }
+        appendBypassReturnRules(
+            command = variant.command,
+            chain = variant.outputChain,
+            cidrs = emptyList(),
+            interfaces = config.ignoredInterfaces,
+            input = false,
+        )
+        appendBypassReturnRules(
+            command = variant.command,
+            chain = variant.outputChain,
+            cidrs = variant.bypassPrivateCidrs,
+            interfaces = emptyList(),
+            input = false,
+        )
+        appendBypassReturnRules(
+            command = variant.command,
+            chain = variant.outputChain,
+            cidrs = variant.localInterfaceCidrs,
+            interfaces = emptyList(),
+            input = false,
+        )
+        appendRootEbpfXtbpfMarkRules(
+            command = variant.command,
+            chain = variant.outputChain,
+            routeMark = config.mark,
+            ownerBypassGid = RootXrayGid,
+        )
+        return
+    }
     if (enableLocalDns) {
         appendPreroutingDnsTproxyRules(variant, port, config.mark)
     }
@@ -167,6 +233,24 @@ private fun StringBuilder.appendIptablesVariantSetupRules(
     )
     variant.dummyInterface?.let { dummyInterface ->
         appendDummyOutputRules(variant.command, dummyInterface)
+    }
+}
+
+private fun StringBuilder.appendEbpfPreroutingRules(
+    config: RootIptablesConfig,
+    variant: TproxyIptablesVariant,
+    port: Int,
+) {
+    appendRootEbpfXtbpfInterfaceTproxyRules(
+        command = variant.command,
+        chain = variant.preroutingChain,
+        interfacePrefixes = config.externalInterfacePrefixes,
+        port = port,
+        onIp = variant.tproxyOnIp,
+        mark = config.mark,
+    )
+    variant.dummyInterface?.let { dummyInterface ->
+        appendDummyPreroutingRules(variant.command, dummyInterface, port)
     }
 }
 

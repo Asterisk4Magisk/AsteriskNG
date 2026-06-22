@@ -14,6 +14,8 @@ const val ResourceFileSourceCustom = 4
 const val ResourceFileGeoIpName = "geoip.dat"
 const val ResourceFileGeoSiteName = "geosite.dat"
 const val ResourceFileGeoIpOnlyCnPrivateName = "geoip-only-cn-private.dat"
+const val ResourceFileDirectCidrIpv4Name = "direct-cidr-v4.txt"
+const val ResourceFileDirectCidrIpv6Name = "direct-cidr-v6.txt"
 const val ResourceFileXrayCoreName = "xray"
 
 const val ResourceFileLoyalsoldierGeoIpUrl =
@@ -32,5 +34,9 @@ const val ResourceFileRunetFreedomGeoIpUrl =
     "https://github.com/runetfreedom/russia-v2ray-rules-dat/releases/latest/download/geoip.dat"
 const val ResourceFileRunetFreedomGeoSiteUrl =
     "https://github.com/runetfreedom/russia-v2ray-rules-dat/releases/latest/download/geosite.dat"
+const val ResourceFileDirectCidrIpv4Url =
+    "https://raw.githubusercontent.com/mayaxcn/china-ip-list/master/chnroute.txt"
+const val ResourceFileDirectCidrIpv6Url =
+    "https://raw.githubusercontent.com/mayaxcn/china-ip-list/master/chnroute_v6.txt"
 
 const val XrayCoreVersion = ProjectInfo.XRAY_CORE_VERSION

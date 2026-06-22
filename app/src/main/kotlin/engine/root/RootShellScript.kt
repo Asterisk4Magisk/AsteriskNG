@@ -39,6 +39,73 @@ internal fun StringBuilder.appendIpRuleDeleteLoop(
     appendScript("while $ipCommand rule del $rule 2>/dev/null; do :; done")
 }
 
+internal fun StringBuilder.appendRootEbpfXtbpfMarkRules(
+    command: String,
+    chain: String,
+    routeMark: String,
+    ownerBypassGid: Int? = null,
+) {
+    val ownerMatch = ownerBypassGid?.let { gid -> "-m owner ! --gid-owner $gid " }.orEmpty()
+    val quotedProgramPath = command.rootEbpfProgramPath(
+        ipv4Path = RootEbpfXtOutputV4ProgramPath,
+        ipv6Path = RootEbpfXtOutputV6ProgramPath,
+    ).shellQuote()
+    appendScript(
+        """
+        $command -t mangle -A $chain -p tcp ${ownerMatch}-m bpf --object-pinned $quotedProgramPath -j MARK --set-xmark $routeMark
+        $command -t mangle -A $chain -p udp ${ownerMatch}-m bpf --object-pinned $quotedProgramPath -j MARK --set-xmark $routeMark
+        """,
+    )
+}
+
+internal fun StringBuilder.appendRootEbpfXtbpfInterfaceMarkRules(
+    command: String,
+    chain: String,
+    routeMark: String,
+    interfacePrefixes: List<String>,
+) {
+    val quotedProgramPath = command.rootEbpfProgramPath(
+        ipv4Path = RootEbpfXtPreroutingV4ProgramPath,
+        ipv6Path = RootEbpfXtPreroutingV6ProgramPath,
+    ).shellQuote()
+    interfacePrefixes.forEach { prefix ->
+        val quotedInterface = prefix.shellQuote()
+        appendScript(
+            """
+            $command -t mangle -A $chain -i $quotedInterface -p tcp -m bpf --object-pinned $quotedProgramPath -j MARK --set-xmark $routeMark
+            $command -t mangle -A $chain -i $quotedInterface -p udp -m bpf --object-pinned $quotedProgramPath -j MARK --set-xmark $routeMark
+            """,
+        )
+    }
+}
+
+internal fun StringBuilder.appendRootEbpfXtbpfInterfaceTproxyRules(
+    command: String,
+    chain: String,
+    interfacePrefixes: List<String>,
+    port: Int,
+    onIp: String,
+    mark: String,
+) {
+    val quotedProgramPath = command.rootEbpfProgramPath(
+        ipv4Path = RootEbpfXtPreroutingV4ProgramPath,
+        ipv6Path = RootEbpfXtPreroutingV6ProgramPath,
+    ).shellQuote()
+    interfacePrefixes.forEach { prefix ->
+        val quotedInterface = prefix.shellQuote()
+        appendScript(
+            """
+            $command -t mangle -A $chain -i $quotedInterface -p tcp -m bpf --object-pinned $quotedProgramPath -j TPROXY --on-port $port --on-ip $onIp --tproxy-mark $mark
+            $command -t mangle -A $chain -i $quotedInterface -p udp -m bpf --object-pinned $quotedProgramPath -j TPROXY --on-port $port --on-ip $onIp --tproxy-mark $mark
+            """,
+        )
+    }
+}
+
+private fun String.rootEbpfProgramPath(ipv4Path: String, ipv6Path: String): String {
+    return if (this == RootIp6tablesCommand) ipv6Path else ipv4Path
+}
+
 internal fun StringBuilder.appendRootIpv6DnsRejectRules() {
     appendRootIpv6DnsRejectCleanupRules()
     appendScript(

@@ -26,6 +26,8 @@ internal data class RootStartConfig(
 internal interface RootModeStartConfig {
     val root: RootStartConfig
     val localProxyOptions: LocalProxyOptions
+    val rootEbpfConfig: RootEbpfRuntimeConfig?
+        get() = null
 }
 
 internal val RootStartConfig.startupScriptPath: String
@@ -42,6 +44,15 @@ internal val RootRuntimeLayout.startupScriptPath: String
 
 internal val RootRuntimeLayout.ipv6DisablerPidPath: String
     get() = File(dataDir, RootIpv6DisablerPidFileName).absolutePath
+
+internal val RootRuntimeLayout.bpfPolicyPath: String
+    get() = File(dataDir, RootEbpfPolicyFileName).absolutePath
+
+internal val RootRuntimeLayout.rootEbpfDirectCidrPathV4: String
+    get() = File(dataDir, RootEbpfDirectCidrV4FileName).absolutePath
+
+internal val RootRuntimeLayout.rootEbpfDirectCidrPathV6: String
+    get() = File(dataDir, RootEbpfDirectCidrV6FileName).absolutePath
 
 internal val RootStartConfig.ipv6DisablerLogPath: String
     get() = coreLogPaths.ipv6DisablerLogFile().absolutePath

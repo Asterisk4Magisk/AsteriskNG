@@ -13,6 +13,8 @@ internal data class RootIptablesConfig(
     val mark: String,
     val ipv4Table: String,
     val ipv6Table: String,
+    val enableEbpfRules: Boolean = false,
+    val enableEbpfDirectCidrBypass: Boolean = false,
     val externalInterfacePrefixes: List<String> = emptyList(),
     val ignoredInterfaces: List<String> = emptyList(),
     val localInterfaceIpv4Cidrs: List<String> = emptyList(),
@@ -59,6 +61,8 @@ internal fun RootIptablesConfig.withAppSettings(
         } else {
             context.resolveRootProxyApplicationUids(selectedAppKeys)
         },
+        enableEbpfRules = appState.enableRootEbpfRules,
+        enableEbpfDirectCidrBypass = appState.enableRootEbpfDirectCidrBypass,
     )
 }
 

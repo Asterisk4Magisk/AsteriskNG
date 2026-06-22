@@ -92,6 +92,14 @@ internal class AppSettingsPreferences(
                 KeyCustomResourceFileGeoIpOnlyCnPrivateUrl,
                 defaults.customResourceFileGeoIpOnlyCnPrivateUrl,
             ) ?: defaults.customResourceFileGeoIpOnlyCnPrivateUrl,
+            customResourceFileDirectCidrIpv4Url = preferences.getString(
+                KeyCustomResourceFileDirectCidrIpv4Url,
+                defaults.customResourceFileDirectCidrIpv4Url,
+            ) ?: defaults.customResourceFileDirectCidrIpv4Url,
+            customResourceFileDirectCidrIpv6Url = preferences.getString(
+                KeyCustomResourceFileDirectCidrIpv6Url,
+                defaults.customResourceFileDirectCidrIpv6Url,
+            ) ?: defaults.customResourceFileDirectCidrIpv6Url,
             customResourceFiles = customResourceFiles,
             nextCustomResourceFileId = nextCustomResourceFileId,
             enableSniffing = preferences.getBoolean(KeyEnableSniffing, defaults.enableSniffing),
@@ -137,6 +145,14 @@ internal class AppSettingsPreferences(
             enableRootBootScript = preferences.getBoolean(
                 KeyEnableRootBootScript,
                 defaults.enableRootBootScript,
+            ),
+            enableRootEbpfRules = preferences.getBoolean(
+                KeyEnableRootEbpfRules,
+                defaults.enableRootEbpfRules,
+            ),
+            enableRootEbpfDirectCidrBypass = preferences.getBoolean(
+                KeyEnableRootEbpfDirectCidrBypass,
+                defaults.enableRootEbpfDirectCidrBypass,
             ),
             enableRootIpv6Disabler = preferences.getBoolean(
                 KeyEnableRootIpv6Disabler,
@@ -191,6 +207,8 @@ internal class AppSettingsPreferences(
             .putString(KeyCustomResourceFileGeoIpUrl, state.customResourceFileGeoIpUrl)
             .putString(KeyCustomResourceFileGeoSiteUrl, state.customResourceFileGeoSiteUrl)
             .putString(KeyCustomResourceFileGeoIpOnlyCnPrivateUrl, state.customResourceFileGeoIpOnlyCnPrivateUrl)
+            .putString(KeyCustomResourceFileDirectCidrIpv4Url, state.customResourceFileDirectCidrIpv4Url)
+            .putString(KeyCustomResourceFileDirectCidrIpv6Url, state.customResourceFileDirectCidrIpv6Url)
             .putCustomResourceFileList(KeyCustomResourceFiles, state.customResourceFiles)
             .putInt(KeyNextCustomResourceFileId, state.nextCustomResourceFileId)
             .putBoolean(KeyEnableSniffing, state.enableSniffing)
@@ -213,6 +231,8 @@ internal class AppSettingsPreferences(
             .putStringList(KeyDnsHosts, state.dnsHosts)
             .putString(KeyTransparentProxyPort, state.transparentProxyPort)
             .putBoolean(KeyEnableRootBootScript, state.enableRootBootScript)
+            .putBoolean(KeyEnableRootEbpfRules, state.enableRootEbpfRules)
+            .putBoolean(KeyEnableRootEbpfDirectCidrBypass, state.enableRootEbpfDirectCidrBypass)
             .putBoolean(KeyEnableRootIpv6Disabler, state.enableRootIpv6Disabler)
             .putString(KeySocks5ProxyPort, state.socks5ProxyPort)
             .putBoolean(KeyEnableHttpProxy, state.enableHttpProxy)
@@ -281,6 +301,8 @@ private const val KeyResourceFileSource = "resource_file_source"
 private const val KeyCustomResourceFileGeoIpUrl = "custom_resource_file_geoip_url"
 private const val KeyCustomResourceFileGeoSiteUrl = "custom_resource_file_geosite_url"
 private const val KeyCustomResourceFileGeoIpOnlyCnPrivateUrl = "custom_resource_file_geoip_only_cn_private_url"
+private const val KeyCustomResourceFileDirectCidrIpv4Url = "custom_resource_file_direct_cidr_ipv4_url"
+private const val KeyCustomResourceFileDirectCidrIpv6Url = "custom_resource_file_direct_cidr_ipv6_url"
 private const val KeyCustomResourceFiles = "custom_resource_files"
 private const val KeyNextCustomResourceFileId = "next_custom_resource_file_id"
 private const val KeyEnableSniffing = "enable_sniffing"
@@ -303,6 +325,8 @@ private const val KeyEnableDirectDnsForProxyServerDomains = "enable_direct_dns_f
 private const val KeyDnsHosts = "dns_hosts"
 private const val KeyTransparentProxyPort = "transparent_proxy_port"
 private const val KeyEnableRootBootScript = "enable_root_boot_script"
+private const val KeyEnableRootEbpfRules = "enable_root_ebpf_rules"
+private const val KeyEnableRootEbpfDirectCidrBypass = "enable_root_ebpf_direct_cidr_bypass"
 private const val KeyEnableRootIpv6Disabler = "enable_root_ipv6_disabler"
 private const val KeySocks5ProxyPort = "socks5_proxy_port"
 private const val KeyEnableHttpProxy = "enable_http_proxy"

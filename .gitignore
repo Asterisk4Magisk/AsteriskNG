@@ -18,3 +18,5 @@ captures
 !*.xcodeproj/project.xcworkspace/
 !*.xcworkspace/contents.xcworkspacedata
 **/xcshareddata/WorkspaceSettings.xcsettings
+/app/src/main/assets/direct-cidr-v4.txt
+/app/src/main/assets/direct-cidr-v6.txt

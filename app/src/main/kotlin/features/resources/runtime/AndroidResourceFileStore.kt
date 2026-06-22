@@ -33,6 +33,8 @@ internal class AndroidResourceFileStore(
             geoIp = file(ResourceFileKind.GeoIp).toStatus(),
             geoSite = file(ResourceFileKind.GeoSite).toStatus(),
             geoIpOnlyCnPrivate = file(ResourceFileKind.GeoIpOnlyCnPrivate).toStatus(),
+            directCidrIpv4 = file(ResourceFileKind.DirectCidrIpv4).toStatus(),
+            directCidrIpv6 = file(ResourceFileKind.DirectCidrIpv6).toStatus(),
             xrayCore = file(ResourceFileKind.XrayCore).toStatus(),
             customResourceFiles = customResourceFiles.map { customFile ->
                 CustomResourceFileStatus(
@@ -62,6 +64,7 @@ internal class AndroidResourceFileStore(
         ResourceFileKind.entries.forEach { kind ->
             val target = file(kind)
             if (!target.needsBundledRestore(bundledUpdatedAtMillis)) return@forEach
+            if (!kind.hasBundledAsset()) return@forEach
             if (kind == ResourceFileKind.XrayCore && bundledXrayCoreFileOrNull() == null) return@forEach
             runCatching { restoreBundled(kind) }
                 .onFailure { error ->
@@ -77,7 +80,7 @@ internal class AndroidResourceFileStore(
         if (kind == ResourceFileKind.XrayCore) {
             restoreBundledXrayCore()
         } else {
-            restoreBundledAsset(kind, kind.bundledAssetPath())
+            restoreBundledAsset(kind, kind.bundledAssetPathOrNull() ?: error("Bundled ${kind.fileName} is unavailable"))
         }
     }
 
@@ -168,8 +171,11 @@ internal class AndroidResourceFileStore(
             dataDir = dataDir.absolutePath,
             setuidgidPath = File(appContext.applicationInfo.nativeLibraryDir, SetuidgidLibraryName).absolutePath,
             ipv6DisablerPath = File(appContext.applicationInfo.nativeLibraryDir, Ipv6DisablerLibraryName).absolutePath,
+            bpfMatcherPath = File(appContext.applicationInfo.nativeLibraryDir, BpfMatcherLibraryName).absolutePath,
             xrayCorePath = file(ResourceFileKind.XrayCore).absolutePath,
             hevSocks5TunnelPath = File(appContext.applicationInfo.nativeLibraryDir, HevSocks5TunnelLibraryName).absolutePath,
+            directCidrIpv4Path = file(ResourceFileKind.DirectCidrIpv4).absolutePath,
+            directCidrIpv6Path = file(ResourceFileKind.DirectCidrIpv6).absolutePath,
         )
     }
 }
@@ -183,8 +189,11 @@ internal data class XrayResourceFilePaths(
     val dataDir: String,
     val setuidgidPath: String,
     val ipv6DisablerPath: String,
+    val bpfMatcherPath: String,
     val xrayCorePath: String,
     val hevSocks5TunnelPath: String,
+    val directCidrIpv4Path: String,
+    val directCidrIpv6Path: String,
 )
 
 internal fun Context.xrayResourceFilesDir(): File {
@@ -195,11 +204,17 @@ internal fun Context.prepareXrayResourceFilePaths(): XrayResourceFilePaths {
     return AndroidResourceFileStore(this).preparePaths()
 }
 
-private fun ResourceFileKind.bundledAssetPath(): String {
+private fun ResourceFileKind.hasBundledAsset(): Boolean {
+    return this == ResourceFileKind.XrayCore || bundledAssetPathOrNull() != null
+}
+
+private fun ResourceFileKind.bundledAssetPathOrNull(): String? {
     return when (this) {
         ResourceFileKind.GeoIp -> fileName
         ResourceFileKind.GeoSite -> fileName
         ResourceFileKind.GeoIpOnlyCnPrivate -> fileName
+        ResourceFileKind.DirectCidrIpv4 -> fileName
+        ResourceFileKind.DirectCidrIpv6 -> fileName
         ResourceFileKind.XrayCore -> error("Xray-core is restored from native libraries")
     }
 }
@@ -225,6 +240,7 @@ private fun Context.packageUpdatedAtMillis(): Long {
 private const val Arm64Abi = "arm64-v8a"
 private const val SetuidgidLibraryName = "libsetuidgid.so"
 private const val Ipv6DisablerLibraryName = "libipv6disabler.so"
+private const val BpfMatcherLibraryName = "libbpf-matcher.so"
 private const val XrayCoreLibraryName = "libxray.so"
 private const val HevSocks5TunnelLibraryName = "libhev-socks5-tunnel.so"
 

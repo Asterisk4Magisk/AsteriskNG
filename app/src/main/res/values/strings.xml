@@ -78,6 +78,12 @@
     <string name="settings_root_boot_script">Start on boot</string>
     <string name="settings_root_boot_script_summary">Generate service.d startup script</string>
     <string name="settings_root_boot_script_failed">Failed to update start on boot</string>
+    <string name="settings_root_ebpf_matcher">Use eBPF matcher</string>
+    <string name="settings_root_ebpf_matcher_summary">Improve performance for large app lists and support address filtering</string>
+    <string name="settings_root_ebpf_bypass_direct_cidrs">Bypass direct addresses</string>
+    <string name="settings_root_ebpf_bypass_direct_cidrs_summary">Uses China address lists by default; adjust them in Resource Management</string>
+    <string name="settings_root_ebpf_matcher_failed">Failed to probe eBPF matcher support</string>
+    <string name="settings_root_ebpf_matcher_unsupported">This device does not support eBPF matcher</string>
     <string name="settings_root_ipv6_disabler">Disable system IPv6</string>
     <string name="settings_root_ipv6_disabler_summary">Prevent WebRTC IPv6 address leaks</string>
     <string name="settings_vpn_local_dns">Enable local DNS</string>

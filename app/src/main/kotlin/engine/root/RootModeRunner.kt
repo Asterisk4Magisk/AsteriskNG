@@ -27,6 +27,7 @@ internal abstract class RootModeRunner<Config : RootModeStartConfig>(
     suspend fun start(config: Config) = withContext(Dispatchers.IO) {
         stop(config.root.runtimeLayout)
         writeRootConfigFile(config.root)
+        config.rootEbpfConfig?.writeRuntimeFiles()
         prepareModeRuntimeFiles(config)
         runRootCommand(config.root.buildPrepareRuntimeCommand(), "Failed to prepare $modeName environment")
         runRootCommandIfNotBlank(
@@ -37,6 +38,10 @@ internal abstract class RootModeRunner<Config : RootModeStartConfig>(
         runRootCommandIfNotBlank(
             command = buildPostCoreStartCommand(config),
             failureMessage = "Failed to start $modeName helper runtime",
+        )
+        runRootCommandIfNotBlank(
+            command = config.rootEbpfConfig?.buildStartCommand().orEmpty(),
+            failureMessage = "Failed to start $modeName eBPF matcher",
         )
 
         val readinessCheck = buildReadinessCheck(config)
@@ -63,6 +68,7 @@ internal abstract class RootModeRunner<Config : RootModeStartConfig>(
 
     suspend fun installBootScript(config: Config) = withContext(Dispatchers.IO) {
         writeRootConfigFile(config.root)
+        config.rootEbpfConfig?.writeRuntimeFiles()
         prepareModeRuntimeFiles(config)
         val command = config.buildInstallRootBootScriptCommand(
             modeName = modeName,

@@ -109,6 +109,7 @@ dependencies {
     implementation("com.github.2dust:libv2ray:${ProjectConfig.ANDROID_LIB_XRAY_LITE_VERSION}@aar")
     implementation(project(":setuidgid"))
     implementation(project(":ipv6disabler"))
+    implementation(project(":bpfmatcher"))
     implementation(libs.ktor.http)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.libsu.core)

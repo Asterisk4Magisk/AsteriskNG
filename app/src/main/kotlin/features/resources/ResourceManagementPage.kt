@@ -294,16 +294,26 @@ fun ResourceManagementPage(
                         customGeoIpUrl = appState.customResourceFileGeoIpUrl,
                         customGeoSiteUrl = appState.customResourceFileGeoSiteUrl,
                         customGeoIpOnlyCnPrivateUrl = appState.customResourceFileGeoIpOnlyCnPrivateUrl,
+                        customDirectCidrIpv4Url = appState.customResourceFileDirectCidrIpv4Url,
+                        customDirectCidrIpv6Url = appState.customResourceFileDirectCidrIpv6Url,
                         updating = updating,
                         onSourceChange = { index ->
                             updateAppState { state -> state.copy(resourceFileSource = index.coerceIn(sourceOptions.indices)) }
                         },
-                        onCustomSourceChange = { geoIpUrl, geoSiteUrl, geoIpOnlyCnPrivateUrl ->
+                        onCustomSourceChange = {
+                                geoIpUrl,
+                                geoSiteUrl,
+                                geoIpOnlyCnPrivateUrl,
+                                directCidrIpv4Url,
+                                directCidrIpv6Url,
+                            ->
                             updateAppState { state ->
                                 state.copy(
                                     customResourceFileGeoIpUrl = geoIpUrl,
                                     customResourceFileGeoSiteUrl = geoSiteUrl,
                                     customResourceFileGeoIpOnlyCnPrivateUrl = geoIpOnlyCnPrivateUrl,
+                                    customResourceFileDirectCidrIpv4Url = directCidrIpv4Url,
+                                    customResourceFileDirectCidrIpv6Url = directCidrIpv6Url,
                                 )
                             }
                         },
@@ -327,6 +337,8 @@ fun ResourceManagementPage(
                     ResourceFileKind.GeoIp,
                     ResourceFileKind.GeoSite,
                     ResourceFileKind.GeoIpOnlyCnPrivate,
+                    ResourceFileKind.DirectCidrIpv4,
+                    ResourceFileKind.DirectCidrIpv6,
                 ).forEach { kind ->
                     item(key = kind.fileName) {
                         ResourceFileCard(

@@ -71,6 +71,18 @@ internal class AndroidResourceFileRepository(
                     targetFile = store.file(ResourceFileKind.GeoIpOnlyCnPrivate),
                     applyPermissions = { store.applyPermissions(ResourceFileKind.GeoIpOnlyCnPrivate) },
                 ),
+                ResourceFileDownloadTarget(
+                    displayName = ResourceFileKind.DirectCidrIpv4.displayName,
+                    url = source.directCidrIpv4Url,
+                    targetFile = store.file(ResourceFileKind.DirectCidrIpv4),
+                    applyPermissions = { store.applyPermissions(ResourceFileKind.DirectCidrIpv4) },
+                ),
+                ResourceFileDownloadTarget(
+                    displayName = ResourceFileKind.DirectCidrIpv6.displayName,
+                    url = source.directCidrIpv6Url,
+                    targetFile = store.file(ResourceFileKind.DirectCidrIpv6),
+                    applyPermissions = { store.applyPermissions(ResourceFileKind.DirectCidrIpv6) },
+                ),
             ) + customResourceFiles.mapNotNull { customFile -> customFile.toDownloadTargetOrNull() },
             options = options,
             customResourceFiles = customResourceFiles,

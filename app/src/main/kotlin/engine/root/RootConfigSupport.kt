@@ -67,6 +67,27 @@ internal class RootConfigBuildContext(
         )
     }
 
+    fun buildRootEbpfRuntimeConfig(iptablesConfig: RootIptablesConfig): RootEbpfRuntimeConfig? {
+        if (!iptablesConfig.enableEbpfRules) return null
+        val runtimeLayout = resourceFilePaths.toRootRuntimeLayout()
+        return RootEbpfRuntimeConfig(
+            matcherPath = runtimeLayout.bpfMatcherPath,
+            bpfPolicyPath = runtimeLayout.bpfPolicyPath,
+            directCidrPathV4 = runtimeLayout.rootEbpfDirectCidrPathV4,
+            directCidrPathV6 = runtimeLayout.rootEbpfDirectCidrPathV6,
+            directCidrSourcePathsV4 = listOf(resourceFilePaths.directCidrIpv4Path),
+            directCidrSourcePathsV6 = listOf(resourceFilePaths.directCidrIpv6Path),
+            policy = iptablesConfig.toRootEbpfPolicy(
+                directCidrPathV4 = runtimeLayout.rootEbpfDirectCidrPathV4,
+                directCidrPathV6 = runtimeLayout.rootEbpfDirectCidrPathV6,
+                xtOutputV4ProgramPath = RootEbpfXtOutputV4ProgramPath,
+                xtOutputV6ProgramPath = RootEbpfXtOutputV6ProgramPath,
+                xtPreroutingV4ProgramPath = RootEbpfXtPreroutingV4ProgramPath,
+                xtPreroutingV6ProgramPath = RootEbpfXtPreroutingV6ProgramPath,
+            ),
+        )
+    }
+
 }
 
 internal fun Context.prepareRootConfigBuildContext(request: ProxyEngineStartRequest): RootConfigBuildContext {

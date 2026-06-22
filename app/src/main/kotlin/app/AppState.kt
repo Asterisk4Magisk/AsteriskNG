@@ -23,6 +23,8 @@ import engine.xray.DefaultMuxXudpConcurrency
 import features.resources.ResourceFileSourceLoyalsoldierGithub
 import features.resources.ResourceFileLoyalsoldierGeoIpUrl
 import features.resources.ResourceFileLoyalsoldierGeoSiteUrl
+import features.resources.ResourceFileDirectCidrIpv4Url
+import features.resources.ResourceFileDirectCidrIpv6Url
 import features.resources.ResourceFileV2FlyGeoIpOnlyCnPrivateUrl
 import features.routing.model.RouteRule
 
@@ -68,6 +70,8 @@ data class AppState(
     val customResourceFileGeoIpUrl: String = ResourceFileLoyalsoldierGeoIpUrl,
     val customResourceFileGeoSiteUrl: String = ResourceFileLoyalsoldierGeoSiteUrl,
     val customResourceFileGeoIpOnlyCnPrivateUrl: String = ResourceFileV2FlyGeoIpOnlyCnPrivateUrl,
+    val customResourceFileDirectCidrIpv4Url: String = ResourceFileDirectCidrIpv4Url,
+    val customResourceFileDirectCidrIpv6Url: String = ResourceFileDirectCidrIpv6Url,
     val customResourceFiles: List<CustomResourceFileState> = emptyList(),
     val nextCustomResourceFileId: Int = 1,
     val enableSniffing: Boolean = true,
@@ -94,6 +98,8 @@ data class AppState(
 
     val transparentProxyPort: String = DefaultTproxyPort.toString(),
     val enableRootBootScript: Boolean = false,
+    val enableRootEbpfRules: Boolean = false,
+    val enableRootEbpfDirectCidrBypass: Boolean = false,
     val enableRootIpv6Disabler: Boolean = false,
     val socks5ProxyPort: String = DefaultTun2SocksProxyPort.toString(),
     val enableHttpProxy: Boolean = false,

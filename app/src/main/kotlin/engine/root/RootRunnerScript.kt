@@ -74,6 +74,9 @@ internal fun buildRootStopCommand(
             )
         }
         append(cleanupRulesCommand)
+        runtimeLayout?.let { paths ->
+            append(paths.buildStopRootEbpfCommand())
+        }
     }
 }
 
