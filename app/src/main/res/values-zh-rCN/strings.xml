@@ -43,6 +43,13 @@
     <string name="common_empty">这里空空的~~~</string>
     <string name="common_unknown_group">未知分组</string>
     <string name="common_copied">已复制</string>
+    <string name="common_more">更多</string>
+    <string name="common_import_from_clipboard">从剪贴板导入</string>
+    <string name="common_export_to_clipboard">导出到剪贴板</string>
+    <string name="common_replace_existing">替换现有</string>
+    <string name="common_merge_import">合并导入</string>
+    <string name="common_clipboard_empty">剪贴板为空</string>
+    <string name="common_clipboard_unsupported_format">剪贴板格式不支持</string>
     <string name="common_replace">替换</string>
     <string name="common_restore">恢复</string>
     <string name="common_unsupported">不支持</string>
@@ -309,6 +316,7 @@
     <string name="proxy_app_list_mode_global">全应用模式</string>
     <string name="proxy_app_list_mode">代理模式</string>
     <string name="proxy_app_list_display_options">显示选项</string>
+    <string name="proxy_app_list_more_actions">更多操作</string>
     <string name="proxy_app_list_show_system_apps">显示系统应用</string>
     <string name="proxy_app_list_search_label">搜索应用名称</string>
     <string name="proxy_app_list_entry_summary">{package}</string>
@@ -317,6 +325,13 @@
     <string name="proxy_app_list_refreshing">正在刷新…</string>
     <string name="proxy_app_list_refreshed">刷新完成</string>
     <string name="proxy_app_list_load_failed">应用列表加载失败</string>
+    <string name="proxy_app_list_import_clipboard_title">导入应用名单</string>
+    <string name="proxy_app_list_import_clipboard_message">检测到 {count} 个应用，请选择导入方式</string>
+    <string name="proxy_app_list_imported">已导入 {count} 个应用</string>
+    <string name="proxy_app_list_import_no_valid_apps">未发现有效应用</string>
+    <string name="proxy_app_list_import_invalid_entry">应用名单条目无效</string>
+    <string name="proxy_app_list_import_invalid_user">应用用户 ID 无效</string>
+    <string name="proxy_app_list_import_unsupported_mode">应用名单模式不支持</string>
 
     <!-- Proxy server list -->
     <string name="proxy_server_list_title">代理节点</string>
@@ -509,6 +524,11 @@
     <string name="routing_default_outbound_subtitle">默认出站代理标签：{tag}</string>
     <string name="routing_deleted">{name} 已删除</string>
     <string name="routing_saved">{name} 已保存</string>
+    <string name="routing_import_clipboard_title">导入路由规则</string>
+    <string name="routing_import_clipboard_message">检测到 {count} 条路由规则，请选择导入方式</string>
+    <string name="routing_imported">已导入 {count} 条路由规则</string>
+    <string name="routing_export_empty">没有可导出的路由规则</string>
+    <string name="routing_import_no_valid_rules">未发现有效路由规则</string>
     <string name="routing_edit">编辑路由</string>
     <string name="routing_delete">删除路由</string>
     <string name="routing_default_proxy_server">代理节点 {id}</string>

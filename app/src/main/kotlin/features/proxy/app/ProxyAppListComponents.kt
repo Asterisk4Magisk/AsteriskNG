@@ -58,6 +58,12 @@ import androidx.compose.runtime.getValue
 import ui.components.IconDropdownMenu
 import ui.components.IconDropdownMenuEntry
 
+internal enum class ProxyAppListMoreAction {
+    ToggleSystemApps,
+    ImportClipboard,
+    ExportClipboard,
+}
+
 @Composable
 internal fun ProxyAppListUserSpaceTabs(
     tabs: List<ProxyAppListUserSpaceTabUi>,
@@ -89,22 +95,32 @@ internal fun ProxyAppListUserSpaceTabs(
 }
 
 @Composable
-internal fun ProxyAppListDisplayOptionsMenu(
+internal fun ProxyAppListMoreActionsMenu(
     showSystemApps: Boolean,
-    onShowSystemAppsChange: (Boolean) -> Unit,
+    onAction: (ProxyAppListMoreAction) -> Unit,
 ) {
     IconDropdownMenu(
         imageVector = MiuixIcons.More,
-        contentDescription = stringResource(R.string.proxy_app_list_display_options),
+        contentDescription = stringResource(R.string.proxy_app_list_more_actions),
         entries = listOf(
             IconDropdownMenuEntry(
                 key = "show-system-apps",
                 title = stringResource(R.string.proxy_app_list_show_system_apps),
                 selected = showSystemApps,
-                action = !showSystemApps,
+                action = ProxyAppListMoreAction.ToggleSystemApps,
+            ),
+            IconDropdownMenuEntry(
+                key = "import-clipboard",
+                title = stringResource(R.string.common_import_from_clipboard),
+                action = ProxyAppListMoreAction.ImportClipboard,
+            ),
+            IconDropdownMenuEntry(
+                key = "export-clipboard",
+                title = stringResource(R.string.common_export_to_clipboard),
+                action = ProxyAppListMoreAction.ExportClipboard,
             ),
         ),
-        onAction = onShowSystemAppsChange,
+        onAction = onAction,
     )
 }
 

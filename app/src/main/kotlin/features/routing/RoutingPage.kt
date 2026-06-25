@@ -21,6 +21,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.res.stringResource
 import app.DefaultRouteOutboundTag
 import app.LocalAppServices
@@ -34,6 +35,10 @@ import features.proxy.server.display.displayNameById
 import features.proxy.server.display.displayNameWithGroup
 import features.proxy.server.model.isCustomProxyServer
 import features.routing.model.RouteRule
+import features.routing.usecase.RouteRuleClipboardItem
+import features.routing.usecase.applyRouteRuleClipboardImport
+import features.routing.usecase.decodeRouteRulesFromClipboard
+import features.routing.usecase.encodeRouteRulesForClipboard
 import kotlinx.coroutines.launch
 import sh.calvin.reorderable.ReorderableItem
 import top.yukonga.miuix.kmp.anim.folmeSpring
@@ -44,10 +49,17 @@ import top.yukonga.miuix.kmp.basic.VerticalScrollBar
 import top.yukonga.miuix.kmp.basic.rememberScrollBarAdapter
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Add
+import top.yukonga.miuix.kmp.icon.extended.More
 import top.yukonga.miuix.kmp.icon.extended.Tune
 import top.yukonga.miuix.kmp.interfaces.ExperimentalScrollBarApi
+import ui.clipboard.ClipboardImportException
+import ui.clipboard.ClipboardImportFailure
+import ui.clipboard.ClipboardImportMode
+import ui.clipboard.getPlainText
+import ui.clipboard.setPlainText
 import ui.components.IconDropdownMenu
 import ui.components.IconDropdownMenuEntry
+import ui.components.ImportModeDialog
 import ui.components.NavigationIcon
 import ui.components.longPressReorderDragHandle
 import ui.components.moveItem
@@ -70,6 +82,11 @@ private const val RoutingPolicyItemKey = "routing_policy"
 private const val RoutingRulesTitleItemKey = "routing_rules_title"
 private const val RouteRuleListHeaderItemCount = 2
 
+private enum class RoutingClipboardAction {
+    Import,
+    Export,
+}
+
 @Composable
 fun RoutingPage(
     padding: PaddingValues,
@@ -80,11 +97,20 @@ fun RoutingPage(
     val topAppBarScrollBehavior = MiuixScrollBehavior()
     val tipNotifier = LocalAppServices.current.tipNotifier
     val scope = rememberCoroutineScope()
+    val clipboard = LocalClipboard.current
     val unknownGroup = stringResource(R.string.common_unknown_group)
     val defaultGroupName = stringResource(R.string.subscription_default_group)
     val defaultProxyServerTemplate = stringResource(R.string.routing_default_proxy_server)
     val deletedTemplate = stringResource(R.string.routing_deleted)
     val savedTemplate = stringResource(R.string.routing_saved)
+    val copiedMessage = stringResource(R.string.common_copied)
+    val clipboardEmptyMessage = stringResource(R.string.common_clipboard_empty)
+    val unsupportedClipboardMessage = stringResource(R.string.common_clipboard_unsupported_format)
+    val routeImportTitle = stringResource(R.string.routing_import_clipboard_title)
+    val routeImportMessageTemplate = stringResource(R.string.routing_import_clipboard_message)
+    val routeImportedTemplate = stringResource(R.string.routing_imported)
+    val routeExportEmptyMessage = stringResource(R.string.routing_export_empty)
+    val noValidRouteRulesMessage = stringResource(R.string.routing_import_no_valid_rules)
     val fixedOutboundOptions = fixedRouteRuleOutboundOptions()
     val outboundOptions = remember(
         fixedOutboundOptions,
@@ -116,6 +142,7 @@ fun RoutingPage(
 
     var editingRule by remember { mutableStateOf<RouteRule?>(null) }
     var showRuleDialog by remember { mutableStateOf(false) }
+    var pendingRouteImport by remember { mutableStateOf<List<RouteRuleClipboardItem>?>(null) }
     val rules = appState.routeRules
 
     Scaffold(
@@ -141,6 +168,38 @@ fun RoutingPage(
                         },
                         imageVector = MiuixIcons.Add,
                     )
+                    RoutingClipboardMenu { action ->
+                        when (action) {
+                            RoutingClipboardAction.Import -> {
+                                scope.launch {
+                                    runCatching {
+                                        decodeRouteRulesFromClipboard(clipboard.getPlainText().orEmpty())
+                                    }.onSuccess { importedRules ->
+                                        pendingRouteImport = importedRules
+                                    }.onFailure { error ->
+                                        tipNotifier.show(
+                                            error.routeRuleClipboardImportMessage(
+                                                emptyClipboard = clipboardEmptyMessage,
+                                                unsupportedFormat = unsupportedClipboardMessage,
+                                                noValidRules = noValidRouteRulesMessage,
+                                            ),
+                                        )
+                                    }
+                                }
+                            }
+
+                            RoutingClipboardAction.Export -> {
+                                scope.launch {
+                                    if (rules.isEmpty()) {
+                                        tipNotifier.show(routeExportEmptyMessage)
+                                    } else {
+                                        clipboard.setPlainText(encodeRouteRulesForClipboard(rules))
+                                        tipNotifier.show(copiedMessage)
+                                    }
+                                }
+                            }
+                        }
+                    }
                 },
             )
         },
@@ -283,6 +342,38 @@ fun RoutingPage(
             }
         },
     )
+
+    val routeImport = pendingRouteImport
+    ImportModeDialog(
+        show = routeImport != null,
+        title = routeImportTitle,
+        message = routeImportMessageTemplate.formatTemplate("count" to routeImport.orEmpty().size),
+        onDismissRequest = { pendingRouteImport = null },
+        onModeSelected = { importMode ->
+            val importedRules = pendingRouteImport ?: return@ImportModeDialog
+            var importedCount = 0
+            updateAppState { state ->
+                val result = applyRouteRuleClipboardImport(
+                    existingRules = state.routeRules,
+                    importedRules = importedRules,
+                    nextRuleId = state.nextRouteRuleId,
+                    mode = importMode,
+                )
+                importedCount = when (importMode) {
+                    ClipboardImportMode.Replace -> result.rules.size
+                    ClipboardImportMode.Merge -> (result.rules.size - state.routeRules.size).coerceAtLeast(0)
+                }
+                state.copy(
+                    routeRules = result.rules,
+                    nextRouteRuleId = result.nextRuleId,
+                )
+            }
+            pendingRouteImport = null
+            scope.launch {
+                tipNotifier.show(routeImportedTemplate.formatTemplate("count" to importedCount))
+            }
+        },
+    )
 }
 
 @Composable
@@ -321,5 +412,41 @@ private fun String.effectiveDefaultOutboundTag(outboundOptions: List<RouteRuleOu
         normalizedTag
     } else {
         DefaultRouteOutboundTag
+    }
+}
+
+@Composable
+private fun RoutingClipboardMenu(
+    onAction: (RoutingClipboardAction) -> Unit,
+) {
+    IconDropdownMenu(
+        imageVector = MiuixIcons.More,
+        contentDescription = stringResource(R.string.common_more),
+        entries = listOf(
+            IconDropdownMenuEntry(
+                key = "import-clipboard",
+                title = stringResource(R.string.common_import_from_clipboard),
+                action = RoutingClipboardAction.Import,
+            ),
+            IconDropdownMenuEntry(
+                key = "export-clipboard",
+                title = stringResource(R.string.common_export_to_clipboard),
+                action = RoutingClipboardAction.Export,
+            ),
+        ),
+        onAction = onAction,
+    )
+}
+
+private fun Throwable.routeRuleClipboardImportMessage(
+    emptyClipboard: String,
+    unsupportedFormat: String,
+    noValidRules: String,
+): String {
+    return when ((this as? ClipboardImportException)?.failure) {
+        ClipboardImportFailure.EmptyClipboard -> emptyClipboard
+        ClipboardImportFailure.NoValidRoutingRules -> noValidRules
+        ClipboardImportFailure.UnsupportedFormat -> unsupportedFormat
+        else -> unsupportedFormat
     }
 }

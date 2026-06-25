@@ -26,14 +26,24 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import app.R
+import features.proxy.app.usecase.ProxyAppListClipboardData
+import features.proxy.app.usecase.applyProxyAppListClipboardImport
+import features.proxy.app.usecase.decodeProxyAppListFromClipboard
+import features.proxy.app.usecase.encodeProxyAppListForClipboard
+import kotlinx.coroutines.launch
 import system.ANDROID_APP_ICON_SIZE_DP
 import androidx.compose.ui.res.stringResource
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
@@ -49,8 +59,14 @@ import features.proxy.app.model.ProxyAppListUserSpaceTabUi
 import ui.layout.pageContentPaddingWithCutout
 import ui.layout.pageListPadding
 import ui.layout.pageScrollModifiers
-import androidx.compose.runtime.getValue
 import top.yukonga.miuix.kmp.interfaces.ExperimentalScrollBarApi
+import ui.clipboard.ClipboardImportException
+import ui.clipboard.ClipboardImportFailure
+import ui.clipboard.ClipboardImportMode
+import ui.clipboard.getPlainText
+import ui.clipboard.setPlainText
+import ui.components.ImportModeDialog
+import ui.text.formatTemplate
 
 @Composable
 fun ProxyAppListPage(
@@ -66,6 +82,19 @@ fun ProxyAppListPage(
     val userSpaces = services.userSpaces
     val tipNotifier = services.tipNotifier
     val topAppBarScrollBehavior = MiuixScrollBehavior()
+    val clipboard = LocalClipboard.current
+    val scope = rememberCoroutineScope()
+    val copiedMessage = stringResource(R.string.common_copied)
+    val clipboardEmptyMessage = stringResource(R.string.common_clipboard_empty)
+    val unsupportedClipboardMessage = stringResource(R.string.common_clipboard_unsupported_format)
+    val importTitle = stringResource(R.string.proxy_app_list_import_clipboard_title)
+    val importMessageTemplate = stringResource(R.string.proxy_app_list_import_clipboard_message)
+    val importedTemplate = stringResource(R.string.proxy_app_list_imported)
+    val noValidAppsMessage = stringResource(R.string.proxy_app_list_import_no_valid_apps)
+    val invalidEntryMessage = stringResource(R.string.proxy_app_list_import_invalid_entry)
+    val invalidUserIdMessage = stringResource(R.string.proxy_app_list_import_invalid_user)
+    val unsupportedModeMessage = stringResource(R.string.proxy_app_list_import_unsupported_mode)
+    var pendingAppListImport by remember { mutableStateOf<ProxyAppListClipboardData?>(null) }
 
     val proxyAppListModes = proxyAppListModeLabels()
     val modeIndex = appState.proxyAppListMode.coerceIn(proxyAppListModes.indices)
@@ -136,7 +165,50 @@ fun ProxyAppListPage(
                     updateAppState { state -> state.copy(proxyAppListMode = index) }
                 },
                 onSearchValueChange = { value -> pageState.searchValue = value },
-                onShowSystemAppsChange = { enabled -> pageState.showSystemApps = enabled },
+                onMoreAction = { action ->
+                    when (action) {
+                        ProxyAppListMoreAction.ToggleSystemApps -> {
+                            pageState.showSystemApps = !pageState.showSystemApps
+                        }
+
+                        ProxyAppListMoreAction.ImportClipboard -> {
+                            scope.launch {
+                                runCatching {
+                                    decodeProxyAppListFromClipboard(
+                                        text = clipboard.getPlainText().orEmpty(),
+                                        currentUserId = selectedUserId ?: 0,
+                                        selfPackageName = selfPackageName,
+                                    )
+                                }.onSuccess { imported ->
+                                    pendingAppListImport = imported
+                                }.onFailure { error ->
+                                    tipNotifier.show(
+                                        error.proxyAppListClipboardImportMessage(
+                                            emptyClipboard = clipboardEmptyMessage,
+                                            unsupportedFormat = unsupportedClipboardMessage,
+                                            noValidApps = noValidAppsMessage,
+                                            invalidEntry = invalidEntryMessage,
+                                            invalidUserId = invalidUserIdMessage,
+                                            unsupportedMode = unsupportedModeMessage,
+                                        ),
+                                    )
+                                }
+                            }
+                        }
+
+                        ProxyAppListMoreAction.ExportClipboard -> {
+                            scope.launch {
+                                clipboard.setPlainText(
+                                    encodeProxyAppListForClipboard(
+                                        selectedApps = appState.proxyAppListSelectedApps,
+                                        mode = appState.proxyAppListMode,
+                                    ),
+                                )
+                                tipNotifier.show(copiedMessage)
+                            }
+                        }
+                    }
+                },
                 onSelectedUserIdChange = { userId -> pageState.selectedUserId = userId },
             )
         },
@@ -170,6 +242,39 @@ fun ProxyAppListPage(
             },
         )
     }
+
+    val appListImport = pendingAppListImport
+    ImportModeDialog(
+        show = appListImport != null,
+        title = importTitle,
+        message = importMessageTemplate.formatTemplate("count" to appListImport?.selectedApps.orEmpty().size),
+        onDismissRequest = { pendingAppListImport = null },
+        onModeSelected = { importMode ->
+            val imported = pendingAppListImport ?: return@ImportModeDialog
+            var importedCount = 0
+            updateAppState { state ->
+                val result = applyProxyAppListClipboardImport(
+                    currentMode = state.proxyAppListMode,
+                    currentSelectedApps = state.proxyAppListSelectedApps,
+                    imported = imported,
+                    mode = importMode,
+                )
+                importedCount = when (importMode) {
+                    ClipboardImportMode.Replace -> result.selectedApps.size
+                    ClipboardImportMode.Merge ->
+                        (result.selectedApps.size - state.proxyAppListSelectedApps.size).coerceAtLeast(0)
+                }
+                state.copy(
+                    proxyAppListMode = result.mode,
+                    proxyAppListSelectedApps = result.selectedApps,
+                )
+            }
+            pendingAppListImport = null
+            scope.launch {
+                tipNotifier.show(importedTemplate.formatTemplate("count" to importedCount))
+            }
+        },
+    )
 }
 
 @Composable
@@ -184,7 +289,7 @@ private fun ProxyAppListTopBar(
     selectedUserId: Int?,
     onModeChanged: (Int) -> Unit,
     onSearchValueChange: (String) -> Unit,
-    onShowSystemAppsChange: (Boolean) -> Unit,
+    onMoreAction: (ProxyAppListMoreAction) -> Unit,
     onSelectedUserIdChange: (Int) -> Unit,
 ) {
     AdaptiveTopAppBar(
@@ -198,9 +303,9 @@ private fun ProxyAppListTopBar(
                 selectedIndex = modeIndex,
                 onSelectedIndexChange = onModeChanged,
             )
-            ProxyAppListDisplayOptionsMenu(
+            ProxyAppListMoreActionsMenu(
                 showSystemApps = showSystemApps,
-                onShowSystemAppsChange = onShowSystemAppsChange,
+                onAction = onMoreAction,
             )
         },
         bottomContent = {
@@ -338,4 +443,23 @@ private fun proxyAppListModeLabels(): List<String> {
         stringResource(R.string.proxy_app_list_mode_whitelist),
         stringResource(R.string.proxy_app_list_mode_global),
     )
+}
+
+private fun Throwable.proxyAppListClipboardImportMessage(
+    emptyClipboard: String,
+    unsupportedFormat: String,
+    noValidApps: String,
+    invalidEntry: String,
+    invalidUserId: String,
+    unsupportedMode: String,
+): String {
+    return when ((this as? ClipboardImportException)?.failure) {
+        ClipboardImportFailure.EmptyClipboard -> emptyClipboard
+        ClipboardImportFailure.NoValidApps -> noValidApps
+        ClipboardImportFailure.InvalidAppEntry -> invalidEntry
+        ClipboardImportFailure.InvalidAppUserId -> invalidUserId
+        ClipboardImportFailure.UnsupportedAppMode -> unsupportedMode
+        ClipboardImportFailure.UnsupportedFormat -> unsupportedFormat
+        else -> unsupportedFormat
+    }
 }

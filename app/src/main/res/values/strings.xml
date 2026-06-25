@@ -43,6 +43,13 @@
     <string name="common_empty">Nothing here yet~~~</string>
     <string name="common_unknown_group">Unknown group</string>
     <string name="common_copied">Copied</string>
+    <string name="common_more">More</string>
+    <string name="common_import_from_clipboard">Import from clipboard</string>
+    <string name="common_export_to_clipboard">Export to clipboard</string>
+    <string name="common_replace_existing">Replace existing</string>
+    <string name="common_merge_import">Merge import</string>
+    <string name="common_clipboard_empty">Clipboard is empty</string>
+    <string name="common_clipboard_unsupported_format">Unsupported clipboard format</string>
     <string name="common_replace">Replace</string>
     <string name="common_restore">Restore</string>
     <string name="common_unsupported">Unsupported</string>
@@ -309,6 +316,7 @@
     <string name="proxy_app_list_mode_global">All-app mode</string>
     <string name="proxy_app_list_mode">App proxy mode</string>
     <string name="proxy_app_list_display_options">Display options</string>
+    <string name="proxy_app_list_more_actions">More actions</string>
     <string name="proxy_app_list_show_system_apps">Show system apps</string>
     <string name="proxy_app_list_search_label">Search apps</string>
     <string name="proxy_app_list_entry_summary">{package}</string>
@@ -317,6 +325,13 @@
     <string name="proxy_app_list_refreshing">Refreshing…</string>
     <string name="proxy_app_list_refreshed">Refresh complete</string>
     <string name="proxy_app_list_load_failed">Unable to load app list</string>
+    <string name="proxy_app_list_import_clipboard_title">Import app list</string>
+    <string name="proxy_app_list_import_clipboard_message">Detected {count} apps. Choose how to import.</string>
+    <string name="proxy_app_list_imported">Imported {count} apps</string>
+    <string name="proxy_app_list_import_no_valid_apps">No valid apps found</string>
+    <string name="proxy_app_list_import_invalid_entry">Invalid app list entry</string>
+    <string name="proxy_app_list_import_invalid_user">Invalid app user ID</string>
+    <string name="proxy_app_list_import_unsupported_mode">Unsupported app list mode</string>
 
     <!-- Proxy server list -->
     <string name="proxy_server_list_title">Proxy servers</string>
@@ -509,6 +524,11 @@
     <string name="routing_default_outbound_subtitle">Default outbound proxy tag: {tag}</string>
     <string name="routing_deleted">{name} deleted</string>
     <string name="routing_saved">{name} saved</string>
+    <string name="routing_import_clipboard_title">Import routing rules</string>
+    <string name="routing_import_clipboard_message">Detected {count} routing rules. Choose how to import.</string>
+    <string name="routing_imported">Imported {count} routing rules</string>
+    <string name="routing_export_empty">No routing rules to export</string>
+    <string name="routing_import_no_valid_rules">No valid routing rules found</string>
     <string name="routing_edit">Edit route</string>
     <string name="routing_delete">Delete route</string>
     <string name="routing_default_proxy_server">Proxy server {id}</string>
