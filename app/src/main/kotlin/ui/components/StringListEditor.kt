@@ -5,13 +5,21 @@ package ui.components
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -22,6 +30,9 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.InputTransformation
 import androidx.compose.foundation.text.input.TextFieldLineLimits
@@ -38,8 +49,14 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -86,7 +103,6 @@ internal fun StringListEditor(
     val editInputState = rememberTextFieldState()
     var showBulkEditor by remember(editorKey, title) { mutableStateOf(false) }
     var bulkInput by remember(editorKey, title) { mutableStateOf("") }
-    val bulkInputState = rememberTextFieldState()
     val tipNotifier = LocalAppServices.current.tipNotifier
     val scope = rememberCoroutineScope()
     LaunchedEffect(editorKey, title) {
@@ -97,7 +113,6 @@ internal fun StringListEditor(
         editInputState.clearText()
         showBulkEditor = false
         bulkInput = ""
-        bulkInputState.clearText()
     }
     val sanitizedValues = values.toTrimmedNonEmptyList()
     LaunchedEffect(sanitizedValues.size, editingIndex) {
@@ -147,7 +162,6 @@ internal fun StringListEditor(
     val showBulkEdit = {
         val draft = sanitizedValues.joinToString(separator = "\n")
         bulkInput = draft
-        bulkInputState.setTextAndPlaceCursorAtEnd(draft)
         showBulkEditor = true
     }
     val bulkParseResult = parseStringListDraft(
@@ -280,7 +294,7 @@ internal fun StringListEditor(
     StringListBulkEditorDialog(
         show = showBulkEditor,
         title = title,
-        state = bulkInputState,
+        value = bulkInput,
         onInputChange = { bulkInput = it },
         onDismissRequest = {
             showBulkEditor = false
@@ -439,7 +453,7 @@ private fun StringListItemActionButton(
 private fun StringListBulkEditorDialog(
     show: Boolean,
     title: String,
-    state: TextFieldState,
+    value: String,
     onInputChange: (String) -> Unit,
     onDismissRequest: () -> Unit,
     onSave: () -> Unit,
@@ -452,12 +466,9 @@ private fun StringListBulkEditorDialog(
         Column(
             modifier = Modifier.fillMaxWidth(),
         ) {
-            TextField(
-                state = state,
-                lineLimits = TextFieldLineLimits.MultiLine(minHeightInLines = 8, maxHeightInLines = 20),
-                inputTransformation = InputTransformation {
-                    onInputChange(asCharSequence().toString())
-                },
+            StringListBulkTextField(
+                value = value,
+                onValueChange = onInputChange,
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(min = 180.dp)
@@ -480,6 +491,123 @@ private fun StringListBulkEditorDialog(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun StringListBulkTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isFocused by interactionSource.collectIsFocusedAsState()
+    val horizontalScrollState = rememberScrollState()
+    val density = LocalDensity.current
+    var fieldValue by remember {
+        mutableStateOf(TextFieldValue(text = value, selection = TextRange(value.length)))
+    }
+    var textLayoutResult by remember {
+        mutableStateOf<TextLayoutResult?>(null)
+    }
+    var textViewportWidth by remember {
+        mutableIntStateOf(0)
+    }
+    val shape = RoundedCornerShape(StringListBulkTextFieldCornerRadius)
+    val borderWidth by animateDpAsState(
+        targetValue = if (isFocused) StringListBulkTextFieldBorderWidth else 0.dp,
+        label = "stringListBulkTextFieldBorderWidth",
+    )
+    val borderColor by animateColorAsState(
+        targetValue = if (isFocused) {
+            MiuixTheme.colorScheme.primary
+        } else {
+            MiuixTheme.colorScheme.secondaryContainer
+        },
+        label = "stringListBulkTextFieldBorderColor",
+    )
+    val resolvedTextStyle = MiuixTheme.textStyles.main.copy(
+        color = MiuixTheme.colorScheme.onSurface,
+        fontSize = 14.sp,
+    )
+
+    LaunchedEffect(value) {
+        if (value != fieldValue.text) {
+            fieldValue = TextFieldValue(text = value, selection = TextRange(value.length))
+        }
+    }
+
+    LaunchedEffect(
+        fieldValue.selection,
+        fieldValue.text,
+        textLayoutResult,
+        textViewportWidth,
+        horizontalScrollState.maxValue,
+    ) {
+        val layoutResult = textLayoutResult ?: return@LaunchedEffect
+        if (textViewportWidth <= 0 || horizontalScrollState.maxValue <= 0) {
+            return@LaunchedEffect
+        }
+
+        val cursorOffset = fieldValue.selection.end.coerceIn(0, fieldValue.text.length)
+        val cursorRect = layoutResult.getCursorRect(cursorOffset)
+        val cursorPaddingPx = with(density) { StringListBulkTextFieldCursorScrollPadding.toPx() }
+        val nextHorizontalScroll = scrollToVisible(
+            current = horizontalScrollState.value,
+            viewportSize = textViewportWidth,
+            targetStart = cursorRect.left - cursorPaddingPx,
+            targetEnd = cursorRect.right + cursorPaddingPx,
+            maxValue = horizontalScrollState.maxValue,
+        )
+        if (nextHorizontalScroll != horizontalScrollState.value) {
+            horizontalScrollState.scrollTo(nextHorizontalScroll)
+        }
+    }
+
+    BoxWithConstraints(modifier = modifier) {
+        val contentMinWidth = (maxWidth - StringListBulkTextFieldHorizontalPadding * 2)
+            .coerceAtLeast(0.dp)
+
+        BasicTextField(
+            value = fieldValue,
+            onValueChange = { nextValue ->
+                fieldValue = nextValue
+                onValueChange(nextValue.text)
+            },
+            textStyle = resolvedTextStyle,
+            minLines = StringListBulkTextFieldMinLines,
+            maxLines = StringListBulkTextFieldMaxLines,
+            onTextLayout = { textLayoutResult = it },
+            interactionSource = interactionSource,
+            cursorBrush = SolidColor(MiuixTheme.colorScheme.primary),
+            decorationBox = { innerTextField ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(shape)
+                        .background(MiuixTheme.colorScheme.secondaryContainer)
+                        .border(borderWidth, borderColor, shape)
+                        .padding(
+                            horizontal = StringListBulkTextFieldHorizontalPadding,
+                            vertical = StringListBulkTextFieldVerticalPadding,
+                        ),
+                    contentAlignment = Alignment.TopStart,
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .onSizeChanged { size ->
+                                textViewportWidth = size.width
+                            }
+                            .horizontalScroll(horizontalScrollState),
+                    ) {
+                        Box(modifier = Modifier.widthIn(min = contentMinWidth)) {
+                            innerTextField()
+                        }
+                    }
+                }
+            },
+        )
     }
 }
 
@@ -522,6 +650,23 @@ private data class StringListLineError(
     val message: String,
 )
 
+private fun scrollToVisible(
+    current: Int,
+    viewportSize: Int,
+    targetStart: Float,
+    targetEnd: Float,
+    maxValue: Int,
+): Int {
+    if (viewportSize <= 0 || maxValue <= 0) return current
+
+    val next = when {
+        targetStart < current -> targetStart.toInt()
+        targetEnd > current + viewportSize -> (targetEnd - viewportSize + 1f).toInt()
+        else -> current
+    }
+    return next.coerceIn(0, maxValue)
+}
+
 private val StringListItemActionSpacing = 2.dp
 private val StringListItemRowHeight = 34.dp
 private val StringListItemActionButtonSize = 30.dp
@@ -532,4 +677,11 @@ private val StringListItemEditFieldCornerRadius = 6.dp
 private val StringListTitleFontSize = 17.sp
 private val StringListBulkEditButtonSize = 38.dp
 private val StringListBulkEditIconSize = 20.dp
+private val StringListBulkTextFieldCornerRadius = 16.dp
+private val StringListBulkTextFieldBorderWidth = 2.dp
+private val StringListBulkTextFieldHorizontalPadding = 16.dp
+private val StringListBulkTextFieldVerticalPadding = 16.dp
+private val StringListBulkTextFieldCursorScrollPadding = 24.dp
+private const val StringListBulkTextFieldMinLines = 8
+private const val StringListBulkTextFieldMaxLines = 20
 private const val NoEditingIndex = -1
