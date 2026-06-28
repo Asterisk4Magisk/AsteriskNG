@@ -213,8 +213,8 @@ private fun ResourceFileKind.bundledAssetPathOrNull(): String? {
         ResourceFileKind.GeoIp -> fileName
         ResourceFileKind.GeoSite -> fileName
         ResourceFileKind.GeoIpOnlyCnPrivate -> fileName
-        ResourceFileKind.DirectCidrIpv4 -> fileName
-        ResourceFileKind.DirectCidrIpv6 -> fileName
+        ResourceFileKind.DirectCidrIpv4 -> "$XrayBundledResourceFilesDir/$fileName"
+        ResourceFileKind.DirectCidrIpv6 -> "$XrayBundledResourceFilesDir/$fileName"
         ResourceFileKind.XrayCore -> error("Xray-core is restored from native libraries")
     }
 }
@@ -243,6 +243,7 @@ private const val Ipv6DisablerLibraryName = "libipv6disabler.so"
 private const val BpfMatcherLibraryName = "libbpf-matcher.so"
 private const val XrayCoreLibraryName = "libxray.so"
 private const val HevSocks5TunnelLibraryName = "libhev-socks5-tunnel-cli.so"
+private const val XrayBundledResourceFilesDir = "xray"
 
 private val SupportedAndroidAbis = setOf(Arm64Abi, "armeabi-v7a", "x86", "x86_64")
 

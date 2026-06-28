@@ -156,6 +156,7 @@ androidComponents {
         variant.sources.kotlin?.addGeneratedSourceDirectory(generateProjectInfo) { task ->
             task.outputDirectory
         }
+        variant.sources.assets?.addStaticSourceDirectory("build/generated/resourceFileAssets")
         variant.sources.jniLibs?.addStaticSourceDirectory("build/generated/xrayCoreJniLibs")
     }
 }

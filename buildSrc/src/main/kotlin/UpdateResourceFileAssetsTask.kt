@@ -3,9 +3,11 @@
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import java.io.File
@@ -17,20 +19,11 @@ abstract class UpdateResourceFileAssetsTask : DefaultTask() {
     @get:Input
     abstract val xrayCoreVersion: Property<String>
 
-    @get:Input
-    abstract val directCidrIpv4Url: Property<String>
-
-    @get:Input
-    abstract val directCidrIpv6Url: Property<String>
-
     @get:OutputFile
     abstract val xrayCoreFile: RegularFileProperty
 
-    @get:OutputFile
-    abstract val directCidrIpv4File: RegularFileProperty
-
-    @get:OutputFile
-    abstract val directCidrIpv6File: RegularFileProperty
+    @get:OutputDirectory
+    abstract val resourceFileAssetsDir: DirectoryProperty
 
     init {
         group = "resources"
@@ -44,14 +37,12 @@ abstract class UpdateResourceFileAssetsTask : DefaultTask() {
             entryName = "xray",
             target = xrayCoreFile.get().asFile,
         )
-        downloadFile(
-            url = directCidrIpv4Url.get(),
-            target = directCidrIpv4File.get().asFile,
-        )
-        downloadFile(
-            url = directCidrIpv6Url.get(),
-            target = directCidrIpv6File.get().asFile,
-        )
+        AndroidXrayResourceFileAssets.forEach { asset ->
+            downloadFile(
+                url = asset.url,
+                target = File(resourceFileAssetsDir.get().asFile, "xray/${asset.fileName}"),
+            )
+        }
     }
 
     private fun xrayCoreArchiveUrl(): String {
@@ -141,3 +132,19 @@ abstract class UpdateResourceFileAssetsTask : DefaultTask() {
         logger.lifecycle("Updated ${target.absolutePath} (${target.length()} bytes)")
     }
 }
+
+private data class XrayResourceFileAsset(
+    val fileName: String,
+    val url: String,
+)
+
+private val AndroidXrayResourceFileAssets = listOf(
+    XrayResourceFileAsset(
+        fileName = "direct-cidr-v4.txt",
+        url = "https://raw.githubusercontent.com/mayaxcn/china-ip-list/master/chnroute.txt",
+    ),
+    XrayResourceFileAsset(
+        fileName = "direct-cidr-v6.txt",
+        url = "https://raw.githubusercontent.com/mayaxcn/china-ip-list/master/chnroute_v6.txt",
+    ),
+)
