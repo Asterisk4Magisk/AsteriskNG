@@ -7,7 +7,6 @@ import java.net.Inet4Address
 import java.net.Inet6Address
 import java.net.InetAddress
 import java.net.NetworkInterface
-import java.util.Enumeration
 
 internal fun collectRootLocalInterfaceCidrs(
     ignoredInterfaceNames: Set<String> = emptySet(),
@@ -34,13 +33,5 @@ private fun InetAddress.toRootLocalAddressCidr(): String? {
         is Inet4Address -> "$hostAddress/32"
         is Inet6Address -> "$hostAddress/128"
         else -> null
-    }
-}
-
-private fun <T> Enumeration<T>.asSequence(): Sequence<T> {
-    return sequence {
-        while (hasMoreElements()) {
-            yield(nextElement())
-        }
     }
 }

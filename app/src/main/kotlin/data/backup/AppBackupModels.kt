@@ -75,6 +75,7 @@ internal data class AppBackupSettings(
     val fragmentPackets: String = BackupDefaults.fragmentPackets,
     val fragmentLength: String = BackupDefaults.fragmentLength,
     val fragmentInterval: String = BackupDefaults.fragmentInterval,
+    val enableTrafficStatsNotification: Boolean = BackupDefaults.enableTrafficStatsNotification,
     val enableIpv6: Boolean = BackupDefaults.enableIpv6,
     val enableIpv6Prefer: Boolean = BackupDefaults.enableIpv6Prefer,
     val enableFakeDns: Boolean = BackupDefaults.enableFakeDns,

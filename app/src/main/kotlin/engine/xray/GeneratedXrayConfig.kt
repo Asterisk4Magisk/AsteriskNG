@@ -17,6 +17,7 @@ internal data class GeneratedXrayConfig(
     val fakeDns: JsonElement? = null,
     val observatory: JsonObject? = null,
     val burstObservatory: JsonObject? = null,
+    val statsApiConfig: XrayStatsApiConfig? = null,
 ) {
     fun toJsonObject(): JsonObject {
         return buildJsonObject {
@@ -28,6 +29,7 @@ internal data class GeneratedXrayConfig(
             fakeDns?.let { put("fakeDns", it) }
             observatory?.let { put("observatory", it) }
             burstObservatory?.let { put("burstObservatory", it) }
+            putXrayStatsApiConfig(statsApiConfig)
         }
     }
 }

@@ -42,7 +42,7 @@ internal fun restartProxyServiceAfterSelection(
                 return@withLock
             }
             val status = try {
-                proxyEngine.status(stateSnapshot.runMode)
+                proxyEngine.status(stateSnapshot.runMode, stateSnapshot)
             } catch (error: CancellationException) {
                 throw error
             } catch (_: Throwable) {
@@ -70,7 +70,7 @@ internal fun restartProxyServiceAfterSelection(
                 }
             } catch (error: CancellationException) {
                 throw error
-            } catch (error: Throwable) {
+            } catch (_: Throwable) {
                 updateAppState { state ->
                     if (state.selectedProxyServerId == serverId) {
                         state.copy(proxyRunning = false)

@@ -20,6 +20,7 @@ internal data class XrayConfigRequest(
     val directDnsDomains: List<String> = appState.directDnsDomains,
     val dnsHosts: List<String> = appState.dnsHosts,
     val dnsHijackInboundTags: List<String> = listOf(XrayTags.VPN_TUN_INBOUND),
+    val statsApiConfig: XrayStatsApiConfig? = null,
 )
 
 internal data class XrayProxyOutboundServer(
@@ -60,6 +61,7 @@ internal object XraySpeedTestConfigFactory {
             ),
             observatory = buildXrayObservatory(outboundPlan.observatorySelectors),
             burstObservatory = buildXrayBurstObservatory(outboundPlan.burstObservatorySelectors),
+            statsApiConfig = request.statsApiConfig,
         ).encodeToJsonString()
     }
 }
@@ -89,6 +91,7 @@ private fun buildGeneratedXrayConfig(request: XrayConfigRequest): GeneratedXrayC
         fakeDns = dnsPlan.fakeDns,
         observatory = buildXrayObservatory(outboundPlan.observatorySelectors),
         burstObservatory = buildXrayBurstObservatory(outboundPlan.burstObservatorySelectors),
+        statsApiConfig = request.statsApiConfig,
     )
 }
 
@@ -97,6 +100,7 @@ private fun buildCustomXrayConfig(
     server: Custom,
 ): String {
     val config = CustomXrayConfigRewriter.rewrite(request, server)
+        .withXrayStatsApiConfig(request.statsApiConfig)
     logGeneratedXrayConfig(config)
     return XrayConfigJson.encodeToString(config)
 }

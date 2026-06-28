@@ -26,6 +26,9 @@
     <string name="resource_file_download_notification_cancelled">资源文件更新已取消</string>
     <string name="resource_file_download_notification_complete">资源文件更新完成</string>
     <string name="resource_file_download_notification_failed">资源文件更新失败：%1$s</string>
+    <string name="proxy_traffic_stats_notification_channel">代理流量统计</string>
+    <string name="proxy_traffic_stats_notification_speed">速度：↑ %1$s / ↓ %2$s</string>
+    <string name="proxy_traffic_stats_notification_total">流量：↑ %1$s / ↓ %2$s</string>
     <string name="quick_settings_tile_label">AsteriskNG</string>
     <string name="quick_settings_tile_running">代理运行中</string>
     <string name="quick_settings_tile_stopped">代理已停止</string>
@@ -53,7 +56,6 @@
     <string name="common_replace">替换</string>
     <string name="common_restore">恢复</string>
     <string name="common_unsupported">不支持</string>
-    <string name="common_complete">完成</string>
     <string name="string_list_item_empty">条目不能为空</string>
     <string name="string_list_line_error">第 %1$d 行：%2$s</string>
 
@@ -154,6 +156,8 @@
     <string name="settings_private_addresses_input">CIDR 地址</string>
     <string name="settings_private_addresses_invalid">无效 CIDR</string>
     <string name="settings_private_addresses_empty">还没有添加 CIDR 地址</string>
+    <string name="settings_traffic_stats_notification">显示统计数据</string>
+    <string name="settings_traffic_stats_notification_summary">在通知中显示当前速度和累计流量</string>
     <string name="settings_ipv6_summary">启用 IPv6 支持</string>
     <string name="settings_ipv6_prefer">IPv6 优先</string>
     <string name="settings_ipv6_prefer_summary">连接时优先使用 IPv6 地址</string>
@@ -252,20 +256,16 @@
     <string name="settings_http_proxy_port">HTTP 代理端口</string>
     <string name="settings_fake_dns_summary">启用 FakeDNS</string>
     <string name="settings_proxy_dns">代理 DNS</string>
-    <string name="settings_proxy_dns_input">DNS 服务器</string>
     <string name="settings_proxy_dns_empty">还没有添加代理 DNS</string>
     <string name="settings_direct_dns">直连 DNS</string>
-    <string name="settings_direct_dns_input">DNS 服务器</string>
     <string name="settings_direct_dns_empty">还没有添加直连 DNS</string>
     <string name="settings_direct_dns_domains">直连 DNS 适用域名</string>
-    <string name="settings_direct_dns_domains_input">域名规则</string>
     <string name="settings_direct_dns_domains_empty">还没有添加直连 DNS 适用域名</string>
     <string name="settings_direct_dns_resolve_proxy_server_domains">使用直连 DNS 解析节点</string>
     <string name="settings_direct_dns_resolve_proxy_server_domains_summary">让代理节点域名走直连 DNS</string>
     <string name="settings_dns_domain_invalid">无效 DNS 域名规则</string>
     <string name="settings_dns_hosts">DNS hosts</string>
     <string name="settings_dns_hosts_format">格式：域名:地址1,地址2,…</string>
-    <string name="settings_dns_hosts_input">DNS hosts 条目</string>
     <string name="settings_dns_hosts_empty">还没有添加 DNS hosts</string>
     <string name="settings_dns_hosts_invalid">无效 DNS hosts 条目</string>
     <string name="settings_dns_server_invalid">无效 Xray DNS 服务器</string>
@@ -317,7 +317,6 @@
     <string name="proxy_app_list_mode_whitelist">白名单模式</string>
     <string name="proxy_app_list_mode_global">全应用模式</string>
     <string name="proxy_app_list_mode">代理模式</string>
-    <string name="proxy_app_list_display_options">显示选项</string>
     <string name="proxy_app_list_more_actions">更多操作</string>
     <string name="proxy_app_list_show_system_apps">显示系统应用</string>
     <string name="proxy_app_list_search_label">搜索应用名称</string>
@@ -540,13 +539,10 @@
     <string name="routing_edit_rule">编辑路由规则</string>
     <string name="routing_rule_name">规则名称</string>
     <string name="routing_domain_label">域名规则</string>
-    <string name="routing_domain_input">添加域名规则</string>
     <string name="routing_domain_invalid">无效域名规则</string>
     <string name="routing_ip_label">IP规则</string>
-    <string name="routing_ip_input">添加IP规则</string>
     <string name="routing_ip_invalid">无效IP规则</string>
     <string name="routing_process_label">进程规则</string>
-    <string name="routing_process_input">添加进程规则</string>
     <string name="routing_process_invalid">无效进程规则</string>
     <string name="routing_list_empty">还没有添加条目</string>
     <string name="routing_port_label">端口</string>

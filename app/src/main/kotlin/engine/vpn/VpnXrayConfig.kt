@@ -16,6 +16,7 @@ import engine.proxy.LocalProxyOptions
 import engine.proxy.ProxyEngineStartRequest
 import engine.proxy.buildLocalSocksInbound
 import engine.proxy.toLocalProxyOptions
+import engine.proxy.xrayStatsApiConfig
 import engine.xray.XrayConfigFactory
 import engine.xray.XrayConfigRequest
 import engine.xray.XrayCoreLogPaths
@@ -90,6 +91,7 @@ internal object VpnXrayConfigFactory {
                     coreLogPaths = coreLogPaths,
                     dnsHosts = dnsHosts,
                     dnsHijackInboundTags = vpnDnsHijackInboundTags(appState.enableVpnHevTun),
+                    statsApiConfig = request.xrayStatsApiConfig(),
                 ),
             ),
             applicationPolicy = appState.toVpnApplicationPolicy(Process.myUid().toAndroidUserId()),

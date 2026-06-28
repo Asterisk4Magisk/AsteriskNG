@@ -6,7 +6,7 @@ package features.logs
 import android.content.Context
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import utils.decodeBase64OrNull
+import utils.decodeBase64StringOrNull
 import utils.encodeBase64
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -77,19 +77,11 @@ private fun decodeLogLine(id: Long, line: String): CoreLogEntry? {
     if (fields.size != 3) {
         return null
     }
-    val message = fields[2].decodeBase64() ?: return null
+    val message = fields[2].decodeBase64StringOrNull() ?: return null
     return CoreLogEntry(
         id = id,
         time = fields[0],
         level = fields[1],
         message = message,
     )
-}
-
-private fun String.encodeBase64(): String {
-    return toByteArray(Charsets.UTF_8).encodeBase64()
-}
-
-private fun String.decodeBase64(): String? {
-    return decodeBase64OrNull()?.toString(Charsets.UTF_8)
 }

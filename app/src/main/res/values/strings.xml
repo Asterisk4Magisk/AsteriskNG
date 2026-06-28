@@ -26,6 +26,9 @@
     <string name="resource_file_download_notification_cancelled">Resource file update cancelled</string>
     <string name="resource_file_download_notification_complete">Resource files updated</string>
     <string name="resource_file_download_notification_failed">Resource file update failed: %1$s</string>
+    <string name="proxy_traffic_stats_notification_channel">Proxy traffic statistics</string>
+    <string name="proxy_traffic_stats_notification_speed">Speed: ↑ %1$s / ↓ %2$s</string>
+    <string name="proxy_traffic_stats_notification_total">Traffic: ↑ %1$s / ↓ %2$s</string>
     <string name="quick_settings_tile_label">AsteriskNG</string>
     <string name="quick_settings_tile_running">Proxy running</string>
     <string name="quick_settings_tile_stopped">Proxy stopped</string>
@@ -53,7 +56,6 @@
     <string name="common_replace">Replace</string>
     <string name="common_restore">Restore</string>
     <string name="common_unsupported">Unsupported</string>
-    <string name="common_complete">Complete</string>
     <string name="string_list_item_empty">Entry cannot be empty</string>
     <string name="string_list_line_error">Line %1$d: %2$s</string>
 
@@ -154,6 +156,8 @@
     <string name="settings_private_addresses_input">CIDR range</string>
     <string name="settings_private_addresses_invalid">Invalid CIDR</string>
     <string name="settings_private_addresses_empty">No CIDR ranges added</string>
+    <string name="settings_traffic_stats_notification">Show traffic statistics</string>
+    <string name="settings_traffic_stats_notification_summary">Show current speed and total traffic in notifications</string>
     <string name="settings_ipv6_summary">Enable IPv6 support</string>
     <string name="settings_ipv6_prefer">IPv6 preferred</string>
     <string name="settings_ipv6_prefer_summary">Prefer IPv6 addresses when connecting</string>
@@ -252,20 +256,16 @@
     <string name="settings_http_proxy_port">HTTP proxy port</string>
     <string name="settings_fake_dns_summary">Enable FakeDNS</string>
     <string name="settings_proxy_dns">Proxy DNS</string>
-    <string name="settings_proxy_dns_input">DNS server</string>
     <string name="settings_proxy_dns_empty">No proxy DNS added</string>
     <string name="settings_direct_dns">Direct DNS</string>
-    <string name="settings_direct_dns_input">DNS server</string>
     <string name="settings_direct_dns_empty">No direct DNS added</string>
     <string name="settings_direct_dns_domains">Direct DNS domains</string>
-    <string name="settings_direct_dns_domains_input">Domain rule</string>
     <string name="settings_direct_dns_domains_empty">No direct DNS domain rules added</string>
     <string name="settings_direct_dns_resolve_proxy_server_domains">Use direct DNS to resolve proxy servers</string>
     <string name="settings_direct_dns_resolve_proxy_server_domains_summary">Resolve proxy domains via direct DNS</string>
     <string name="settings_dns_domain_invalid">Invalid DNS domain rule</string>
     <string name="settings_dns_hosts">DNS hosts</string>
     <string name="settings_dns_hosts_format">Format: domain:address1,address2,…</string>
-    <string name="settings_dns_hosts_input">DNS hosts entry</string>
     <string name="settings_dns_hosts_empty">No DNS hosts added</string>
     <string name="settings_dns_hosts_invalid">Invalid DNS hosts entry</string>
     <string name="settings_dns_server_invalid">Invalid Xray DNS server</string>
@@ -317,7 +317,6 @@
     <string name="proxy_app_list_mode_whitelist">Whitelist mode</string>
     <string name="proxy_app_list_mode_global">All-app mode</string>
     <string name="proxy_app_list_mode">App proxy mode</string>
-    <string name="proxy_app_list_display_options">Display options</string>
     <string name="proxy_app_list_more_actions">More actions</string>
     <string name="proxy_app_list_show_system_apps">Show system apps</string>
     <string name="proxy_app_list_search_label">Search apps</string>
@@ -540,13 +539,10 @@
     <string name="routing_edit_rule">Edit routing rule</string>
     <string name="routing_rule_name">Rule name</string>
     <string name="routing_domain_label">Domain rules</string>
-    <string name="routing_domain_input">Add domain rule</string>
     <string name="routing_domain_invalid">Invalid domain rule</string>
     <string name="routing_ip_label">IP rules</string>
-    <string name="routing_ip_input">Add IP rule</string>
     <string name="routing_ip_invalid">Invalid IP rule</string>
     <string name="routing_process_label">Process rules</string>
-    <string name="routing_process_input">Add process rule</string>
     <string name="routing_process_invalid">Invalid process rule</string>
     <string name="routing_list_empty">No entries added</string>
     <string name="routing_port_label">Port</string>

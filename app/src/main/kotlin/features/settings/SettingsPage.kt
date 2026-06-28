@@ -312,6 +312,7 @@ private fun SettingsContent(
                 SettingsProxyModeSections(
                     runMode = appState.runMode,
                     localProxySettingsSummary = localProxySettingsSummary,
+                    enableTrafficStatsNotification = appState.enableTrafficStatsNotification,
                     enableVpnAppendHttpProxy = appState.enableVpnAppendHttpProxy,
                     enableVpnHevTun = appState.enableVpnHevTun,
                     tunSettingsSummary = tunSettingsSummary,
@@ -325,6 +326,9 @@ private fun SettingsContent(
                     ignoredInterfacesSummary = ignoredInterfacesSummary,
                     privateAddressCidrsSummary = privateAddressCidrsSummary,
                     onOpenLocalProxySettings = { sheetState.openLocalProxySettings(appState) },
+                    onEnableTrafficStatsNotificationChange = { enabled ->
+                        updateAppState { state -> state.copy(enableTrafficStatsNotification = enabled) }
+                    },
                     onEnableVpnAppendHttpProxyChange = { enabled ->
                         updateAppState { state -> state.copy(enableVpnAppendHttpProxy = enabled) }
                     },

@@ -142,7 +142,7 @@ private fun HttpURLConnection.setEmbeddedBasicAuth(rawUrl: String) {
     val parts = userInfo.split(":", limit = 2)
     val user = parts.getOrElse(0) { "" }
     val password = parts.getOrElse(1) { "" }
-    val token = "$user:$password".encodeToByteArray().encodeBase64()
+    val token = "$user:$password".encodeBase64()
     setRequestProperty("Authorization", "Basic $token")
 }
 

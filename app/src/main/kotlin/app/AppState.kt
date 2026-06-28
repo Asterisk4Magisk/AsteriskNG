@@ -88,6 +88,7 @@ data class AppState(
     val fragmentLength: String = DefaultFragmentLength,
     val fragmentInterval: String = DefaultFragmentInterval,
 
+    val enableTrafficStatsNotification: Boolean = false,
     val enableIpv6: Boolean = false,
     val enableIpv6Prefer: Boolean = false,
     val enableFakeDns: Boolean = false,

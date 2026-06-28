@@ -7,6 +7,8 @@ import app.AppState
 import app.effectiveFakeDnsEnabled
 import app.modes.RunModeTun2Socks
 import app.modes.RunModeTproxy
+import engine.network.findAvailableTcpPort
+import engine.network.isTcpPortAvailable
 import engine.network.NetworkDefaults
 import engine.network.toPortOrNull
 import engine.tproxy.DefaultTproxyPort
@@ -15,8 +17,6 @@ import engine.vpn.VpnDefaults
 import engine.xray.XrayProtocols
 import engine.xray.toJsonStringArray
 import engine.xray.xraySniffingDestOverrides
-import java.net.InetAddress
-import java.net.ServerSocket
 import java.util.concurrent.atomic.AtomicReference
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonArray
@@ -160,23 +160,12 @@ internal fun availablePort(
     listenAddress: String,
     excludedPorts: Set<Int> = emptySet(),
 ): Int? {
-    return runCatching {
-        repeat(10) {
-            ServerSocket(0, 0, InetAddress.getByName(listenAddress)).use { socket ->
-                if (socket.localPort !in excludedPorts) {
-                    return@runCatching socket.localPort
-                }
-            }
-        }
-        null
-    }.getOrNull()
+    return findAvailableTcpPort(listenAddress, excludedPorts)
 }
 
 private fun isPortAvailable(
     listenAddress: String,
     port: Int,
 ): Boolean {
-    return runCatching {
-        ServerSocket(port, 0, InetAddress.getByName(listenAddress)).use { }
-    }.isSuccess
+    return isTcpPortAvailable(listenAddress, port)
 }

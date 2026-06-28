@@ -2,12 +2,14 @@
 
 import com.android.build.api.variant.HasHostTestsBuilder
 import com.android.build.api.variant.HostTestBuilder
+import com.google.protobuf.gradle.id
 
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.protobuf)
 }
 
 val generatedSrcDir: Provider<Directory> = layout.buildDirectory.dir("generated/projectInfo")
@@ -114,6 +116,9 @@ dependencies {
     implementation(dependencies.project(":ipv6disabler"))
     implementation(dependencies.project(":bpfmatcher"))
     implementation(dependencies.project(":hevtun"))
+    implementation(libs.grpc.okhttp)
+    implementation(libs.grpc.protobuf.lite)
+    implementation(libs.grpc.stub)
     implementation(libs.ktor.http)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.libsu.core)
@@ -121,14 +126,41 @@ dependencies {
     implementation(libs.miuix.icons)
     implementation(libs.miuix.navigation3.ui)
     implementation(libs.miuix.preference)
+    implementation(libs.protobuf.javalite)
     implementation(libs.reorderable)
     implementation(libs.snakeyaml.engine)
     implementation(libs.zxing.android.embedded)
+    compileOnly(libs.javax.annotation.api)
     ksp(libs.androidx.room.compiler)
 }
 
 ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
+}
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:4.35.1"
+    }
+    plugins {
+        id("grpc") {
+            artifact = "io.grpc:protoc-gen-grpc-java:1.82.1"
+        }
+    }
+    generateProtoTasks {
+        all().configureEach {
+            builtins {
+                id("java") {
+                    option("lite")
+                }
+            }
+            plugins {
+                id("grpc") {
+                    option("lite")
+                }
+            }
+        }
+    }
 }
 
 val generateProjectInfo = tasks.register<GenerateProjectInfoTask>("generateProjectInfo") {

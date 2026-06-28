@@ -9,6 +9,12 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE"
+        tools:ignore="ForegroundServicesPolicy" />
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"
+        tools:ignore="ForegroundServicesPolicy" />
 
     <!-- Required to resolve labels and icons for the per-app proxy package list. -->
     <uses-permission
@@ -121,6 +127,15 @@
         <receiver
             android:name="features.resources.runtime.AndroidResourceFileDownloadCancelReceiver"
             android:exported="false" />
+
+        <service
+            android:name="engine.stats.ProxyTrafficStatsService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Displays current upload and download speed and accumulated proxy traffic in an ongoing notification while the user-enabled proxy is running." />
+        </service>
 
         <service
             android:name="features.quicksettings.ProxyQuickSettingsTileService"
