@@ -20,11 +20,13 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import app.modes.LanguageModeEnglish
 import app.modes.LanguageModeSimplifiedChinese
+import app.modes.LanguageModeRussian
 import java.util.Locale
 
 private fun languageTagForMode(mode: Int): String? = when (mode) {
     LanguageModeEnglish -> "en"
     LanguageModeSimplifiedChinese -> "zh-CN"
+    LanguageModeRussian -> "ru"
     else -> null
 }
 
