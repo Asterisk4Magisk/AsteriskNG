@@ -13,4 +13,4 @@ const val ColorModeThemeDark = 5
 const val LanguageModeSystem = 0
 const val LanguageModeEnglish = 1
 const val LanguageModeSimplifiedChinese = 2
-
+const val LanguageModeRussian = 3
