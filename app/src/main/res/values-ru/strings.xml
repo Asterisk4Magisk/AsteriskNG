@@ -28,8 +28,8 @@
     <string name="resource_file_download_notification_complete">Файлы ресурсов успешно обновлены</string>
     <string name="resource_file_download_notification_failed">Ошибка обновления файлов ресурсов: %1$s</string>
     <string name="proxy_traffic_stats_notification_channel">Статистика трафика прокси</string>
-    <string name="proxy_traffic_stats_notification_speed">Скорость: ↑ %1$s / ↓ %2$s</string>
-    <string name="proxy_traffic_stats_notification_total">Трафик: ↑ %1$s / ↓ %2$s</string>
+    <string name="proxy_traffic_stats_notification_speed">Скорость: ^ %1$s / v %2$s</string>
+    <string name="proxy_traffic_stats_notification_total">Трафик: ^ %1$s / v %2$s</string>
     <string name="quick_settings_tile_label">AsteriskNG</string>
     <string name="quick_settings_tile_running">Прокси работает</string>
     <string name="quick_settings_tile_stopped">Прокси остановлен</string>
@@ -60,7 +60,7 @@
     <string name="string_list_line_error">Строка %1$d: %2$s</string>
 
     <string name="nav_proxy">Прокси</string>
-    <string name="nav_routing">Маршруты</string>
+    <string name="nav_routing">Правила</string>
     <string name="nav_apps">Приложения</string>
     <string name="nav_settings">Настройки</string>
 
@@ -190,7 +190,7 @@
     <string name="settings_resource_files_deleted">{name} удален</string>
     <string name="settings_log_level">Уровень логирования</string>
     <string name="settings_sniffing_summary">Перехватывать и определять целевые домены HTTP/TLS для точной маршрутизации</string>
-    <string name="settings_sniffing_route_only">Только маршрут (routeOnly)</string>
+    <string name="settings_sniffing_route_only">Только для маршрутизации (routeOnly)</string>
     <string name="settings_sniffing_route_only_summary">Использовать перехваченные домены исключительно для выбора маршрута</string>
     <string name="settings_mux">Мультиплексирование (Mux)</string>
     <string name="settings_mux_description">Может снизить задержку соединения, но способно вызывать прерывания в стриминговых потоках. Используйте с осторожностью.</string>
@@ -221,7 +221,7 @@
     <string name="settings_fragment_length_error">Укажите положительное число или диапазон значений</string>
     <string name="settings_fragment_interval">Интервал фрагментации</string>
     <string name="settings_fragment_interval_error">Укажите 0 или положительный диапазон</string>
-    <string name="settings_dns">Настройки DNS</string>
+    <string name="settings_dns">DNS</string>
     <string name="settings_dns_summary">FakeDNS, прямой DNS, DNS для прокси, DNS hosts</string>
     <string name="settings_backup_restore">Резервное копирование и восстановление</string>
     <string name="settings_backup_user_data">Создать резервную копию</string>
@@ -275,7 +275,7 @@
     <string name="option_theme_light">Светлая (Monet)</string>
     <string name="option_theme_dark">Тёмная (Monet)</string>
     <string name="option_english">English</string>
-    <string name="option_simplified_chinese">中文（简体）</string>
+    <string name="option_simplified_chinese">??(??)</string>
     <string name="option_russian">Русский</string>
     <string name="theme_color_default">Системный по умолчанию</string>
     <string name="theme_color_blue">Классический синий</string>
@@ -515,20 +515,20 @@
     <string name="routing_domain_strategy">Стратегия доменов</string>
     <string name="routing_default_outbound_tag">Тег прокси по умолчанию</string>
     <string name="routing_default_outbound_subtitle">Исходящий тег по умолчанию: {tag}</string>
-    <string name="routing_deleted">Маршрут {name} удален</string>
-    <string name="routing_saved">Маршрут {name} сохранен</string>
+    <string name="routing_deleted">Правило {name} удалено</string>
+    <string name="routing_saved">Правило {name} сохранено</string>
     <string name="routing_import_clipboard_title">Импорт правил маршрутизации</string>
     <string name="routing_import_clipboard_message">Обнаружено правил маршрутизации: {count}. Выберите вариант импорта.</string>
     <string name="routing_imported">Импортировано правил маршрутизации: {count}</string>
     <string name="routing_export_empty">Нет правил маршрутизации для экспорта</string>
     <string name="routing_import_no_valid_rules">Допустимые правила маршрутизации не найдены</string>
-    <string name="routing_edit">Редактировать маршрут</string>
-    <string name="routing_delete">Удалить маршрут</string>
+    <string name="routing_edit">Редактировать правило</string>
+    <string name="routing_delete">Удалить правило</string>
     <string name="routing_default_proxy_server">Прокси-сервер {id}</string>
-    <string name="routing_new_rule">Новое правило маршрутизации</string>
+    <string name="routing_new_rule">Новое правило</string>
     <string name="routing_unnamed_rule">Безымянное правило</string>
     <string name="routing_add_rule">Добавить правило маршрутизации</string>
-    <string name="routing_edit_rule">Редактировать правило маршрутизации</string>
+    <string name="routing_edit_rule">Редактировать</string>
     <string name="routing_rule_name">Имя правила</string>
     <string name="routing_domain_label">Правила доменов</string>
     <string name="routing_domain_invalid">Недопустимое правило домена</string>
