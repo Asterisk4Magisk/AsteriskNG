@@ -275,7 +275,7 @@
     <string name="option_theme_light">Светлая (Monet)</string>
     <string name="option_theme_dark">Тёмная (Monet)</string>
     <string name="option_english">English</string>
-    <string name="option_simplified_chinese">??(??)</string>
+    <string name="option_simplified_chinese">中文（简体）</string>
     <string name="option_russian">Русский</string>
     <string name="theme_color_default">Системный по умолчанию</string>
     <string name="theme_color_blue">Классический синий</string>
