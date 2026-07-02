@@ -30,7 +30,7 @@ internal class RootConfigBuildContext(
     private val androidContext: Context,
     val appState: AppState,
     private val selectedServer: ProxyServerState,
-    private val resourceFilePaths: XrayResourceFilePaths,
+    val resourceFilePaths: XrayResourceFilePaths,
     private val coreLogPaths: XrayCoreLogPaths,
     private val dnsHosts: List<String>,
 ) {
@@ -140,6 +140,10 @@ internal fun AppState.buildRootSharedProxyInbounds(
 
 internal fun AppState.tun2SocksInternalProxyPortValue(): Int {
     return socks5ProxyPort.toPortOrNull() ?: DefaultTun2SocksProxyPort
+}
+
+internal fun AppState.bpf2SocksBridgePortValue(): Int {
+    return bpf2SocksBridgePort.toPortOrNull() ?: RootBpf2SocksDefaultBridgePort
 }
 
 private fun buildRootHttpProxyInbound(

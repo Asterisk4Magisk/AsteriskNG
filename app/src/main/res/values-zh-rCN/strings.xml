@@ -8,6 +8,8 @@
     <string name="error_tproxy_start_failed">TPROXY 模式启动失败：%1$s</string>
     <string name="error_tun2socks_root_required">ROOT 权限不可用，无法启动 TUN2SOCKS 模式</string>
     <string name="error_tun2socks_start_failed">TUN2SOCKS 模式启动失败：%1$s</string>
+    <string name="error_bpf2socks_root_required">ROOT 权限不可用，无法启动 BPF2SOCKS 模式</string>
+    <string name="error_bpf2socks_start_failed">BPF2SOCKS 模式启动失败：%1$s</string>
     <string name="error_vpn_permission_launcher_missing">VPN 权限请求器未注册</string>
     <string name="error_qr_camera_permission_denied">相机权限未授予，无法扫描二维码</string>
     <string name="error_qr_scan_launcher_missing">二维码扫描请求器未注册</string>
@@ -81,11 +83,13 @@
     <string name="settings_run_mode_vpn_service">VPN Service</string>
     <string name="settings_run_mode_tproxy">TPROXY（ROOT）</string>
     <string name="settings_run_mode_tun2socks">TUN2SOCKS（ROOT）</string>
+    <string name="settings_run_mode_bpf2socks">BPF2SOCKS（ROOT）</string>
     <string name="settings_resolve_proxy_server_domain">解析节点域名</string>
     <string name="settings_resolve_proxy_server_domain_summary">将代理节点 IP 写入 DNS hosts</string>
     <string name="settings_root_required">获取ROOT权限失败！</string>
     <string name="settings_proxy_tproxy">代理设置（TPROXY）</string>
     <string name="settings_proxy_tun2socks">代理设置（TUN2SOCKS）</string>
+    <string name="settings_proxy_bpf2socks">代理设置（BPF2SOCKS）</string>
     <string name="settings_proxy_vpn_service">代理设置（VPN Service）</string>
     <string name="settings_root_boot_script">开机自启</string>
     <string name="settings_root_boot_script_summary">生成 service.d 启动脚本</string>
@@ -132,7 +136,10 @@
     <string name="settings_inbound">入站代理设置</string>
     <string name="settings_inbound_tproxy_port">透明代理端口：{port}</string>
     <string name="settings_inbound_socks5_port">TUN2SOCKS SOCKS5 端口：{port}</string>
+    <string name="settings_inbound_bpf2socks_summary">Bridge 端口：{bridgePort}，SOCKS5 端口：{socksPort}</string>
     <string name="settings_inbound_selected">已启用：{inbounds}</string>
+    <string name="settings_bpf2socks_bridge_port">BPF2SOCKS bridge 端口</string>
+    <string name="settings_bpf2socks_socks5_port">SOCKS5 端口</string>
     <string name="settings_external_interfaces">热点共享设置</string>
     <string name="settings_external_interfaces_summary">选择允许外部入站流量进入的热点共享类型</string>
     <string name="settings_external_interfaces_none">未启用</string>

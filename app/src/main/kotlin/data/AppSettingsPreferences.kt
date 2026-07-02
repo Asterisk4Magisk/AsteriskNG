@@ -166,6 +166,10 @@ internal class AppSettingsPreferences(
                 KeyEnableRootIpv6Disabler,
                 defaults.enableRootIpv6Disabler,
             ),
+            bpf2SocksBridgePort = preferences.getString(
+                KeyBpf2SocksBridgePort,
+                defaults.bpf2SocksBridgePort,
+            ) ?: defaults.bpf2SocksBridgePort,
             socks5ProxyPort = preferences.getString(
                 KeySocks5ProxyPort,
                 defaults.socks5ProxyPort,
@@ -244,6 +248,7 @@ internal class AppSettingsPreferences(
             .putBoolean(KeyEnableRootEbpfRules, state.enableRootEbpfRules)
             .putBoolean(KeyEnableRootEbpfDirectCidrBypass, state.enableRootEbpfDirectCidrBypass)
             .putBoolean(KeyEnableRootIpv6Disabler, state.enableRootIpv6Disabler)
+            .putString(KeyBpf2SocksBridgePort, state.bpf2SocksBridgePort)
             .putString(KeySocks5ProxyPort, state.socks5ProxyPort)
             .putBoolean(KeyEnableHttpProxy, state.enableHttpProxy)
             .putString(KeyHttpProxyPort, state.httpProxyPort)
@@ -340,6 +345,7 @@ private const val KeyEnableRootBootScript = "enable_root_boot_script"
 private const val KeyEnableRootEbpfRules = "enable_root_ebpf_rules"
 private const val KeyEnableRootEbpfDirectCidrBypass = "enable_root_ebpf_direct_cidr_bypass"
 private const val KeyEnableRootIpv6Disabler = "enable_root_ipv6_disabler"
+private const val KeyBpf2SocksBridgePort = "bpf2socks_bridge_port"
 private const val KeySocks5ProxyPort = "socks5_proxy_port"
 private const val KeyEnableHttpProxy = "enable_http_proxy"
 private const val KeyHttpProxyPort = "http_proxy_port"

@@ -8,6 +8,7 @@ import engine.xray.XrayCoreLogPaths
 import engine.xray.logDirectoryPath
 import engine.xray.prepareXrayCoreLogPaths
 import utils.shellQuote
+import utils.shellQuoteForCase
 import java.io.File
 
 internal val RootStartConfig.shouldStartIpv6Disabler: Boolean
@@ -24,6 +25,8 @@ internal fun RootRuntimeLayout.buildStartIpv6DisablerCommand(logPath: String): S
     val logDirPath = File(logPath).parentFile?.absolutePath
     val processMatchTest = buildIpv6DisablerProcessMatchTest().trimEnd()
     return buildString {
+        append(buildStopIpv6DisablerCommand())
+        append(buildKillStaleIpv6DisablerProcessesCommand())
         logDirPath?.let { path ->
             appendScript("mkdir -p ${path.shellQuote()} || exit 1")
         }
@@ -56,6 +59,39 @@ internal fun RootRuntimeLayout.buildStartIpv6DisablerCommand(logPath: String): S
             """,
         )
     }
+}
+
+private fun RootRuntimeLayout.buildKillStaleIpv6DisablerProcessesCommand(): String {
+    return $$"""
+        ipv6_disabler_stale_pids=""
+        for ipv6_disabler_status in /proc/[0-9]*/status; do
+            pid="${ipv6_disabler_status%/status}"
+            pid="${pid##*/}"
+            [ -n "$pid" ] || continue
+            cmdline="$(tr '\0' ' ' < /proc/"$pid"/cmdline 2>/dev/null || true)"
+            exe="$(readlink /proc/"$pid"/exe 2>/dev/null || true)"
+            matched=0
+            case "$cmdline" in *$${ipv6DisablerPath.shellQuoteForCase()}*) matched=1;; esac
+            [ "$exe" = $${ipv6DisablerPath.shellQuote()} ] && matched=1
+            [ "$matched" = 1 ] || continue
+            uid_line="$(grep '^Uid:' /proc/"$pid"/status 2>/dev/null || true)"
+            set -- $uid_line
+            [ "$3" = "$$RootIpv6DisablerUid" ] || [ "$5" = "$$RootIpv6DisablerUid" ] || continue
+            gid_line="$(grep '^Gid:' /proc/"$pid"/status 2>/dev/null || true)"
+            set -- $gid_line
+            [ "$3" = "$$RootIpv6DisablerGid" ] || [ "$5" = "$$RootIpv6DisablerGid" ] || continue
+            ipv6_disabler_stale_pids="$ipv6_disabler_stale_pids $pid"
+        done
+        for pid in $ipv6_disabler_stale_pids; do
+            kill "$pid" 2>/dev/null || true
+        done
+        if [ -n "$ipv6_disabler_stale_pids" ]; then
+            sleep 0.2
+            for pid in $ipv6_disabler_stale_pids; do
+                kill -9 "$pid" 2>/dev/null || true
+            done
+        fi
+    """.trimIndent() + "\n"
 }
 
 internal fun RootRuntimeLayout.buildStopIpv6DisablerCommand(): String {

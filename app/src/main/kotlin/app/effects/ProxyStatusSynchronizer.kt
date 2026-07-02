@@ -12,8 +12,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import app.AppState
 import app.collectAppState
-import app.modes.RunModeTun2Socks
-import app.modes.RunModeTproxy
+import app.modes.isRootRunMode
 import data.AndroidAppStateStore
 import engine.proxy.AndroidProxyEngine
 import engine.stats.ProxyTrafficStatsService
@@ -30,9 +29,7 @@ internal fun ProxyStatusSynchronizer(
 
     LaunchedEffect(stateStore, proxyEngine) {
         val currentState = stateStore.state.value
-        val shouldCheckRuntime = currentState.runMode == RunModeTproxy ||
-            currentState.runMode == RunModeTun2Socks ||
-            currentState.proxyRunning
+        val shouldCheckRuntime = currentState.runMode.isRootRunMode() || currentState.proxyRunning
         if (shouldCheckRuntime) {
             val status = runCatching { proxyEngine.status(currentState.runMode, currentState) }.getOrNull()
             if (status != null) {

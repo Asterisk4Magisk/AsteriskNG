@@ -7,6 +7,7 @@ import app.AppState
 import engine.network.findAvailableTcpPort
 import engine.network.isTcpPortAvailable
 import engine.network.toPortOrNull
+import engine.root.RootBpf2SocksDefaultBridgePort
 import engine.tproxy.DefaultTproxyPort
 import engine.tun2socks.DefaultTun2SocksProxyPort
 import engine.vpn.VpnDefaults
@@ -17,6 +18,7 @@ internal fun AppState.xrayStatsApiExcludedPorts(): Set<Int> {
     return buildSet {
         add(localProxyPort.toPortOrNull() ?: VpnDefaults.LOCAL_PROXY_PORT)
         add(transparentProxyPort.toPortOrNull() ?: DefaultTproxyPort)
+        add(bpf2SocksBridgePort.toPortOrNull() ?: RootBpf2SocksDefaultBridgePort)
         add(socks5ProxyPort.toPortOrNull() ?: DefaultTun2SocksProxyPort)
         if (enableHttpProxy) {
             httpProxyPort.toPortOrNull()?.let(::add)

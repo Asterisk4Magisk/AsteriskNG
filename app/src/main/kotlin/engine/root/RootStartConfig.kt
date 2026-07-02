@@ -48,6 +48,12 @@ internal val RootRuntimeLayout.ipv6DisablerPidPath: String
 internal val RootRuntimeLayout.bpfPolicyPath: String
     get() = File(dataDir, RootEbpfPolicyFileName).absolutePath
 
+internal val RootRuntimeLayout.bpf2socksConfigPath: String
+    get() = File(dataDir, RootBpf2SocksConfigFileName).absolutePath
+
+internal val RootRuntimeLayout.bpf2socksPidPath: String
+    get() = File(dataDir, RootBpf2SocksPidFileName).absolutePath
+
 internal val RootRuntimeLayout.rootEbpfDirectCidrPathV4: String
     get() = File(dataDir, RootEbpfDirectCidrV4FileName).absolutePath
 

@@ -10,6 +10,7 @@ import app.modes.ProxyServerListLayoutSingle
 import app.modes.ProxyServerListSortDefault
 import app.modes.RunModeVpnService
 import engine.root.DefaultRootHttpProxyPort
+import engine.root.RootBpf2SocksDefaultBridgePort
 import engine.tun2socks.DefaultTun2SocksProxyPort
 import engine.tproxy.DefaultTproxyPort
 import engine.vpn.VpnDefaults
@@ -103,6 +104,7 @@ data class AppState(
     val enableRootEbpfRules: Boolean = false,
     val enableRootEbpfDirectCidrBypass: Boolean = false,
     val enableRootIpv6Disabler: Boolean = false,
+    val bpf2SocksBridgePort: String = RootBpf2SocksDefaultBridgePort.toString(),
     val socks5ProxyPort: String = DefaultTun2SocksProxyPort.toString(),
     val enableHttpProxy: Boolean = false,
     val httpProxyPort: String = DefaultRootHttpProxyPort.toString(),

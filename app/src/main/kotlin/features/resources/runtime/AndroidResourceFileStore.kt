@@ -172,6 +172,7 @@ internal class AndroidResourceFileStore(
             setuidgidPath = File(appContext.applicationInfo.nativeLibraryDir, SetuidgidLibraryName).absolutePath,
             ipv6DisablerPath = File(appContext.applicationInfo.nativeLibraryDir, Ipv6DisablerLibraryName).absolutePath,
             bpfMatcherPath = File(appContext.applicationInfo.nativeLibraryDir, BpfMatcherLibraryName).absolutePath,
+            bpf2socksPath = File(appContext.applicationInfo.nativeLibraryDir, Bpf2SocksLibraryName).absolutePath,
             xrayCorePath = file(ResourceFileKind.XrayCore).absolutePath,
             hevSocks5TunnelPath = File(appContext.applicationInfo.nativeLibraryDir, HevSocks5TunnelLibraryName).absolutePath,
             directCidrIpv4Path = file(ResourceFileKind.DirectCidrIpv4).absolutePath,
@@ -190,6 +191,7 @@ internal data class XrayResourceFilePaths(
     val setuidgidPath: String,
     val ipv6DisablerPath: String,
     val bpfMatcherPath: String,
+    val bpf2socksPath: String,
     val xrayCorePath: String,
     val hevSocks5TunnelPath: String,
     val directCidrIpv4Path: String,
@@ -241,6 +243,7 @@ private const val Arm64Abi = "arm64-v8a"
 private const val SetuidgidLibraryName = "libsetuidgid.so"
 private const val Ipv6DisablerLibraryName = "libipv6disabler.so"
 private const val BpfMatcherLibraryName = "libbpf-matcher.so"
+private const val Bpf2SocksLibraryName = "libbpf2socks.so"
 private const val XrayCoreLibraryName = "libxray.so"
 private const val HevSocks5TunnelLibraryName = "libhev-socks5-tunnel-cli.so"
 private const val XrayBundledResourceFilesDir = "xray"

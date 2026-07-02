@@ -8,6 +8,8 @@
     <string name="error_tproxy_start_failed">Failed to start TPROXY mode: %1$s</string>
     <string name="error_tun2socks_root_required">ROOT access is required for TUN2SOCKS mode</string>
     <string name="error_tun2socks_start_failed">Failed to start TUN2SOCKS mode: %1$s</string>
+    <string name="error_bpf2socks_root_required">ROOT access is required for BPF2SOCKS mode</string>
+    <string name="error_bpf2socks_start_failed">Failed to start BPF2SOCKS mode: %1$s</string>
     <string name="error_vpn_permission_launcher_missing">VPN permission launcher is not registered</string>
     <string name="error_qr_camera_permission_denied">Camera permission was not granted. QR code scanning cannot start</string>
     <string name="error_qr_scan_launcher_missing">QR code scanner launcher is not registered</string>
@@ -81,11 +83,13 @@
     <string name="settings_run_mode_vpn_service">VPN Service</string>
     <string name="settings_run_mode_tproxy">TPROXY (ROOT)</string>
     <string name="settings_run_mode_tun2socks">TUN2SOCKS (ROOT)</string>
+    <string name="settings_run_mode_bpf2socks">BPF2SOCKS (ROOT)</string>
     <string name="settings_resolve_proxy_server_domain">Resolve proxy server domains</string>
     <string name="settings_resolve_proxy_server_domain_summary">Write proxy server IPs to DNS hosts</string>
     <string name="settings_root_required">No ROOT access detected!</string>
     <string name="settings_proxy_tproxy">Proxy settings (TPROXY)</string>
     <string name="settings_proxy_tun2socks">Proxy settings (TUN2SOCKS)</string>
+    <string name="settings_proxy_bpf2socks">Proxy settings (BPF2SOCKS)</string>
     <string name="settings_proxy_vpn_service">Proxy settings (VPN Service)</string>
     <string name="settings_root_boot_script">Start on boot</string>
     <string name="settings_root_boot_script_summary">Generate service.d startup script</string>
@@ -132,7 +136,10 @@
     <string name="settings_inbound">Inbound proxy settings</string>
     <string name="settings_inbound_tproxy_port">Transparent proxy port: {port}</string>
     <string name="settings_inbound_socks5_port">TUN2SOCKS SOCKS5 port: {port}</string>
+    <string name="settings_inbound_bpf2socks_summary">Bridge port: {bridgePort}, SOCKS5 port: {socksPort}</string>
     <string name="settings_inbound_selected">Enabled: {inbounds}</string>
+    <string name="settings_bpf2socks_bridge_port">BPF2SOCKS bridge port</string>
+    <string name="settings_bpf2socks_socks5_port">SOCKS5 port</string>
     <string name="settings_external_interfaces">Tethering sharing</string>
     <string name="settings_external_interfaces_summary">Select which tethering types accept external inbound traffic</string>
     <string name="settings_external_interfaces_none">Not enabled</string>

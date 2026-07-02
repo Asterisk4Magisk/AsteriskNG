@@ -18,9 +18,10 @@ import features.settings.sheets.orderedBy
 import features.settings.sheets.sanitizeExternalInterfaces
 import features.settings.sheets.sanitizeMuxUdp443Index
 import features.settings.sheets.sanitizePrivateAddressCidrs
+import app.modes.RunModeBpf2Socks
 import app.modes.RunModeTun2Socks
-import app.modes.RunModeTproxy
 import app.modes.RunModeVpnService
+import app.modes.isRootRunMode
 
 @Composable
 internal fun SettingsBottomSheetsHost(
@@ -31,14 +32,22 @@ internal fun SettingsBottomSheetsHost(
     ProxySettingsBottomSheet(
         show = sheetState.showProxySettings,
         useTun2SocksProxyPort = appState.runMode == RunModeTun2Socks,
-        lockInboundSettings = (appState.runMode == RunModeTproxy || appState.runMode == RunModeTun2Socks) && appState.proxyRunning,
+        useBpf2SocksProxyPort = appState.runMode == RunModeBpf2Socks,
+        lockPrimaryPortSettings = appState.runMode.isRootRunMode() && appState.proxyRunning,
+        lockSharedInboundSettings = appState.runMode.isRootRunMode() && appState.proxyRunning,
         transparentProxyPort = sheetState.proxySettingsDraft.transparentProxyPort,
+        bpf2SocksBridgePort = sheetState.proxySettingsDraft.bpf2SocksBridgePort,
         socks5ProxyPort = sheetState.proxySettingsDraft.socks5ProxyPort,
         enableHttpProxy = sheetState.proxySettingsDraft.enableHttpProxy,
         httpProxyPort = sheetState.proxySettingsDraft.httpProxyPort,
         onTransparentProxyPortChange = {
             sheetState.proxySettingsDraft = sheetState.proxySettingsDraft.copy(
                 transparentProxyPort = it,
+            )
+        },
+        onBpf2SocksBridgePortChange = {
+            sheetState.proxySettingsDraft = sheetState.proxySettingsDraft.copy(
+                bpf2SocksBridgePort = it,
             )
         },
         onSocks5ProxyPortChange = {
@@ -55,18 +64,24 @@ internal fun SettingsBottomSheetsHost(
             )
         },
         onDismissRequest = { sheetState.showProxySettings = false },
-        onSave = { transparentProxyPort, socks5ProxyPort, enableHttpProxy, httpProxyPort ->
+        onSave = { transparentProxyPort, bpf2SocksBridgePort, socks5ProxyPort, enableHttpProxy, httpProxyPort ->
             updateAppState { state ->
-                val lockInboundSettings = (state.runMode == RunModeTproxy || state.runMode == RunModeTun2Socks) && state.proxyRunning
+                val lockPrimaryPortSettings = state.runMode.isRootRunMode() && state.proxyRunning
+                val lockSharedInboundSettings = state.runMode.isRootRunMode() && state.proxyRunning
                 state.copy(
-                    transparentProxyPort = if (lockInboundSettings) {
+                    transparentProxyPort = if (lockPrimaryPortSettings) {
                         state.transparentProxyPort
                     } else {
                         transparentProxyPort
                     },
-                    socks5ProxyPort = if (lockInboundSettings) state.socks5ProxyPort else socks5ProxyPort,
-                    enableHttpProxy = if (lockInboundSettings) state.enableHttpProxy else enableHttpProxy,
-                    httpProxyPort = if (lockInboundSettings) state.httpProxyPort else httpProxyPort,
+                    bpf2SocksBridgePort = if (lockPrimaryPortSettings) {
+                        state.bpf2SocksBridgePort
+                    } else {
+                        bpf2SocksBridgePort
+                    },
+                    socks5ProxyPort = if (lockPrimaryPortSettings) state.socks5ProxyPort else socks5ProxyPort,
+                    enableHttpProxy = if (lockSharedInboundSettings) state.enableHttpProxy else enableHttpProxy,
+                    httpProxyPort = if (lockSharedInboundSettings) state.httpProxyPort else httpProxyPort,
                 )
             }
             sheetState.showProxySettings = false

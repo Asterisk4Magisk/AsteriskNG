@@ -24,17 +24,21 @@ import top.yukonga.miuix.kmp.window.WindowBottomSheet
 internal fun ProxySettingsBottomSheet(
     show: Boolean,
     useTun2SocksProxyPort: Boolean,
-    lockInboundSettings: Boolean,
+    useBpf2SocksProxyPort: Boolean,
+    lockPrimaryPortSettings: Boolean,
+    lockSharedInboundSettings: Boolean,
     transparentProxyPort: String,
+    bpf2SocksBridgePort: String,
     socks5ProxyPort: String,
     enableHttpProxy: Boolean,
     httpProxyPort: String,
     onTransparentProxyPortChange: (String) -> Unit,
+    onBpf2SocksBridgePortChange: (String) -> Unit,
     onSocks5ProxyPortChange: (String) -> Unit,
     onEnableHttpProxyChange: (Boolean) -> Unit,
     onHttpProxyPortChange: (String) -> Unit,
     onDismissRequest: () -> Unit,
-    onSave: (String, String, Boolean, String) -> Unit,
+    onSave: (String, String, String, Boolean, String) -> Unit,
 ) {
     WindowBottomSheet(
         show = show,
@@ -51,6 +55,7 @@ internal fun ProxySettingsBottomSheet(
                 onClick = {
                     onSave(
                         transparentProxyPort,
+                        bpf2SocksBridgePort,
                         socks5ProxyPort,
                         enableHttpProxy,
                         httpProxyPort,
@@ -60,12 +65,39 @@ internal fun ProxySettingsBottomSheet(
         },
         onDismissRequest = onDismissRequest,
     ) {
-        key(show, useTun2SocksProxyPort) {
+        key(show, useTun2SocksProxyPort, useBpf2SocksProxyPort) {
             SettingsSheetContent {
-                if (useTun2SocksProxyPort) {
+                if (useBpf2SocksProxyPort) {
+                    ProxyPortTextField(
+                        value = bpf2SocksBridgePort,
+                        onValueChange = if (lockPrimaryPortSettings) {
+                            {}
+                        } else {
+                            onBpf2SocksBridgePortChange
+                        },
+                        label = stringResource(R.string.settings_bpf2socks_bridge_port),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 12.dp),
+                        enabled = !lockPrimaryPortSettings,
+                    )
                     ProxyPortTextField(
                         value = socks5ProxyPort,
-                        onValueChange = if (lockInboundSettings) {
+                        onValueChange = if (lockPrimaryPortSettings) {
+                            {}
+                        } else {
+                            onSocks5ProxyPortChange
+                        },
+                        label = stringResource(R.string.settings_bpf2socks_socks5_port),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 12.dp),
+                        enabled = !lockPrimaryPortSettings,
+                    )
+                } else if (useTun2SocksProxyPort) {
+                    ProxyPortTextField(
+                        value = socks5ProxyPort,
+                        onValueChange = if (lockPrimaryPortSettings) {
                             {}
                         } else {
                             onSocks5ProxyPortChange
@@ -74,12 +106,12 @@ internal fun ProxySettingsBottomSheet(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(bottom = 12.dp),
-                        enabled = !lockInboundSettings,
+                        enabled = !lockPrimaryPortSettings,
                     )
                 } else {
                     ProxyPortTextField(
                         value = transparentProxyPort,
-                        onValueChange = if (lockInboundSettings) {
+                        onValueChange = if (lockPrimaryPortSettings) {
                             {}
                         } else {
                             onTransparentProxyPortChange
@@ -88,7 +120,7 @@ internal fun ProxySettingsBottomSheet(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(bottom = 12.dp),
-                        enabled = !lockInboundSettings,
+                        enabled = !lockPrimaryPortSettings,
                     )
                 }
                 SwitchPreference(
@@ -96,7 +128,7 @@ internal fun ProxySettingsBottomSheet(
                     summary = stringResource(R.string.settings_http_proxy_summary),
                     checked = enableHttpProxy,
                     onCheckedChange = onEnableHttpProxyChange,
-                    enabled = !lockInboundSettings,
+                    enabled = !lockSharedInboundSettings,
                     modifier = Modifier.padding(bottom = if (enableHttpProxy) 12.dp else 0.dp),
                 )
                 AnimatedVisibility(
@@ -106,7 +138,7 @@ internal fun ProxySettingsBottomSheet(
                 ) {
                     ProxyPortTextField(
                         value = httpProxyPort,
-                        onValueChange = if (lockInboundSettings) {
+                        onValueChange = if (lockSharedInboundSettings) {
                             {}
                         } else {
                             onHttpProxyPortChange
@@ -115,7 +147,7 @@ internal fun ProxySettingsBottomSheet(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(bottom = 12.dp),
-                        enabled = !lockInboundSettings,
+                        enabled = !lockSharedInboundSettings,
                     )
                 }
             }

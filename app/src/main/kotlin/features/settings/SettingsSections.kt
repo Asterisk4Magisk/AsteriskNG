@@ -3,9 +3,11 @@
 
 package features.settings
 
-import app.modes.RunModeTproxy
+import app.modes.RunModeBpf2Socks
 import app.modes.RunModeTun2Socks
 import app.modes.RunModeVpnService
+import app.modes.isRootRunMode
+import app.modes.supportsRootEbpfMatcher
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.expandVertically
@@ -267,19 +269,23 @@ internal fun SettingsProxyModeSections(
         }
     }
     AnimatedVisibility(
-        visible = runMode == RunModeTproxy || runMode == RunModeTun2Socks,
+        visible = runMode.isRootRunMode(),
         enter = fadeIn() + expandVertically(),
         exit = ExitTransition.None,
     ) {
         Column {
             SmallTitle(
                 text = stringResource(
-                    if (runMode == RunModeTun2Socks) R.string.settings_proxy_tun2socks else R.string.settings_proxy_tproxy,
+                    when (runMode) {
+                        RunModeTun2Socks -> R.string.settings_proxy_tun2socks
+                        RunModeBpf2Socks -> R.string.settings_proxy_bpf2socks
+                        else -> R.string.settings_proxy_tproxy
+                    },
                 ),
             )
             SettingsSectionCard {
                 AnimatedVisibility(
-                    visible = runMode == RunModeTproxy || runMode == RunModeTun2Socks,
+                    visible = runMode.isRootRunMode(),
                     enter = fadeIn() + expandVertically(),
                     exit = shrinkVertically() + fadeOut(),
                 ) {
@@ -290,14 +296,20 @@ internal fun SettingsProxyModeSections(
                         onCheckedChange = onEnableRootBootScriptChange,
                     )
                 }
-                SwitchPreference(
-                    title = stringResource(R.string.settings_root_ebpf_matcher),
-                    summary = stringResource(R.string.settings_root_ebpf_matcher_summary),
-                    checked = enableRootEbpfRules,
-                    onCheckedChange = onEnableRootEbpfRulesChange,
-                )
                 AnimatedVisibility(
-                    visible = enableRootEbpfRules,
+                    visible = runMode.supportsRootEbpfMatcher(),
+                    enter = fadeIn() + expandVertically(),
+                    exit = shrinkVertically() + fadeOut(),
+                ) {
+                    SwitchPreference(
+                        title = stringResource(R.string.settings_root_ebpf_matcher),
+                        summary = stringResource(R.string.settings_root_ebpf_matcher_summary),
+                        checked = enableRootEbpfRules,
+                        onCheckedChange = onEnableRootEbpfRulesChange,
+                    )
+                }
+                AnimatedVisibility(
+                    visible = enableRootEbpfRules || runMode == RunModeBpf2Socks,
                     enter = fadeIn() + expandVertically(),
                     exit = shrinkVertically() + fadeOut(),
                 ) {
@@ -341,21 +353,23 @@ internal fun SettingsProxyModeSections(
                         onClick = onOpenTunSettings,
                     )
                 }
-                ArrowPreference(
-                    title = stringResource(R.string.settings_external_interfaces),
-                    summary = externalInterfacesSummary,
-                    onClick = onOpenExternalInterfaces,
-                )
-                ArrowPreference(
-                    title = stringResource(R.string.settings_ignored_interfaces),
-                    summary = ignoredInterfacesSummary,
-                    onClick = onOpenIgnoredInterfaces,
-                )
-                ArrowPreference(
-                    title = stringResource(R.string.settings_private_addresses),
-                    summary = privateAddressCidrsSummary,
-                    onClick = onOpenPrivateAddresses,
-                )
+                Column {
+                    ArrowPreference(
+                        title = stringResource(R.string.settings_external_interfaces),
+                        summary = externalInterfacesSummary,
+                        onClick = onOpenExternalInterfaces,
+                    )
+                    ArrowPreference(
+                        title = stringResource(R.string.settings_ignored_interfaces),
+                        summary = ignoredInterfacesSummary,
+                        onClick = onOpenIgnoredInterfaces,
+                    )
+                    ArrowPreference(
+                        title = stringResource(R.string.settings_private_addresses),
+                        summary = privateAddressCidrsSummary,
+                        onClick = onOpenPrivateAddresses,
+                    )
+                }
             }
         }
     }

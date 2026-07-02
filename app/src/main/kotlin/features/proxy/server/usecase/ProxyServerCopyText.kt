@@ -6,9 +6,11 @@ package features.proxy.server.usecase
 import android.content.Context
 import app.AppState
 import app.ProxyServerState
+import app.modes.RunModeBpf2Socks
 import app.modes.RunModeTun2Socks
 import app.modes.RunModeTproxy
 import engine.proxy.ProxyEngineStartRequest
+import engine.root.bpf2socks.buildBpf2SocksStartConfig
 import engine.root.prepareRootConfigBuildContext
 import engine.tproxy.buildTproxyStartConfig
 import engine.tun2socks.buildTun2SocksStartConfig
@@ -107,7 +109,8 @@ private fun Context.generatedProxyServerXrayConfig(
     )
     return when (copyState.runMode) {
         RunModeTproxy,
-        RunModeTun2Socks -> generatedRootProxyServerXrayConfig(copyState.runMode, request)
+        RunModeTun2Socks,
+        RunModeBpf2Socks -> generatedRootProxyServerXrayConfig(copyState.runMode, request)
 
         else -> VpnXrayConfigFactory.create(applicationContext, request).xrayConfigJson
     }
@@ -121,6 +124,7 @@ private fun Context.generatedRootProxyServerXrayConfig(
     return when (runMode) {
         RunModeTproxy -> rootContext.buildTproxyStartConfig().root.xrayConfigJson
         RunModeTun2Socks -> rootContext.buildTun2SocksStartConfig().root.xrayConfigJson
+        RunModeBpf2Socks -> rootContext.buildBpf2SocksStartConfig().root.xrayConfigJson
         else -> error("Unsupported ROOT run mode: $runMode")
     }
 }

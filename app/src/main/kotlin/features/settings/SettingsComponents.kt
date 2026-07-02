@@ -3,6 +3,8 @@
 
 package features.settings
 
+import app.modes.RunModeBpf2Socks
+import app.modes.RunModeTun2Socks
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -34,16 +36,23 @@ internal fun SettingsSectionCard(
 
 @Composable
 internal fun inboundProxySummary(
-    useTun2SocksProxyPort: Boolean,
+    runMode: Int,
     transparentProxyPort: String,
+    bpf2SocksBridgePort: String,
     socks5ProxyPort: String,
     enableHttpProxy: Boolean,
 ): String {
-    val primaryInbound = if (useTun2SocksProxyPort) {
-        stringResource(R.string.settings_inbound_socks5_port)
+    val primaryInbound = when (runMode) {
+        RunModeBpf2Socks -> stringResource(R.string.settings_inbound_bpf2socks_summary)
+            .formatTemplate(
+                "bridgePort" to bpf2SocksBridgePort,
+                "socksPort" to socks5ProxyPort,
+            )
+
+        RunModeTun2Socks -> stringResource(R.string.settings_inbound_socks5_port)
             .formatTemplate("port" to socks5ProxyPort)
-    } else {
-        stringResource(R.string.settings_inbound_tproxy_port)
+
+        else -> stringResource(R.string.settings_inbound_tproxy_port)
             .formatTemplate("port" to transparentProxyPort)
     }
     val enabledInbounds = mutableListOf<String>()

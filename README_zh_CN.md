@@ -2,7 +2,7 @@
 
 # AsteriskNG
 
-一个 Android Xray GUI 客户端，使用 [Xray-core](https://github.com/XTLS/Xray-core)、[AndroidLibXrayLite](https://github.com/2dust/AndroidLibXrayLite) 和 [hev-socks5-tunnel](https://github.com/heiher/hev-socks5-tunnel) 实现。
+一个 Android Xray GUI 客户端，使用 [Xray-core](https://github.com/XTLS/Xray-core)、[AndroidLibXrayLite](https://github.com/2dust/AndroidLibXrayLite)、[hev-socks5-tunnel](https://github.com/heiher/hev-socks5-tunnel) 和 native BPF2SOCKS runtime 实现。
 
 ## Telegram Channel
 
@@ -10,7 +10,7 @@
 
 ## 功能
 
-- VPN Service、TPROXY(ROOT) 和 TUN2SOCKS(ROOT) 运行模式
+- VPN Service、TPROXY(ROOT)、TUN2SOCKS(ROOT) 和 BPF2SOCKS(ROOT) 运行模式
 - VMess、VLESS、Trojan、Shadowsocks、Socks、HTTP、Hysteria2、WireGuard、策略组和链式代理支持
 - v2rayNG、mihomo 订阅格式支持
 - 管理 `geoip.dat`、`geosite.dat`、`geoip-only-cn-private.dat` 和 Xray 可执行文件等资源文件
@@ -49,6 +49,14 @@
 - 使用 Xray 的本地 SOCKS5 入站作为隧道目标。
 - 与 TPROXY 共享大部分 ROOT 路由和应用代理行为，但流量会通过 TUN 设备转发，而不是通过 Xray 的 TPROXY 入站。
 
+### BPF2SOCKS(ROOT)
+
+- 需要 root 权限，并要求 Android 内核支持 eBPF。
+- 通过 libsu 直接运行本地 Xray 可执行文件和 native `bpf2socks` helper。
+- 使用 cgroup eBPF 程序将本机 TCP 连接和 UDP 数据报重定向到 BPF2SOCKS bridge，再由 bridge 转发到 Xray 的本地 SOCKS5 入站。
+- 不创建 TUN 设备。默认 bridge 端口为 `65532`，默认 SOCKS5 入站端口为 `65534`。
+- 启动前要求 eBPF probe 通过。设备支持不足时，该模式无法启动。
+
 ## 资源文件
 
 - 运行时文件存储在应用私有的 `files/xray` 目录中，通常为 `/data/user/0/org.asterisk.zcc.ang/files/xray`。
@@ -82,7 +90,7 @@ macOS 或 Linux：
 - 下载或准备内置 Xray-core 资源
 - 构建前将 `hev-socks5-tunnel` checkout 到 `ProjectConfig.HEV_SOCKS5_TUNNEL_VERSION`
 - 从 vendored submodule 构建 native `hev-socks5-tunnel` JNI library 和 CLI runtime
-- 构建 native `setuidgid` 和 `ipv6disabler` helper
+- 构建 native `bpf2socks`、`setuidgid` 和 `ipv6disabler` helper
 - 为 `arm64-v8a`、`armeabi-v7a`、`x86` 和 `x86_64` 打包 native 运行时组件
 
 如果 Gradle 找不到 Android NDK，请在 `local.properties` 中设置 `ndk.dir`，设置 `ANDROID_NDK_HOME`，或在 Android SDK 下安装 NDK。

@@ -6,8 +6,7 @@ package app.effects
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import app.AppState
-import app.modes.RunModeTproxy
-import app.modes.RunModeTun2Socks
+import app.modes.isRootRunMode
 import data.AndroidAppStateStore
 import engine.proxy.withResolvedDynamicLocalProxyPort
 import features.logs.AndroidAppLogger
@@ -37,7 +36,7 @@ internal fun RootBootScriptSynchronizer(
                     }
                     return@collect
                 }
-                if (!state.enableRootBootScript || (state.runMode != RunModeTproxy && state.runMode != RunModeTun2Socks)) {
+                if (!state.enableRootBootScript || !state.runMode.isRootRunMode()) {
                     return@collect
                 }
                 when (val result = rootBootScriptUseCase.refresh(state)) {
@@ -100,6 +99,7 @@ private data class RootBootScriptSignature(
     val localProxyUsername: String,
     val localProxyPassword: String,
     val transparentProxyPort: String,
+    val bpf2SocksBridgePort: String,
     val enableRootIpv6Disabler: Boolean,
     val enableRootEbpfRules: Boolean,
     val enableRootEbpfDirectCidrBypass: Boolean,
@@ -163,6 +163,7 @@ private fun AppState.toRootBootScriptRefresh(): RootBootScriptRefresh {
             localProxyUsername = localProxyUsername,
             localProxyPassword = localProxyPassword,
             transparentProxyPort = transparentProxyPort,
+            bpf2SocksBridgePort = bpf2SocksBridgePort,
             enableRootIpv6Disabler = enableRootIpv6Disabler,
             enableRootEbpfRules = enableRootEbpfRules,
             enableRootEbpfDirectCidrBypass = enableRootEbpfDirectCidrBypass,

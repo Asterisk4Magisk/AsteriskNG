@@ -6,6 +6,15 @@ package app.modes
 const val RunModeVpnService = 0
 const val RunModeTproxy = 1
 const val RunModeTun2Socks = 2
+const val RunModeBpf2Socks = 3
+
+fun Int.isRootRunMode(): Boolean {
+    return supportsRootEbpfMatcher() || this == RunModeBpf2Socks
+}
+
+fun Int.supportsRootEbpfMatcher(): Boolean {
+    return this == RunModeTproxy || this == RunModeTun2Socks
+}
 
 const val ProxyAppListModeBlacklist = 0
 const val ProxyAppListModeWhitelist = 1

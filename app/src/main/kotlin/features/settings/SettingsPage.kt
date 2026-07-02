@@ -5,64 +5,63 @@
 
 package features.settings
 
-import app.LocalAppChromeState
-import app.LocalAppStateStore
-import app.LocalAppServices
-import app.LocalIsWideScreen
-import app.LocalNavigator
-import app.LocalUpdateAppState
-import app.modes.ColorModeThemeDark
-import app.modes.ColorModeThemeSystem
-import app.collectAppState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import app.modes.RunModeTun2Socks
-import app.modes.RunModeTproxy
-import app.modes.RunModeVpnService
+import androidx.compose.ui.res.stringResource
+import app.LocalAppChromeState
+import app.LocalAppServices
+import app.LocalAppStateStore
+import app.LocalIsWideScreen
+import app.LocalNavigator
+import app.LocalUpdateAppState
 import app.ProjectInfo
 import app.R
+import app.collectAppState
+import app.modes.ColorModeThemeDark
+import app.modes.ColorModeThemeSystem
+import app.modes.RunModeVpnService
+import app.modes.supportsRootEbpfMatcher
+import app.navigation.Route
 import data.backup.AppBackupRestorePreview
 import engine.proxy.withResolvedDynamicLocalProxyPort
+import features.proxy.server.usecase.ProxyServiceResult
 import features.settings.sheets.externalInterfacesSummary
 import features.settings.sheets.fragmentSettingsSummary
 import features.settings.sheets.ignoredInterfacesSummary
 import features.settings.sheets.muxSettingsSummary
 import features.settings.sheets.privateAddressCidrsSummary
 import features.settings.sheets.tunSettingsSummary
-import features.settings.usecase.SwitchRunModeResult
 import features.settings.usecase.RootBootScriptResult
 import features.settings.usecase.RootEbpfProbeResult
-import features.proxy.server.usecase.ProxyServiceResult
+import features.settings.usecase.SwitchRunModeResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import app.navigation.Route
-import androidx.compose.ui.res.stringResource
-import androidx.compose.runtime.remember
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.ScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.ScrollBehavior
 import top.yukonga.miuix.kmp.basic.VerticalScrollBar
 import top.yukonga.miuix.kmp.basic.rememberScrollBarAdapter
+import top.yukonga.miuix.kmp.interfaces.ExperimentalScrollBarApi
+import ui.KeyColors
+import ui.components.WarningConfirmDialog
 import ui.layout.AdaptiveTopAppBar
 import ui.layout.pageContentPaddingWithCutout
 import ui.layout.pageListPadding
 import ui.layout.pageScrollModifiers
-import ui.KeyColors
-import ui.components.WarningConfirmDialog
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import top.yukonga.miuix.kmp.interfaces.ExperimentalScrollBarApi
 
 @Composable
 fun SettingsPage(
@@ -144,6 +143,7 @@ private fun SettingsContent(
         stringResource(R.string.settings_run_mode_vpn_service),
         stringResource(R.string.settings_run_mode_tproxy),
         stringResource(R.string.settings_run_mode_tun2socks),
+        stringResource(R.string.settings_run_mode_bpf2socks),
     )
     val keyColorOptions = listOf(
         stringResource(R.string.theme_color_default),
@@ -171,8 +171,9 @@ private fun SettingsContent(
     val selectServerFirstMessage = stringResource(R.string.proxy_server_list_select_first)
     val ignoredInterfacesErrorDetail = stringResource(R.string.settings_ignored_interfaces_error_detail)
     val inboundProxySummary = inboundProxySummary(
-        useTun2SocksProxyPort = appState.runMode == RunModeTun2Socks,
+        runMode = appState.runMode,
         transparentProxyPort = appState.transparentProxyPort,
+        bpf2SocksBridgePort = appState.bpf2SocksBridgePort,
         socks5ProxyPort = appState.socks5ProxyPort,
         enableHttpProxy = appState.enableHttpProxy,
     )
@@ -285,7 +286,7 @@ private fun SettingsContent(
                                                     proxyRunning = result.proxyRunning,
                                                     enableRootBootScript = false,
                                                     enableRootEbpfRules = state.enableRootEbpfRules &&
-                                                        (result.runMode == RunModeTproxy || result.runMode == RunModeTun2Socks),
+                                                        result.runMode.supportsRootEbpfMatcher(),
                                                 )
                                             }
                                         }

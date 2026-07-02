@@ -5,9 +5,13 @@ package features.settings.usecase
 
 import android.content.Context
 import app.AppState
+import app.modes.RunModeBpf2Socks
 import app.modes.RunModeTproxy
 import app.modes.RunModeTun2Socks
+import app.modes.isRootRunMode
 import engine.proxy.ProxyEngineStartRequest
+import engine.root.bpf2socks.Bpf2SocksRootRunner
+import engine.root.bpf2socks.buildBpf2SocksStartConfig
 import engine.root.prepareRootConfigBuildContext
 import engine.root.prepareRootRuntimeLayout
 import engine.root.removeRootBootScript
@@ -26,6 +30,7 @@ internal class RootBootScriptUseCase(
     private val appContext = context.applicationContext
     private val tproxyRootRunner = TproxyRootRunner(rootAccess)
     private val tun2SocksRootRunner = Tun2SocksRootRunner(rootAccess)
+    private val bpf2SocksRootRunner = Bpf2SocksRootRunner(rootAccess)
 
     suspend fun setEnabled(
         state: AppState,
@@ -72,11 +77,8 @@ internal class RootBootScriptUseCase(
             ?: return RootBootScriptResult.MissingServer
         return runCatching {
             val request = ProxyEngineStartRequest(state, selectedServer)
-            when (state.runMode) {
-                RunModeTproxy,
-                RunModeTun2Socks -> installRootBootScript(state.runMode, request)
-
-                else -> Unit
+            if (state.runMode.isRootRunMode()) {
+                installRootBootScript(state.runMode, request)
             }
         }.fold(
             onSuccess = { RootBootScriptResult.Success },
@@ -92,6 +94,7 @@ internal class RootBootScriptUseCase(
         when (runMode) {
             RunModeTproxy -> tproxyRootRunner.installBootScript(rootContext.buildTproxyStartConfig())
             RunModeTun2Socks -> tun2SocksRootRunner.installBootScript(rootContext.buildTun2SocksStartConfig())
+            RunModeBpf2Socks -> bpf2SocksRootRunner.installBootScript(rootContext.buildBpf2SocksStartConfig())
         }
     }
 }
