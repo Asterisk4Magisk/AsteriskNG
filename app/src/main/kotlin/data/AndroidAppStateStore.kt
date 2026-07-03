@@ -5,6 +5,7 @@ package data
 
 import android.content.Context
 import androidx.room.Room
+import androidx.room.RoomDatabase
 import app.AppState
 import features.logs.AndroidAppLogger
 import kotlinx.coroutines.CoroutineScope
@@ -122,6 +123,8 @@ class AndroidAppStateStore private constructor(
             AsteriskAppDatabase::class.java,
             AsteriskDatabaseName,
         )
+            // Keep committed state in the main DB file for file-based backup tools.
+            .setJournalMode(RoomDatabase.JournalMode.TRUNCATE)
             .fallbackToDestructiveMigration(dropAllTables = true)
             .build()
     }
