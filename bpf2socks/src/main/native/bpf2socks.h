@@ -193,6 +193,7 @@ struct bpf2socks_bpf_runtime {
     int sk_lookup_link_fd;
     int connect4_prog_fd;
     int connect6_prog_fd;
+    int connect6_v4mapped_prog_fd;
     int udp4_sendmsg_prog_fd;
     int udp6_sendmsg_prog_fd;
     int udp4_recvmsg_prog_fd;

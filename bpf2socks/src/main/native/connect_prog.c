@@ -228,7 +228,7 @@ static void emit_uid_policy(
     }
 }
 
-static void emit_ipv4_policy_checks(
+static void emit_ipv4_policy_checks_from_regs(
     struct bpf_builder *builder,
     const struct bpf2socks_policy_config *policy,
     int proxy_cidr4_map_fd,
@@ -239,9 +239,6 @@ static void emit_ipv4_policy_checks(
     bool protocol_from_context,
     size_t *bypass_jumps,
     size_t *bypass_jump_count) {
-    emit(builder, BPF_LDX_MEM(BPF_W, BPF_REG_7, BPF_REG_6, offsetof(struct bpf_sock_addr, user_ip4)));
-    emit(builder, BPF_LDX_MEM(BPF_W, BPF_REG_8, BPF_REG_6, offsetof(struct bpf_sock_addr, user_port)));
-
     bypass_jumps[(*bypass_jump_count)++] = emit_jump(builder, BPF_JMP_IMM_OP(BPF_JEQ, BPF_REG_7, 0, 0));
 
     emit(builder, BPF_MOV64_REG(BPF_REG_2, BPF_REG_7));
@@ -312,10 +309,75 @@ static void emit_ipv4_policy_checks(
     }
 }
 
+static void emit_ipv4_policy_checks(
+    struct bpf_builder *builder,
+    const struct bpf2socks_policy_config *policy,
+    int proxy_cidr4_map_fd,
+    int bypass_cidr4_map_fd,
+    int ignored_ifindex_map_fd,
+    int ignored_route_cidr4_map_fd,
+    uint8_t protocol,
+    bool protocol_from_context,
+    size_t *bypass_jumps,
+    size_t *bypass_jump_count) {
+    emit(builder, BPF_LDX_MEM(BPF_W, BPF_REG_7, BPF_REG_6, offsetof(struct bpf_sock_addr, user_ip4)));
+    emit(builder, BPF_LDX_MEM(BPF_W, BPF_REG_8, BPF_REG_6, offsetof(struct bpf_sock_addr, user_port)));
+    emit_ipv4_policy_checks_from_regs(
+        builder,
+        policy,
+        proxy_cidr4_map_fd,
+        bypass_cidr4_map_fd,
+        ignored_ifindex_map_fd,
+        ignored_route_cidr4_map_fd,
+        protocol,
+        protocol_from_context,
+        bypass_jumps,
+        bypass_jump_count);
+}
+
 static uint32_t ipv6_word_for_bpf_imm(const uint8_t addr[16], size_t offset) {
     uint32_t value = 0U;
     memcpy(&value, addr + offset, sizeof(value));
     return value;
+}
+
+static void emit_ipv4_mapped_ipv6_check(
+    struct bpf_builder *builder,
+    size_t *bypass_jumps,
+    size_t *bypass_jump_count) {
+    emit(builder, BPF_LDX_MEM(BPF_W, BPF_REG_2, BPF_REG_6, offsetof(struct bpf_sock_addr, user_ip6)));
+    bypass_jumps[(*bypass_jump_count)++] = emit_jump(builder, BPF_JMP_IMM_OP(BPF_JNE, BPF_REG_2, 0, 0));
+    emit(builder, BPF_LDX_MEM(BPF_W, BPF_REG_2, BPF_REG_6, offsetof(struct bpf_sock_addr, user_ip6) + 4));
+    bypass_jumps[(*bypass_jump_count)++] = emit_jump(builder, BPF_JMP_IMM_OP(BPF_JNE, BPF_REG_2, 0, 0));
+    emit(builder, BPF_LDX_MEM(BPF_W, BPF_REG_2, BPF_REG_6, offsetof(struct bpf_sock_addr, user_ip6) + 8));
+    emit(builder, BPF_ENDIAN_OP(BPF_REG_2, 32));
+    bypass_jumps[(*bypass_jump_count)++] = emit_jump(builder, BPF_JMP_IMM_OP(BPF_JNE, BPF_REG_2, 0x0000ffffU, 0));
+}
+
+static void emit_ipv4_mapped_ipv6_policy_checks(
+    struct bpf_builder *builder,
+    const struct bpf2socks_policy_config *policy,
+    int proxy_cidr4_map_fd,
+    int bypass_cidr4_map_fd,
+    int ignored_ifindex_map_fd,
+    int ignored_route_cidr4_map_fd,
+    uint8_t protocol,
+    bool protocol_from_context,
+    size_t *bypass_jumps,
+    size_t *bypass_jump_count) {
+    emit(builder, BPF_LDX_MEM(BPF_W, BPF_REG_7, BPF_REG_6, offsetof(struct bpf_sock_addr, user_ip6) + 12));
+    emit(builder, BPF_LDX_MEM(BPF_W, BPF_REG_8, BPF_REG_6, offsetof(struct bpf_sock_addr, user_port)));
+    emit_ipv4_policy_checks_from_regs(
+        builder,
+        policy,
+        proxy_cidr4_map_fd,
+        bypass_cidr4_map_fd,
+        ignored_ifindex_map_fd,
+        ignored_route_cidr4_map_fd,
+        protocol,
+        protocol_from_context,
+        bypass_jumps,
+        bypass_jump_count);
 }
 
 static void emit_ipv6_policy_checks(
@@ -492,6 +554,61 @@ static void emit_token_update_and_rewrite_v6(
     emit(builder, BPF_ST_MEM(BPF_W, BPF_REG_6, offsetof(struct bpf_sock_addr, user_port), htons(bridge_port)));
 }
 
+static void emit_ipv4_mapped_token_update_and_rewrite(
+    struct bpf_builder *builder,
+    int token_map_fd,
+    uint8_t protocol,
+    bool protocol_from_context,
+    uint16_t bridge_port,
+    size_t *drop_jumps,
+    size_t *drop_jump_count) {
+    emit(builder, BPF_CALL_FUNC(BPF_FUNC_get_prandom_u32));
+    emit(builder, BPF_MOV32_REG(BPF_REG_9, BPF_REG_0));
+    emit(builder, BPF_ALU32_IMM_OP(BPF_AND, BPF_REG_9, 0x00ffffffU));
+    emit(builder, BPF_ALU32_IMM_OP(BPF_OR, BPF_REG_9, 0x7f000000U));
+    emit(builder, BPF_ENDIAN_OP(BPF_REG_9, 32));
+    if (protocol_from_context) {
+        emit(builder, BPF_LDX_MEM(BPF_W, BPF_REG_4, BPF_REG_6, offsetof(struct bpf_sock_addr, type)));
+        emit(builder, BPF_MOV64_IMM(BPF_REG_5, BPF2SOCKS_PROTO_TCP));
+        size_t not_udp = emit_jump(builder, BPF_JMP_IMM_OP(BPF_JNE, BPF_REG_4, SOCK_DGRAM, 0));
+        emit(builder, BPF_MOV64_IMM(BPF_REG_5, BPF2SOCKS_PROTO_UDP));
+        patch_jump(builder, not_udp, builder->count);
+    } else {
+        emit(builder, BPF_MOV64_IMM(BPF_REG_5, protocol));
+    }
+
+    emit_zero_region(builder, STACK_TOKEN_KEY, sizeof(struct bpf2socks_token_key));
+    emit_zero_region(builder, STACK_ORIGINAL_DST, sizeof(struct bpf2socks_original_dst));
+
+    emit(builder, BPF_ST_MEM(BPF_B, BPF_REG_10, STACK_TOKEN_KEY + (int)offsetof(struct bpf2socks_token_key, family), AF_INET));
+    emit(builder, BPF_STX_MEM(BPF_B, BPF_REG_10, BPF_REG_5, STACK_TOKEN_KEY + (int)offsetof(struct bpf2socks_token_key, protocol)));
+    emit(builder, BPF_ST_MEM(BPF_H, BPF_REG_10, STACK_TOKEN_KEY + (int)offsetof(struct bpf2socks_token_key, token_port), bridge_port));
+    emit(builder, BPF_STX_MEM(BPF_W, BPF_REG_10, BPF_REG_9, STACK_TOKEN_KEY + (int)offsetof(struct bpf2socks_token_key, token_addr)));
+
+    emit(builder, BPF_ST_MEM(BPF_B, BPF_REG_10, STACK_ORIGINAL_DST + (int)offsetof(struct bpf2socks_original_dst, family), AF_INET));
+    emit(builder, BPF_STX_MEM(BPF_B, BPF_REG_10, BPF_REG_5, STACK_ORIGINAL_DST + (int)offsetof(struct bpf2socks_original_dst, protocol)));
+    emit(builder, BPF_LDX_MEM(BPF_W, BPF_REG_8, BPF_REG_6, offsetof(struct bpf_sock_addr, user_port)));
+    emit(builder, BPF_ENDIAN_OP(BPF_REG_8, 16));
+    emit(builder, BPF_STX_MEM(BPF_H, BPF_REG_10, BPF_REG_8, STACK_ORIGINAL_DST + (int)offsetof(struct bpf2socks_original_dst, port)));
+    emit(builder, BPF_LDX_MEM(BPF_W, BPF_REG_7, BPF_REG_6, offsetof(struct bpf_sock_addr, user_ip6) + 12));
+    emit(builder, BPF_STX_MEM(BPF_W, BPF_REG_10, BPF_REG_7, STACK_ORIGINAL_DST + (int)offsetof(struct bpf2socks_original_dst, addr)));
+
+    emit_ld_map_fd(builder, BPF_REG_1, token_map_fd);
+    emit(builder, BPF_MOV64_REG(BPF_REG_2, BPF_REG_10));
+    emit(builder, BPF_ALU64_IMM_OP(BPF_ADD, BPF_REG_2, STACK_TOKEN_KEY));
+    emit(builder, BPF_MOV64_REG(BPF_REG_3, BPF_REG_10));
+    emit(builder, BPF_ALU64_IMM_OP(BPF_ADD, BPF_REG_3, STACK_ORIGINAL_DST));
+    emit(builder, BPF_MOV64_IMM(BPF_REG_4, BPF_ANY));
+    emit(builder, BPF_CALL_FUNC(BPF_FUNC_map_update_elem));
+    drop_jumps[(*drop_jump_count)++] = emit_jump(builder, BPF_JMP_IMM_OP(BPF_JNE, BPF_REG_0, 0, 0));
+
+    emit(builder, BPF_ST_MEM(BPF_W, BPF_REG_6, offsetof(struct bpf_sock_addr, user_ip6), 0));
+    emit(builder, BPF_ST_MEM(BPF_W, BPF_REG_6, offsetof(struct bpf_sock_addr, user_ip6) + 4, 0));
+    emit(builder, BPF_ST_MEM(BPF_W, BPF_REG_6, offsetof(struct bpf_sock_addr, user_ip6) + 8, 0xffff0000U));
+    emit(builder, BPF_STX_MEM(BPF_W, BPF_REG_6, BPF_REG_9, offsetof(struct bpf_sock_addr, user_ip6) + 12));
+    emit(builder, BPF_ST_MEM(BPF_W, BPF_REG_6, offsetof(struct bpf_sock_addr, user_port), htons(bridge_port)));
+}
+
 static int build_ipv4_sock_addr_prog(
     const struct bpf2socks_policy_config *policy,
     int uid_map_fd,
@@ -618,6 +735,71 @@ static int build_ipv6_sock_addr_prog(
         name,
         BPF_PROG_TYPE_CGROUP_SOCK_ADDR,
         attach_type,
+        log_error);
+}
+
+static int build_ipv4_mapped_ipv6_sock_addr_prog(
+    const struct bpf2socks_policy_config *policy,
+    int uid_map_fd,
+    int proxy_cidr4_map_fd,
+    int bypass_cidr4_map_fd,
+    int ignored_ifindex_map_fd,
+    int ignored_route_cidr4_map_fd,
+    int token_map_fd,
+    uint16_t bridge_port,
+    const char *name,
+    bool log_error) {
+    struct bpf_builder b = {0};
+    size_t bypass_jumps[64];
+    size_t bypass_jump_count = 0;
+    size_t drop_jumps[16];
+    size_t drop_jump_count = 0;
+
+    emit(&b, BPF_MOV64_REG(BPF_REG_6, BPF_REG_1));
+    emit(&b, BPF_LDX_MEM(BPF_W, BPF_REG_2, BPF_REG_6, offsetof(struct bpf_sock_addr, protocol)));
+    bypass_jumps[bypass_jump_count++] =
+        emit_jump(&b, BPF_JMP_IMM_OP(BPF_JNE, BPF_REG_2, BPF2SOCKS_PROTO_TCP, 0));
+    emit_uid_policy(&b, policy, uid_map_fd, bypass_jumps, &bypass_jump_count, drop_jumps, &drop_jump_count);
+    emit_ipv4_mapped_ipv6_check(&b, bypass_jumps, &bypass_jump_count);
+    emit_ipv4_mapped_ipv6_policy_checks(
+        &b,
+        policy,
+        proxy_cidr4_map_fd,
+        bypass_cidr4_map_fd,
+        ignored_ifindex_map_fd,
+        ignored_route_cidr4_map_fd,
+        BPF2SOCKS_PROTO_TCP,
+        true,
+        bypass_jumps,
+        &bypass_jump_count);
+    emit_ipv4_mapped_token_update_and_rewrite(
+        &b,
+        token_map_fd,
+        BPF2SOCKS_PROTO_TCP,
+        true,
+        bridge_port,
+        drop_jumps,
+        &drop_jump_count);
+    size_t allow_label = emit_exit(&b, 1);
+    size_t drop_label = emit_exit(&b, 0);
+
+    for (size_t i = 0; i < bypass_jump_count; ++i) {
+        patch_jump(&b, bypass_jumps[i], allow_label);
+    }
+    for (size_t i = 0; i < drop_jump_count; ++i) {
+        patch_jump(&b, drop_jumps[i], drop_label);
+    }
+
+    if (b.overflow) {
+        errno = EMSGSIZE;
+        return -1;
+    }
+    return bpf2socks_load_prog(
+        b.insns,
+        b.count,
+        name,
+        BPF_PROG_TYPE_CGROUP_SOCK_ADDR,
+        BPF_CGROUP_INET6_CONNECT,
         log_error);
 }
 
@@ -818,6 +1000,7 @@ int bpf2socks_bpf_probe(
     int cgroup_fd = -1;
     int connect4_fd = -1;
     int connect6_fd = -1;
+    int connect6_v4mapped_fd = -1;
     int udp4_fd = -1;
     int udp6_fd = -1;
     int udp4_recv_fd = -1;
@@ -910,6 +1093,22 @@ int bpf2socks_bpf_probe(
             snprintf(message, message_size, "cgroup IPv6 programs cannot be loaded: errno=%d", errno);
             goto done;
         }
+    } else {
+        connect6_v4mapped_fd = build_ipv4_mapped_ipv6_sock_addr_prog(
+            policy,
+            uid_fd,
+            proxy_cidr4_fd,
+            bypass_cidr4_fd,
+            ignored_ifindex_fd,
+            ignored_route_cidr4_fd,
+            token_fd,
+            bridge_port,
+            "b2s_c6v4m",
+            false);
+        if (connect6_v4mapped_fd < 0) {
+            snprintf(message, message_size, "cgroup IPv4-mapped connect6 program cannot be loaded: errno=%d", errno);
+            goto done;
+        }
     }
 
     cgroup_fd = open_cgroup_path(config != NULL ? config->cgroup_path : NULL);
@@ -920,12 +1119,16 @@ int bpf2socks_bpf_probe(
 
     noop_connect4_fd = load_noop_sock_addr_prog(BPF_CGROUP_INET4_CONNECT, "b2s_pconn4");
     noop_udp4_fd = load_noop_sock_addr_prog(BPF_CGROUP_UDP4_SENDMSG, "b2s_pudp4");
-    if (policy->enable_ipv6) {
+    bool need_connect6_attach = policy->enable_ipv6 || connect6_v4mapped_fd >= 0;
+    if (need_connect6_attach) {
         noop_connect6_fd = load_noop_sock_addr_prog(BPF_CGROUP_INET6_CONNECT, "b2s_pconn6");
+    }
+    if (policy->enable_ipv6) {
         noop_udp6_fd = load_noop_sock_addr_prog(BPF_CGROUP_UDP6_SENDMSG, "b2s_pudp6");
     }
     if (noop_connect4_fd < 0 || noop_udp4_fd < 0 ||
-        (policy->enable_ipv6 && (noop_connect6_fd < 0 || noop_udp6_fd < 0))) {
+        (need_connect6_attach && noop_connect6_fd < 0) ||
+        (policy->enable_ipv6 && noop_udp6_fd < 0)) {
         snprintf(message, message_size, "cgroup probe program cannot be loaded: errno=%d", errno);
         goto done;
     }
@@ -944,12 +1147,14 @@ int bpf2socks_bpf_probe(
         goto done;
     }
     (void)bpf2socks_detach_prog(cgroup_fd, udp4_recv_fd, BPF_CGROUP_UDP4_RECVMSG);
-    if (policy->enable_ipv6) {
+    if (need_connect6_attach) {
         if (bpf2socks_attach_prog(cgroup_fd, noop_connect6_fd, BPF_CGROUP_INET6_CONNECT) < 0) {
             snprintf(message, message_size, "cgroup connect6 attach is unavailable: errno=%d", errno);
             goto done;
         }
         (void)bpf2socks_detach_prog(cgroup_fd, noop_connect6_fd, BPF_CGROUP_INET6_CONNECT);
+    }
+    if (policy->enable_ipv6) {
         if (bpf2socks_attach_prog(cgroup_fd, noop_udp6_fd, BPF_CGROUP_UDP6_SENDMSG) < 0) {
             snprintf(message, message_size, "cgroup udp6 sendmsg attach is unavailable: errno=%d", errno);
             goto done;
@@ -983,6 +1188,7 @@ done:
     close_fd(&udp4_recv_fd);
     close_fd(&udp6_fd);
     close_fd(&udp4_fd);
+    close_fd(&connect6_v4mapped_fd);
     close_fd(&connect6_fd);
     close_fd(&connect4_fd);
     close_fd(&cgroup_fd);
@@ -1204,6 +1410,22 @@ int bpf2socks_bpf_start(
             stage = "load cgroup IPv6 programs";
             goto fail;
         }
+    } else {
+        runtime->connect6_v4mapped_prog_fd = build_ipv4_mapped_ipv6_sock_addr_prog(
+            policy,
+            runtime->uid_map_fd,
+            runtime->proxy_cidr4_map_fd,
+            runtime->bypass_cidr4_map_fd,
+            runtime->ignored_ifindex_map_fd,
+            runtime->ignored_route_cidr4_map_fd,
+            runtime->token_map_fd,
+            config->listen_port,
+            "b2s_c6v4m",
+            true);
+        if (runtime->connect6_v4mapped_prog_fd < 0) {
+            stage = "load cgroup IPv4-mapped connect6 program";
+            goto fail;
+        }
     }
     if (bpf2socks_interface_policy_start(policy, runtime) < 0) {
         stage = "start interface policy";
@@ -1244,6 +1466,9 @@ int bpf2socks_bpf_start(
             stage = "attach udp6 recvmsg";
             goto fail;
         }
+    } else if (bpf2socks_attach_prog(runtime->cgroup_fd, runtime->connect6_v4mapped_prog_fd, BPF_CGROUP_INET6_CONNECT) < 0) {
+        stage = "attach connect6 v4mapped";
+        goto fail;
     }
     return 0;
 
@@ -1266,6 +1491,9 @@ void bpf2socks_bpf_stop(struct bpf2socks_bpf_runtime *runtime) {
         if (runtime->connect6_prog_fd >= 0) {
             (void)bpf2socks_detach_prog(runtime->cgroup_fd, runtime->connect6_prog_fd, BPF_CGROUP_INET6_CONNECT);
         }
+        if (runtime->connect6_v4mapped_prog_fd >= 0) {
+            (void)bpf2socks_detach_prog(runtime->cgroup_fd, runtime->connect6_v4mapped_prog_fd, BPF_CGROUP_INET6_CONNECT);
+        }
         if (runtime->udp4_recvmsg_prog_fd >= 0) {
             (void)bpf2socks_detach_prog(runtime->cgroup_fd, runtime->udp4_recvmsg_prog_fd, BPF_CGROUP_UDP4_RECVMSG);
         }
@@ -1283,6 +1511,7 @@ void bpf2socks_bpf_stop(struct bpf2socks_bpf_runtime *runtime) {
     close_fd(&runtime->udp4_recvmsg_prog_fd);
     close_fd(&runtime->udp6_sendmsg_prog_fd);
     close_fd(&runtime->udp4_sendmsg_prog_fd);
+    close_fd(&runtime->connect6_v4mapped_prog_fd);
     close_fd(&runtime->connect6_prog_fd);
     close_fd(&runtime->connect4_prog_fd);
     close_fd(&runtime->token_map_fd);
