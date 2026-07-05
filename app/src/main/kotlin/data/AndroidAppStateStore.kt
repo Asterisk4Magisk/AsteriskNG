@@ -34,6 +34,7 @@ class AndroidAppStateStore private constructor(
     private val saveRevision = AtomicLong(0)
     private val hasPersistedState = AtomicBoolean(false)
     private val loadedState = loadInitialState()
+    private val persistenceTracker = AppStatePersistenceTracker(loadedState.state)
     private val mutableState = MutableStateFlow(loadedState.state)
 
     init {
@@ -51,14 +52,13 @@ class AndroidAppStateStore private constructor(
             } else {
                 mutableState.value = nextState
                 PendingStateSave(
-                    previousState = previousState,
                     nextState = nextState,
                     revision = saveRevision.incrementAndGet(),
                 )
             }
         } ?: return
 
-        persist(pendingSave.previousState, pendingSave.nextState, pendingSave.revision)
+        persist(pendingSave.nextState, pendingSave.revision)
     }
 
     private fun loadInitialState(): LoadedAppState {
@@ -84,20 +84,25 @@ class AndroidAppStateStore private constructor(
         }
     }
 
-    private fun persist(previousState: AppState, nextState: AppState, revision: Long) {
+    private fun persist(nextState: AppState, revision: Long) {
         scope.launch {
             saveMutex.withLock {
                 if (revision != saveRevision.get()) {
                     return@withLock
                 }
+                val plan = persistenceTracker.plan(
+                    nextState = nextState,
+                    hasPersistedRoomState = hasPersistedState.get(),
+                )
                 runCatching {
-                    settingsPreferences.save(nextState)
+                    settingsPreferences.save(plan.nextState)
                     dao.saveState(
-                        previousState = previousState,
-                        nextState = nextState,
-                        replaceAll = !hasPersistedState.get(),
+                        previousState = plan.previousState,
+                        nextState = plan.nextState,
+                        replaceAll = plan.replaceAll,
                     )
                     hasPersistedState.set(true)
+                    persistenceTracker.markPersisted(plan.nextState)
                 }.onFailure { error ->
                     AndroidAppLogger.error(LogTag, "Failed to persist app state", error)
                     resetDatabase()
@@ -109,6 +114,7 @@ class AndroidAppStateStore private constructor(
                             replaceAll = true,
                         )
                         hasPersistedState.set(true)
+                        persistenceTracker.markPersisted(nextState)
                     }.onFailure { retryError ->
                         AndroidAppLogger.error(LogTag, "Failed to persist app state after database reset", retryError)
                     }
@@ -156,7 +162,6 @@ class AndroidAppStateStore private constructor(
 }
 
 private data class PendingStateSave(
-    val previousState: AppState,
     val nextState: AppState,
     val revision: Long,
 )
