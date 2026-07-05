@@ -80,6 +80,7 @@ fun ResourceManagementPage(
     val editCustomResourceFileUrlState = rememberTextFieldState()
     val updatingMessage = stringResource(R.string.settings_resource_files_updating)
     val updatedMessage = stringResource(R.string.settings_resource_files_updated)
+    val updatedOneMessage = stringResource(R.string.settings_resource_file_updated)
     val replacedMessage = stringResource(R.string.settings_resource_files_replaced)
     val restoredMessage = stringResource(R.string.settings_resource_files_restored)
     val deletedMessage = stringResource(R.string.settings_resource_files_deleted)
@@ -126,6 +127,37 @@ fun ResourceManagementPage(
         services.appScope.launch {
             tipNotifier.show(message)
         }
+    }
+
+    fun updateResourceFile(kind: ResourceFileKind) {
+        runResourceFileAction(
+            action = {
+                tipNotifier.show(updatingMessage)
+                resourceFileUseCase.update(
+                    kind = kind,
+                    source = appState.resourceFileUpdateSource(),
+                    options = appState.resourceFileUpdateOptions(),
+                    customResourceFiles = appState.customResourceFiles,
+                )
+            },
+            successMessage = updatedOneMessage.formatTemplate("name" to kind.displayName),
+            failureStatusCustomResourceFiles = { appState.customResourceFiles },
+        )
+    }
+
+    fun updateCustomResourceFile(file: CustomResourceFileState) {
+        runResourceFileAction(
+            action = {
+                tipNotifier.show(updatingMessage)
+                resourceFileUseCase.updateCustom(
+                    customFile = file,
+                    options = appState.resourceFileUpdateOptions(),
+                    customResourceFiles = appState.customResourceFiles,
+                )
+            },
+            successMessage = updatedOneMessage.formatTemplate("name" to file.name),
+            failureStatusCustomResourceFiles = { appState.customResourceFiles },
+        )
     }
 
     fun customResourceFileReservedNames(editingFileId: Int? = null): Set<String> {
@@ -345,6 +377,7 @@ fun ResourceManagementPage(
                             fileName = kind.displayName,
                             status = status.statusOf(kind),
                             updating = updating,
+                            onUpdate = { updateResourceFile(kind) },
                             onReplace = {
                                 runResourceFileAction(
                                     action = { resourceFileUseCase.replace(kind, appState.customResourceFiles) },
@@ -365,6 +398,7 @@ fun ResourceManagementPage(
                         CustomResourceFileCard(
                             fileStatus = status.statusOf(customFile),
                             updating = updating,
+                            onUpdate = { file -> updateCustomResourceFile(file) },
                             onReplace = { file ->
                                 runResourceFileAction(
                                     action = {

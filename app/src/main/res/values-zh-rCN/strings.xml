@@ -56,6 +56,7 @@
     <string name="common_clipboard_empty">剪贴板为空</string>
     <string name="common_clipboard_unsupported_format">剪贴板格式不支持</string>
     <string name="common_replace">替换</string>
+    <string name="common_update">更新</string>
     <string name="common_restore">恢复</string>
     <string name="common_unsupported">不支持</string>
     <string name="string_list_item_empty">条目不能为空</string>
@@ -196,6 +197,7 @@
     <string name="settings_resource_files_size">大小 {size}</string>
     <string name="settings_resource_files_updating">正在更新资源文件…</string>
     <string name="settings_resource_files_updated">资源文件已更新</string>
+    <string name="settings_resource_file_updated">{name} 已更新</string>
     <string name="settings_resource_files_replaced">{name} 已替换</string>
     <string name="settings_resource_files_restored">{name} 已恢复为内置文件</string>
     <string name="settings_resource_files_deleted">{name} 已删除</string>

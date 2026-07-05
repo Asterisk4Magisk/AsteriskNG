@@ -33,6 +33,23 @@ class ResourceFileUseCase(
         return repository.update(source, options, customResourceFiles)
     }
 
+    suspend fun update(
+        kind: ResourceFileKind,
+        source: ResourceFileUpdateSource,
+        options: ResourceFileUpdateOptions = ResourceFileUpdateOptions(),
+        customResourceFiles: List<CustomResourceFileState> = emptyList(),
+    ): ResourceFilesStatus {
+        return repository.update(kind, source, options, customResourceFiles)
+    }
+
+    suspend fun updateCustom(
+        customFile: CustomResourceFileState,
+        options: ResourceFileUpdateOptions = ResourceFileUpdateOptions(),
+        customResourceFiles: List<CustomResourceFileState> = emptyList(),
+    ): ResourceFilesStatus {
+        return repository.updateCustom(customFile, options, customResourceFiles)
+    }
+
     suspend fun renameCustom(
         previousFile: CustomResourceFileState,
         customFile: CustomResourceFileState,

@@ -56,6 +56,7 @@
     <string name="common_clipboard_empty">Clipboard is empty</string>
     <string name="common_clipboard_unsupported_format">Unsupported clipboard format</string>
     <string name="common_replace">Replace</string>
+    <string name="common_update">Update</string>
     <string name="common_restore">Restore</string>
     <string name="common_unsupported">Unsupported</string>
     <string name="string_list_item_empty">Entry cannot be empty</string>
@@ -196,6 +197,7 @@
     <string name="settings_resource_files_size">Size {size}</string>
     <string name="settings_resource_files_updating">Updating resource files…</string>
     <string name="settings_resource_files_updated">Resource files updated</string>
+    <string name="settings_resource_file_updated">{name} updated</string>
     <string name="settings_resource_files_replaced">{name} replaced</string>
     <string name="settings_resource_files_restored">{name} restored from bundled assets</string>
     <string name="settings_resource_files_deleted">{name} deleted</string>

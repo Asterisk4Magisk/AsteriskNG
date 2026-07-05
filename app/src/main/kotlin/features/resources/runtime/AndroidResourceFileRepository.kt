@@ -58,38 +58,34 @@ internal class AndroidResourceFileRepository(
         customResourceFiles: List<CustomResourceFileState> = emptyList(),
     ): ResourceFilesStatus = withContext(Dispatchers.IO) {
         updateTargets(
-            downloads = listOf(
-                ResourceFileDownloadTarget(
-                    displayName = ResourceFileKind.GeoIp.displayName,
-                    url = source.geoIpUrl,
-                    targetFile = store.file(ResourceFileKind.GeoIp),
-                    applyPermissions = { store.applyPermissions(ResourceFileKind.GeoIp) },
-                ),
-                ResourceFileDownloadTarget(
-                    displayName = ResourceFileKind.GeoSite.displayName,
-                    url = source.geoSiteUrl,
-                    targetFile = store.file(ResourceFileKind.GeoSite),
-                    applyPermissions = { store.applyPermissions(ResourceFileKind.GeoSite) },
-                ),
-                ResourceFileDownloadTarget(
-                    displayName = ResourceFileKind.GeoIpOnlyCnPrivate.displayName,
-                    url = source.geoIpOnlyCnPrivateUrl,
-                    targetFile = store.file(ResourceFileKind.GeoIpOnlyCnPrivate),
-                    applyPermissions = { store.applyPermissions(ResourceFileKind.GeoIpOnlyCnPrivate) },
-                ),
-                ResourceFileDownloadTarget(
-                    displayName = ResourceFileKind.DirectCidrIpv4.displayName,
-                    url = source.directCidrIpv4Url,
-                    targetFile = store.file(ResourceFileKind.DirectCidrIpv4),
-                    applyPermissions = { store.applyPermissions(ResourceFileKind.DirectCidrIpv4) },
-                ),
-                ResourceFileDownloadTarget(
-                    displayName = ResourceFileKind.DirectCidrIpv6.displayName,
-                    url = source.directCidrIpv6Url,
-                    targetFile = store.file(ResourceFileKind.DirectCidrIpv6),
-                    applyPermissions = { store.applyPermissions(ResourceFileKind.DirectCidrIpv6) },
-                ),
-            ) + customResourceFiles.mapNotNull { customFile -> customFile.toDownloadTargetOrNull() },
+            downloads = UpdateableResourceFileKinds.map { kind ->
+                kind.toDownloadTarget(source)
+            } + customResourceFiles.mapNotNull { customFile -> customFile.toDownloadTargetOrNull() },
+            options = options,
+            customResourceFiles = customResourceFiles,
+        )
+    }
+
+    suspend fun update(
+        kind: ResourceFileKind,
+        source: ResourceFileUpdateSource,
+        options: ResourceFileUpdateOptions,
+        customResourceFiles: List<CustomResourceFileState> = emptyList(),
+    ): ResourceFilesStatus = withContext(Dispatchers.IO) {
+        updateTargets(
+            downloads = listOf(kind.toDownloadTarget(source)),
+            options = options,
+            customResourceFiles = customResourceFiles,
+        )
+    }
+
+    suspend fun updateCustom(
+        customFile: CustomResourceFileState,
+        options: ResourceFileUpdateOptions,
+        customResourceFiles: List<CustomResourceFileState> = emptyList(),
+    ): ResourceFilesStatus = withContext(Dispatchers.IO) {
+        updateTargets(
+            downloads = listOfNotNull(customFile.toDownloadTargetOrNull()),
             options = options,
             customResourceFiles = customResourceFiles,
         )
@@ -168,6 +164,23 @@ internal class AndroidResourceFileRepository(
         )
     }
 
+    private fun ResourceFileKind.toDownloadTarget(source: ResourceFileUpdateSource): ResourceFileDownloadTarget {
+        val updateUrl = when (this) {
+            ResourceFileKind.GeoIp -> source.geoIpUrl
+            ResourceFileKind.GeoSite -> source.geoSiteUrl
+            ResourceFileKind.GeoIpOnlyCnPrivate -> source.geoIpOnlyCnPrivateUrl
+            ResourceFileKind.DirectCidrIpv4 -> source.directCidrIpv4Url
+            ResourceFileKind.DirectCidrIpv6 -> source.directCidrIpv6Url
+            ResourceFileKind.XrayCore -> error("${ResourceFileKind.XrayCore.displayName} cannot be updated from URL")
+        }
+        return ResourceFileDownloadTarget(
+            displayName = displayName,
+            url = updateUrl,
+            targetFile = store.file(this),
+            applyPermissions = { store.applyPermissions(this) },
+        )
+    }
+
     suspend fun replaceCustom(
         customFile: CustomResourceFileState,
         uri: Uri,
@@ -200,6 +213,14 @@ private data class ResourceFileDownloadTarget(
     val url: String,
     val targetFile: java.io.File,
     val applyPermissions: () -> Unit = {},
+)
+
+private val UpdateableResourceFileKinds = listOf(
+    ResourceFileKind.GeoIp,
+    ResourceFileKind.GeoSite,
+    ResourceFileKind.GeoIpOnlyCnPrivate,
+    ResourceFileKind.DirectCidrIpv4,
+    ResourceFileKind.DirectCidrIpv6,
 )
 
 private class ResourceFileDownloadFailedException(
