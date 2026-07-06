@@ -231,6 +231,11 @@ int bpf2socks_load_uid_map(int uid_map_fd, const struct bpf2socks_policy_config 
 int bpf2socks_load_direct_cidrs(int map_fd, const char *path, int expected_family);
 int bpf2socks_load_cidr_strings(int map_fd, const char cidrs[][BPF2SOCKS_MAX_CIDR_TEXT_LEN], size_t count, int expected_family);
 int bpf2socks_parse_ipv4_cidr_host(const char *cidr, uint32_t *base, uint32_t *host_bits);
+int bpf2socks_original_from_sockaddr_storage(
+    const struct sockaddr_storage *addr,
+    const struct bpf2socks_runtime_config *config,
+    uint8_t protocol,
+    struct bpf2socks_original_dst *original);
 
 long bpf2socks_bpf_sys(enum bpf_cmd cmd, union bpf_attr *attr, unsigned int size);
 int bpf2socks_create_map(enum bpf_map_type type, uint32_t key_size, uint32_t value_size, uint32_t max_entries, uint32_t flags);

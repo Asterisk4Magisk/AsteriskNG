@@ -24,6 +24,10 @@
 #define SO_ORIGINAL_DST 80
 #endif
 
+#ifndef IP6T_SO_ORIGINAL_DST
+#define IP6T_SO_ORIGINAL_DST 80
+#endif
+
 #ifndef EPOLLRDHUP
 #define EPOLLRDHUP 0x2000
 #endif
@@ -217,10 +221,6 @@ done:
     return result;
 }
 
-static bool ipv4_is_loopback(uint32_t addr_net) {
-    return (ntohl(addr_net) & 0xff000000U) == 0x7f000000U;
-}
-
 static int tcp_socks5_write_addr(uint8_t *out, size_t out_cap, const struct bpf2socks_sockaddr *addr) {
     size_t len = 0U;
     if (addr->family == AF_INET) {
@@ -327,39 +327,40 @@ static int original_to_sockaddr(const struct bpf2socks_original_dst *src, struct
     return -1;
 }
 
-static int sockaddr_in_to_original(
-    const struct sockaddr_in *addr,
-    uint8_t protocol,
+static int lookup_tcp_original_from_socket(
+    int client_fd,
+    const struct bpf2socks_runtime_config *config,
     struct bpf2socks_original_dst *original) {
-    if (addr == NULL || original == NULL || addr->sin_family != AF_INET) return -1;
-    memset(original, 0, sizeof(*original));
-    original->family = AF_INET;
-    original->protocol = protocol;
-    original->port = ntohs(addr->sin_port);
-    memcpy(original->addr, &addr->sin_addr, 4U);
-    return 0;
-}
-
-static int lookup_tcp_original_from_socket(int client_fd, struct bpf2socks_original_dst *original) {
-    struct sockaddr_in original_addr;
+    struct sockaddr_storage original_addr;
     socklen_t original_len = sizeof(original_addr);
     memset(&original_addr, 0, sizeof(original_addr));
     if (getsockopt(client_fd, SOL_IP, SO_ORIGINAL_DST, &original_addr, &original_len) == 0 &&
-        original_addr.sin_family == AF_INET &&
-        !ipv4_is_loopback(original_addr.sin_addr.s_addr)) {
-        return sockaddr_in_to_original(&original_addr, BPF2SOCKS_PROTO_TCP, original);
+        bpf2socks_original_from_sockaddr_storage(
+            &original_addr,
+            config,
+            BPF2SOCKS_PROTO_TCP,
+            original) == 0) {
+        return 0;
+    }
+
+    struct sockaddr_storage original6_addr;
+    socklen_t original6_len = sizeof(original6_addr);
+    memset(&original6_addr, 0, sizeof(original6_addr));
+    if (getsockopt(client_fd, IPPROTO_IPV6, IP6T_SO_ORIGINAL_DST, &original6_addr, &original6_len) == 0 &&
+        bpf2socks_original_from_sockaddr_storage(
+            &original6_addr,
+            config,
+            BPF2SOCKS_PROTO_TCP,
+            original) == 0) {
+        return 0;
     }
 
     struct sockaddr_storage local;
     socklen_t local_len = sizeof(local);
-    if (getsockname(client_fd, (struct sockaddr *)&local, &local_len) != 0 || local.ss_family != AF_INET) {
+    if (getsockname(client_fd, (struct sockaddr *)&local, &local_len) != 0) {
         return -1;
     }
-    const struct sockaddr_in *local_addr = (const struct sockaddr_in *)&local;
-    if (ipv4_is_loopback(local_addr->sin_addr.s_addr)) {
-        return -1;
-    }
-    return sockaddr_in_to_original(local_addr, BPF2SOCKS_PROTO_TCP, original);
+    return bpf2socks_original_from_sockaddr_storage(&local, config, BPF2SOCKS_PROTO_TCP, original);
 }
 
 static void active_add(struct tcp_worker_state *state, struct tcp_connection *connection) {
@@ -756,7 +757,7 @@ static int client_original_dst(int client_fd, const struct bpf2socks_runtime_con
     struct bpf2socks_original_dst original;
     if (fill_tcp_token_key(client_fd, &key) < 0) return -1;
     if (lookup_original_with_client_fallback(config->token_map_fd, &key, &original) < 0 &&
-        lookup_tcp_original_from_socket(client_fd, &original) < 0) {
+        lookup_tcp_original_from_socket(client_fd, config, &original) < 0) {
         return -1;
     }
     return original_to_sockaddr(&original, dst);
