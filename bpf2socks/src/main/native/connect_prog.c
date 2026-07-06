@@ -369,15 +369,6 @@ static void emit_connected_udp_original_flag(
     patch_jump(builder, not_udp, builder->count);
 }
 
-static void emit_udp_recvmsg_connected_token_bypass(
-    struct bpf_builder *builder,
-    size_t *bypass_jumps,
-    size_t *bypass_jump_count) {
-    emit(builder, BPF_LDX_MEM(BPF_B, BPF_REG_2, BPF_REG_0, offsetof(struct bpf2socks_original_dst, flags)));
-    emit(builder, BPF_ALU64_IMM_OP(BPF_AND, BPF_REG_2, BPF2SOCKS_ORIGINAL_DST_FLAG_CONNECTED_UDP));
-    bypass_jumps[(*bypass_jump_count)++] = emit_jump(builder, BPF_JMP_IMM_OP(BPF_JNE, BPF_REG_2, 0, 0));
-}
-
 static void emit_udp_peer_cache_update_v4(
     struct bpf_builder *builder,
     int udp_peer_map_fd,
@@ -1476,7 +1467,6 @@ static int build_udp4_recvmsg_prog(int token_map_fd, const char *name, bool log_
     emit(&b, BPF_ALU64_IMM_OP(BPF_ADD, BPF_REG_2, STACK_TOKEN_KEY));
     emit(&b, BPF_CALL_FUNC(BPF_FUNC_map_lookup_elem));
     bypass_jumps[bypass_jump_count++] = emit_jump(&b, BPF_JMP_IMM_OP(BPF_JEQ, BPF_REG_0, 0, 0));
-    emit_udp_recvmsg_connected_token_bypass(&b, bypass_jumps, &bypass_jump_count);
 
     emit(&b, BPF_LDX_MEM(BPF_W, BPF_REG_7, BPF_REG_0, offsetof(struct bpf2socks_original_dst, addr)));
     emit(&b, BPF_LDX_MEM(BPF_H, BPF_REG_8, BPF_REG_0, offsetof(struct bpf2socks_original_dst, port)));
@@ -1532,7 +1522,6 @@ static int build_udp6_recvmsg_prog(int token_map_fd, const char *name, bool log_
     emit(&b, BPF_ALU64_IMM_OP(BPF_ADD, BPF_REG_2, STACK_TOKEN_KEY));
     emit(&b, BPF_CALL_FUNC(BPF_FUNC_map_lookup_elem));
     bypass_jumps[bypass_jump_count++] = emit_jump(&b, BPF_JMP_IMM_OP(BPF_JEQ, BPF_REG_0, 0, 0));
-    emit_udp_recvmsg_connected_token_bypass(&b, bypass_jumps, &bypass_jump_count);
 
     emit(&b, BPF_LDX_MEM(BPF_W, BPF_REG_7, BPF_REG_0, offsetof(struct bpf2socks_original_dst, addr)));
     emit(&b, BPF_LDX_MEM(BPF_H, BPF_REG_8, BPF_REG_0, offsetof(struct bpf2socks_original_dst, port)));
@@ -1570,7 +1559,6 @@ static int build_udp6_recvmsg_prog(int token_map_fd, const char *name, bool log_
     emit(&b, BPF_ALU64_IMM_OP(BPF_ADD, BPF_REG_2, STACK_TOKEN_KEY));
     emit(&b, BPF_CALL_FUNC(BPF_FUNC_map_lookup_elem));
     bypass_jumps[bypass_jump_count++] = emit_jump(&b, BPF_JMP_IMM_OP(BPF_JEQ, BPF_REG_0, 0, 0));
-    emit_udp_recvmsg_connected_token_bypass(&b, bypass_jumps, &bypass_jump_count);
 
     emit(&b, BPF_LDX_MEM(BPF_W, BPF_REG_7, BPF_REG_0, offsetof(struct bpf2socks_original_dst, addr)));
     emit(&b, BPF_LDX_MEM(BPF_W, BPF_REG_8, BPF_REG_0, offsetof(struct bpf2socks_original_dst, addr) + 4));
