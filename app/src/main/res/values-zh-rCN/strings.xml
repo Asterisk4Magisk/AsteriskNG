@@ -104,7 +104,7 @@
     <string name="settings_broadcast_control">广播控制</string>
     <string name="settings_broadcast_control_summary">允许外部广播启动和停止代理服务</string>
     <string name="settings_root_ebpf_selinux_policy_warning_title">启用 eBPF 匹配器？</string>
-    <string name="settings_root_ebpf_selinux_policy_warning_summary">未检测到 SELinux policy 工具。启动代理时，AsteriskNG 可能无法为 netd 添加 eBPF 权限规则。仍可启用 eBPF 匹配器，但热点或网络共享可能无法正常使用，直到 root 框架提供 magiskpolicy/supolicy，或手动添加该规则。</string>
+    <string name="settings_root_ebpf_selinux_policy_warning_summary">未检测到 SELinux policy 工具。启动代理时，AsteriskNG 可能无法添加必要的 eBPF 权限规则。仍可启用 eBPF 匹配器，但热点或网络共享可能无法正常使用，直到 root 框架提供 magiskpolicy/supolicy，或手动添加这些规则。</string>
     <string name="settings_root_ebpf_selinux_policy_warning_confirm">仍然启用</string>
     <string name="settings_root_ipv6_disabler">禁用系统 IPv6</string>
     <string name="settings_root_ipv6_disabler_summary">防止 WebRTC 泄露 IPv6 地址</string>

@@ -142,10 +142,21 @@ internal fun parseRootEbpfProbeResult(value: String): RootEbpfProbeResult {
     )
 }
 
-internal const val RootEbpfSelinuxPolicyRule = "allow netd * bpf { prog_run map_read map_write }"
+internal const val RootEbpfNetdSelinuxPolicyRule = "allow netd * bpf { prog_run map_read map_write }"
+internal const val RootEbpfNetutilsWrapperSelinuxPolicyRule =
+    "allow netutils_wrapper * bpf { prog_run map_read map_write }"
+
+private val RootEbpfSelinuxPolicyRules = listOf(
+    RootEbpfNetdSelinuxPolicyRule,
+    RootEbpfNetutilsWrapperSelinuxPolicyRule,
+)
+
+private fun rootEbpfSelinuxPolicyRuleArguments(): String {
+    return RootEbpfSelinuxPolicyRules.joinToString(separator = " ") { rule -> rule.shellQuote() }
+}
 
 internal fun buildRootEbpfSelinuxPolicyApplicatorCommand(): String {
-    val policyRule = RootEbpfSelinuxPolicyRule.shellQuote()
+    val policyRule = RootEbpfNetdSelinuxPolicyRule.shellQuote()
     return buildString {
         appendScript(
             $$"""
@@ -200,7 +211,7 @@ internal fun buildRootEbpfSelinuxPolicyApplicatorCommand(): String {
 }
 
 internal fun buildApplyRootEbpfSelinuxPolicyCommand(): String {
-    val policyRule = RootEbpfSelinuxPolicyRule.shellQuote()
+    val policyRules = rootEbpfSelinuxPolicyRuleArguments()
     return buildString {
         appendScript(
             $$"""
@@ -210,11 +221,15 @@ internal fun buildApplyRootEbpfSelinuxPolicyCommand(): String {
             case "$root_ebpf_policy_applicator" in
                 magiskpolicy:*)
                     root_ebpf_policy_tool="${root_ebpf_policy_applicator#magiskpolicy:}"
-                    "$root_ebpf_policy_tool" --live $$policyRule >/dev/null 2>&1 || true
+                    for root_ebpf_policy_rule in $${policyRules}; do
+                        "$root_ebpf_policy_tool" --live "$root_ebpf_policy_rule" >/dev/null 2>&1 || true
+                    done
                     ;;
                 ksud:*)
                     root_ebpf_policy_tool="${root_ebpf_policy_applicator#ksud:}"
-                    "$root_ebpf_policy_tool" sepolicy patch $$policyRule >/dev/null 2>&1 || true
+                    for root_ebpf_policy_rule in $${policyRules}; do
+                        "$root_ebpf_policy_tool" sepolicy patch "$root_ebpf_policy_rule" >/dev/null 2>&1 || true
+                    done
                     ;;
             esac
             """,

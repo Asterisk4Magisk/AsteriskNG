@@ -95,7 +95,7 @@
     <string name="settings_root_ebpf_matcher_failed">Не удалось проверить поддержку eBPF на устройстве</string>
     <string name="settings_root_ebpf_matcher_unsupported">Это устройство не поддерживает обработку через eBPF</string>
     <string name="settings_root_ebpf_selinux_policy_warning_title">Включить eBPF-файрвол?</string>
-    <string name="settings_root_ebpf_selinux_policy_warning_summary">Инструменты сборки политик SELinux не обнаружены. AsteriskNG может не иметь возможности автоматически добавить разрешающее eBPF-правило netd при запуске прокси. Вы все равно можете включить eBPF, но раздача интернета (точка доступа/USB) может не работать, пока ваш рут-фреймворк не предоставит magiskpolicy/supolicy или правило не будет добавлено вручную.</string>
+    <string name="settings_root_ebpf_selinux_policy_warning_summary">Инструменты сборки политик SELinux не обнаружены. AsteriskNG может не иметь возможности автоматически добавить необходимые eBPF-разрешения при запуске прокси. Вы все равно можете включить eBPF, но раздача интернета (точка доступа/USB) может не работать, пока ваш рут-фреймворк не предоставит magiskpolicy/supolicy или правила не будут добавлены вручную.</string>
     <string name="settings_root_ebpf_selinux_policy_warning_confirm">Включить в любом случае</string>
     <string name="settings_root_ipv6_disabler">Отключить системный IPv6</string>
     <string name="settings_root_ipv6_disabler_summary">Предотвращает утечки IPv6-адресов через протокол WebRTC</string>

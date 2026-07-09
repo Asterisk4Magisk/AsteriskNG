@@ -104,7 +104,7 @@
     <string name="settings_broadcast_control">Broadcast control</string>
     <string name="settings_broadcast_control_summary">Allow external broadcasts to start and stop the proxy service</string>
     <string name="settings_root_ebpf_selinux_policy_warning_title">Enable eBPF matcher?</string>
-    <string name="settings_root_ebpf_selinux_policy_warning_summary">No SELinux policy tool was detected. AsteriskNG may be unable to add the netd eBPF permission rule when the proxy starts. You can still enable eBPF matching, but hotspot or tethering sharing may not work until your root framework provides magiskpolicy/supolicy or the rule is added manually.</string>
+    <string name="settings_root_ebpf_selinux_policy_warning_summary">No SELinux policy tool was detected. AsteriskNG may be unable to add the required eBPF permission rules when the proxy starts. You can still enable eBPF matching, but hotspot or tethering sharing may not work until your root framework provides magiskpolicy/supolicy or the rules are added manually.</string>
     <string name="settings_root_ebpf_selinux_policy_warning_confirm">Enable anyway</string>
     <string name="settings_root_ipv6_disabler">Disable system IPv6</string>
     <string name="settings_root_ipv6_disabler_summary">Prevent WebRTC IPv6 address leaks</string>
