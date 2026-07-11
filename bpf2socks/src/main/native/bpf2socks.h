@@ -33,8 +33,14 @@
 #define BPF2SOCKS_DEFAULT_UDP_MTU 1500U
 #define BPF2SOCKS_DEFAULT_MAX_UDP_SESSIONS 4096U
 #define BPF2SOCKS_DEFAULT_MAX_UDP_BINDINGS 16384U
-#define BPF2SOCKS_DEFAULT_MAX_UDP_BINDINGS_PER_SESSION 64U
-#define BPF2SOCKS_DEFAULT_UDP_IDLE_TIMEOUT_SECONDS 120U
+#define BPF2SOCKS_DEFAULT_UDP_IDLE_TIMEOUT_SECONDS 60U
+#define BPF2SOCKS_MIN_UDP_PENDING_BYTES (64U * 1024U)
+#define BPF2SOCKS_DEFAULT_MAX_UDP_PENDING_BYTES (32U * 1024U * 1024U)
+#define BPF2SOCKS_MAX_UDP_PENDING_BYTES (128U * 1024U * 1024U)
+#define BPF2SOCKS_DEFAULT_DNS_TRANSACTION_TIMEOUT_MILLISECONDS 60000U
+#define BPF2SOCKS_MIN_DNS_TRANSACTION_TIMEOUT_MILLISECONDS 1000U
+#define BPF2SOCKS_MAX_DNS_TRANSACTION_TIMEOUT_MILLISECONDS 600000U
+#define BPF2SOCKS_DEFAULT_NOFILE_LIMIT 65535U
 #define BPF2SOCKS_DEFAULT_TOKEN_IPV6_PREFIX "fd7a:7374:6572:6973::/64"
 #define BPF2SOCKS_TOKEN_IPV6_PREFIX_BITS 64U
 #define BPF2SOCKS_SK_LOOKUP_KEY(family, protocol, worker) \
@@ -163,8 +169,9 @@ struct bpf2socks_runtime_config {
     uint32_t udp_mtu;
     uint32_t max_udp_sessions;
     uint32_t max_udp_bindings;
-    uint32_t max_udp_bindings_per_session;
     uint32_t udp_idle_timeout_seconds;
+    uint32_t max_udp_pending_bytes;
+    uint32_t dns_transaction_timeout_milliseconds;
     int token_map_fd;
     int sk_lookup_sock_map_fd;
 };
@@ -190,6 +197,8 @@ struct bpf2socks_bridge_stats {
     uint64_t udp_binding_evictions;
     uint64_t udp_drops_malformed_socks5;
     uint64_t udp_drops_oversized;
+    uint64_t udp_drops_pending_budget;
+    uint64_t udp_pending_peak_bytes;
     uint64_t udp_send_errors;
 };
 
@@ -306,6 +315,7 @@ int bpf2socks_socks5_udp_recvmmsg(
     size_t packet_stride);
 int bpf2socks_splice_probe(char *message, size_t message_size);
 int bpf2socks_advanced_socket_probe(char *message, size_t message_size);
+int bpf2socks_raise_nofile_limit(uint32_t requested_limit);
 int bpf2socks_bridge_run(const struct bpf2socks_runtime_config *config, const char *pid_path);
 
 int bpf2socks_sk_lookup_probe(bool enable_ipv6, char *message, size_t message_size);

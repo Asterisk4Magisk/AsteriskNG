@@ -44,11 +44,8 @@
 #define BPF2SOCKS_UDP_ZEROCOPY_MIN_BYTES 8192U
 #define BPF2SOCKS_DNS_CHANNELS_PER_WORKER 2U
 #define BPF2SOCKS_DNS_MAX_TRANSACTIONS_PER_WORKER 8192U
-#define BPF2SOCKS_DNS_TRANSACTION_TIMEOUT_MS 5000ULL
 #define BPF2SOCKS_DNS_CHANNEL_REBUILD_DELAY_MS 1000ULL
 #define BPF2SOCKS_DNS_MAX_EXPIRE_PER_LOOP 64U
-#define BPF2SOCKS_UDP_PENDING_PACKETS_PER_SESSION 4U
-#define BPF2SOCKS_UDP_PENDING_PACKET_POOL_FACTOR 2U
 
 struct bpf2socks_udp_header {
     uint16_t source;
@@ -123,9 +120,6 @@ struct udp_state {
     struct bpf2socks_udp_client_session *free_sessions;
     struct bpf2socks_udp_reply_binding *bindings;
     struct bpf2socks_udp_reply_binding *free_bindings;
-    struct bpf2socks_udp_pending_packet *pending_packets;
-    struct bpf2socks_udp_pending_packet *free_pending_packets;
-    uint8_t *pending_payloads;
     struct udp_session_fd_refs *session_refs;
     struct epoll_event *events;
     struct bpf2socks_udp_client_session **session_buckets;
@@ -143,9 +137,8 @@ struct udp_state {
     size_t session_cap;
     size_t session_count;
     size_t binding_cap;
-    size_t binding_cap_per_session;
     size_t binding_count;
-    size_t pending_packet_cap;
+    struct bpf2socks_udp_pending_budget *pending_budget;
     size_t event_cap;
     uint32_t next_dns_channel;
 };
@@ -674,11 +667,7 @@ static int evict_binding(
 
 static int ensure_binding_capacity(
     struct udp_state *state,
-    struct bpf2socks_udp_client_session *session,
     struct bpf2socks_bridge_worker *worker) {
-    while (session->binding_count >= state->binding_cap_per_session) {
-        if (evict_binding(state, session, worker) < 0) return -1;
-    }
     while (state->binding_count >= state->binding_cap) {
         if (evict_binding(state, NULL, worker) < 0) return -1;
     }
@@ -759,26 +748,35 @@ static int switch_session_epoll_to_udp(struct udp_state *state, struct bpf2socks
     return add_session_udp_epoll_fd(state, session);
 }
 
-static struct bpf2socks_udp_pending_packet *alloc_pending_packet(struct udp_state *state) {
-    if (state == NULL || state->free_pending_packets == NULL) {
+static struct bpf2socks_udp_pending_packet *alloc_pending_packet(
+    struct udp_state *state,
+    size_t payload_len) {
+    if (state == NULL || state->pending_budget == NULL ||
+        payload_len > SIZE_MAX - sizeof(struct bpf2socks_udp_pending_packet)) {
         errno = ENOBUFS;
         return NULL;
     }
-    struct bpf2socks_udp_pending_packet *packet = state->free_pending_packets;
-    state->free_pending_packets = packet->next;
-    uint8_t *payload = packet->payload;
+    size_t allocation_bytes = sizeof(struct bpf2socks_udp_pending_packet) + payload_len;
+    if (bpf2socks_pending_budget_reserve(state->pending_budget, allocation_bytes) < 0) return NULL;
+    struct bpf2socks_udp_pending_packet *packet = malloc(allocation_bytes);
+    if (packet == NULL) {
+        (void)bpf2socks_pending_budget_release(state->pending_budget, allocation_bytes);
+        errno = ENOMEM;
+        return NULL;
+    }
     memset(packet, 0, sizeof(*packet));
-    packet->payload = payload;
+    packet->payload = (uint8_t *)(packet + 1);
+    packet->allocation_bytes = allocation_bytes;
     return packet;
 }
 
 static void release_pending_packet(struct udp_state *state, struct bpf2socks_udp_pending_packet *packet) {
     if (state == NULL || packet == NULL) return;
-    uint8_t *payload = packet->payload;
-    memset(packet, 0, sizeof(*packet));
-    packet->payload = payload;
-    packet->next = state->free_pending_packets;
-    state->free_pending_packets = packet;
+    size_t allocation_bytes = packet->allocation_bytes;
+    free(packet);
+    if (state->pending_budget != NULL) {
+        (void)bpf2socks_pending_budget_release(state->pending_budget, allocation_bytes);
+    }
 }
 
 static void release_session_pending_packets(struct udp_state *state, struct bpf2socks_udp_client_session *session) {
@@ -805,11 +803,7 @@ static int queue_pending_udp_packet(
         errno = EINVAL;
         return -1;
     }
-    if (session->pending_count >= BPF2SOCKS_UDP_PENDING_PACKETS_PER_SESSION) {
-        errno = ENOBUFS;
-        return -1;
-    }
-    struct bpf2socks_udp_pending_packet *packet = alloc_pending_packet(state);
+    struct bpf2socks_udp_pending_packet *packet = alloc_pending_packet(state, payload_len);
     if (packet == NULL) return -1;
     packet->original_dst = *original_dst;
     packet->payload_len = payload_len;
@@ -822,7 +816,7 @@ static int queue_pending_udp_packet(
     }
     session->pending_tail = packet;
     ++session->pending_count;
-    session->last_seen = time(NULL);
+    session->last_seen_ms = monotonic_ms();
     lru_touch(state, session);
     return 0;
 }
@@ -1148,8 +1142,7 @@ static int flush_session_pending_packets(
             count);
         if (sent <= 0) return -1;
         worker->stats.udp_packets_to_upstream += (uint64_t)sent;
-        time_t now = time(NULL);
-        session->last_seen = now;
+        session->last_seen_ms = monotonic_ms();
         lru_touch(state, session);
         for (int i = 0; i < sent; ++i) {
             struct bpf2socks_udp_pending_packet *packet = packets[i];
@@ -1227,7 +1220,7 @@ static struct bpf2socks_udp_client_session *find_session(
          session = session->next) {
         if (session->used &&
             same_sockaddr(&session->client_addr, session->client_addr_len, client_addr, client_addr_len)) {
-            session->last_seen = time(NULL);
+            session->last_seen_ms = monotonic_ms();
             lru_touch(state, session);
             return session;
         }
@@ -1316,7 +1309,7 @@ static struct bpf2socks_udp_reply_binding *create_binding(
     bool needs_original_reply_socket,
     bool fullcone,
     struct bpf2socks_bridge_worker *worker) {
-    if (ensure_binding_capacity(state, session, worker) < 0) return NULL;
+    if (ensure_binding_capacity(state, worker) < 0) return NULL;
     struct bpf2socks_udp_reply_binding *binding = alloc_binding(state);
     if (binding == NULL) return NULL;
     binding->original_dst = *original;
@@ -1324,7 +1317,7 @@ static struct bpf2socks_udp_reply_binding *create_binding(
         if (token_addr_len > sizeof(binding->token_addr)) token_addr_len = sizeof(binding->token_addr);
         memcpy(binding->token_addr, token_addr, token_addr_len);
     }
-    binding->last_seen = time(NULL);
+    binding->last_seen_ms = monotonic_ms();
     binding->connected_udp_token = connected_udp_token;
     if (needs_original_reply_socket) {
         binding->reply_fd = create_udp_client_reply_socket(original, &binding->reply_raw);
@@ -1403,7 +1396,7 @@ static struct bpf2socks_udp_client_session *get_session(
     session->used = true;
     session->client_addr = packet->client_addr;
     session->client_addr_len = packet->client_addr_len;
-    session->last_seen = time(NULL);
+    session->last_seen_ms = monotonic_ms();
     if (build_udp_associate_pipeline_request(session) < 0) {
         close_session(state, session);
         session->free_next = state->free_sessions;
@@ -1597,10 +1590,10 @@ static int flush_udp_downlink_batch(
     int sent = send_udp_downlink_mmsg(batch->fd, vec, batch->count, zerocopy);
     if (sent <= 0) return -1;
 
-    time_t now = time(NULL);
-    batch->session->last_seen = now;
+    uint64_t now_ms = monotonic_ms();
+    batch->session->last_seen_ms = now_ms;
     for (int i = 0; i < sent; ++i) {
-        batch->bindings[i]->last_seen = now;
+        batch->bindings[i]->last_seen_ms = now_ms;
         ++worker->stats.udp_packets_to_client;
     }
     if ((unsigned int)sent < batch->count) {
@@ -2159,7 +2152,7 @@ static void handle_udp_client_packets(
     (void)bpf2socks_dns_table_expire(
         &state->dns_table,
         now_ms,
-        BPF2SOCKS_DNS_TRANSACTION_TIMEOUT_MS,
+        worker->config->dns_transaction_timeout_milliseconds,
         BPF2SOCKS_DNS_MAX_EXPIRE_PER_LOOP);
 
     for (int i = 0; i < received; ++i) {
@@ -2232,7 +2225,7 @@ static void handle_udp_client_packets(
                 }
             }
             binding->connected_udp_token = packet.connected_udp_token;
-            binding->last_seen = time(NULL);
+            binding->last_seen_ms = monotonic_ms();
             binding_lru_touch(state, session, binding);
         }
 
@@ -2244,7 +2237,17 @@ static void handle_udp_client_packets(
                     packet.payload,
                     packet.payload_len,
                     payload_stride) < 0) {
-                ++worker->stats.udp_send_errors;
+                if (errno == ENOBUFS) {
+                    ++worker->stats.udp_drops_pending_budget;
+                    uint64_t drops = worker->stats.udp_drops_pending_budget;
+                    if ((drops & (drops - 1U)) == 0U) {
+                        fprintf(stderr,
+                            "dropping UDP pending packet: pending budget exhausted (drops=%llu)\n",
+                            (unsigned long long)drops);
+                    }
+                } else {
+                    ++worker->stats.udp_send_errors;
+                }
             }
             continue;
         }
@@ -2356,9 +2359,9 @@ static void handle_udp_upstream_packets(
                     drop_session(state, session);
                     return;
                 }
-                time_t now = time(NULL);
-                session->last_seen = now;
-                binding->last_seen = now;
+                uint64_t now_ms = monotonic_ms();
+                session->last_seen_ms = now_ms;
+                binding->last_seen_ms = now_ms;
                 ++worker->stats.udp_packets_to_client;
             } else {
                 if (queue_udp_downlink_batch(
@@ -2403,19 +2406,15 @@ static void handle_udp_upstream_packets(
 }
 
 static void expire_sessions(struct udp_state *state, const struct bpf2socks_runtime_config *config) {
-    time_t now = time(NULL);
+    uint64_t now_ms = monotonic_ms();
+    if (now_ms == 0U) return;
+    uint64_t timeout_ms = (uint64_t)bpf2socks_udp_effective_idle_timeout(
+        config->udp_idle_timeout_seconds,
+        BPF2SOCKS_DEFAULT_UDP_IDLE_TIMEOUT_SECONDS) * 1000ULL;
     struct bpf2socks_udp_client_session *session = state->lru_head;
     while (session != NULL) {
         struct bpf2socks_udp_client_session *next = session->lru_next;
-        uint32_t timeout = bpf2socks_udp_effective_idle_timeout(
-            config->udp_idle_timeout_seconds,
-            BPF2SOCKS_DEFAULT_UDP_IDLE_TIMEOUT_SECONDS,
-            state->session_count,
-            state->session_cap,
-            state->binding_count,
-            state->binding_cap,
-            session->stage != BPF2SOCKS_UDP_SESSION_READY);
-        if (!session->used || now - session->last_seen < (time_t)timeout) {
+        if (!session->used || now_ms - session->last_seen_ms < timeout_ms) {
             break;
         }
         drop_session(state, session);
@@ -2427,19 +2426,15 @@ static void evict_idle_bindings(
     struct udp_state *state,
     const struct bpf2socks_runtime_config *config,
     struct bpf2socks_bridge_worker *worker) {
-    time_t now = time(NULL);
-    uint32_t timeout = bpf2socks_udp_effective_idle_timeout(
+    uint64_t now_ms = monotonic_ms();
+    if (now_ms == 0U) return;
+    uint64_t timeout_ms = (uint64_t)bpf2socks_udp_effective_idle_timeout(
         config->udp_idle_timeout_seconds,
-        BPF2SOCKS_DEFAULT_UDP_IDLE_TIMEOUT_SECONDS,
-        state->session_count,
-        state->session_cap,
-        state->binding_count,
-        state->binding_cap,
-        0);
+        BPF2SOCKS_DEFAULT_UDP_IDLE_TIMEOUT_SECONDS) * 1000ULL;
     struct bpf2socks_udp_reply_binding *binding = state->binding_lru_head;
     while (binding != NULL) {
         struct bpf2socks_udp_reply_binding *next = binding->global_lru_next;
-        if (!binding->used || now - binding->last_seen < (time_t)timeout) break;
+        if (!binding->used || now_ms - binding->last_seen_ms < timeout_ms) break;
         struct bpf2socks_udp_client_session *session = binding->owner;
         destroy_binding(state, session, binding);
         ++worker->stats.udp_binding_evictions;
@@ -2447,37 +2442,29 @@ static void evict_idle_bindings(
     }
 }
 
-static int init_state(struct udp_state *state, const struct bpf2socks_runtime_config *config) {
+static int init_state(struct udp_state *state, struct bpf2socks_bridge_worker *worker) {
+    if (state == NULL || worker == NULL || worker->config == NULL || worker->udp_pending_budget == NULL ||
+        worker->udp_session_cap == 0U || worker->udp_binding_cap == 0U) {
+        errno = EINVAL;
+        return -1;
+    }
     memset(state, 0, sizeof(*state));
     state->epoll_fd = -1;
     state->dns_raw4_fd = -1;
     state->dns_raw6_fd = -1;
-    size_t max_sessions = config->max_udp_sessions;
-    if (max_sessions == 0U) max_sessions = BPF2SOCKS_DEFAULT_MAX_UDP_SESSIONS;
-    state->binding_cap = config->max_udp_bindings;
-    if (state->binding_cap == 0U) state->binding_cap = BPF2SOCKS_DEFAULT_MAX_UDP_BINDINGS;
-    state->binding_cap_per_session = config->max_udp_bindings_per_session;
-    if (state->binding_cap_per_session == 0U) {
-        state->binding_cap_per_session = BPF2SOCKS_DEFAULT_MAX_UDP_BINDINGS_PER_SESSION;
-    }
-    state->pending_packet_cap = max_sessions * BPF2SOCKS_UDP_PENDING_PACKET_POOL_FACTOR;
+    size_t max_sessions = worker->udp_session_cap;
+    state->binding_cap = worker->udp_binding_cap;
+    state->pending_budget = worker->udp_pending_budget;
     state->sessions = calloc(max_sessions, sizeof(*state->sessions));
     state->bindings = calloc(state->binding_cap, sizeof(*state->bindings));
-    state->pending_packets = calloc(state->pending_packet_cap, sizeof(*state->pending_packets));
-    size_t payload_stride = udp_payload_stride(config);
-    state->pending_payloads = calloc(state->pending_packet_cap, payload_stride);
     state->session_refs = calloc(max_sessions, sizeof(*state->session_refs));
     state->event_cap = max_sessions * 2U + 2U + BPF2SOCKS_DNS_CHANNELS_PER_WORKER * 2U;
     state->events = calloc(state->event_cap, sizeof(*state->events));
     state->session_buckets = calloc(BPF2SOCKS_SESSION_HASH_BUCKETS, sizeof(*state->session_buckets));
-    if (state->sessions == NULL || state->bindings == NULL ||
-        state->pending_packets == NULL || state->pending_payloads == NULL ||
-        state->session_refs == NULL ||
+    if (state->sessions == NULL || state->bindings == NULL || state->session_refs == NULL ||
         state->events == NULL || state->session_buckets == NULL) {
         free(state->sessions);
         free(state->bindings);
-        free(state->pending_packets);
-        free(state->pending_payloads);
         free(state->session_refs);
         free(state->events);
         free(state->session_buckets);
@@ -2499,11 +2486,6 @@ static int init_state(struct udp_state *state, const struct bpf2socks_runtime_co
         state->bindings[i].reply_fd = -1;
         state->bindings[i].free_next = state->free_bindings;
         state->free_bindings = &state->bindings[i];
-    }
-    for (size_t i = 0; i < state->pending_packet_cap; ++i) {
-        state->pending_packets[i].payload = state->pending_payloads + i * payload_stride;
-        state->pending_packets[i].next = state->free_pending_packets;
-        state->free_pending_packets = &state->pending_packets[i];
     }
     state->listener_ref.kind = UDP_FD_LISTENER4;
     state->listener_ref.fd = -1;
@@ -2527,8 +2509,6 @@ static int init_state(struct udp_state *state, const struct bpf2socks_runtime_co
         free(state->session_buckets);
         free(state->events);
         free(state->session_refs);
-        free(state->pending_payloads);
-        free(state->pending_packets);
         free(state->bindings);
         free(state->sessions);
         memset(state, 0, sizeof(*state));
@@ -2561,8 +2541,6 @@ static void free_state(struct udp_state *state) {
     free(state->session_buckets);
     free(state->events);
     free(state->session_refs);
-    free(state->pending_payloads);
-    free(state->pending_packets);
     free(state->bindings);
     free(state->sessions);
     bpf2socks_dns_table_free(&state->dns_table);
@@ -2572,7 +2550,7 @@ static void free_state(struct udp_state *state) {
 int bpf2socks_bridge_udp_worker_run(struct bpf2socks_bridge_worker *worker) {
     if (worker == NULL || worker->udp_listener_fd < 0 || worker->config == NULL) return -1;
     struct udp_state state;
-    if (init_state(&state, worker->config) < 0) return -1;
+    if (init_state(&state, worker) < 0) return -1;
 
     uint32_t batch = worker->config->udp_batch_size;
     if (batch == 0U) batch = BPF2SOCKS_DEFAULT_UDP_BATCH_SIZE;
@@ -2627,7 +2605,7 @@ int bpf2socks_bridge_udp_worker_run(struct bpf2socks_bridge_worker *worker) {
             (void)bpf2socks_dns_table_expire(
                 &state.dns_table,
                 monotonic_ms(),
-                BPF2SOCKS_DNS_TRANSACTION_TIMEOUT_MS,
+                worker->config->dns_transaction_timeout_milliseconds,
                 BPF2SOCKS_DNS_MAX_EXPIRE_PER_LOOP);
             continue;
         }
@@ -2681,7 +2659,7 @@ int bpf2socks_bridge_udp_worker_run(struct bpf2socks_bridge_worker *worker) {
         (void)bpf2socks_dns_table_expire(
             &state.dns_table,
             monotonic_ms(),
-            BPF2SOCKS_DNS_TRANSACTION_TIMEOUT_MS,
+            worker->config->dns_transaction_timeout_milliseconds,
             BPF2SOCKS_DNS_MAX_EXPIRE_PER_LOOP);
     }
 

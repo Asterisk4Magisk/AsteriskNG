@@ -190,11 +190,21 @@ static int build_sk_lookup_assign_prog(
     emit_sk_lookup_local_addr_bypass_v4(&b, direct_cidr4_map_fd, pass_jumps, &pass_jump_count);
 
     emit(&b, BPF_LDX_MEM(BPF_W, BPF_REG_9, BPF_REG_6, offsetof(struct bpf_sk_lookup, remote_ip4)));
+    /*
+     * UDP sessions are keyed by the client endpoint in bridge_udp.c and are
+     * worker-local. Keep all destinations for one client source endpoint on
+     * the same worker so they share one SOCKS UDP ASSOCIATE session. TCP
+     * retains its destination-aware distribution.
+     */
+    size_t udp_v4_hash = emit_jump(&b, BPF_JMP_IMM_OP(BPF_JEQ, BPF_REG_8, BPF2SOCKS_PROTO_UDP, 0));
     emit(&b, BPF_ALU64_REG_OP(BPF_XOR, BPF_REG_9, BPF_REG_7));
+    patch_jump(&b, udp_v4_hash, b.count);
     emit(&b, BPF_LDX_MEM(BPF_W, BPF_REG_4, BPF_REG_6, offsetof(struct bpf_sk_lookup, remote_port)));
     emit(&b, BPF_ALU64_REG_OP(BPF_XOR, BPF_REG_9, BPF_REG_4));
+    size_t udp_v4_skip_local_port = emit_jump(&b, BPF_JMP_IMM_OP(BPF_JEQ, BPF_REG_8, BPF2SOCKS_PROTO_UDP, 0));
     emit(&b, BPF_LDX_MEM(BPF_W, BPF_REG_4, BPF_REG_6, offsetof(struct bpf_sk_lookup, local_port)));
     emit(&b, BPF_ALU64_REG_OP(BPF_XOR, BPF_REG_9, BPF_REG_4));
+    patch_jump(&b, udp_v4_skip_local_port, b.count);
     emit(&b, BPF_ALU64_REG_OP(BPF_XOR, BPF_REG_9, BPF_REG_8));
     emit(&b, BPF_MOV64_IMM(BPF_REG_4, 0));
     size_t family_done = 0U;
@@ -224,6 +234,7 @@ static int build_sk_lookup_assign_prog(
         emit_sk_lookup_local_addr_bypass_v6(&b, direct_cidr6_map_fd, pass_jumps, &pass_jump_count);
 
         emit(&b, BPF_MOV64_IMM(BPF_REG_9, 0));
+        size_t udp_v6_hash = emit_jump(&b, BPF_JMP_IMM_OP(BPF_JEQ, BPF_REG_8, BPF2SOCKS_PROTO_UDP, 0));
         emit(&b, BPF_LDX_MEM(BPF_W, BPF_REG_7, BPF_REG_6, offsetof(struct bpf_sk_lookup, local_ip6)));
         emit(&b, BPF_LDX_MEM(BPF_W, BPF_REG_0, BPF_REG_6, offsetof(struct bpf_sk_lookup, local_ip6) + 4));
         emit(&b, BPF_LDX_MEM(BPF_W, BPF_REG_1, BPF_REG_6, offsetof(struct bpf_sk_lookup, local_ip6) + 8));
@@ -236,6 +247,7 @@ static int build_sk_lookup_assign_prog(
         emit(&b, BPF_ALU64_REG_OP(BPF_XOR, BPF_REG_9, BPF_REG_4));
         emit(&b, BPF_MOV64_REG(BPF_REG_4, BPF_REG_3));
         emit(&b, BPF_ALU64_REG_OP(BPF_XOR, BPF_REG_9, BPF_REG_4));
+        patch_jump(&b, udp_v6_hash, b.count);
         emit(&b, BPF_LDX_MEM(BPF_W, BPF_REG_4, BPF_REG_6, offsetof(struct bpf_sk_lookup, remote_ip6)));
         emit(&b, BPF_ALU64_REG_OP(BPF_XOR, BPF_REG_9, BPF_REG_4));
         emit(&b, BPF_LDX_MEM(BPF_W, BPF_REG_4, BPF_REG_6, offsetof(struct bpf_sk_lookup, remote_ip6) + 4));
@@ -246,8 +258,10 @@ static int build_sk_lookup_assign_prog(
         emit(&b, BPF_ALU64_REG_OP(BPF_XOR, BPF_REG_9, BPF_REG_4));
         emit(&b, BPF_LDX_MEM(BPF_W, BPF_REG_4, BPF_REG_6, offsetof(struct bpf_sk_lookup, remote_port)));
         emit(&b, BPF_ALU64_REG_OP(BPF_XOR, BPF_REG_9, BPF_REG_4));
+        size_t udp_v6_skip_local_port = emit_jump(&b, BPF_JMP_IMM_OP(BPF_JEQ, BPF_REG_8, BPF2SOCKS_PROTO_UDP, 0));
         emit(&b, BPF_LDX_MEM(BPF_W, BPF_REG_4, BPF_REG_6, offsetof(struct bpf_sk_lookup, local_port)));
         emit(&b, BPF_ALU64_REG_OP(BPF_XOR, BPF_REG_9, BPF_REG_4));
+        patch_jump(&b, udp_v6_skip_local_port, b.count);
         emit(&b, BPF_ALU64_REG_OP(BPF_XOR, BPF_REG_9, BPF_REG_8));
         emit(&b, BPF_MOV64_IMM(BPF_REG_4, 2));
 
@@ -278,7 +292,9 @@ static int build_sk_lookup_assign_prog(
     emit(&b, BPF_MOV64_REG(BPF_REG_7, BPF_REG_0));
     emit(&b, BPF_MOV64_REG(BPF_REG_1, BPF_REG_6));
     emit(&b, BPF_MOV64_REG(BPF_REG_2, BPF_REG_7));
-    emit(&b, BPF_MOV64_IMM(BPF_REG_3, BPF_SK_LOOKUP_F_REPLACE));
+    emit(&b, BPF_MOV64_IMM(
+        BPF_REG_3,
+        BPF_SK_LOOKUP_F_REPLACE | BPF_SK_LOOKUP_F_NO_REUSEPORT));
     emit(&b, BPF_CALL_FUNC(BPF_FUNC_sk_assign));
     emit(&b, BPF_MOV64_REG(BPF_REG_8, BPF_REG_0));
     emit(&b, BPF_MOV64_REG(BPF_REG_1, BPF_REG_7));

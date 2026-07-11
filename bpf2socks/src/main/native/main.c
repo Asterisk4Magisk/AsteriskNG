@@ -192,8 +192,9 @@ static void init_runtime_config_defaults(struct bpf2socks_runtime_config *config
     config->udp_mtu = BPF2SOCKS_DEFAULT_UDP_MTU;
     config->max_udp_sessions = BPF2SOCKS_DEFAULT_MAX_UDP_SESSIONS;
     config->max_udp_bindings = BPF2SOCKS_DEFAULT_MAX_UDP_BINDINGS;
-    config->max_udp_bindings_per_session = BPF2SOCKS_DEFAULT_MAX_UDP_BINDINGS_PER_SESSION;
     config->udp_idle_timeout_seconds = BPF2SOCKS_DEFAULT_UDP_IDLE_TIMEOUT_SECONDS;
+    config->max_udp_pending_bytes = BPF2SOCKS_DEFAULT_MAX_UDP_PENDING_BYTES;
+    config->dns_transaction_timeout_milliseconds = BPF2SOCKS_DEFAULT_DNS_TRANSACTION_TIMEOUT_MILLISECONDS;
 }
 
 static void init_policy_config_defaults(struct bpf2socks_policy_config *policy) {
@@ -218,12 +219,29 @@ static void normalize_runtime_tunables(struct bpf2socks_runtime_config *config) 
     if (config->udp_mtu == 0U) config->udp_mtu = BPF2SOCKS_DEFAULT_UDP_MTU;
     if (config->max_udp_sessions == 0U) config->max_udp_sessions = BPF2SOCKS_DEFAULT_MAX_UDP_SESSIONS;
     if (config->max_udp_bindings == 0U) config->max_udp_bindings = BPF2SOCKS_DEFAULT_MAX_UDP_BINDINGS;
-    if (config->max_udp_bindings_per_session == 0U) {
-        config->max_udp_bindings_per_session = BPF2SOCKS_DEFAULT_MAX_UDP_BINDINGS_PER_SESSION;
-    }
     if (config->udp_idle_timeout_seconds == 0U) {
         config->udp_idle_timeout_seconds = BPF2SOCKS_DEFAULT_UDP_IDLE_TIMEOUT_SECONDS;
     }
+    if (config->max_udp_pending_bytes == 0U) {
+        config->max_udp_pending_bytes = BPF2SOCKS_DEFAULT_MAX_UDP_PENDING_BYTES;
+    }
+    if (config->max_udp_pending_bytes < BPF2SOCKS_MIN_UDP_PENDING_BYTES) {
+        config->max_udp_pending_bytes = BPF2SOCKS_MIN_UDP_PENDING_BYTES;
+    }
+    if (config->max_udp_pending_bytes > BPF2SOCKS_MAX_UDP_PENDING_BYTES) {
+        config->max_udp_pending_bytes = BPF2SOCKS_MAX_UDP_PENDING_BYTES;
+    }
+    if (config->dns_transaction_timeout_milliseconds == 0U) {
+        config->dns_transaction_timeout_milliseconds = BPF2SOCKS_DEFAULT_DNS_TRANSACTION_TIMEOUT_MILLISECONDS;
+    }
+    if (config->dns_transaction_timeout_milliseconds < BPF2SOCKS_MIN_DNS_TRANSACTION_TIMEOUT_MILLISECONDS) {
+        config->dns_transaction_timeout_milliseconds = BPF2SOCKS_MIN_DNS_TRANSACTION_TIMEOUT_MILLISECONDS;
+    }
+    if (config->dns_transaction_timeout_milliseconds > BPF2SOCKS_MAX_DNS_TRANSACTION_TIMEOUT_MILLISECONDS) {
+        config->dns_transaction_timeout_milliseconds = BPF2SOCKS_MAX_DNS_TRANSACTION_TIMEOUT_MILLISECONDS;
+    }
+    if (config->max_udp_sessions < config->worker_count) config->worker_count = config->max_udp_sessions;
+    if (config->max_udp_bindings < config->worker_count) config->worker_count = config->max_udp_bindings;
 }
 
 static int load_runtime_config(
@@ -274,14 +292,18 @@ static int load_runtime_config(
     config->udp_mtu = json_uint(json, "udpMtu", config->udp_mtu);
     config->max_udp_sessions = json_uint(json, "maxUdpSessions", config->max_udp_sessions);
     config->max_udp_bindings = json_uint(json, "maxUdpBindings", config->max_udp_bindings);
-    config->max_udp_bindings_per_session = json_uint(
-        json,
-        "maxUdpBindingsPerSession",
-        config->max_udp_bindings_per_session);
     config->udp_idle_timeout_seconds = json_uint(
         json,
         "udpIdleTimeoutSeconds",
         config->udp_idle_timeout_seconds);
+    config->max_udp_pending_bytes = json_uint(
+        json,
+        "maxUdpPendingBytes",
+        config->max_udp_pending_bytes);
+    config->dns_transaction_timeout_milliseconds = json_uint(
+        json,
+        "dnsTransactionTimeoutMilliseconds",
+        config->dns_transaction_timeout_milliseconds);
     normalize_runtime_tunables(config);
 
     const char *policy_json = json;
@@ -491,6 +513,9 @@ static int start_with_config(const char *path, const char *pid_path) {
     struct bpf2socks_runtime_config config;
     struct bpf2socks_policy_config policy;
     if (load_runtime_config(path, &config, &policy) < 0) return 2;
+    if (bpf2socks_raise_nofile_limit(BPF2SOCKS_DEFAULT_NOFILE_LIMIT) != 0) {
+        fprintf(stderr, "failed to raise bpf2socks file descriptor limit: errno=%d\n", errno);
+    }
 
     char message[256];
     if (bpf2socks_splice_probe(message, sizeof(message)) < 0) {

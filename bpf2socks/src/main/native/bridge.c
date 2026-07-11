@@ -339,6 +339,7 @@ static void add_worker_stats(struct bpf2socks_bridge_stats *total, const struct 
     total->udp_binding_evictions += stats->udp_binding_evictions;
     total->udp_drops_malformed_socks5 += stats->udp_drops_malformed_socks5;
     total->udp_drops_oversized += stats->udp_drops_oversized;
+    total->udp_drops_pending_budget += stats->udp_drops_pending_budget;
     total->udp_send_errors += stats->udp_send_errors;
 }
 
@@ -363,6 +364,10 @@ static void aggregate_worker_stats(
     if (workers == NULL) return;
     for (uint32_t i = 0; i < worker_count; ++i) {
         add_worker_stats(out, &workers[i].stats);
+        size_t peak = bpf2socks_pending_budget_peak(workers[i].udp_pending_budget);
+        if ((uint64_t)peak > out->udp_pending_peak_bytes) {
+            out->udp_pending_peak_bytes = (uint64_t)peak;
+        }
     }
 }
 
@@ -430,6 +435,8 @@ static int start_stats_thread(
 int bpf2socks_bridge_run(const struct bpf2socks_runtime_config *config, const char *pid_path) {
     if (config == NULL) return -1;
     uint32_t worker_count = normalized_worker_count(config);
+    struct bpf2socks_udp_pending_budget udp_pending_budget;
+    bpf2socks_pending_budget_init(&udp_pending_budget, config->max_udp_pending_bytes);
     struct sockaddr_storage socks_addr;
     socklen_t socks_addr_len = 0;
     if (bpf2socks_resolve_tcp_addr(config->socks_host, config->socks_port, &socks_addr, &socks_addr_len) < 0) {
@@ -456,6 +463,9 @@ int bpf2socks_bridge_run(const struct bpf2socks_runtime_config *config, const ch
         workers[i].socks_addr = socks_addr;
         workers[i].socks_addr_len = socks_addr_len;
         workers[i].config = config;
+        workers[i].udp_session_cap = bpf2socks_worker_quota(config->max_udp_sessions, i, worker_count);
+        workers[i].udp_binding_cap = bpf2socks_worker_quota(config->max_udp_bindings, i, worker_count);
+        workers[i].udp_pending_budget = &udp_pending_budget;
 
         if (config->enable_udp) {
             workers[i].udp_listener_fd = bind_udp_listener(config);

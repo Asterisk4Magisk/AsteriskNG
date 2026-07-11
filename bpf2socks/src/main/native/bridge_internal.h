@@ -8,6 +8,7 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdatomic.h>
 #include <stdint.h>
 #include <sys/socket.h>
 #include <time.h>
@@ -16,6 +17,12 @@
 #define BPF2SOCKS_UDP_BUFFER_SIZE 65535U
 #define BPF2SOCKS_SESSION_HASH_BUCKETS 4096U
 #define BPF2SOCKS_MAX_SOCKS5_UDP_HEADER 22U
+
+struct bpf2socks_udp_pending_budget {
+    size_t cap_bytes;
+    atomic_size_t used_bytes;
+    atomic_size_t peak_bytes;
+};
 
 struct bpf2socks_bridge_worker {
     uint32_t id;
@@ -27,6 +34,9 @@ struct bpf2socks_bridge_worker {
     struct sockaddr_storage socks_addr;
     socklen_t socks_addr_len;
     const struct bpf2socks_runtime_config *config;
+    size_t udp_session_cap;
+    size_t udp_binding_cap;
+    struct bpf2socks_udp_pending_budget *udp_pending_budget;
     struct bpf2socks_bridge_stats stats;
 };
 
@@ -37,7 +47,7 @@ struct bpf2socks_udp_reply_binding {
     bool connected_udp_token;
     int reply_fd;
     bool reply_raw;
-    time_t last_seen;
+    uint64_t last_seen_ms;
     struct bpf2socks_udp_client_session *owner;
     struct bpf2socks_udp_reply_binding *next;
     struct bpf2socks_udp_reply_binding *lru_prev;
@@ -51,6 +61,7 @@ struct bpf2socks_udp_pending_packet {
     struct bpf2socks_sockaddr original_dst;
     uint8_t *payload;
     size_t payload_len;
+    size_t allocation_bytes;
     struct bpf2socks_udp_pending_packet *next;
 };
 
@@ -72,7 +83,7 @@ struct bpf2socks_udp_client_session {
     int udp_fd;
     struct sockaddr_storage relay_addr;
     socklen_t relay_addr_len;
-    time_t last_seen;
+    uint64_t last_seen_ms;
     uint8_t associate_write_buf[32];
     size_t associate_write_len;
     size_t associate_write_offset;
@@ -93,14 +104,15 @@ struct bpf2socks_udp_client_session {
 };
 
 uint32_t bpf2socks_hash_bytes(const void *data, size_t len);
+uint32_t bpf2socks_worker_quota(uint32_t total, uint32_t worker_id, uint32_t worker_count);
 uint32_t bpf2socks_udp_effective_idle_timeout(
     uint32_t configured_timeout,
-    uint32_t default_timeout,
-    uint64_t session_count,
-    uint64_t session_cap,
-    uint64_t binding_count,
-    uint64_t binding_cap,
-    int pending);
+    uint32_t default_timeout);
+void bpf2socks_pending_budget_init(struct bpf2socks_udp_pending_budget *budget, size_t cap_bytes);
+int bpf2socks_pending_budget_reserve(struct bpf2socks_udp_pending_budget *budget, size_t bytes);
+int bpf2socks_pending_budget_release(struct bpf2socks_udp_pending_budget *budget, size_t bytes);
+size_t bpf2socks_pending_budget_used(const struct bpf2socks_udp_pending_budget *budget);
+size_t bpf2socks_pending_budget_peak(const struct bpf2socks_udp_pending_budget *budget);
 int bpf2socks_bridge_set_nonblocking(int fd);
 uint32_t bpf2socks_bridge_clamp_socket_buffer(uint32_t requested, uint32_t fallback);
 void bpf2socks_bridge_tune_socket_buffers(int fd, uint32_t recv_size, uint32_t send_size);
