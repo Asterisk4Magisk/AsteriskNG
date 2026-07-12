@@ -74,7 +74,7 @@
     <string name="settings_color_mode">Theme</string>
     <string name="settings_language">Language</string>
     <string name="settings_theme_color">Accent color</string>
-    <string name="settings_subscriptions">Subscriptions</string>
+    <string name="settings_general">General</string>
     <string name="settings_group_management">Group management</string>
     <string name="settings_group_management_summary">Edit subscription URLs, group names, and enabled state</string>
     <string name="settings_enable_all_proxy_group">Enable "All" group</string>

@@ -73,7 +73,7 @@ internal fun SettingsSubscriptionsSection(
     onOpenResourceManagement: () -> Unit,
     onEnableAllProxyGroupChange: (Boolean) -> Unit,
 ) {
-    SmallTitle(text = stringResource(R.string.settings_subscriptions))
+    SmallTitle(text = stringResource(R.string.settings_general))
     SettingsSectionCard {
         ArrowPreference(
             title = stringResource(R.string.settings_group_management),

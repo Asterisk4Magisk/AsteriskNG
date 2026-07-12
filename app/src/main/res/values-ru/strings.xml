@@ -69,7 +69,7 @@
     <string name="settings_color_mode">Цветовой режим</string>
     <string name="settings_language">Язык</string>
     <string name="settings_theme_color">Цветовой акцент</string>
-    <string name="settings_subscriptions">Подписки</string>
+    <string name="settings_general">Общие</string>
     <string name="settings_group_management">Управление группами</string>
     <string name="settings_group_management_summary">Редактирование URL-адресов подписок, имен групп и их состояния</string>
     <string name="settings_enable_all_proxy_group">Включить группу «Все»</string>

@@ -227,7 +227,7 @@ private fun SettingsContent(
                     onLanguageModeChange = { index -> updateAppState { state -> state.copy(languageMode = index) } },
                 )
             }
-            item(key = "settings_subscriptions") {
+            item(key = "settings_general") {
                 SettingsSubscriptionsSection(
                     enableAllProxyGroup = appState.enableAllProxyGroup,
                     onOpenGroupManagement = { navigator.push(Route.SubscriptionGroupList) },

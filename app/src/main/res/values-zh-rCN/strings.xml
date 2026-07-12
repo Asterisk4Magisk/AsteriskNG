@@ -74,7 +74,7 @@
     <string name="settings_color_mode">主题</string>
     <string name="settings_language">语言</string>
     <string name="settings_theme_color">强调色</string>
-    <string name="settings_subscriptions">订阅</string>
+    <string name="settings_general">常规</string>
     <string name="settings_group_management">分组管理</string>
     <string name="settings_group_management_summary">编辑订阅地址、分组名称和启用状态</string>
     <string name="settings_enable_all_proxy_group">启用“全部”分组</string>
