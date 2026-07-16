@@ -18,9 +18,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import app.modes.ColorModeDark
+import app.modes.ColorModeLight
 import app.modes.LanguageModeEnglish
 import app.modes.LanguageModeRussian
 import app.modes.LanguageModeSimplifiedChinese
+import app.modes.normalizeColorMode
 import java.util.Locale
 
 private fun languageTagForMode(mode: Int): String? = when (mode) {
@@ -75,20 +78,36 @@ private fun String?.toAppLocale(systemLocale: Locale): Locale {
     return this?.let(Locale::forLanguageTag) ?: systemLocale
 }
 
-internal fun Context.localizedAppContext(languageMode: Int): Context {
+internal fun Context.localizedAppContext(
+    languageMode: Int,
+    colorMode: Int? = null,
+): Context {
     val locale = languageTagForMode(languageMode).toAppLocale(resources.configuration.primaryLocale())
-    return createConfigurationContext(localizedConfiguration(locale))
+    return createConfigurationContext(localizedConfiguration(locale, colorMode))
 }
 
 private fun Configuration.primaryLocale(): Locale {
     return locales[0] ?: Locale.getDefault()
 }
 
-private fun Context.localizedConfiguration(locale: Locale): Configuration {
+private fun Context.localizedConfiguration(
+    locale: Locale,
+    colorMode: Int? = null,
+): Configuration {
     return Configuration(resources.configuration).apply {
         setLocales(LocaleList(locale))
         setLayoutDirection(locale)
+        colorMode?.let(::applyAppColorMode)
     }
+}
+
+private fun Configuration.applyAppColorMode(colorMode: Int) {
+    val nightMode = when (normalizeColorMode(colorMode)) {
+        ColorModeLight -> Configuration.UI_MODE_NIGHT_NO
+        ColorModeDark -> Configuration.UI_MODE_NIGHT_YES
+        else -> return
+    }
+    uiMode = (uiMode and Configuration.UI_MODE_NIGHT_MASK.inv()) or nightMode
 }
 
 private tailrec fun Context.findActivity(): Activity? {

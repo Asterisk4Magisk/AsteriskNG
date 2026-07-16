@@ -7,11 +7,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.input.OffsetMapping
-import androidx.compose.ui.text.input.TransformedText
-import androidx.compose.ui.text.input.VisualTransformation
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import ui.isInDarkTheme
 
@@ -27,6 +22,7 @@ internal fun rememberJsonEditorColors(): JsonEditorColors {
     return remember(primary, background, foreground, darkTheme, onSurfaceVariantSummary, onSecondaryContainer) {
         val primaryHue = primary.hue()
         JsonEditorColors(
+            darkTheme = darkTheme,
             accent = primary,
             foreground = foreground,
             background = background,
@@ -35,6 +31,8 @@ internal fun rememberJsonEditorColors(): JsonEditorColors {
             border = primary.copy(alpha = if (darkTheme) 0.20f else 0.14f),
             lineNumber = onSurfaceVariantSummary.copy(alpha = if (darkTheme) 0.78f else 0.68f),
             placeholder = onSecondaryContainer.copy(alpha = if (darkTheme) 0.70f else 0.58f),
+            selection = primary.copy(alpha = if (darkTheme) 0.34f else 0.24f),
+            currentLine = primary.copy(alpha = if (darkTheme) 0.10f else 0.06f),
             formatButtonBackground = primary.copy(alpha = if (darkTheme) 0.18f else 0.14f),
             syntax = JsonSyntaxColors(
                 key = vividThemeColor(primaryHue, hueOffset = 0f, darkTheme = darkTheme),
@@ -47,17 +45,8 @@ internal fun rememberJsonEditorColors(): JsonEditorColors {
     }
 }
 
-@Composable
-internal fun rememberJsonSyntaxHighlightTransformation(
-    colors: JsonEditorColors,
-): VisualTransformation {
-    val syntaxColors = colors.syntax
-    return remember(syntaxColors) {
-        JsonSyntaxHighlightTransformation(syntaxColors)
-    }
-}
-
 internal data class JsonEditorColors(
+    val darkTheme: Boolean,
     val accent: Color,
     val foreground: Color,
     val background: Color,
@@ -66,6 +55,8 @@ internal data class JsonEditorColors(
     val border: Color,
     val lineNumber: Color,
     val placeholder: Color,
+    val selection: Color,
+    val currentLine: Color,
     val formatButtonBackground: Color,
     val syntax: JsonSyntaxColors,
 )
@@ -78,54 +69,75 @@ internal data class JsonSyntaxColors(
     val punctuation: Color,
 )
 
-private class JsonSyntaxHighlightTransformation(
-    private val colors: JsonSyntaxColors,
-) : VisualTransformation {
-    override fun filter(text: AnnotatedString): TransformedText {
-        return TransformedText(highlightJson(text.text, colors), OffsetMapping.Identity)
-    }
+internal enum class JsonTokenKind {
+    Normal,
+    Key,
+    String,
+    Number,
+    Literal,
+    Punctuation,
 }
 
-private fun highlightJson(
-    text: String,
-    colors: JsonSyntaxColors,
-): AnnotatedString {
-    val builder = AnnotatedString.Builder(text)
+internal data class JsonToken(
+    val start: Int,
+    val kind: JsonTokenKind,
+)
+
+internal fun tokenizeJsonLine(line: CharSequence): List<JsonToken> {
+    val text = line.toString()
+    val tokens = mutableListOf<JsonToken>()
     var index = 0
     while (index < text.length) {
-        when (val char = text[index]) {
+        val start = index
+        when (text[index]) {
             '"' -> {
-                val end = text.stringTokenEnd(index)
-                val tokenColor = if (text.isObjectKey(end)) colors.key else colors.string
-                builder.addStyle(SpanStyle(color = tokenColor), index, end)
-                index = end
+                index = text.stringTokenEnd(index)
+                tokens += JsonToken(
+                    start = start,
+                    kind = if (text.isObjectKey(index)) JsonTokenKind.Key else JsonTokenKind.String,
+                )
             }
 
             '-', in '0'..'9' -> {
-                val end = text.numberTokenEnd(index)
-                builder.addStyle(SpanStyle(color = colors.number), index, end)
-                index = end
+                index = text.numberTokenEnd(index)
+                tokens += JsonToken(start, JsonTokenKind.Number)
             }
 
             't', 'f', 'n' -> {
                 val end = text.literalTokenEnd(index)
                 if (end > index) {
-                    builder.addStyle(SpanStyle(color = colors.literal), index, end)
                     index = end
+                    tokens += JsonToken(start, JsonTokenKind.Literal)
                 } else {
                     index += 1
+                    tokens += JsonToken(start, JsonTokenKind.Normal)
                 }
             }
 
             '{', '}', '[', ']', ':', ',' -> {
-                builder.addStyle(SpanStyle(color = colors.punctuation), index, index + 1)
                 index += 1
+                tokens += JsonToken(start, JsonTokenKind.Punctuation)
             }
 
-            else -> index += 1
+            else -> {
+                index += 1
+                while (index < text.length && !text.isJsonTokenStart(index)) {
+                    index += 1
+                }
+                tokens += JsonToken(start, JsonTokenKind.Normal)
+            }
         }
     }
-    return builder.toAnnotatedString()
+    return tokens.ifEmpty { listOf(JsonToken(0, JsonTokenKind.Normal)) }
+}
+
+private fun String.isJsonTokenStart(index: Int): Boolean {
+    val char = this[index]
+    return char == '"' ||
+        char == '-' ||
+        char.isDigit() ||
+        char in JsonLiteralStarts ||
+        char in JsonPunctuation
 }
 
 private fun String.stringTokenEnd(start: Int): Int {
@@ -171,9 +183,6 @@ private fun String.literalTokenEnd(start: Int): Int {
     return if (boundaryBefore && boundaryAfter) end else start
 }
 
-private val JsonNumberTokenChars = setOf('-', '+', '.', 'e', 'E') + ('0'..'9')
-private val JsonLiterals = listOf("true", "false", "null")
-
 private fun Color.hue(): Float {
     val hsv = FloatArray(3)
     android.graphics.Color.colorToHSV(toArgb(), hsv)
@@ -204,3 +213,8 @@ private fun Float.floorMod(modulus: Float): Float {
     val result = this % modulus
     return if (result < 0f) result + modulus else result
 }
+
+private val JsonNumberTokenChars = setOf('-', '+', '.', 'e', 'E') + ('0'..'9')
+private val JsonLiterals = listOf("true", "false", "null")
+private val JsonLiteralStarts = setOf('t', 'f', 'n')
+private val JsonPunctuation = setOf('{', '}', '[', ']', ':', ',')

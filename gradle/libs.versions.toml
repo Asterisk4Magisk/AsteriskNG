@@ -17,6 +17,7 @@ protobuf = "4.35.1"
 protobuf-plugin = "0.10.0"
 reorderable = "3.1.0"
 snakeyaml-engine = "3.0.1"
+sora-editor = "0.24.6"
 zxing-android-embedded = "4.3.0"
 
 [libraries]
@@ -43,6 +44,7 @@ miuix-ui = { module = "top.yukonga.miuix.kmp:miuix-ui", version.ref = "miuix" }
 protobuf-javalite = { module = "com.google.protobuf:protobuf-javalite", version.ref = "protobuf" }
 reorderable = { module = "sh.calvin.reorderable:reorderable", version.ref = "reorderable" }
 snakeyaml-engine = { module = "org.snakeyaml:snakeyaml-engine", version.ref = "snakeyaml-engine" }
+sora-editor = { module = "io.github.rosemoe:editor", version.ref = "sora-editor" }
 zxing-android-embedded = { module = "com.journeyapps:zxing-android-embedded", version.ref = "zxing-android-embedded" }
 
 [plugins]

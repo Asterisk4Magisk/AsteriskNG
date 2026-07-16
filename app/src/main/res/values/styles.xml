@@ -3,5 +3,10 @@
         <item name="android:windowActionBar">false</item>
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowBackground">@color/splash_background</item>
+    </style>
+
+    <style name="AppTheme.Starting" parent="AppTheme">
+        <item name="android:windowBackground">@color/splash_background</item>
     </style>
 </resources>

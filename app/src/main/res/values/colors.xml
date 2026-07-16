@@ -2,4 +2,7 @@
     <color name="ic_launcher_background">#E6D5F4</color>
     <color name="ic_launcher_monet_background">#EDE2F8</color>
     <color name="ic_launcher_monet_foreground">#7E57C2</color>
+    <color name="splash_background_light">#FFFBFE</color>
+    <color name="splash_background_dark">#141218</color>
+    <color name="splash_background">@color/splash_background_light</color>
 </resources>

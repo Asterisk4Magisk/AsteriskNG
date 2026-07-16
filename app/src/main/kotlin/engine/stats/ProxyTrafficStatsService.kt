@@ -41,6 +41,8 @@ class ProxyTrafficStatsService : Service() {
         }
     }
     private var pollingJob: Job? = null
+    private var activeRuntime: ProxyTrafficStatsRuntime? = null
+    private var accumulator = XrayTrafficSessionAccumulator()
 
     override fun onCreate() {
         super.onCreate()
@@ -65,6 +67,13 @@ class ProxyTrafficStatsService : Service() {
             return START_NOT_STICKY
         }
 
+        if (runtime == activeRuntime && pollingJob?.isActive == true) {
+            return START_STICKY
+        }
+        if (runtime != activeRuntime) {
+            accumulator = XrayTrafficSessionAccumulator()
+        }
+        activeRuntime = runtime
         startStats(runtime)
         return START_STICKY
     }
@@ -72,6 +81,7 @@ class ProxyTrafficStatsService : Service() {
     override fun onDestroy() {
         pollingJob?.cancel()
         pollingJob = null
+        activeRuntime = null
         serviceJob.cancel()
         super.onDestroy()
     }
@@ -90,8 +100,8 @@ class ProxyTrafficStatsService : Service() {
         }.isSuccess
         if (!foregroundStarted) return
 
+        val sessionAccumulator = accumulator
         pollingJob = serviceScope.launch {
-            val accumulator = XrayTrafficSessionAccumulator()
             var lastPollAt = SystemClock.elapsedRealtime()
             var failures = 0
             XrayStatsClient(
@@ -111,7 +121,7 @@ class ProxyTrafficStatsService : Service() {
                             NotificationId,
                             buildNotification(
                                 runtime = runtime,
-                                sample = accumulator.record(delta, elapsedMillis),
+                                sample = sessionAccumulator.record(delta, elapsedMillis),
                             ),
                         )
                     }.onFailure { error ->
@@ -130,6 +140,8 @@ class ProxyTrafficStatsService : Service() {
     private fun stopStats() {
         pollingJob?.cancel()
         pollingJob = null
+        activeRuntime = null
+        accumulator = XrayTrafficSessionAccumulator()
         runCatching {
             stopForeground(STOP_FOREGROUND_REMOVE)
         }
