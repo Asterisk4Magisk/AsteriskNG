@@ -58,6 +58,7 @@ internal object XraySpeedTestConfigFactory {
             outbounds = buildXrayOutbounds(
                 appState = speedTestState,
                 proxyOutbounds = outboundPlan.proxyOutbounds,
+                primaryOutboundTag = XrayTags.PROXY,
             ),
             observatory = buildXrayObservatory(outboundPlan.observatorySelectors),
             burstObservatory = buildXrayBurstObservatory(outboundPlan.burstObservatorySelectors),
@@ -86,7 +87,11 @@ private fun buildGeneratedXrayConfig(request: XrayConfigRequest): GeneratedXrayC
         log = request.buildXrayLogConfig(),
         dns = buildXrayDnsConfig(dnsPlan),
         inbounds = request.inbounds.toJsonObjectArray(),
-        outbounds = buildXrayOutbounds(request.appState, outboundPlan.proxyOutbounds),
+        outbounds = buildXrayOutbounds(
+            appState = request.appState,
+            proxyOutbounds = outboundPlan.proxyOutbounds,
+            primaryOutboundTag = routingPlan.primaryOutboundTag,
+        ),
         routing = buildXrayRouting(routingPlan),
         fakeDns = dnsPlan.fakeDns,
         observatory = buildXrayObservatory(outboundPlan.observatorySelectors),

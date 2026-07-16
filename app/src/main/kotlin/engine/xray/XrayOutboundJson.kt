@@ -18,8 +18,12 @@ import utils.toIntCoercedInOrDefault
 internal fun buildXrayOutbounds(
     appState: AppState,
     proxyOutbounds: List<XrayProxyOutboundServer>,
+    primaryOutboundTag: String? = appState.defaultRouteOutboundTag,
 ): JsonArray {
-    return buildJsonArray {
+    val outbounds = buildJsonArray {
+        if (primaryOutboundTag?.trim() == XrayTags.DEFAULT_ROUTE_LOOPBACK) {
+            add(buildDefaultRouteOutbound())
+        }
         proxyOutbounds.forEach { outboundServer ->
             add(buildProxyOutbound(appState, outboundServer))
         }
@@ -30,6 +34,18 @@ internal fun buildXrayOutbounds(
         }
         if (appState.enableFragment) {
             add(buildFragmentOutbound(appState))
+        }
+    }
+    val primaryIndex = outbounds.indexOfFirst { outbound ->
+        (outbound as? JsonObject)?.stringValue("tag") == primaryOutboundTag?.trim()
+    }
+    if (primaryIndex <= 0) return outbounds
+    return buildJsonArray {
+        add(outbounds[primaryIndex])
+        outbounds.forEachIndexed { index, outbound ->
+            if (index != primaryIndex) {
+                add(outbound)
+            }
         }
     }
 }
@@ -145,6 +161,19 @@ internal fun buildFreedomOutbound(tag: String, domainStrategy: String): JsonObje
             "settings",
             buildJsonObject {
                 put("domainStrategy", domainStrategy)
+            },
+        )
+    }
+}
+
+private fun buildDefaultRouteOutbound(): JsonObject {
+    return buildJsonObject {
+        put("tag", XrayTags.DEFAULT_ROUTE_LOOPBACK)
+        put("protocol", XrayProtocols.LOOPBACK)
+        put(
+            "settings",
+            buildJsonObject {
+                put("inboundTag", XrayTags.DEFAULT_ROUTE_LOOPBACK_INBOUND)
             },
         )
     }

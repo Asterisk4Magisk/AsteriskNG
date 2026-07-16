@@ -3,6 +3,7 @@
 
 package engine.stats
 
+import engine.xray.XrayTags
 import java.util.Locale
 
 internal enum class XrayTrafficDirection {
@@ -117,4 +118,5 @@ private val ExcludedProxyTrafficOutboundTags = setOf(
     "dns-out",
     "fragment",
     "api",
+    XrayTags.DEFAULT_ROUTE_LOOPBACK,
 )

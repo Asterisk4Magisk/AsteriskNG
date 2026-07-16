@@ -52,6 +52,8 @@ internal object XrayTags {
     const val TUN2SOCKS_HTTP_INBOUND = "tun2socks-http-in"
     const val BPF2SOCKS_INBOUND = "bpf2socks-in"
     const val BPF2SOCKS_HTTP_INBOUND = "bpf2socks-http-in"
+    const val DEFAULT_ROUTE_LOOPBACK = "asterisk-internal-default-route-loopback"
+    const val DEFAULT_ROUTE_LOOPBACK_INBOUND = "asterisk-internal-default-route-loopback-in"
 
     val FIXED_OUTBOUND_TAGS = setOf(
         PROXY,
@@ -70,6 +72,7 @@ internal object XrayProtocols {
     const val SOCKS = "socks"
     const val HTTP = "http"
     const val TUNNEL = "tunnel"
+    const val LOOPBACK = "loopback"
 }
 
 internal fun xraySniffingDestOverrides(enableFakeDns: Boolean): List<String> {
