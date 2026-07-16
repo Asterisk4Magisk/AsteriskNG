@@ -3,12 +3,16 @@
 
 package ui
 
+import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
 import app.modes.ColorModeDark
 import app.modes.ColorModeLight
 import app.modes.ColorModeSystem
@@ -59,6 +63,7 @@ fun AppTheme(
     }
     CompositionLocalProvider(LocalColorMode provides colorMode) {
         MiuixTheme(controller) {
+            SystemBarAppearance(isDark = isInDarkTheme())
             content()
         }
     }
@@ -71,6 +76,16 @@ fun isInDarkTheme(): Boolean = when (LocalColorMode.current) {
     ColorModeDark,
     ColorModeThemeDark -> true
     else -> isSystemInDarkTheme()
+}
+
+@Composable
+private fun SystemBarAppearance(isDark: Boolean) {
+    val view = LocalView.current
+    if (view.isInEditMode) return
+    SideEffect {
+        val window = (view.context as? Activity)?.window ?: return@SideEffect
+        WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !isDark
+    }
 }
 
 val KeyColors: List<Color> = listOf(
