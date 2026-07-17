@@ -12,6 +12,9 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.RandomAccessFile
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.TimeZone
 
 internal data class CoreLogFile(
     val path: String,
@@ -97,6 +100,27 @@ internal data class ParsedCoreLogLine(
 
 private val XrayLogLineRegex = Regex("""^(\d{4}/\d{2}/\d{2}\s+\d{2}:\d{2}:\d{2})\s+\[([A-Za-z]+)]\s*(.*)$""")
 private val XrayLogLineWithoutLevelRegex = Regex("""^(\d{4}/\d{2}/\d{2}\s+\d{2}:\d{2}:\d{2})\s+(.*)$""")
+private val XrayLogTimeWhitespaceRegex = Regex("\\s+")
+private const val XrayLogTimeFormat = "yyyy-MM-dd HH:mm:ss"
+
+// Xray-core (Go) timestamps are UTC on Android: Go's runtime stubs the local
+// timezone to UTC and ignores $TZ (src/time/zoneinfo_android.go initLocal), and
+// libv2ray embeds no tzdata. Parse the captured stamp as UTC, render in the
+// device's local timezone so the viewer shows wall-clock time.
+private val utcXrayLogTimeParser = ThreadLocal.withInitial {
+    SimpleDateFormat(XrayLogTimeFormat, Locale.ROOT).apply { timeZone = TimeZone.getTimeZone("UTC") }
+}
+private val localXrayLogTimeFormatter = ThreadLocal.withInitial {
+    SimpleDateFormat(XrayLogTimeFormat, Locale.ROOT).apply { timeZone = TimeZone.getDefault() }
+}
+
+private fun toLocalXrayLogTime(rawXrayTime: String): String? {
+    val normalized = rawXrayTime.replace('/', '-').replace(XrayLogTimeWhitespaceRegex, " ")
+    val instant = runCatching { utcXrayLogTimeParser.get().parse(normalized) }.getOrNull() ?: return null
+    val formatter = localXrayLogTimeFormatter.get()
+    formatter.timeZone = TimeZone.getDefault()
+    return runCatching { formatter.format(instant) }.getOrNull()
+}
 
 internal fun CoreLogRepository.appendParsedCoreLogLine(line: String, defaultLevel: String) {
     val parsedLine = parseCoreLogLine(line, defaultLevel) ?: return
@@ -116,7 +140,7 @@ internal fun parseCoreLogLine(line: String, defaultLevel: String): ParsedCoreLog
     XrayLogLineRegex.matchEntire(trimmedLine)?.let { match ->
         val (time, level, message) = match.destructured
         return ParsedCoreLogLine(
-            time = time.replace('/', '-'),
+            time = toLocalXrayLogTime(time) ?: time.replace('/', '-'),
             level = level,
             message = message,
         )
@@ -125,7 +149,7 @@ internal fun parseCoreLogLine(line: String, defaultLevel: String): ParsedCoreLog
     XrayLogLineWithoutLevelRegex.matchEntire(trimmedLine)?.let { match ->
         val (time, message) = match.destructured
         return ParsedCoreLogLine(
-            time = time.replace('/', '-'),
+            time = toLocalXrayLogTime(time) ?: time.replace('/', '-'),
             level = defaultLevel,
             message = message,
         )
