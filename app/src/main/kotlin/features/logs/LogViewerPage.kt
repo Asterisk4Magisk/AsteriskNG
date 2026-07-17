@@ -41,6 +41,7 @@ import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.PullToRefresh
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.SmallTitle
+import top.yukonga.miuix.kmp.basic.ScrollBarColors
 import top.yukonga.miuix.kmp.basic.VerticalScrollBar
 import top.yukonga.miuix.kmp.basic.rememberScrollBarAdapter
 import top.yukonga.miuix.kmp.icon.MiuixIcons
@@ -254,6 +255,11 @@ private fun LogViewerPage(
                         adapter = rememberScrollBarAdapter(lazyListState),
                         modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
                         trackPadding = listPadding,
+                        thumbWidth = 5.dp,
+                        thumbMinLength = 48.dp,
+                        colors = ScrollBarColors(
+                            thumbColor = MiuixTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                        ),
                     )
                 }
             }
