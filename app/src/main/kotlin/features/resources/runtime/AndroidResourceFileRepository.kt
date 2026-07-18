@@ -108,11 +108,12 @@ internal class AndroidResourceFileRepository(
                 "Resource file update will use local proxy ${downloadProxy.host}:${downloadProxy.port}",
             )
         }
+        val userAgent = options.userAgent.ifBlank { null }
         val result = runCatching {
             downloads.forEachIndexed { index, download ->
                 try {
                     notifier.showProgress(download.displayName, progress = null, force = true)
-                    downloader.download(download.url, download.targetFile, downloadProxy) { downloadedBytes, totalBytes ->
+                    downloader.download(download.url, download.targetFile, downloadProxy, userAgent) { downloadedBytes, totalBytes ->
                         notifier.showProgress(
                             fileName = download.displayName,
                             progress = overallProgress(

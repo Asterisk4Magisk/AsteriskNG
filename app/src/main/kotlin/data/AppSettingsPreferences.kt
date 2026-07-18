@@ -13,6 +13,7 @@ import app.modes.ColorModeThemeLight
 import app.modes.ColorModeThemeSystem
 import app.modes.normalizeColorMode
 import androidx.core.content.edit
+import features.subscription.DefaultSubscriptionUserAgent
 import java.util.UUID
 
 internal class AppSettingsPreferences(
@@ -139,6 +140,10 @@ internal class AppSettingsPreferences(
             ) ?: defaults.customResourceFileDirectCidrIpv6Url,
             customResourceFiles = customResourceFiles,
             nextCustomResourceFileId = nextCustomResourceFileId,
+            resourceFileUserAgent = preferences.getString(
+                KeyResourceFileUserAgent,
+                defaults.resourceFileUserAgent,
+            ) ?: defaults.resourceFileUserAgent,
             enableSniffing = preferences.getBoolean(KeyEnableSniffing, defaults.enableSniffing),
             enableSniffingRouteOnly = preferences.getBoolean(
                 KeyEnableSniffingRouteOnly,
@@ -262,6 +267,7 @@ internal class AppSettingsPreferences(
             .putString(KeyCustomResourceFileDirectCidrIpv6Url, state.customResourceFileDirectCidrIpv6Url)
             .putCustomResourceFileList(KeyCustomResourceFiles, state.customResourceFiles)
             .putInt(KeyNextCustomResourceFileId, state.nextCustomResourceFileId)
+            .putString(KeyResourceFileUserAgent, state.resourceFileUserAgent)
             .putBoolean(KeyEnableSniffing, state.enableSniffing)
             .putBoolean(KeyEnableSniffingRouteOnly, state.enableSniffingRouteOnly)
             .putBoolean(KeyEnableMux, state.enableMux)
@@ -362,6 +368,7 @@ private const val KeyCustomResourceFileDirectCidrIpv4Url = "custom_resource_file
 private const val KeyCustomResourceFileDirectCidrIpv6Url = "custom_resource_file_direct_cidr_ipv6_url"
 private const val KeyCustomResourceFiles = "custom_resource_files"
 private const val KeyNextCustomResourceFileId = "next_custom_resource_file_id"
+private const val KeyResourceFileUserAgent = "resource_file_user_agent"
 private const val KeyEnableSniffing = "enable_sniffing"
 private const val KeyEnableSniffingRouteOnly = "enable_sniffing_route_only"
 private const val KeyEnableMux = "enable_mux"

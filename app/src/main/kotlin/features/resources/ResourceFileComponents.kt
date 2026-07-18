@@ -572,3 +572,47 @@ private fun Long.toReadableDateTime(): String {
     if (this <= 0L) return "-"
     return DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(this))
 }
+
+@Composable
+internal fun CustomResourceFileUserAgentDialog(
+    show: Boolean,
+    state: TextFieldState,
+    onDismissRequest: () -> Unit,
+    onSave: () -> Unit,
+) {
+    WindowDialog(
+        show = show,
+        title = stringResource(R.string.subscription_custom_user_agent),
+        onDismissRequest = onDismissRequest,
+        content = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                TextField(
+                    state = state,
+                    label = stringResource(R.string.subscription_custom_user_agent),
+                    lineLimits = TextFieldLineLimits.SingleLine,
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    TextButton(
+                        text = stringResource(R.string.common_cancel),
+                        onClick = onDismissRequest,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Spacer(Modifier.width(20.dp))
+                    TextButton(
+                        text = stringResource(R.string.common_save),
+                        onClick = onSave,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            }
+        },
+    )
+}

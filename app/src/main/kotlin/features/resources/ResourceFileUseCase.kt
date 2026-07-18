@@ -94,4 +94,5 @@ data class ResourceFileUpdateOptions(
     val fallbackProxyPort: Int? = null,
     val fallbackProxyUsername: String = "",
     val fallbackProxyPassword: String = "",
+    val userAgent: String = "",
 )

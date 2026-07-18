@@ -185,6 +185,7 @@
     <string name="settings_resource_files_size">Размер: {size}</string>
     <string name="settings_resource_files_updating">Обновление файлов ресурсов…</string>
     <string name="settings_resource_files_updated">Файлы ресурсов успешно обновлены</string>
+    <string name="settings_resource_file_updated">{name} успешно обновлен</string>
     <string name="settings_resource_files_replaced">{name} успешно заменен</string>
     <string name="settings_resource_files_restored">{name} восстановлен из встроенных ресурсов приложения</string>
     <string name="settings_resource_files_deleted">{name} удален</string>
