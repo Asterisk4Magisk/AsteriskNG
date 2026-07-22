@@ -1,0 +1,89 @@
+name: CI Compile Check
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  compile:
+    name: Compile Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "26"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+
+      - name: Install Android SDK packages
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          set +o pipefail
+          yes | sdkmanager --licenses >/dev/null
+          licenses_status="${PIPESTATUS[1]}"
+          set -o pipefail
+          if [ "$licenses_status" -ne 0 ]; then
+            echo "::error::Failed to accept Android SDK licenses."
+            exit "$licenses_status"
+          fi
+
+          target_sdk="$(sed -n 's/^[[:space:]]*const val TARGET_SDK = \([0-9]\+\).*/\1/p' buildSrc/src/main/kotlin/BuildConfig.kt | head -n 1)"
+          if [ -z "$target_sdk" ]; then
+            echo "::error::Unable to read ProjectConfig.TARGET_SDK from buildSrc/src/main/kotlin/BuildConfig.kt."
+            exit 1
+          fi
+
+          available_packages="$(sdkmanager --list | awk '{ print $1 }')"
+          platform_package="platforms;android-${target_sdk}"
+          if ! grep -Fxq "$platform_package" <<< "$available_packages"; then
+            if grep -Fxq "platforms;android-${target_sdk}.0" <<< "$available_packages"; then
+              platform_package="platforms;android-${target_sdk}.0"
+            else
+              echo "::error::No Android SDK platform package is available for TARGET_SDK=$target_sdk."
+              exit 1
+            fi
+          fi
+
+          build_tools_package="$(printf '%s\n' "$available_packages" | awk '$1 ~ /^build-tools;[0-9]/ { print $1 }' | sort -V | tail -n 1)"
+          ndk_package="$(printf '%s\n' "$available_packages" | awk '$1 ~ /^ndk;[0-9]/ { print $1 }' | sort -V | tail -n 1)"
+
+          if [ -z "$build_tools_package" ]; then
+            echo "::error::No Android build-tools package is available from sdkmanager."
+            exit 1
+          fi
+          if [ -z "$ndk_package" ]; then
+            echo "::error::No Android NDK package is available from sdkmanager."
+            exit 1
+          fi
+
+          sdkmanager --install "$platform_package" "$build_tools_package" "$ndk_package"
+
+          ndk_version="${ndk_package#ndk;}"
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/$ndk_version" >> "$GITHUB_ENV"
+          echo "ANDROID_NDK_ROOT=$ANDROID_HOME/ndk/$ndk_version" >> "$GITHUB_ENV"
+
+      - name: Compile release Kotlin
+        run: ./gradlew --no-daemon :app:compileReleaseKotlin
