@@ -73,7 +73,18 @@ fun ProxyServerListPage(
     val serviceRestartMutex = remember { Mutex() }
 
     var searchValue by rememberSaveable { mutableStateOf("") }
-    var selectedGroupId by rememberSaveable { mutableIntStateOf(DefaultSubscriptionGroupId) }
+    // Derive the initial selectedGroupId from the persisted selectedProxyServerId
+    // so the tab starts on the correct group after process death. rememberSaveable
+    // cannot survive process kill, so we compute the initial value from proxyListState
+    // (synchronously loaded from persistent storage) instead of defaulting to
+    // DefaultSubscriptionGroupId.
+    val initialSelectedGroupId = remember {
+        proxyListState.proxyServers
+            .firstOrNull { it.id == proxyListState.selectedProxyServerId }
+            ?.groupId
+            ?: DefaultSubscriptionGroupId
+    }
+    var selectedGroupId by rememberSaveable { mutableIntStateOf(initialSelectedGroupId) }
     var serviceOperationInProgress by rememberSaveable { mutableStateOf(false) }
     var pendingProxyServerDeletion by remember { mutableStateOf<ProxyServerState?>(null) }
     val servers = proxyListState.proxyServers
@@ -88,19 +99,6 @@ fun ProxyServerListPage(
 
     LaunchedEffect(proxyListState.selectedProxyServerId) {
         selectedServerId = proxyListState.selectedProxyServerId
-    }
-
-    // Align the tab to the group that contains the persisted selectedProxyServerId.
-    // rememberSaveable cannot survive process death, so selectedGroupId falls back
-    // to DefaultSubscriptionGroupId after a kill. Use proxyListState (synchronously
-    // loaded from persistent storage) directly, not the rememberSaveable selectedServerId
-    // which may hold a stale value.
-    LaunchedEffect(servers.isNotEmpty()) {
-        if (servers.isEmpty()) return@LaunchedEffect
-        val selectedServer = servers.firstOrNull { it.id == proxyListState.selectedProxyServerId }
-        if (selectedServer != null && selectedServer.groupId != selectedGroupId) {
-            selectedGroupId = selectedServer.groupId
-        }
     }
 
     fun runProxyServiceOperation(operation: suspend () -> Unit) {
