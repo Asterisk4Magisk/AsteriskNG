@@ -151,7 +151,7 @@ private fun LogViewerPage(
                             scope.launch {
                                 val uri = logFileCreator(logExportFileName(title)) ?: return@launch
                                 runCatching {
-                                    context.exportLogEntries(uri, exportEntries)
+                                    context.exportLogEntries(uri, exportEntries, showLogMetadata)
                                 }.onSuccess {
                                     tipNotifier.show(exportedMessage)
                                 }.onFailure { error ->
@@ -242,7 +242,7 @@ private fun LogViewerPage(
                                         showMetadata = showLogMetadata,
                                         onClick = {
                                             scope.launch {
-                                                clipboard.setPlainText(entry.copyText())
+                                                clipboard.setPlainText(entry.copyText(showLogMetadata))
                                                 tipNotifier.show(copiedMessage)
                                             }
                                         },
@@ -267,20 +267,22 @@ private fun LogViewerPage(
     }
 }
 
-private fun CoreLogEntry.copyText(): String {
+private fun CoreLogEntry.copyText(showMetadata: Boolean): String {
+    if (!showMetadata) return message
     return "$time  ${level.uppercase()}  $message"
 }
 
 private suspend fun Context.exportLogEntries(
     uri: Uri,
     entries: List<CoreLogEntry>,
+    showMetadata: Boolean,
 ) {
     withContext(Dispatchers.IO) {
         val outputStream = contentResolver.openOutputStream(uri) ?: throw IllegalStateException()
         outputStream.writer(Charsets.UTF_8).use { writer ->
             entries.forEachIndexed { index, entry ->
                 if (index > 0) writer.write("\n")
-                writer.write(entry.copyText())
+                writer.write(entry.copyText(showMetadata))
             }
         }
     }
