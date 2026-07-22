@@ -98,8 +98,8 @@ internal data class ParsedCoreLogLine(
     val message: String,
 )
 
-private val XrayLogLineRegex = Regex("""^(\d{4}/\d{2}/\d{2}\s+\d{2}:\d{2}:\d{2})\s+\[([A-Za-z]+)]\s*(.*)$""")
-private val XrayLogLineWithoutLevelRegex = Regex("""^(\d{4}/\d{2}/\d{2}\s+\d{2}:\d{2}:\d{2})\s+(.*)$""")
+private val XrayLogLineRegex = Regex("""^(\d{4}/\d{2}/\d{2}\s+\d{2}:\d{2}:\d{2}(?:\.\d+)?)\s+\[([A-Za-z]+)]\s*(.*)$""")
+private val XrayLogLineWithoutLevelRegex = Regex("""^(\d{4}/\d{2}/\d{2}\s+\d{2}:\d{2}:\d{2}(?:\.\d+)?)\s+(.*)$""")
 private val XrayLogTimeWhitespaceRegex = Regex("\\s+")
 private const val XrayLogTimeFormat = "yyyy-MM-dd HH:mm:ss"
 
@@ -116,7 +116,10 @@ private val localXrayLogTimeFormatter = ThreadLocal.withInitial {
 
 private fun toLocalXrayLogTime(rawXrayTime: String): String? {
     val normalized = rawXrayTime.replace('/', '-').replace(XrayLogTimeWhitespaceRegex, " ")
-    val instant = runCatching { utcXrayLogTimeParser.get().parse(normalized) }.getOrNull() ?: return null
+    // Xray-core may include sub-second precision (e.g. 11:48:12.901279) which
+    // SimpleDateFormat "yyyy-MM-dd HH:mm:ss" cannot parse. Strip the fraction.
+    val withoutFraction = normalized.substringBeforeLast('.')
+    val instant = runCatching { utcXrayLogTimeParser.get().parse(withoutFraction) }.getOrNull() ?: return null
     val formatter = localXrayLogTimeFormatter.get()
     formatter.timeZone = TimeZone.getDefault()
     return runCatching { formatter.format(instant) }.getOrNull()
