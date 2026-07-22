@@ -20,6 +20,7 @@ import features.proxy.server.model.VLESS
 import features.proxy.server.model.VMess
 import features.proxy.server.model.Wireguard
 import features.proxy.server.model.getUrlOrNull
+import features.proxy.server.model.isCompositeProxyServer
 
 internal data class ProxyServerListSubscriptionUpdate(
     val groupId: Int,
@@ -130,7 +131,12 @@ internal fun AppState.withUpdatedSubscriptionServers(
             )
         }
     }
-    val nextServers = importedServers + proxyServers.filterNot { server -> server.groupId in updatedGroupIds }
+    // Preserve composite proxy servers (strategy groups, chain proxies) even when
+    // their groupId matches an updated subscription group — they are user-created,
+    // not downloaded from the subscription, and should survive subscription updates.
+    val nextServers = importedServers + proxyServers.filterNot { server ->
+        server.groupId in updatedGroupIds && !server.server.isCompositeProxyServer()
+    }
     val selectedServerId = when {
         nextServers.any { server -> server.id == selectedProxyServerId } -> selectedProxyServerId
         else -> proxyServers.firstOrNull { server -> server.groupId !in updatedGroupIds }?.id

@@ -90,6 +90,18 @@ fun ProxyServerListPage(
         selectedServerId = proxyListState.selectedProxyServerId
     }
 
+    // On first composition with real data, align the tab to the group that
+    // contains the persisted selectedProxyServerId. rememberSaveable may restore
+    // a stale selectedGroupId (or default to DefaultSubscriptionGroupId after a
+    // process kill), so we correct it once before the user interacts.
+    LaunchedEffect(servers.isNotEmpty()) {
+        if (servers.isEmpty()) return@LaunchedEffect
+        val selectedServer = servers.firstOrNull { it.id == selectedServerId }
+        if (selectedServer != null && selectedServer.groupId != selectedGroupId) {
+            selectedGroupId = selectedServer.groupId
+        }
+    }
+
     fun runProxyServiceOperation(operation: suspend () -> Unit) {
         if (serviceOperationInProgress) return
         serviceOperationInProgress = true
