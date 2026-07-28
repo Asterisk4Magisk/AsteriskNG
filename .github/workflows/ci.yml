@@ -5,6 +5,13 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
   compile:
     name: Compile Check
@@ -82,5 +89,5 @@ jobs:
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/$ndk_version" >> "$GITHUB_ENV"
           echo "ANDROID_NDK_ROOT=$ANDROID_HOME/ndk/$ndk_version" >> "$GITHUB_ENV"
 
-      - name: Compile release Kotlin
-        run: ./gradlew --no-daemon :app:compileReleaseKotlin
+      - name: Assemble release APKs
+        run: ./gradlew --no-daemon :app:assembleRelease
