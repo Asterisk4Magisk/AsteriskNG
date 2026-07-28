@@ -158,7 +158,7 @@
         },
         {
             "uniqueId": "io.grpc:grpc-okhttp",
-            "artifactVersion": "1.82.2",
+            "artifactVersion": "1.83.0",
             "name": "io.grpc:grpc-okhttp",
             "description": "gRPC: OkHttp",
             "website": "https://github.com/grpc/grpc-java",
@@ -171,7 +171,7 @@
         },
         {
             "uniqueId": "io.grpc:grpc-protobuf-lite",
-            "artifactVersion": "1.82.2",
+            "artifactVersion": "1.83.0",
             "name": "io.grpc:grpc-protobuf-lite",
             "description": "gRPC: Protobuf Lite",
             "website": "https://github.com/grpc/grpc-java",
@@ -184,7 +184,7 @@
         },
         {
             "uniqueId": "io.grpc:grpc-stub",
-            "artifactVersion": "1.82.2",
+            "artifactVersion": "1.83.0",
             "name": "io.grpc:grpc-stub",
             "description": "gRPC: Stub",
             "website": "https://github.com/grpc/grpc-java",
@@ -210,7 +210,7 @@
         },
         {
             "uniqueId": "com.github.android-password-store:kage",
-            "artifactVersion": "0.5.0",
+            "artifactVersion": "0.6.0",
             "name": "kage",
             "description": "Kotlin implementation of the age file encryption library",
             "website": "https://github.com/Android-Password-Store/kage",
@@ -405,7 +405,7 @@
         },
         {
             "uniqueId": "github:XTLS/Xray-core",
-            "artifactVersion": "v26.7.11",
+            "artifactVersion": "v26.7.28",
             "name": "Xray-core",
             "description": "An open platform for proxy and anti-censorship networking.",
             "website": "https://github.com/XTLS/Xray-core",
