@@ -25,6 +25,7 @@ data class Wireguard(
     var reserved: String = "0,0,0",
     var address: String = "172.16.0.2/32",
     var mtu: String = "1420",
+    var finalMask: String = "",
 ) : UrlProxyServer<Wireguard> {
     override fun getInfo(): ProxyServerInfo {
         return ProxyServerInfo(this.remarks, "${this.server}:${this.port}", "Wireguard")
@@ -58,6 +59,11 @@ data class Wireguard(
                     putJsonArray("reserved") {
                         reservedBytes.forEach { add(it) }
                     }
+                }
+            },
+            streamSettings = finalMask.toXrayJsonObjectOrNull("FinalMask")?.let { parsedFinalMask ->
+                buildJsonObject {
+                    put("finalmask", parsedFinalMask)
                 }
             },
         )
@@ -115,6 +121,7 @@ data class Wireguard(
             reserved = other.reserved
             address = other.address
             mtu = other.mtu
+            finalMask = other.finalMask
         }
     }
 
@@ -132,6 +139,7 @@ data class Wireguard(
         validateWireguardReserved(reserved)
         validateWireguardAddresses(address)
         validateMtu(mtu)
+        validateOptionalJsonObject(finalMask, "FinalMask")
     }
 
     private fun toWireguardEndpoint(): String {

@@ -149,5 +149,18 @@ internal fun LazyListScope.wireguardProxyServer(wgEdit: Wireguard) {
             onKeyboardAction = { focusManager.clearFocus() },
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
         )
+        TextField(
+            label = stringResource(R.string.proxy_editor_final_mask),
+            state = rememberTextFieldState(initialText = wgEdit.finalMask),
+            lineLimits = TextFieldLineLimits.MultiLine(minHeightInLines = 5, maxHeightInLines = 20),
+            inputTransformation = InputTransformation {
+                wgEdit.finalMask = asCharSequence().toString()
+            },
+            modifier = Modifier
+                .padding(horizontal = 12.dp)
+                .padding(bottom = 12.dp),
+            onKeyboardAction = { focusManager.clearFocus() },
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+        )
     }
 }

@@ -222,7 +222,7 @@ private fun String.toKcpHeaderMaskType(): String {
     return if (this == "wechat-video") "header-wechat" else "header-$this"
 }
 
-private fun String?.toXrayJsonObjectOrNull(fieldName: String): JsonObject? {
+internal fun String?.toXrayJsonObjectOrNull(fieldName: String): JsonObject? {
     val value = this?.trim().orEmpty()
     if (value.isBlank()) return null
     val element: JsonElement = runCatching {
