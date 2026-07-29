@@ -15,7 +15,7 @@
         },
         {
             "uniqueId": "github:2dust/AndroidLibXrayLite",
-            "artifactVersion": "v26.7.19",
+            "artifactVersion": "v26.7.28",
             "name": "AndroidLibXrayLite",
             "description": "Android AAR wrapper for Xray-core, built with gomobile.",
             "website": "https://github.com/2dust/AndroidLibXrayLite",
