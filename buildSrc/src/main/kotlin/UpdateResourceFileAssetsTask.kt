@@ -51,6 +51,7 @@ abstract class UpdateResourceFileAssetsTask : DefaultTask() {
     }
 
     private fun downloadZipEntry(url: String, entryName: String, target: File) {
+        if (useExistingFile(target)) return
         target.parentFile.mkdirs()
         val tempFile = target.resolveSibling("${target.name}.tmp")
         logger.lifecycle("Downloading $url")
@@ -98,7 +99,14 @@ abstract class UpdateResourceFileAssetsTask : DefaultTask() {
         logger.lifecycle("Updated ${target.absolutePath} (${target.length()} bytes)")
     }
 
+    private fun useExistingFile(target: File): Boolean {
+        if (!target.isFile) return false
+        logger.lifecycle("Using existing ${target.absolutePath} (${target.length()} bytes)")
+        return true
+    }
+
     private fun downloadFile(url: String, target: File) {
+        if (useExistingFile(target)) return
         target.parentFile.mkdirs()
         val tempFile = target.resolveSibling("${target.name}.tmp")
         logger.lifecycle("Downloading $url")
