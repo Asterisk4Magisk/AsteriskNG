@@ -109,32 +109,33 @@ internal fun StringBuilder.appendRootEbpfXtbpfInterfaceTproxyRules(
     }
 }
 
-internal fun StringBuilder.appendAsteriskdBypassAnchorJump(
+internal fun StringBuilder.appendAsteriskdBypassBoundary(
     command: String,
     chain: String,
     ipv6: Boolean,
 ) {
-    val anchor = if (ipv6) RootAsteriskdBypass6Anchor else RootAsteriskdBypass4Anchor
-    appendScript("$command -t mangle -N $anchor 2>/dev/null || true")
-    appendScript("$command -t mangle -A $chain -j $anchor")
+    val begin = if (ipv6) RootAsteriskdBypass6Begin else RootAsteriskdBypass4Begin
+    val end = if (ipv6) RootAsteriskdBypass6End else RootAsteriskdBypass4End
+    appendScript("$command -t mangle -N $begin 2>/dev/null || true")
+    appendScript("$command -t mangle -N $end 2>/dev/null || true")
+    appendScript("$command -t mangle -A $chain -j $begin")
+    appendScript("$command -t mangle -A $chain -j $end")
 }
 
-internal fun StringBuilder.appendAsteriskdBypassAnchorCleanup(
+internal fun StringBuilder.appendAsteriskdBypassCleanup(
     command: String,
     ipv6: Boolean,
 ) {
     val chains = if (ipv6) {
-        listOf(RootAsteriskdBypass6SlotA, RootAsteriskdBypass6SlotB, RootAsteriskdBypass6Anchor)
+        listOf(RootAsteriskdBypass6Begin, RootAsteriskdBypass6End)
     } else {
-        listOf(RootAsteriskdBypass4SlotA, RootAsteriskdBypass4SlotB, RootAsteriskdBypass4Anchor)
+        listOf(RootAsteriskdBypass4Begin, RootAsteriskdBypass4End)
     }
     chains.forEach { chain ->
-        appendScript(
-            """
-            $command -t mangle -F $chain 2>/dev/null || true
-            $command -t mangle -X $chain 2>/dev/null || true
-            """,
-        )
+        appendScript("$command -t mangle -F $chain 2>/dev/null || true")
+    }
+    chains.forEach { chain ->
+        appendScript("$command -t mangle -X $chain 2>/dev/null || true")
     }
 }
 

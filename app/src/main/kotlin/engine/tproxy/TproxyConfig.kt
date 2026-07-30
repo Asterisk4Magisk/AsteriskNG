@@ -10,6 +10,7 @@ import engine.proxy.buildLocalSocksInbound
 import engine.proxy.toLocalProxyOptions
 import engine.network.toPortOrNull
 import engine.root.AsteriskdConfig
+import engine.root.AsteriskdBypassConsumerChains
 import engine.root.AsteriskdMode
 import engine.root.RootConfigBuildContext
 import engine.root.RootEbpfRuntimeConfig
@@ -58,6 +59,10 @@ internal fun RootConfigBuildContext.buildTproxyStartConfig(): TproxyStartConfig 
             mode = AsteriskdMode.Tproxy,
             iptablesConfig = iptablesConfig,
             virtualInterfaces = listOf(TproxyDummyDevice),
+            bypassConsumerChains = AsteriskdBypassConsumerChains(
+                ipv4 = listOf(TproxyPreroutingChain, TproxyOutputChain),
+                ipv6 = listOf(TproxyPrerouting6Chain, TproxyOutput6Chain),
+            ),
         ),
         rootEbpfConfig = buildRootEbpfRuntimeConfig(iptablesConfig),
     )

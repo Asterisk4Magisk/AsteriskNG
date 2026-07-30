@@ -17,7 +17,7 @@ internal enum class AsteriskdMode(
 
 @Serializable
 internal data class AsteriskdConfig(
-    val version: Int = 2,
+    val version: Int = 3,
     val mode: String,
     val enableIpv6: Boolean,
     val disableSystemIpv6: Boolean,
@@ -42,17 +42,16 @@ internal data class AsteriskdConfig(
             ignoredInterfaces: List<String>,
             virtualInterfaces: List<String>,
             hotspotInterfacePrefixes: List<String>,
+            bypassConsumerChains: AsteriskdBypassConsumerChains?,
             stopScriptPath: String,
             statePath: String,
             emergencyProcesses: List<AsteriskdEmergencyProcess>,
         ): AsteriskdConfig {
-            val bypass = if (mode == AsteriskdMode.Bpf2Socks) {
-                null
-            } else {
+            val ipv4Bypass = bypassConsumerChains?.let { consumers ->
                 AsteriskdBypassTarget(
-                    anchorChain = AsteriskdIpv4BypassAnchorChain,
-                    slotAChain = AsteriskdIpv4BypassSlotAChain,
-                    slotBChain = AsteriskdIpv4BypassSlotBChain,
+                    beginChain = AsteriskdIpv4BypassBeginChain,
+                    endChain = AsteriskdIpv4BypassEndChain,
+                    consumerChains = consumers.ipv4.distinct(),
                 )
             }
             return AsteriskdConfig(
@@ -63,12 +62,14 @@ internal data class AsteriskdConfig(
                 ignoredInterfaces = ignoredInterfaces.distinct(),
                 virtualInterfaces = virtualInterfaces.distinct(),
                 hotspotInterfacePrefixes = hotspotInterfacePrefixes.distinct(),
-                ipv4Bypass = bypass,
-                ipv6Bypass = bypass?.takeIf { enableIpv6 }?.copy(
-                    anchorChain = AsteriskdIpv6BypassAnchorChain,
-                    slotAChain = AsteriskdIpv6BypassSlotAChain,
-                    slotBChain = AsteriskdIpv6BypassSlotBChain,
-                ),
+                ipv4Bypass = ipv4Bypass,
+                ipv6Bypass = bypassConsumerChains?.takeIf { enableIpv6 }?.let { consumers ->
+                    AsteriskdBypassTarget(
+                        beginChain = AsteriskdIpv6BypassBeginChain,
+                        endChain = AsteriskdIpv6BypassEndChain,
+                        consumerChains = consumers.ipv6.distinct(),
+                    )
+                },
                 bpfLocalMaps = if (mode == AsteriskdMode.Bpf2Socks) {
                     AsteriskdBpfLocalMaps(
                         ipv4Path = "$RootBpf2SocksPinnedObjectDir/local_addr_v4",
@@ -98,9 +99,14 @@ internal data class AsteriskdConfig(
 
 @Serializable
 internal data class AsteriskdBypassTarget(
-    val anchorChain: String,
-    val slotAChain: String,
-    val slotBChain: String,
+    val beginChain: String,
+    val endChain: String,
+    val consumerChains: List<String>,
+)
+
+internal data class AsteriskdBypassConsumerChains(
+    val ipv4: List<String>,
+    val ipv6: List<String>,
 )
 
 @Serializable
@@ -124,9 +130,7 @@ internal data class AsteriskdEmergencyProcess(
     val commandMarker: String,
 )
 
-internal const val AsteriskdIpv4BypassAnchorChain = RootAsteriskdBypass4Anchor
-internal const val AsteriskdIpv4BypassSlotAChain = RootAsteriskdBypass4SlotA
-internal const val AsteriskdIpv4BypassSlotBChain = RootAsteriskdBypass4SlotB
-internal const val AsteriskdIpv6BypassAnchorChain = RootAsteriskdBypass6Anchor
-internal const val AsteriskdIpv6BypassSlotAChain = RootAsteriskdBypass6SlotA
-internal const val AsteriskdIpv6BypassSlotBChain = RootAsteriskdBypass6SlotB
+internal const val AsteriskdIpv4BypassBeginChain = RootAsteriskdBypass4Begin
+internal const val AsteriskdIpv4BypassEndChain = RootAsteriskdBypass4End
+internal const val AsteriskdIpv6BypassBeginChain = RootAsteriskdBypass6Begin
+internal const val AsteriskdIpv6BypassEndChain = RootAsteriskdBypass6End

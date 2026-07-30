@@ -19,6 +19,7 @@ internal fun RootStartConfig.buildAsteriskdConfig(
     mode: AsteriskdMode,
     iptablesConfig: RootIptablesConfig,
     virtualInterfaces: List<String>,
+    bypassConsumerChains: AsteriskdBypassConsumerChains? = null,
 ): AsteriskdConfig {
     return AsteriskdConfig.forMode(
         mode = mode,
@@ -28,6 +29,7 @@ internal fun RootStartConfig.buildAsteriskdConfig(
         ignoredInterfaces = iptablesConfig.ignoredInterfaces,
         virtualInterfaces = virtualInterfaces,
         hotspotInterfacePrefixes = iptablesConfig.externalInterfacePrefixes,
+        bypassConsumerChains = bypassConsumerChains,
         stopScriptPath = runtimeLayout.stopScriptPath,
         statePath = runtimeLayout.asteriskdStatePath,
         emergencyProcesses = runtimeLayout.asteriskdEmergencyProcesses(),
