@@ -39,6 +39,7 @@ internal fun buildRootStopScript(
             ASTERISKD_READY_FILE=$${runtimeLayout.asteriskdReadyPath.shellQuote()}
             ASTERISKD_STATE_FILE=$${runtimeLayout.asteriskdStatePath.shellQuote()}
             ASTERISKD_EXECUTABLE=$${runtimeLayout.asteriskdPath.shellQuote()}
+            ASTERISKD_CONFIG_FILE=$${runtimeLayout.asteriskdConfigPath.shellQuote()}
             XRAY_PID_FILE=$${runtimeLayout.pidPath.shellQuote()}
             XRAY_EXECUTABLE=$${runtimeLayout.xrayCorePath.shellQuote()}
 
@@ -99,6 +100,9 @@ internal fun buildRootStopScript(
                         restore_asteriskd_ipv6_state
                         kill -9 "$asteriskd_pid" 2>/dev/null || true
                     fi
+                fi
+                if [ -x "$ASTERISKD_EXECUTABLE" ] && [ -r "$ASTERISKD_CONFIG_FILE" ]; then
+                    "$ASTERISKD_EXECUTABLE" --prepare --config "$ASTERISKD_CONFIG_FILE" >/dev/null 2>&1 || true
                 fi
                 clear_asteriskd_markers
             }

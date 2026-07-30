@@ -46,15 +46,21 @@ abstract class BuildBpf2SocksTask : DefaultTask() {
     @TaskAction
     fun build() {
         val sourceDir = sourceDirectory.get().asFile
-        val sources = sourceDir.listFiles()
-            ?.filter { file -> file.isFile && file.extension == "c" }
+        val userSpaceSources = sourceDir.listFiles()
+            ?.filter { file ->
+                file.isFile &&
+                    file.extension == "c" &&
+                    !file.name.endsWith(".bpf.c")
+            }
             ?.sortedBy { file -> file.name }
             .orEmpty()
-        if (sources.isEmpty()) {
+        if (userSpaceSources.isEmpty()) {
             throw GradleException("No bpf2socks C sources found under ${sourceDir.absolutePath}")
         }
 
         val ndkDir = findNdkDir()
+        val embeddedSource = buildEmbeddedBpfSource(ndkDir, sourceDir)
+        val sources = userSpaceSources + embeddedSource
         val outputDir = outputDirectory.get().asFile
         outputDir.mkdirs()
         targetAbis.get().map { abi -> abi.toBpf2SocksAbiTarget() }.forEach { target ->
@@ -82,12 +88,59 @@ abstract class BuildBpf2SocksTask : DefaultTask() {
         }
     }
 
-    private fun findNdkClang(ndkDir: File, target: Bpf2SocksAbiTarget): File {
-        val hostTag = when {
-            System.getProperty("os.name").startsWith("Windows", ignoreCase = true) -> "windows-x86_64"
-            System.getProperty("os.name").contains("Mac", ignoreCase = true) -> "darwin-x86_64"
-            else -> "linux-x86_64"
+    private fun buildEmbeddedBpfSource(ndkDir: File, sourceDir: File): File {
+        val bpfSource = sourceDir.resolve("tc_redirect.bpf.c")
+        if (!bpfSource.isFile) {
+            throw GradleException("Missing bpf2socks TC source: ${bpfSource.absolutePath}")
         }
+        val workDir = temporaryDir.resolve("embedded-bpf").apply { mkdirs() }
+        val objectFile = workDir.resolve("tc_redirect.bpf.o")
+        val hostTag = ndkHostTag()
+        val clangName = if (hostTag.startsWith("windows")) "clang.exe" else "clang"
+        val clang = ndkDir.resolve("toolchains/llvm/prebuilt/$hostTag/bin/$clangName")
+        val sysrootInclude = ndkDir.resolve("toolchains/llvm/prebuilt/$hostTag/sysroot/usr/include")
+        execOperations.exec {
+            commandLine(
+                clang.absolutePath,
+                "-target",
+                "bpfel",
+                "-std=c17",
+                "-O2",
+                "-Wall",
+                "-Wextra",
+                "-Werror",
+                "-I${sourceDir.absolutePath}",
+                "-isystem${sysrootInclude.absolutePath}",
+                "-isystem${sysrootInclude.resolve("aarch64-linux-android").absolutePath}",
+                "-c",
+                bpfSource.absolutePath,
+                "-o",
+                objectFile.absolutePath,
+            )
+        }
+        val bytes = objectFile.readBytes()
+        if (bytes.isEmpty()) {
+            throw GradleException("Failed to compile embedded bpf2socks TC object")
+        }
+        val generated = workDir.resolve("embedded_bpf_object.c")
+        generated.writeText(
+            buildString {
+                appendLine("#include <stddef.h>")
+                appendLine("const unsigned char bpf2socks_embedded_bpf_object[] = {")
+                bytes.asList().chunked(16).forEach { row ->
+                    append("    ")
+                    row.forEach { byte -> append("0x%02x,".format(byte.toInt() and 0xff)) }
+                    appendLine()
+                }
+                appendLine("};")
+                appendLine("const size_t bpf2socks_embedded_bpf_object_size = sizeof(bpf2socks_embedded_bpf_object);")
+            },
+        )
+        return generated
+    }
+
+    private fun findNdkClang(ndkDir: File, target: Bpf2SocksAbiTarget): File {
+        val hostTag = ndkHostTag()
         val executableName = if (hostTag.startsWith("windows")) {
             "${target.clangTarget}${minSdk.get()}-clang.cmd"
         } else {
@@ -98,6 +151,12 @@ abstract class BuildBpf2SocksTask : DefaultTask() {
             throw GradleException("Android NDK clang not found: ${clang.absolutePath}")
         }
         return clang
+    }
+
+    private fun ndkHostTag(): String = when {
+        System.getProperty("os.name").startsWith("Windows", ignoreCase = true) -> "windows-x86_64"
+        System.getProperty("os.name").contains("Mac", ignoreCase = true) -> "darwin-x86_64"
+        else -> "linux-x86_64"
     }
 
     private fun findNdkDir(): File {
@@ -123,6 +182,7 @@ abstract class BuildBpf2SocksTask : DefaultTask() {
 
         throw GradleException("Android NDK not found. Set ndk.dir, ANDROID_NDK_HOME, or install an NDK under the Android SDK.")
     }
+
 }
 
 private fun File.latestChildDirectoryForBpf2Socks(): File? {

@@ -28,6 +28,7 @@ internal data class AsteriskdConfig(
     val ipv4Bypass: AsteriskdBypassTarget?,
     val ipv6Bypass: AsteriskdBypassTarget?,
     val bpfLocalMaps: AsteriskdBpfLocalMaps?,
+    val bpf2socksTc: AsteriskdBpf2SocksTc?,
     val stopScriptPath: String,
     val statePath: String,
     val emergencyProcesses: List<AsteriskdEmergencyProcess>,
@@ -76,6 +77,17 @@ internal data class AsteriskdConfig(
                 } else {
                     null
                 },
+                bpf2socksTc = if (mode == AsteriskdMode.Bpf2Socks) {
+                    AsteriskdBpf2SocksTc(
+                        ingressPath = "$RootBpf2SocksPinnedObjectDir/tc_ingress",
+                        egressPath = "$RootBpf2SocksPinnedObjectDir/tc_egress",
+                        statePath = "$statePath.route-localnet",
+                        preference = RootBpf2SocksTcPreference,
+                        handle = RootBpf2SocksTcHandle,
+                    )
+                } else {
+                    null
+                },
                 stopScriptPath = stopScriptPath,
                 statePath = statePath,
                 emergencyProcesses = emergencyProcesses,
@@ -95,6 +107,15 @@ internal data class AsteriskdBypassTarget(
 internal data class AsteriskdBpfLocalMaps(
     val ipv4Path: String,
     val ipv6Path: String?,
+)
+
+@Serializable
+internal data class AsteriskdBpf2SocksTc(
+    val ingressPath: String,
+    val egressPath: String,
+    val statePath: String,
+    val preference: Int,
+    val handle: Int,
 )
 
 @Serializable

@@ -4,24 +4,15 @@
 package engine.bpf2socks
 
 import engine.root.RootBpf2SocksPinnedObjectDir
-import engine.root.RootBpf2SocksFwmark
-import engine.root.RootBpf2SocksPreroutingChain
-import engine.root.RootBpf2SocksRouteTable
 import engine.root.RootBpf2SocksTokenIpv6Prefix
-import engine.root.RootIpCommand
 import engine.root.RootIp6Command
-import engine.root.RootIp6tablesCommand
-import engine.root.RootIptablesCommand
 import engine.root.RootModeRunner
-import engine.root.RootProxyRouteRulePriority
 import engine.root.RootReadinessCheck
 import engine.root.RootRuntimeLayout
 import engine.root.RootXrayGid
 import engine.root.RootXrayUid
-import engine.root.appendDeleteRuleLoop
 import engine.root.appendRootFakeDnsIcmpReplyCleanupRules
 import engine.root.appendRootFakeDnsIcmpReplyRules
-import engine.root.appendIpRuleDeleteLoop
 import engine.root.appendScript
 import engine.root.buildApplyRootEbpfSelinuxPolicyCommand
 import engine.root.buildRootPortReadyCommand
@@ -54,13 +45,11 @@ internal class Bpf2SocksRootRunner(
             append(buildApplyRootEbpfSelinuxPolicyCommand())
             appendRootFakeDnsIcmpReplyRules(config.root.enableFakeDns, cleanupExistingRules)
             appendBpf2SocksIpv6TokenRouteSetup(config.bpf2socksConfig)
-            appendBpf2SocksHotspotSetupRules(config.bpf2socksConfig, cleanupExistingRules)
         }
     }
 
     override fun buildCleanupRulesCommand(): String {
         return buildString {
-            appendBpf2SocksHotspotCleanupRules()
             appendRootFakeDnsIcmpReplyCleanupRules()
             appendBpf2SocksIpv6TokenRouteCleanup()
             appendScript("rm -rf ${RootBpf2SocksPinnedObjectDir.shellQuote()} 2>/dev/null || true")
@@ -81,6 +70,7 @@ internal class Bpf2SocksRootRunner(
         return buildString {
             appendScript(
                 $$"""
+                mkdir -p $${RootBpf2SocksPinnedObjectDir.shellQuote()} || exit 1
                 chmod 755 $${setuidgid.shellQuote()}
                 chmod 755 $${helper.executablePath.shellQuote()}
                 $${setuidgid.shellQuote()} $${RootXrayUid.toString().shellQuote()} $${RootXrayGid.toString().shellQuote()} $${helper.executablePath.shellQuote()} --start --config $${helper.configPath.shellQuote()} --pid $${helper.pidPath.shellQuote()} >> $${config.root.coreLogPaths.errorLogPath.shellQuote()} 2>&1 < /dev/null &
@@ -118,7 +108,6 @@ internal class Bpf2SocksRootRunner(
     override suspend fun collectReadinessDiagnostics(config: Bpf2SocksStartConfig): String {
         val bridgePort = config.bpf2socksConfig.bridgePort
         val portHex = bridgePort.toNetstatPortHexMarker()
-        val fwmark = RootBpf2SocksFwmark.substringBefore('/')
         val command = $$"""
             pid="$(cat $${config.controlPaths.pidPath.shellQuote()} 2>/dev/null || true)"
             echo "== bpf2socks =="
@@ -133,10 +122,14 @@ internal class Bpf2SocksRootRunner(
             echo "bridgePortHex=$${portHex}"
             echo "== bpf2socks pinned objects =="
             ls -la $${RootBpf2SocksPinnedObjectDir.shellQuote()} 2>&1 || true
-            echo "== bpf2socks hotspot rules =="
-            $${RootIpCommand} rule show 2>&1 | grep -E 'fwmark $${fwmark}' || true
-            $${RootIpCommand} route show table $${RootBpf2SocksRouteTable} 2>&1 || true
-            $${RootIptablesCommand} -t mangle -S $${RootBpf2SocksPreroutingChain} 2>&1 || true
+            echo "== bpf2socks hotspot TC =="
+            for interface_path in /sys/class/net/*; do
+                interface="${interface_path##*/}"
+                route_localnet="/proc/sys/net/ipv4/conf/$interface/route_localnet"
+                [ -r "$route_localnet" ] && echo "$interface route_localnet=$(cat "$route_localnet" 2>/dev/null || true)"
+                tc filter show dev "$interface" ingress 2>&1 | grep -E 'pref 1 |b2s_tc' || true
+                tc filter show dev "$interface" egress 2>&1 | grep -E 'pref 1 |b2s_tc' || true
+            done
             echo "== core error log =="
             tail -n 80 $${config.root.coreLogPaths.errorLogPath.shellQuote()} 2>&1 || true
         """.trimIndent()
@@ -151,7 +144,6 @@ internal class Bpf2SocksRootRunner(
     }
 
     override fun StringBuilder.appendStartupFailureDiagnostics(config: Bpf2SocksStartConfig) {
-        val fwmark = RootBpf2SocksFwmark.substringBefore('/')
         appendScript(
             $$"""
                 echo
@@ -165,10 +157,12 @@ internal class Bpf2SocksRootRunner(
                 echo "bpf2socks pinned objects:"
                 ls -la $${RootBpf2SocksPinnedObjectDir.shellQuote()} 2>&1 || true
                 echo
-                echo "bpf2socks hotspot rules:"
-                $${RootIpCommand} rule show 2>&1 | grep -E 'fwmark $${fwmark}' || true
-                $${RootIpCommand} route show table $${RootBpf2SocksRouteTable} 2>&1 || true
-                $${RootIptablesCommand} -t mangle -S $${RootBpf2SocksPreroutingChain} 2>&1 || true
+                echo "bpf2socks hotspot TC:"
+                for interface_path in /sys/class/net/*; do
+                    interface="${interface_path##*/}"
+                    tc filter show dev "$interface" ingress 2>&1 | grep -E 'pref 1 |b2s_tc' || true
+                    tc filter show dev "$interface" egress 2>&1 | grep -E 'pref 1 |b2s_tc' || true
+                done
             """,
         )
     }
@@ -194,60 +188,6 @@ internal class Bpf2SocksRootRunner(
     }
 }
 
-private fun StringBuilder.appendBpf2SocksHotspotSetupRules(
-    config: Bpf2SocksConfig,
-    cleanupExistingRules: Boolean,
-) {
-    val prefixes = config.hotspotInterfacePrefixes
-    if (prefixes.isEmpty()) return
-    if (cleanupExistingRules) {
-        appendBpf2SocksHotspotCleanupRules()
-    }
-    appendScript(
-        """
-        $RootIpCommand rule add priority $RootProxyRouteRulePriority fwmark $RootBpf2SocksFwmark table $RootBpf2SocksRouteTable 2>/dev/null || true
-        $RootIpCommand route add local default dev lo table $RootBpf2SocksRouteTable 2>/dev/null || true
-        $RootIptablesCommand -t mangle -N $RootBpf2SocksPreroutingChain 2>/dev/null || true
-        $RootIptablesCommand -t mangle -I PREROUTING 1 -j $RootBpf2SocksPreroutingChain
-        """,
-    )
-    val programPath = config.pinnedObjectPath("prerouting_v4").shellQuote()
-    prefixes.forEach { prefix ->
-        val quotedInterface = prefix.shellQuote()
-        appendScript(
-            """
-            $RootIptablesCommand -t mangle -A $RootBpf2SocksPreroutingChain -i $quotedInterface -p tcp -m bpf --object-pinned $programPath -j MARK --set-xmark $RootBpf2SocksFwmark
-            $RootIptablesCommand -t mangle -A $RootBpf2SocksPreroutingChain -i $quotedInterface -p udp -m bpf --object-pinned $programPath -j MARK --set-xmark $RootBpf2SocksFwmark
-            """,
-        )
-    }
-    if (config.enableIpv6) {
-        appendScript(
-            """
-            $RootIp6Command rule add priority $RootProxyRouteRulePriority fwmark $RootBpf2SocksFwmark table $RootBpf2SocksRouteTable 2>/dev/null || true
-            $RootIp6Command route add local default dev lo table $RootBpf2SocksRouteTable 2>/dev/null || true
-            $RootIp6tablesCommand -t mangle -N $RootBpf2SocksPreroutingChain 2>/dev/null || true
-            $RootIp6tablesCommand -t mangle -I PREROUTING 1 -j $RootBpf2SocksPreroutingChain
-            """,
-        )
-        val programPath6 = config.pinnedObjectPath("prerouting_v6").shellQuote()
-        prefixes.forEach { prefix ->
-            val quotedInterface = prefix.shellQuote()
-            appendScript(
-                """
-                ${if (config.enableDnsHijack) "$RootIp6tablesCommand -t mangle -A $RootBpf2SocksPreroutingChain -i $quotedInterface -p udp --dport 53 -j DROP" else ":"}
-                $RootIp6tablesCommand -t mangle -A $RootBpf2SocksPreroutingChain -i $quotedInterface -p tcp -m bpf --object-pinned $programPath6 -j MARK --set-xmark $RootBpf2SocksFwmark
-                $RootIp6tablesCommand -t mangle -A $RootBpf2SocksPreroutingChain -i $quotedInterface -p udp -m bpf --object-pinned $programPath6 -j MARK --set-xmark $RootBpf2SocksFwmark
-                """,
-            )
-        }
-    }
-}
-
-private fun Bpf2SocksConfig.pinnedObjectPath(name: String): String {
-    return "${pinnedObjectDir.trimEnd('/')}/$name"
-}
-
 private fun StringBuilder.appendRootFakeDnsIcmpReplyRules(enableFakeDns: Boolean, cleanupExistingRules: Boolean) {
     if (enableFakeDns) {
         appendRootFakeDnsIcmpReplyRules(cleanupExistingRules)
@@ -269,29 +209,6 @@ private fun StringBuilder.appendBpf2SocksIpv6TokenRouteCleanup() {
         $RootIp6Command route del local ${RootBpf2SocksTokenIpv6Prefix.shellQuote()} dev lo table local 2>/dev/null || true
         """,
     )
-}
-
-private fun StringBuilder.appendBpf2SocksHotspotCleanupRules() {
-    appendDeleteRuleLoop(RootIptablesCommand, "PREROUTING", "-j $RootBpf2SocksPreroutingChain")
-    appendDeleteRuleLoop(RootIp6tablesCommand, "PREROUTING", "-j $RootBpf2SocksPreroutingChain")
-    appendScript(
-        """
-        $RootIptablesCommand -t mangle -F $RootBpf2SocksPreroutingChain 2>/dev/null || true
-        $RootIptablesCommand -t mangle -X $RootBpf2SocksPreroutingChain 2>/dev/null || true
-        $RootIp6tablesCommand -t mangle -F $RootBpf2SocksPreroutingChain 2>/dev/null || true
-        $RootIp6tablesCommand -t mangle -X $RootBpf2SocksPreroutingChain 2>/dev/null || true
-        """,
-    )
-    appendIpRuleDeleteLoop(
-        ipCommand = RootIpCommand,
-        rule = "priority $RootProxyRouteRulePriority fwmark $RootBpf2SocksFwmark table $RootBpf2SocksRouteTable",
-    )
-    appendScript("$RootIpCommand route flush table $RootBpf2SocksRouteTable 2>/dev/null || true")
-    appendIpRuleDeleteLoop(
-        ipCommand = RootIp6Command,
-        rule = "priority $RootProxyRouteRulePriority fwmark $RootBpf2SocksFwmark table $RootBpf2SocksRouteTable",
-    )
-    appendScript("$RootIp6Command route flush table $RootBpf2SocksRouteTable 2>/dev/null || true")
 }
 
 internal fun RootRuntimeLayout.buildStopBpf2SocksCommand(): String {
