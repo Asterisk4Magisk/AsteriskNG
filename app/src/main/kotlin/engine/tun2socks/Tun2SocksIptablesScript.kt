@@ -12,8 +12,8 @@ import engine.root.RootIptablesCommand
 import engine.root.RootIptablesConfig
 import engine.root.RootProxyRouteRulePriority
 import engine.root.RootProxyAppWhitelistSystemUids
-import engine.root.appendAsteriskdBypassAnchorCleanup
-import engine.root.appendAsteriskdBypassAnchorJump
+import engine.root.appendAsteriskdBypassBoundary
+import engine.root.appendAsteriskdBypassCleanup
 import engine.root.appendDeleteRuleLoop
 import engine.root.appendIpRuleDeleteLoop
 import engine.root.appendRootEbpfXtbpfInterfaceMarkRules
@@ -62,8 +62,8 @@ internal fun RootIptablesConfig.buildCleanupRulesCommand(): String {
         appendRootFakeDnsIcmpReplyCleanupRules()
         appendRootIpv6DnsRejectCleanupRules()
         appendIptablesVariantCleanupRules(this@buildCleanupRulesCommand, Tun2SocksIptablesVariant.forIpv6(this@buildCleanupRulesCommand))
-        appendAsteriskdBypassAnchorCleanup(RootIptablesCommand, ipv6 = false)
-        appendAsteriskdBypassAnchorCleanup(RootIp6tablesCommand, ipv6 = true)
+        appendAsteriskdBypassCleanup(RootIptablesCommand, ipv6 = false)
+        appendAsteriskdBypassCleanup(RootIp6tablesCommand, ipv6 = true)
     }
 }
 
@@ -80,7 +80,7 @@ private fun StringBuilder.appendIptablesVariantSetupRules(
         ${variant.command} -t mangle -N ${variant.outputChain} 2>/dev/null || true
         ${variant.command} -t filter -N ${variant.forwardChain} 2>/dev/null || true
         ${variant.command} -t mangle -I PREROUTING 1 -j ${variant.preroutingChain}
-        ${variant.command} -t mangle -I OUTPUT 1 -j ${variant.outputChain}
+        ${variant.command} -t mangle -A OUTPUT -j ${variant.outputChain}
         ${variant.command} -t filter -I FORWARD 1 -j ${variant.forwardChain}
         ${variant.command} -t filter -A ${variant.forwardChain} -i 'asterisk0' -j ACCEPT
         ${variant.command} -t filter -A ${variant.forwardChain} -o 'asterisk0' -j ACCEPT
@@ -103,7 +103,7 @@ private fun StringBuilder.appendIptablesVariantSetupRules(
             interfaces = emptyList(),
             input = true,
         )
-        appendAsteriskdBypassAnchorJump(variant.command, variant.preroutingChain, variant.ipv6)
+        appendAsteriskdBypassBoundary(variant.command, variant.preroutingChain, variant.ipv6)
         appendRootEbpfXtbpfInterfaceMarkRules(
             command = variant.command,
             chain = variant.preroutingChain,
@@ -140,7 +140,7 @@ private fun StringBuilder.appendIptablesVariantSetupRules(
             interfaces = emptyList(),
             input = false,
         )
-        appendAsteriskdBypassAnchorJump(variant.command, variant.outputChain, variant.ipv6)
+        appendAsteriskdBypassBoundary(variant.command, variant.outputChain, variant.ipv6)
         appendRootEbpfXtbpfMarkRules(
             command = variant.command,
             chain = variant.outputChain,
@@ -202,7 +202,7 @@ private fun StringBuilder.appendPreroutingTrafficMarkRules(
         interfaces = emptyList(),
         input = true,
     )
-    appendAsteriskdBypassAnchorJump(variant.command, variant.preroutingChain, variant.ipv6)
+    appendAsteriskdBypassBoundary(variant.command, variant.preroutingChain, variant.ipv6)
     config.externalInterfacePrefixes.forEach { prefix ->
         appendPreroutingInterfaceMarkRules(variant.command, variant.preroutingChain, prefix, config.mark)
     }
@@ -243,7 +243,7 @@ private fun StringBuilder.appendOutputTrafficMarkRules(
         interfaces = emptyList(),
         input = false,
     )
-    appendAsteriskdBypassAnchorJump(variant.command, variant.outputChain, variant.ipv6)
+    appendAsteriskdBypassBoundary(variant.command, variant.outputChain, variant.ipv6)
     appendScript("${variant.command} -t mangle -A ${variant.outputChain} -m owner --gid-owner $RootXrayGid -j RETURN")
     appendOutputApplicationBypassRules(
         command = variant.command,
