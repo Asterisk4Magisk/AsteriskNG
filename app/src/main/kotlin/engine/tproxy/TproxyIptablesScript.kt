@@ -99,7 +99,7 @@ private fun StringBuilder.appendIptablesVariantSetupRules(
         ${variant.command} -t mangle -N ${variant.preroutingChain} 2>/dev/null || true
         ${variant.command} -t mangle -N ${variant.outputChain} 2>/dev/null || true
         ${variant.command} -t mangle -I PREROUTING 1 -j ${variant.preroutingChain}
-        ${variant.command} -t mangle -I OUTPUT 1 -j ${variant.outputChain}
+        ${variant.command} -t mangle -A OUTPUT -j ${variant.outputChain}
         """,
     )
     if (config.enableEbpfRules) {

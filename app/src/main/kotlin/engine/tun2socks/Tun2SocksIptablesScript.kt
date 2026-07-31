@@ -80,7 +80,7 @@ private fun StringBuilder.appendIptablesVariantSetupRules(
         ${variant.command} -t mangle -N ${variant.outputChain} 2>/dev/null || true
         ${variant.command} -t filter -N ${variant.forwardChain} 2>/dev/null || true
         ${variant.command} -t mangle -I PREROUTING 1 -j ${variant.preroutingChain}
-        ${variant.command} -t mangle -I OUTPUT 1 -j ${variant.outputChain}
+        ${variant.command} -t mangle -A OUTPUT -j ${variant.outputChain}
         ${variant.command} -t filter -I FORWARD 1 -j ${variant.forwardChain}
         ${variant.command} -t filter -A ${variant.forwardChain} -i 'asterisk0' -j ACCEPT
         ${variant.command} -t filter -A ${variant.forwardChain} -o 'asterisk0' -j ACCEPT
