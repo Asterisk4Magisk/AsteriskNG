@@ -15,7 +15,7 @@
         },
         {
             "uniqueId": "github:2dust/AndroidLibXrayLite",
-            "artifactVersion": "v26.7.28",
+            "artifactVersion": "v26.7.31",
             "name": "AndroidLibXrayLite",
             "description": "Android AAR wrapper for Xray-core, built with gomobile.",
             "website": "https://github.com/2dust/AndroidLibXrayLite",
@@ -41,7 +41,7 @@
         },
         {
             "uniqueId": "github:Asterisk4Magisk/asteriskd",
-            "artifactVersion": "v1.0.3",
+            "artifactVersion": "v1.0.4",
             "name": "asteriskd",
             "description": "A root Android daemon that synchronizes local-address bypass rules and pinned eBPF maps.",
             "website": "https://github.com/Asterisk4Magisk/asteriskd",
@@ -54,7 +54,7 @@
         },
         {
             "uniqueId": "github:Asterisk4Magisk/bpf2socks",
-            "artifactVersion": "v1.0.2",
+            "artifactVersion": "v1.0.3",
             "name": "bpf2socks",
             "description": "A root Android/Linux traffic bridge that forwards TCP and UDP through a SOCKS5 upstream using eBPF.",
             "website": "https://github.com/Asterisk4Magisk/bpf2socks",
@@ -158,7 +158,7 @@
         },
         {
             "uniqueId": "io.grpc:grpc-okhttp",
-            "artifactVersion": "1.83.0",
+            "artifactVersion": "1.83.1",
             "name": "io.grpc:grpc-okhttp",
             "description": "gRPC: OkHttp",
             "website": "https://github.com/grpc/grpc-java",
@@ -171,7 +171,7 @@
         },
         {
             "uniqueId": "io.grpc:grpc-protobuf-lite",
-            "artifactVersion": "1.83.0",
+            "artifactVersion": "1.83.1",
             "name": "io.grpc:grpc-protobuf-lite",
             "description": "gRPC: Protobuf Lite",
             "website": "https://github.com/grpc/grpc-java",
@@ -184,7 +184,7 @@
         },
         {
             "uniqueId": "io.grpc:grpc-stub",
-            "artifactVersion": "1.83.0",
+            "artifactVersion": "1.83.1",
             "name": "io.grpc:grpc-stub",
             "description": "gRPC: Stub",
             "website": "https://github.com/grpc/grpc-java",
@@ -249,7 +249,7 @@
         },
         {
             "uniqueId": "io.ktor:ktor-http",
-            "artifactVersion": "3.5.1",
+            "artifactVersion": "3.5.2",
             "name": "ktor-http",
             "description": "Ktor is a framework for quickly creating web applications in Kotlin with minimal effort.",
             "website": "https://github.com/ktorio/ktor",
