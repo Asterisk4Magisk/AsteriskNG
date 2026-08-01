@@ -101,6 +101,9 @@ internal fun buildRootStopScript(
                         kill -9 "$asteriskd_pid" 2>/dev/null || true
                     fi
                 fi
+                # Covers a daemon that already fail-stopped or was killed
+                # before this intentional stop began.
+                [ -r "$ASTERISKD_STATE_FILE" ] && restore_asteriskd_ipv6_state
                 if [ -x "$ASTERISKD_EXECUTABLE" ] && [ -r "$ASTERISKD_CONFIG_FILE" ]; then
                     "$ASTERISKD_EXECUTABLE" --prepare --config "$ASTERISKD_CONFIG_FILE" >/dev/null 2>&1 || true
                 fi
@@ -130,13 +133,16 @@ internal fun buildRootStopScript(
             }
 
             main() {
+                preserve_asteriskd_state=0
                 case "${1:-}" in
                     --normal)
                         stop_asteriskd
                         ;;
                     --from-asteriskd)
-                        # asteriskd already restored IPv6 state and exec'd this script.
+                        # A fail-stopped asteriskd leaves IPv6 disabled and
+                        # preserves originals for restart or intentional stop.
                         clear_asteriskd_markers
+                        preserve_asteriskd_state=1
                         ;;
                     *)
                         echo "Usage: $0 --normal | --from-asteriskd" >&2
@@ -146,7 +152,9 @@ internal fun buildRootStopScript(
 
                 stop_xray
                 cleanup_network_rules
-                rm -f "$ASTERISKD_STATE_FILE" 2>/dev/null || true
+                if [ "$preserve_asteriskd_state" != "1" ]; then
+                    rm -f "$ASTERISKD_STATE_FILE" 2>/dev/null || true
+                fi
             }
 
             main "$@"
