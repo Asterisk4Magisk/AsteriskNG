@@ -102,6 +102,11 @@ class AsteriskVpnService : VpnService() {
         super.onDestroy()
     }
 
+    override fun onRevoke() {
+        running = false
+        super.onRevoke()
+    }
+
     private fun stopSelfOnMain(startId: Int) {
         if (Looper.myLooper() == Looper.getMainLooper()) {
             stopSelf(startId)

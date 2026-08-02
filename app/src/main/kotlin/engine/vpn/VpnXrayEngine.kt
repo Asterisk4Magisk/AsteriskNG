@@ -36,6 +36,13 @@ internal class VpnXrayEngine(
     }
 
     override suspend fun status(): ProxyEngineStatus {
-        return ProxyEngineStatus(running = AsteriskVpnService.isRunning(), runMode = runMode)
+        val ownsVpnPreparation = VpnService.prepare(context) == null
+        return ProxyEngineStatus(
+            running = resolveVpnRuntimeRunning(
+                runtimeRunning = AsteriskVpnService.isRunning(),
+                ownsVpnPreparation = ownsVpnPreparation,
+            ),
+            runMode = runMode,
+        )
     }
 }
