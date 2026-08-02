@@ -6,6 +6,7 @@ package engine.proxy
 import app.AppState
 import app.ProxyServerState
 import engine.xray.XrayStatsApiConfig
+import engine.xray.xrayStatsApiTag
 
 data class ProxyEngineStartRequest(
     val appState: AppState,
@@ -26,5 +27,6 @@ internal fun ProxyEngineStartRequest.xrayStatsApiConfig(): XrayStatsApiConfig? {
     return XrayStatsApiConfig(
         listenAddress = listenAddress,
         port = port,
+        apiTag = selectedServer.server.xrayStatsApiTag(),
     )
 }

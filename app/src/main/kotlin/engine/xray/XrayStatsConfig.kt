@@ -3,6 +3,9 @@
 
 package engine.xray
 
+import features.proxy.server.model.Custom
+import features.proxy.server.model.ProxyServer
+import features.proxy.server.model.parseCustomXrayConfigJsonObject
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonObjectBuilder
 import kotlinx.serialization.json.JsonPrimitive
@@ -15,7 +18,16 @@ import kotlinx.serialization.json.put
 internal data class XrayStatsApiConfig(
     val listenAddress: String,
     val port: Int,
+    val apiTag: String = XrayStatsApiTag,
 )
+
+internal fun ProxyServer<*>.xrayStatsApiTag(): String {
+    val custom = this as? Custom ?: return XrayStatsApiTag
+    return parseCustomXrayConfigJsonObject(custom.configJson)
+        .objectValue("api")
+        ?.stringValue("tag")
+        ?: XrayStatsApiTag
+}
 
 internal fun JsonObject.withXrayStatsApiConfig(config: XrayStatsApiConfig?): JsonObject {
     if (config == null) return this
@@ -40,7 +52,7 @@ internal fun JsonObjectBuilder.putXrayStatsApiConfig(config: XrayStatsApiConfig?
     put(
         "api",
         buildJsonObject {
-            put("tag", XrayStatsApiTag)
+            put("tag", config.apiTag)
             put("listen", "${config.listenAddress}:${config.port}")
             putStatsApiServices(listOf(XrayStatsServiceName))
         },
@@ -55,7 +67,7 @@ private fun JsonObject.withStatsPolicy(): JsonObject {
 }
 
 private fun JsonObject.withStatsApi(config: XrayStatsApiConfig): JsonObject {
-    val tag = stringValue("tag") ?: XrayStatsApiTag
+    val tag = stringValue("tag") ?: config.apiTag
     val services = arrayValue("services")
         ?.mapNotNull { element -> element.jsonPrimitive.contentOrNull }
         .orEmpty()
@@ -74,6 +86,8 @@ private fun JsonObjectBuilder.putStatsPolicySystem() {
 }
 
 private fun JsonObjectBuilder.putStatsPolicyFlags() {
+    put("statsInboundUplink", true)
+    put("statsInboundDownlink", true)
     put("statsOutboundUplink", true)
     put("statsOutboundDownlink", true)
 }
@@ -87,5 +101,5 @@ private fun JsonObjectBuilder.putStatsApiServices(services: List<String>) {
     )
 }
 
-private const val XrayStatsApiTag = "api"
+internal const val XrayStatsApiTag = "api"
 private const val XrayStatsServiceName = "StatsService"

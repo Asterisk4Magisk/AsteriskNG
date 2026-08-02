@@ -16,6 +16,7 @@ import android.os.IBinder
 import android.os.SystemClock
 import androidx.core.content.ContextCompat
 import app.R
+import engine.xray.XrayStatsApiTag
 import features.logs.AndroidAppLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -107,6 +108,7 @@ class ProxyTrafficStatsService : Service() {
             XrayStatsClient(
                 listenAddress = runtime.listenAddress,
                 port = runtime.port,
+                apiTag = runtime.apiTag,
             ).use { client ->
                 while (isActive) {
                     delay(PollIntervalMillis.milliseconds)
@@ -114,7 +116,7 @@ class ProxyTrafficStatsService : Service() {
                     val elapsedMillis = now - lastPollAt
                     lastPollAt = now
                     runCatching {
-                        client.queryOutboundTraffic(reset = true)
+                        client.queryInboundTraffic(reset = true)
                     }.onSuccess { delta ->
                         failures = 0
                         notificationManager.notify(
@@ -217,6 +219,9 @@ class ProxyTrafficStatsService : Service() {
             listenAddress = listenAddress,
             port = port,
             serverName = serverName,
+            apiTag = getStringExtra(ExtraApiTag)
+                ?.takeIf(String::isNotBlank)
+                ?: XrayStatsApiTag,
         )
     }
 
@@ -242,7 +247,8 @@ class ProxyTrafficStatsService : Service() {
                         .setAction(ActionStart)
                         .putExtra(ExtraListenAddress, runtime.listenAddress)
                         .putExtra(ExtraPort, runtime.port)
-                        .putExtra(ExtraServerName, runtime.serverName),
+                        .putExtra(ExtraServerName, runtime.serverName)
+                        .putExtra(ExtraApiTag, runtime.apiTag),
                 )
             }.onFailure { error ->
                 AndroidAppLogger.warn(LogTag, "Failed to request traffic stats foreground service start", error)
@@ -262,6 +268,7 @@ private const val ActionStop = "app.action.STOP_PROXY_TRAFFIC_STATS"
 private const val ExtraListenAddress = "listen_address"
 private const val ExtraPort = "port"
 private const val ExtraServerName = "server_name"
+private const val ExtraApiTag = "api_tag"
 private const val ChannelId = "proxy_traffic_stats"
 private const val NotificationId = 3001
 private const val PollIntervalMillis = 1_000L

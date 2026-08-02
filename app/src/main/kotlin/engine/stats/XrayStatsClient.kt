@@ -13,29 +13,31 @@ import java.util.concurrent.TimeUnit
 internal class XrayStatsClient(
     listenAddress: String,
     port: Int,
+    apiTag: String,
 ) : Closeable {
     private val channel: ManagedChannel = OkHttpChannelBuilder
         .forAddress(listenAddress, port)
         .usePlaintext()
         .build()
     private val stub = StatsServiceGrpc.newBlockingStub(channel)
+    private val excludedInboundTags = xrayTrafficExcludedInboundTags(apiTag)
 
-    fun queryOutboundTraffic(reset: Boolean = true): XrayTrafficBytes {
+    fun queryInboundTraffic(reset: Boolean = true): XrayTrafficBytes {
         val response = stub
             .withDeadlineAfter(QueryDeadlineSeconds, TimeUnit.SECONDS)
             .queryStats(
-                QueryStatsRequest.newBuilder()
-                    .setPattern(XrayOutboundTrafficStatsPattern)
-                    .setReset(reset)
-                    .build(),
+                buildXrayInboundTrafficStatsRequest(reset),
             )
         val stats = response.statList.mapNotNull { stat ->
-            parseXrayTrafficStat(
+            parseXrayInboundTrafficStat(
                 name = stat.name,
                 bytes = stat.value,
             )
         }
-        return aggregateProxyTraffic(stats)
+        return aggregateInboundTraffic(
+            stats = stats,
+            excludedInboundTags = excludedInboundTags,
+        )
     }
 
     override fun close() {
@@ -43,5 +45,12 @@ internal class XrayStatsClient(
     }
 }
 
-private const val XrayOutboundTrafficStatsPattern = "outbound>>>"
+internal fun buildXrayInboundTrafficStatsRequest(reset: Boolean): QueryStatsRequest {
+    return QueryStatsRequest.newBuilder()
+        .setPattern(XrayInboundTrafficStatsPattern)
+        .setReset(reset)
+        .build()
+}
+
+private const val XrayInboundTrafficStatsPattern = "inbound>>>"
 private const val QueryDeadlineSeconds = 2L

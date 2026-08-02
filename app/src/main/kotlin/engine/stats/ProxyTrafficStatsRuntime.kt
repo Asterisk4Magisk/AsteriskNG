@@ -5,11 +5,13 @@ package engine.stats
 
 import android.content.Context
 import androidx.core.content.edit
+import engine.xray.XrayStatsApiTag
 
 internal data class ProxyTrafficStatsRuntime(
     val listenAddress: String,
     val port: Int,
     val serverName: String,
+    val apiTag: String = XrayStatsApiTag,
 )
 
 internal object ProxyTrafficStatsRuntimeStore {
@@ -22,6 +24,9 @@ internal object ProxyTrafficStatsRuntimeStore {
                 ?: XrayStatsApiListenAddress,
             port = port,
             serverName = preferences.getString(KeyServerName, "").orEmpty(),
+            apiTag = preferences.getString(KeyApiTag, XrayStatsApiTag)
+                ?.takeIf(String::isNotBlank)
+                ?: XrayStatsApiTag,
         )
     }
 
@@ -37,6 +42,7 @@ internal object ProxyTrafficStatsRuntimeStore {
             putString(KeyListenAddress, runtime.listenAddress)
             putInt(KeyPort, runtime.port)
             putString(KeyServerName, runtime.serverName)
+            putString(KeyApiTag, runtime.apiTag)
         }
     }
 
@@ -50,3 +56,4 @@ private const val PreferencesName = "proxy_traffic_stats"
 private const val KeyListenAddress = "listen_address"
 private const val KeyPort = "port"
 private const val KeyServerName = "server_name"
+private const val KeyApiTag = "api_tag"

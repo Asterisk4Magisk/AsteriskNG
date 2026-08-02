@@ -217,15 +217,18 @@ class AndroidProxyEngine(
             preferredPort = ProxyTrafficStatsRuntimeStore.readPort(appContext),
             excludedPorts = appState.xrayStatsApiExcludedPorts(),
         )
-        val runtime = ProxyTrafficStatsRuntime(
-            listenAddress = XrayStatsApiListenAddress,
-            port = port,
-            serverName = selectedServer.trafficStatsServerName(),
+        val request = copy(
+            xrayStatsApiListenAddress = XrayStatsApiListenAddress,
+            xrayStatsApiPort = port,
         )
-        return copy(
-            xrayStatsApiListenAddress = runtime.listenAddress,
-            xrayStatsApiPort = runtime.port,
-        ) to runtime
+        val statsApiConfig = checkNotNull(request.xrayStatsApiConfig())
+        val runtime = ProxyTrafficStatsRuntime(
+            listenAddress = statsApiConfig.listenAddress,
+            port = statsApiConfig.port,
+            serverName = selectedServer.trafficStatsServerName(),
+            apiTag = statsApiConfig.apiTag,
+        )
+        return request to runtime
     }
 
     private fun ProxyEngineStatus.withTrafficStatsReconciled(appState: AppState?): ProxyEngineStatus {

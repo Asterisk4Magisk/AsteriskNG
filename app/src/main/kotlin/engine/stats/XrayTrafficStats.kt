@@ -54,13 +54,13 @@ internal class XrayTrafficSessionAccumulator {
 
 }
 
-internal fun parseXrayTrafficStat(
+internal fun parseXrayInboundTrafficStat(
     name: String,
     bytes: Long,
 ): XrayTrafficStat? {
     val parts = name.split(XrayStatNameSeparator)
-    if (parts.size != XrayOutboundTrafficStatPartCount) return null
-    if (parts[0] != XrayOutboundStatPrefix || parts[2] != XrayTrafficStatMiddle) return null
+    if (parts.size != XrayInboundTrafficStatPartCount) return null
+    if (parts[0] != XrayInboundStatPrefix || parts[2] != XrayTrafficStatMiddle) return null
     val direction = when (parts[3]) {
         XrayTrafficStatUplink -> XrayTrafficDirection.Uplink
         XrayTrafficStatDownlink -> XrayTrafficDirection.Downlink
@@ -73,12 +73,15 @@ internal fun parseXrayTrafficStat(
     )
 }
 
-internal fun aggregateProxyTraffic(stats: List<XrayTrafficStat>): XrayTrafficBytes {
+internal fun aggregateInboundTraffic(
+    stats: List<XrayTrafficStat>,
+    excludedInboundTags: Set<String>,
+): XrayTrafficBytes {
     var uplink = 0L
     var downlink = 0L
     stats
         .asSequence()
-        .filter { stat -> stat.tag !in ExcludedProxyTrafficOutboundTags }
+        .filter { stat -> stat.tag !in excludedInboundTags }
         .forEach { stat ->
             when (stat.direction) {
                 XrayTrafficDirection.Uplink -> uplink += stat.bytes
@@ -103,8 +106,8 @@ internal fun Long.toTrafficSpeedString(): String {
 }
 
 private const val XrayStatNameSeparator = ">>>"
-private const val XrayOutboundTrafficStatPartCount = 4
-private const val XrayOutboundStatPrefix = "outbound"
+private const val XrayInboundTrafficStatPartCount = 4
+private const val XrayInboundStatPrefix = "inbound"
 private const val XrayTrafficStatMiddle = "traffic"
 private const val XrayTrafficStatUplink = "uplink"
 private const val XrayTrafficStatDownlink = "downlink"
@@ -112,11 +115,7 @@ private const val TrafficUnitThreshold = 1000L
 private const val TrafficUnitDivisor = 1024.0
 
 private val TrafficUnits = listOf("B", "KB", "MB", "GB", "TB", "PB")
-private val ExcludedProxyTrafficOutboundTags = setOf(
-    "direct",
-    "block",
-    "dns-out",
-    "fragment",
-    "api",
-    XrayTags.DEFAULT_ROUTE_LOOPBACK,
+internal fun xrayTrafficExcludedInboundTags(apiTag: String): Set<String> = setOf(
+    apiTag,
+    XrayTags.DEFAULT_ROUTE_LOOPBACK_INBOUND,
 )
