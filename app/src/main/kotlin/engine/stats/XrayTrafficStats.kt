@@ -34,24 +34,48 @@ internal data class XrayTrafficSessionSample(
     val totalBytes: XrayTrafficBytes,
 )
 
+private data class XrayTrafficSpeedSample(
+    val bytes: XrayTrafficBytes,
+    val elapsedMillis: Long,
+)
+
 internal class XrayTrafficSessionAccumulator {
     private var totalBytes = XrayTrafficBytes()
+    private val speedSamples = ArrayDeque<XrayTrafficSpeedSample>()
+    private var speedWindowElapsedMillis = 0L
 
     fun record(
         delta: XrayTrafficBytes,
         elapsedMillis: Long,
     ): XrayTrafficSessionSample {
-        val elapsedSeconds = elapsedMillis.coerceAtLeast(1L).toDouble() / 1000.0
+        val sampleElapsedMillis = elapsedMillis.coerceAtLeast(1L)
         totalBytes += delta
+        speedSamples.addLast(
+            XrayTrafficSpeedSample(
+                bytes = delta,
+                elapsedMillis = sampleElapsedMillis,
+            ),
+        )
+        speedWindowElapsedMillis += sampleElapsedMillis
+        while (speedSamples.size > 1) {
+            val oldest = speedSamples.first()
+            if (speedWindowElapsedMillis - oldest.elapsedMillis < TrafficSpeedWindowMillis) break
+            speedSamples.removeFirst()
+            speedWindowElapsedMillis -= oldest.elapsedMillis
+        }
+
+        val speedWindowBytes = speedSamples.fold(XrayTrafficBytes()) { result, sample ->
+            result + sample.bytes
+        }
+        val speedWindowSeconds = speedWindowElapsedMillis.toDouble() / 1000.0
         return XrayTrafficSessionSample(
             speedBytesPerSecond = XrayTrafficBytes(
-                uplink = (delta.uplink / elapsedSeconds).toLong(),
-                downlink = (delta.downlink / elapsedSeconds).toLong(),
+                uplink = (speedWindowBytes.uplink / speedWindowSeconds).toLong(),
+                downlink = (speedWindowBytes.downlink / speedWindowSeconds).toLong(),
             ),
             totalBytes = totalBytes,
         )
     }
-
 }
 
 internal fun parseXrayInboundTrafficStat(
@@ -111,6 +135,7 @@ private const val XrayInboundStatPrefix = "inbound"
 private const val XrayTrafficStatMiddle = "traffic"
 private const val XrayTrafficStatUplink = "uplink"
 private const val XrayTrafficStatDownlink = "downlink"
+private const val TrafficSpeedWindowMillis = 3_000L
 private const val TrafficUnitThreshold = 1000L
 private const val TrafficUnitDivisor = 1024.0
 
