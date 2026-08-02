@@ -27,7 +27,10 @@ import engine.proxy.AndroidProxyEngine
 import engine.proxy.latency.AndroidProxyLatencyTester
 import features.proxy.server.usecase.ProxyServerImportFileUseCase
 import features.proxy.server.usecase.ProxyServiceUseCase
+import features.resources.ResourceFileUpdateCoordinator
+import features.resources.ResourceFileUpdateRequest
 import features.resources.ResourceFileUseCase
+import features.resources.runtime.AndroidResourceFileDownloadCancellation
 import features.settings.locale.ProvideAppLanguage
 import features.settings.locale.RecreateActivityOnAppLanguageChange
 import features.settings.usecase.SwitchRunModeUseCase
@@ -74,6 +77,32 @@ fun App(
         ResourceFileUseCase(
             context = appContext,
             resourceFilePicker = resourceFilePicker,
+        )
+    }
+    val resourceFileUpdateCoordinator = remember(appScope, resourceFileUseCase) {
+        ResourceFileUpdateCoordinator(
+            scope = appScope,
+            execute = { request ->
+                when (request) {
+                    is ResourceFileUpdateRequest.BuiltIn -> resourceFileUseCase.update(
+                        kind = request.kind,
+                        source = request.source,
+                        options = request.options,
+                        customResourceFiles = request.customResourceFiles,
+                    )
+                    is ResourceFileUpdateRequest.Custom -> resourceFileUseCase.updateCustom(
+                        customFile = request.file,
+                        options = request.options,
+                        customResourceFiles = request.customResourceFiles,
+                    )
+                    is ResourceFileUpdateRequest.All -> resourceFileUseCase.update(
+                        source = request.source,
+                        options = request.options,
+                        customResourceFiles = request.customResourceFiles,
+                    )
+                }
+            },
+            cancelRunning = AndroidResourceFileDownloadCancellation::cancel,
         )
     }
     val appBackupUseCase = remember(appContext, resourceFilePicker, logFileCreator) {
@@ -134,6 +163,7 @@ fun App(
         packageCatalog,
         networkInterfaces,
         resourceFileUseCase,
+        resourceFileUpdateCoordinator,
         appBackupUseCase,
         subscriptionFetcher,
         qrScanner,
@@ -154,6 +184,7 @@ fun App(
             packageCatalog = packageCatalog,
             networkInterfaces = networkInterfaces,
             resourceFileUseCase = resourceFileUseCase,
+            resourceFileUpdateCoordinator = resourceFileUpdateCoordinator,
             appBackupUseCase = appBackupUseCase,
             subscriptionFetcher = subscriptionFetcher,
             qrScanner = qrScanner,

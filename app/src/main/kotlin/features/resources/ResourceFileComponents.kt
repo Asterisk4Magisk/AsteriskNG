@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -38,6 +39,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -48,6 +51,7 @@ import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.basic.InfiniteProgressIndicator
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.basic.TextField
@@ -96,7 +100,9 @@ internal fun ResourceFileSourceCard(
     ) -> Unit,
     onUserAgentChange: (String) -> Unit,
     onUpdate: () -> Unit,
+    onCancel: () -> Unit,
     modifier: Modifier = Modifier,
+    actionsEnabled: Boolean = true,
 ) {
     var showCustomSourceDialog by remember { mutableStateOf(false) }
     var showCustomUserAgentDialog by remember { mutableStateOf(false) }
@@ -211,9 +217,11 @@ internal fun ResourceFileSourceCard(
             },
         )
         ArrowPreference(
-            title = stringResource(R.string.settings_resource_files_update),
-            onClick = onUpdate,
-            enabled = !updating,
+            title = stringResource(
+                if (updating) R.string.common_cancel else R.string.settings_resource_files_update,
+            ),
+            onClick = { if (updating) onCancel() else onUpdate() },
+            enabled = updating || actionsEnabled,
         )
     }
 }
@@ -294,13 +302,15 @@ private fun CustomResourceFileSourceDialog(
 internal fun ResourceFileCard(
     fileName: String,
     status: ResourceFileStatus,
-    updating: Boolean,
+    updateState: ResourceFileUpdateDisplayState = ResourceFileUpdateDisplayState.Idle,
     onReplace: () -> Unit,
     onRestore: () -> Unit,
     modifier: Modifier = Modifier,
     onUpdate: (() -> Unit)? = null,
     description: String? = null,
+    actionsEnabled: Boolean = true,
 ) {
+    val cardActionsEnabled = actionsEnabled && updateState == ResourceFileUpdateDisplayState.Idle
     ResourceFileCardSurface(
         fileName = fileName,
         status = status,
@@ -308,29 +318,20 @@ internal fun ResourceFileCard(
         modifier = modifier,
     ) {
         if (onUpdate != null) {
-            IconButton(
-                enabled = !updating,
+            ResourceFileUpdateAction(
+                updateState = updateState,
+                enabled = actionsEnabled,
                 onClick = onUpdate,
-            ) {
-                Icon(
-                    imageVector = MiuixIcons.Refresh,
-                    contentDescription = stringResource(R.string.common_update),
-                    tint = if (updating) {
-                        MiuixTheme.colorScheme.disabledOnSecondaryVariant
-                    } else {
-                        MiuixTheme.colorScheme.onSurface
-                    },
-                )
-            }
+            )
         }
         IconButton(
-            enabled = !updating,
+            enabled = cardActionsEnabled,
             onClick = onReplace,
         ) {
             Icon(
                 imageVector = MiuixIcons.Replace,
                 contentDescription = stringResource(R.string.common_replace),
-                tint = if (updating) {
+                tint = if (!cardActionsEnabled) {
                     MiuixTheme.colorScheme.disabledOnSecondaryVariant
                 } else {
                     MiuixTheme.colorScheme.onSurface
@@ -338,13 +339,13 @@ internal fun ResourceFileCard(
             )
         }
         IconButton(
-            enabled = !updating,
+            enabled = cardActionsEnabled,
             onClick = onRestore,
         ) {
             Icon(
                 imageVector = MiuixIcons.Reset,
                 contentDescription = stringResource(R.string.common_restore),
-                tint = if (updating) {
+                tint = if (!cardActionsEnabled) {
                     MiuixTheme.colorScheme.disabledOnSecondaryVariant
                 } else {
                     MiuixTheme.colorScheme.onSurface
@@ -494,42 +495,35 @@ internal fun CustomResourceFileEditorDialog(
 @Composable
 internal fun CustomResourceFileCard(
     fileStatus: CustomResourceFileStatus,
-    updating: Boolean,
+    updateState: ResourceFileUpdateDisplayState = ResourceFileUpdateDisplayState.Idle,
     onUpdate: (CustomResourceFileState) -> Unit,
     onReplace: (CustomResourceFileState) -> Unit,
     onEdit: (CustomResourceFileState) -> Unit,
     onDelete: (CustomResourceFileState) -> Unit,
     modifier: Modifier = Modifier,
+    actionsEnabled: Boolean = true,
 ) {
+    val cardActionsEnabled = actionsEnabled && updateState == ResourceFileUpdateDisplayState.Idle
     ResourceFileCardSurface(
         fileName = fileStatus.file.name,
         status = fileStatus.status,
         modifier = modifier,
     ) {
         if (fileStatus.file.url.isNotBlank()) {
-            IconButton(
-                enabled = !updating,
+            ResourceFileUpdateAction(
+                updateState = updateState,
+                enabled = actionsEnabled,
                 onClick = { onUpdate(fileStatus.file) },
-            ) {
-                Icon(
-                    imageVector = MiuixIcons.Refresh,
-                    contentDescription = stringResource(R.string.common_update),
-                    tint = if (updating) {
-                        MiuixTheme.colorScheme.disabledOnSecondaryVariant
-                    } else {
-                        MiuixTheme.colorScheme.onSurface
-                    },
-                )
-            }
+            )
         }
         IconButton(
-            enabled = !updating,
+            enabled = cardActionsEnabled,
             onClick = { onReplace(fileStatus.file) },
         ) {
             Icon(
                 imageVector = MiuixIcons.Replace,
                 contentDescription = stringResource(R.string.common_replace),
-                tint = if (updating) {
+                tint = if (!cardActionsEnabled) {
                     MiuixTheme.colorScheme.disabledOnSecondaryVariant
                 } else {
                     MiuixTheme.colorScheme.onSurface
@@ -537,13 +531,13 @@ internal fun CustomResourceFileCard(
             )
         }
         IconButton(
-            enabled = !updating,
+            enabled = cardActionsEnabled,
             onClick = { onEdit(fileStatus.file) },
         ) {
             Icon(
                 imageVector = MiuixIcons.Edit,
                 contentDescription = stringResource(R.string.common_edit),
-                tint = if (updating) {
+                tint = if (!cardActionsEnabled) {
                     MiuixTheme.colorScheme.disabledOnSecondaryVariant
                 } else {
                     MiuixTheme.colorScheme.onSurface
@@ -551,18 +545,72 @@ internal fun CustomResourceFileCard(
             )
         }
         IconButton(
-            enabled = !updating,
+            enabled = cardActionsEnabled,
             onClick = { onDelete(fileStatus.file) },
         ) {
             Icon(
                 imageVector = MiuixIcons.Delete,
                 contentDescription = stringResource(R.string.common_delete),
-                tint = if (updating) {
+                tint = if (!cardActionsEnabled) {
                     MiuixTheme.colorScheme.disabledOnSecondaryVariant
                 } else {
                     MiuixTheme.colorScheme.onSurface
                 },
             )
+        }
+    }
+}
+
+@Composable
+private fun ResourceFileUpdateAction(
+    updateState: ResourceFileUpdateDisplayState,
+    enabled: Boolean,
+    onClick: () -> Unit,
+) {
+    when (updateState) {
+        ResourceFileUpdateDisplayState.Idle -> IconButton(
+            enabled = enabled,
+            onClick = onClick,
+        ) {
+            Icon(
+                imageVector = MiuixIcons.Refresh,
+                contentDescription = stringResource(R.string.common_update),
+                tint = if (enabled) {
+                    MiuixTheme.colorScheme.onSurface
+                } else {
+                    MiuixTheme.colorScheme.disabledOnSecondaryVariant
+                },
+            )
+        }
+
+        ResourceFileUpdateDisplayState.Queued -> IconButton(
+            enabled = false,
+            onClick = {},
+        ) {
+            Icon(
+                imageVector = MiuixIcons.Refresh,
+                contentDescription = stringResource(R.string.settings_resource_file_update_queued),
+                tint = MiuixTheme.colorScheme.primary,
+            )
+        }
+
+        ResourceFileUpdateDisplayState.Running -> IconButton(
+            enabled = false,
+            onClick = {},
+        ) {
+            val updatingDescription = stringResource(R.string.settings_resource_file_updating)
+            Box(
+                modifier = Modifier
+                    .size(24.dp)
+                    .semantics { contentDescription = updatingDescription },
+                contentAlignment = Alignment.Center,
+            ) {
+                InfiniteProgressIndicator(
+                    color = MiuixTheme.colorScheme.primary,
+                    size = 20.dp,
+                    strokeWidth = 2.dp,
+                )
+            }
         }
     }
 }

@@ -203,6 +203,8 @@
     <string name="settings_resource_files_updated_at">更新时间 {time}</string>
     <string name="settings_resource_files_size">大小 {size}</string>
     <string name="settings_resource_files_updating">正在更新资源文件…</string>
+    <string name="settings_resource_file_update_queued">等待更新</string>
+    <string name="settings_resource_file_updating">正在更新资源文件</string>
     <string name="settings_resource_files_updated">资源文件已更新</string>
     <string name="settings_resource_file_updated">{name} 已更新</string>
     <string name="settings_resource_files_replaced">{name} 已替换</string>

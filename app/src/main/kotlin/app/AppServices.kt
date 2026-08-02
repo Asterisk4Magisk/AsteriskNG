@@ -11,6 +11,7 @@ import engine.proxy.latency.AndroidProxyLatencyTester
 import features.logs.CoreLogRepository
 import features.proxy.server.usecase.ProxyServerImportFileUseCase
 import features.proxy.server.usecase.ProxyServiceUseCase
+import features.resources.ResourceFileUpdateCoordinator
 import features.resources.ResourceFileUseCase
 import features.settings.usecase.SwitchRunModeUseCase
 import features.settings.usecase.RootBootScriptUseCase
@@ -31,6 +32,7 @@ internal data class AppServices(
     val packageCatalog: AndroidPackageProvider,
     val networkInterfaces: AndroidNetworkInterfaceProvider,
     val resourceFileUseCase: ResourceFileUseCase,
+    val resourceFileUpdateCoordinator: ResourceFileUpdateCoordinator,
     val appBackupUseCase: AppBackupUseCase,
     val subscriptionFetcher: AndroidSubscriptionFetcher,
     val qrScanner: suspend () -> String?,

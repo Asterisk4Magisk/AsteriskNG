@@ -15,6 +15,7 @@ import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -68,11 +69,13 @@ fun ResourceManagementPage(
     val updateAppState = LocalUpdateAppState.current
     val services = LocalAppServices.current
     val resourceFileUseCase = services.resourceFileUseCase
+    val resourceFileUpdateCoordinator = services.resourceFileUpdateCoordinator
+    val updateQueueState by resourceFileUpdateCoordinator.state.collectAsState()
     val sourceOptions = settingsResourceFileSourceOptions()
     val tipNotifier = services.tipNotifier
     val topAppBarScrollBehavior = MiuixScrollBehavior()
     var status by remember { mutableStateOf(ResourceFilesStatus()) }
-    var updating by remember { mutableStateOf(false) }
+    var resourceActionRunning by remember { mutableStateOf(false) }
     val showCustomResourceFileDialog = remember { mutableStateOf(false) }
     var editingCustomResourceFile by remember { mutableStateOf<CustomResourceFileState?>(null) }
     var pendingCustomResourceFileDeletion by remember { mutableStateOf<CustomResourceFileState?>(null) }
@@ -80,7 +83,6 @@ fun ResourceManagementPage(
     val customResourceFileUrlState = rememberTextFieldState()
     val editCustomResourceFileNameState = rememberTextFieldState()
     val editCustomResourceFileUrlState = rememberTextFieldState()
-    val updatingMessage = stringResource(R.string.settings_resource_files_updating)
     val updatedMessage = stringResource(R.string.settings_resource_files_updated)
     val updatedOneMessage = stringResource(R.string.settings_resource_file_updated)
     val replacedMessage = stringResource(R.string.settings_resource_files_replaced)
@@ -96,9 +98,9 @@ fun ResourceManagementPage(
     fun runResourceFileAction(
         action: suspend () -> ResourceFilesStatus?,
         successMessage: String?,
-        failureStatusCustomResourceFiles: (() -> List<CustomResourceFileState>)? = null,
     ) {
-        updating = true
+        if (resourceActionRunning) return
+        resourceActionRunning = true
         services.appScope.launch {
             try {
                 action()?.let {
@@ -108,18 +110,10 @@ fun ResourceManagementPage(
                     successMessage?.let { message -> tipNotifier.show(message) }
                 }
             } catch (error: Throwable) {
-                failureStatusCustomResourceFiles?.let { customResourceFiles ->
-                    runCatching {
-                        val failureStatus = resourceFileUseCase.status(customResourceFiles())
-                        withContext(Dispatchers.Main.immediate) {
-                            status = failureStatus
-                        }
-                    }
-                }
                 tipNotifier.showError(error)
             } finally {
                 withContext(Dispatchers.Main.immediate) {
-                    updating = false
+                    resourceActionRunning = false
                 }
             }
         }
@@ -132,33 +126,23 @@ fun ResourceManagementPage(
     }
 
     fun updateResourceFile(kind: ResourceFileKind) {
-        runResourceFileAction(
-            action = {
-                tipNotifier.show(updatingMessage)
-                resourceFileUseCase.update(
-                    kind = kind,
-                    source = appState.resourceFileUpdateSource(),
-                    options = appState.resourceFileUpdateOptions(),
-                    customResourceFiles = appState.customResourceFiles,
-                )
-            },
-            successMessage = updatedOneMessage.formatTemplate("name" to kind.displayName),
-            failureStatusCustomResourceFiles = { appState.customResourceFiles },
+        resourceFileUpdateCoordinator.enqueue(
+            ResourceFileUpdateRequest.BuiltIn(
+                kind = kind,
+                source = appState.resourceFileUpdateSource(),
+                options = appState.resourceFileUpdateOptions(),
+                customResourceFiles = appState.customResourceFiles.toList(),
+            ),
         )
     }
 
     fun updateCustomResourceFile(file: CustomResourceFileState) {
-        runResourceFileAction(
-            action = {
-                tipNotifier.show(updatingMessage)
-                resourceFileUseCase.updateCustom(
-                    customFile = file,
-                    options = appState.resourceFileUpdateOptions(),
-                    customResourceFiles = appState.customResourceFiles,
-                )
-            },
-            successMessage = updatedOneMessage.formatTemplate("name" to file.name),
-            failureStatusCustomResourceFiles = { appState.customResourceFiles },
+        resourceFileUpdateCoordinator.enqueue(
+            ResourceFileUpdateRequest.Custom(
+                file = file,
+                options = appState.resourceFileUpdateOptions(),
+                customResourceFiles = appState.customResourceFiles.toList(),
+            ),
         )
     }
 
@@ -276,8 +260,28 @@ fun ResourceManagementPage(
         }
     }
 
-    LaunchedEffect(appState.customResourceFiles) {
+    LaunchedEffect(appState.customResourceFiles, updateQueueState.completionRevision) {
         status = resourceFileUseCase.status(appState.customResourceFiles)
+    }
+    LaunchedEffect(resourceFileUpdateCoordinator, updatedMessage, updatedOneMessage) {
+        resourceFileUpdateCoordinator.results.collect { result ->
+            when (result) {
+                is ResourceFileUpdateResult.Success -> {
+                    val message = when (val request = result.request) {
+                        is ResourceFileUpdateRequest.All -> updatedMessage
+                        is ResourceFileUpdateRequest.BuiltIn -> updatedOneMessage.formatTemplate(
+                            "name" to request.kind.displayName,
+                        )
+                        is ResourceFileUpdateRequest.Custom -> updatedOneMessage.formatTemplate(
+                            "name" to request.file.name,
+                        )
+                    }
+                    tipNotifier.show(message)
+                }
+                is ResourceFileUpdateResult.Failure -> tipNotifier.showError(result.error)
+                is ResourceFileUpdateResult.Cancelled -> Unit
+            }
+        }
     }
 
     Scaffold(
@@ -325,7 +329,7 @@ fun ResourceManagementPage(
                     ResourceFileCard(
                         fileName = kind.displayName,
                         status = status.statusOf(kind),
-                        updating = updating,
+                        actionsEnabled = !resourceActionRunning,
                         description = stringResource(R.string.settings_resource_files_root_only),
                         onReplace = {
                             runResourceFileAction(
@@ -355,7 +359,8 @@ fun ResourceManagementPage(
                         customDirectCidrIpv4Url = appState.customResourceFileDirectCidrIpv4Url,
                         customDirectCidrIpv6Url = appState.customResourceFileDirectCidrIpv6Url,
                         userAgent = appState.resourceFileUserAgent,
-                        updating = updating,
+                        updating = updateQueueState.isBusy,
+                        actionsEnabled = !resourceActionRunning,
                         onSourceChange = { index ->
                             updateAppState { state -> state.copy(resourceFileSource = index.coerceIn(sourceOptions.indices)) }
                         },
@@ -382,19 +387,15 @@ fun ResourceManagementPage(
                             }
                         },
                         onUpdate = {
-                            runResourceFileAction(
-                                action = {
-                                    tipNotifier.show(updatingMessage)
-                                    resourceFileUseCase.update(
-                                        source = appState.resourceFileUpdateSource(),
-                                        options = appState.resourceFileUpdateOptions(),
-                                        customResourceFiles = appState.customResourceFiles,
-                                    )
-                                },
-                                successMessage = updatedMessage,
-                                failureStatusCustomResourceFiles = { appState.customResourceFiles },
+                            resourceFileUpdateCoordinator.enqueue(
+                                ResourceFileUpdateRequest.All(
+                                    source = appState.resourceFileUpdateSource(),
+                                    options = appState.resourceFileUpdateOptions(),
+                                    customResourceFiles = appState.customResourceFiles.toList(),
+                                ),
                             )
                         },
+                        onCancel = resourceFileUpdateCoordinator::cancelAll,
                     )
                 }
                 listOf(
@@ -408,7 +409,10 @@ fun ResourceManagementPage(
                         ResourceFileCard(
                             fileName = kind.displayName,
                             status = status.statusOf(kind),
-                            updating = updating,
+                            updateState = updateQueueState.displayStateOf(
+                                ResourceFileUpdateTarget.BuiltIn(kind),
+                            ),
+                            actionsEnabled = !resourceActionRunning,
                             onUpdate = { updateResourceFile(kind) },
                             onReplace = {
                                 runResourceFileAction(
@@ -429,7 +433,10 @@ fun ResourceManagementPage(
                     item(key = "custom_resource_file_${customFile.id}") {
                         CustomResourceFileCard(
                             fileStatus = status.statusOf(customFile),
-                            updating = updating,
+                            updateState = updateQueueState.displayStateOf(
+                                ResourceFileUpdateTarget.Custom(customFile.id),
+                            ),
+                            actionsEnabled = !resourceActionRunning,
                             onUpdate = { file -> updateCustomResourceFile(file) },
                             onReplace = { file ->
                                 runResourceFileAction(

@@ -203,6 +203,8 @@
     <string name="settings_resource_files_updated_at">Updated {time}</string>
     <string name="settings_resource_files_size">Size {size}</string>
     <string name="settings_resource_files_updating">Updating resource files…</string>
+    <string name="settings_resource_file_update_queued">Queued for update</string>
+    <string name="settings_resource_file_updating">Updating resource file</string>
     <string name="settings_resource_files_updated">Resource files updated</string>
     <string name="settings_resource_file_updated">{name} updated</string>
     <string name="settings_resource_files_replaced">{name} replaced</string>
