@@ -15,6 +15,7 @@ import engine.proxy.ProxyEngineStatus
 internal class VpnXrayEngine(
     private val context: Context,
     private val requestVpnPermission: suspend (Intent) -> Boolean,
+    private val runtimeRunning: () -> Boolean = AsteriskVpnService::isRunning,
 ) : AndroidModeProxyEngine {
     override val runMode: Int = RunModeVpnService
 
@@ -36,12 +37,8 @@ internal class VpnXrayEngine(
     }
 
     override suspend fun status(): ProxyEngineStatus {
-        val ownsVpnPreparation = VpnService.prepare(context) == null
         return ProxyEngineStatus(
-            running = resolveVpnRuntimeRunning(
-                runtimeRunning = AsteriskVpnService.isRunning(),
-                ownsVpnPreparation = ownsVpnPreparation,
-            ),
+            running = runtimeRunning(),
             runMode = runMode,
         )
     }
