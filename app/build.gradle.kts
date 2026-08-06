@@ -134,7 +134,9 @@ dependencies {
     implementation(libs.miuix.preference)
     implementation(libs.protobuf.javalite)
     implementation(libs.reorderable)
-    implementation(libs.snakeyaml.engine)
+    implementation(libs.snakeyaml.engine) {
+        exclude(group = "org.junit.jupiter", module = "junit-jupiter-api")
+    }
     implementation(libs.sora.editor)
     implementation(libs.zxing.android.embedded)
     compileOnly(libs.javax.annotation.api)
