@@ -90,6 +90,7 @@ private fun StringBuilder.appendIptablesVariantSetupRules(
         if (enableLocalDns) {
             appendUdpDnsMarkRule(variant.command, variant.preroutingChain, config.mark)
         }
+        appendAsteriskdBypassBoundary(variant.command, variant.preroutingChain, variant.ipv6)
         appendDestinationMarkRules(
             command = variant.command,
             chain = variant.preroutingChain,
@@ -103,7 +104,6 @@ private fun StringBuilder.appendIptablesVariantSetupRules(
             interfaces = emptyList(),
             input = true,
         )
-        appendAsteriskdBypassBoundary(variant.command, variant.preroutingChain, variant.ipv6)
         appendRootEbpfXtbpfInterfaceMarkRules(
             command = variant.command,
             chain = variant.preroutingChain,
@@ -119,11 +119,19 @@ private fun StringBuilder.appendIptablesVariantSetupRules(
                 ownerBypassGid = RootXrayGid,
             )
         }
+        appendAsteriskdBypassBoundary(variant.command, variant.outputChain, variant.ipv6)
         appendDestinationMarkRules(
             command = variant.command,
             chain = variant.outputChain,
             cidrs = variant.proxyPrivateCidrs,
             mark = config.mark,
+        )
+        appendBypassReturnRules(
+            command = variant.command,
+            chain = variant.outputChain,
+            cidrs = variant.bypassPrivateCidrs,
+            interfaces = emptyList(),
+            input = false,
         )
         appendScript("${variant.command} -t mangle -A ${variant.outputChain} -o 'asterisk0' -j RETURN")
         appendBypassReturnRules(
@@ -133,14 +141,6 @@ private fun StringBuilder.appendIptablesVariantSetupRules(
             interfaces = config.ignoredInterfaces,
             input = false,
         )
-        appendBypassReturnRules(
-            command = variant.command,
-            chain = variant.outputChain,
-            cidrs = variant.bypassPrivateCidrs,
-            interfaces = emptyList(),
-            input = false,
-        )
-        appendAsteriskdBypassBoundary(variant.command, variant.outputChain, variant.ipv6)
         appendRootEbpfXtbpfMarkRules(
             command = variant.command,
             chain = variant.outputChain,
@@ -189,6 +189,7 @@ private fun StringBuilder.appendPreroutingTrafficMarkRules(
     if (enableLocalDns) {
         appendUdpDnsMarkRule(variant.command, variant.preroutingChain, config.mark)
     }
+    appendAsteriskdBypassBoundary(variant.command, variant.preroutingChain, variant.ipv6)
     appendDestinationMarkRules(
         command = variant.command,
         chain = variant.preroutingChain,
@@ -202,7 +203,6 @@ private fun StringBuilder.appendPreroutingTrafficMarkRules(
         interfaces = emptyList(),
         input = true,
     )
-    appendAsteriskdBypassBoundary(variant.command, variant.preroutingChain, variant.ipv6)
     config.externalInterfacePrefixes.forEach { prefix ->
         appendPreroutingInterfaceMarkRules(variant.command, variant.preroutingChain, prefix, config.mark)
     }
@@ -222,11 +222,19 @@ private fun StringBuilder.appendOutputTrafficMarkRules(
             ownerBypassGid = RootXrayGid,
         )
     }
+    appendAsteriskdBypassBoundary(variant.command, variant.outputChain, variant.ipv6)
     appendDestinationMarkRules(
         command = variant.command,
         chain = variant.outputChain,
         cidrs = variant.proxyPrivateCidrs,
         mark = config.mark,
+    )
+    appendBypassReturnRules(
+        command = variant.command,
+        chain = variant.outputChain,
+        cidrs = variant.bypassPrivateCidrs,
+        interfaces = emptyList(),
+        input = false,
     )
     appendScript("${variant.command} -t mangle -A ${variant.outputChain} -o 'asterisk0' -j RETURN")
     appendBypassReturnRules(
@@ -236,14 +244,6 @@ private fun StringBuilder.appendOutputTrafficMarkRules(
         interfaces = config.ignoredInterfaces,
         input = false,
     )
-    appendBypassReturnRules(
-        command = variant.command,
-        chain = variant.outputChain,
-        cidrs = variant.bypassPrivateCidrs,
-        interfaces = emptyList(),
-        input = false,
-    )
-    appendAsteriskdBypassBoundary(variant.command, variant.outputChain, variant.ipv6)
     appendScript("${variant.command} -t mangle -A ${variant.outputChain} -m owner --gid-owner $RootXrayGid -j RETURN")
     appendOutputApplicationBypassRules(
         command = variant.command,
