@@ -14,14 +14,18 @@ internal class HevTunRuntime(
     fun start(config: HevSocks5TunnelConfig, tunFd: Int) {
         stop()
         config.writeConfigFile()
-        nativeGateway.startService(config.configPath, tunFd)
+        check(nativeGateway.startService(config.configPath, tunFd)) {
+            "Failed to start Hev TUN native service"
+        }
         running = true
     }
 
     fun stop() {
         if (!running) return
         try {
-            nativeGateway.stopService()
+            check(nativeGateway.stopService()) {
+                "Failed to stop Hev TUN native service"
+            }
         } finally {
             running = false
         }

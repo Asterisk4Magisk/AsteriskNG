@@ -6,8 +6,9 @@ package engine.vpn.hevtun
 import androidx.annotation.Keep
 
 internal interface HevTunNativeGateway {
-    fun startService(configPath: String, fd: Int)
-    fun stopService()
+    fun startService(configPath: String, fd: Int): Boolean
+    fun stopService(): Boolean
+    fun isRunning(): Boolean
 }
 
 @Keep
@@ -18,22 +19,30 @@ internal object HevTunNative : HevTunNativeGateway {
 
     @JvmStatic
     @Suppress("FunctionName")
-    private external fun TProxyStartService(configPath: String, fd: Int)
+    private external fun TProxyStartService(configPath: String, fd: Int): Boolean
 
     @JvmStatic
     @Suppress("FunctionName")
-    private external fun TProxyStopService()
+    private external fun TProxyStopService(): Boolean
+
+    @JvmStatic
+    @Suppress("FunctionName")
+    private external fun TProxyIsRunning(): Boolean
 
     @JvmStatic
     @Keep
     @Suppress("FunctionName")
     private external fun TProxyGetStats(): LongArray
 
-    override fun startService(configPath: String, fd: Int) {
-        TProxyStartService(configPath, fd)
+    override fun startService(configPath: String, fd: Int): Boolean {
+        return TProxyStartService(configPath, fd)
     }
 
-    override fun stopService() {
-        TProxyStopService()
+    override fun stopService(): Boolean {
+        return TProxyStopService()
+    }
+
+    override fun isRunning(): Boolean {
+        return TProxyIsRunning()
     }
 }
