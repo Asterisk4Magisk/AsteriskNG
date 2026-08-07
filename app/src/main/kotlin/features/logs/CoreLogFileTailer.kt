@@ -15,6 +15,7 @@ import java.io.RandomAccessFile
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
+import kotlin.time.Duration.Companion.milliseconds
 
 internal data class CoreLogFile(
     val path: String,
@@ -49,7 +50,7 @@ internal class CoreLogFileTailer(
 
         while (scope.isActive) {
             if (!file.exists()) {
-                delay(TailIntervalMillis)
+                delay(TailIntervalMillis.milliseconds)
                 continue
             }
 
@@ -76,7 +77,7 @@ internal class CoreLogFileTailer(
                 }
             }
 
-            delay(TailIntervalMillis)
+            delay(TailIntervalMillis.milliseconds)
         }
     }
 
@@ -119,8 +120,9 @@ private fun toLocalXrayLogTime(rawXrayTime: String): String? {
     // Xray-core may include sub-second precision (e.g. 11:48:12.901279) which
     // SimpleDateFormat "yyyy-MM-dd HH:mm:ss" cannot parse. Strip the fraction.
     val withoutFraction = normalized.substringBeforeLast('.')
-    val instant = runCatching { utcXrayLogTimeParser.get().parse(withoutFraction) }.getOrNull() ?: return null
-    val formatter = localXrayLogTimeFormatter.get()
+    val parser = utcXrayLogTimeParser.get() ?: return null
+    val instant = runCatching { parser.parse(withoutFraction) }.getOrNull() ?: return null
+    val formatter = localXrayLogTimeFormatter.get() ?: return null
     formatter.timeZone = TimeZone.getDefault()
     return runCatching { formatter.format(instant) }.getOrNull()
 }

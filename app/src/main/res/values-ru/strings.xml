@@ -183,7 +183,6 @@
     <string name="settings_resource_files_missing">Отсутствует</string>
     <string name="settings_resource_files_updated_at">Обновлено: {time}</string>
     <string name="settings_resource_files_size">Размер: {size}</string>
-    <string name="settings_resource_files_updating">Обновление файлов ресурсов…</string>
     <string name="settings_resource_files_updated">Файлы ресурсов успешно обновлены</string>
     <string name="settings_resource_file_updated">{name} успешно обновлен</string>
     <string name="settings_resource_files_replaced">{name} успешно заменен</string>
