@@ -67,7 +67,7 @@
         },
         {
             "uniqueId": "github:Asterisk4Magisk/bpfmatcher",
-            "artifactVersion": "v1.0.0",
+            "artifactVersion": "v1.0.1",
             "name": "bpfmatcher",
             "description": "An eBPF socket-filter loader for iptables xt_bpf matching.",
             "website": "https://github.com/Asterisk4Magisk/bpfmatcher",

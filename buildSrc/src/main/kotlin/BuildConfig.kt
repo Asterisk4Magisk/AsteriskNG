@@ -15,7 +15,7 @@ object ProjectConfig {
     const val PACKAGE_NAME = "org.asterisk.zcc.ang"
     const val ASTERISKD_VERSION = "v1.0.4"
     const val BPF2SOCKS_VERSION = "v1.0.4"
-    const val BPF_MATCHER_VERSION = "v1.0.0"
+    const val BPF_MATCHER_VERSION = "v1.0.1"
     const val SETUIDGID_VERSION = "v1.0.0"
     const val XRAY_CORE_VERSION = "v26.7.28"
     const val ANDROID_LIB_XRAY_LITE_VERSION = "v26.7.31"
