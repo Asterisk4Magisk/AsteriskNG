@@ -64,6 +64,8 @@ internal object XrayTags {
     )
 }
 
+internal fun String.withSingleTrailingLf(): String = trimEnd('\r', '\n') + "\n"
+
 internal object XrayProtocols {
     const val TUN = "tun"
     const val DNS = "dns"

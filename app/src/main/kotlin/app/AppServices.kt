@@ -46,6 +46,7 @@ internal data class AppServices(
     val logFileCreator: suspend (String) -> Uri?,
     val coreLogRepository: CoreLogRepository,
     val accessLogRepository: CoreLogRepository,
+    val rootLogRepository: CoreLogRepository,
     val logcatRepository: CoreLogRepository,
 )
 

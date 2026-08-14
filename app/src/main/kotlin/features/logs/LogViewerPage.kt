@@ -67,9 +67,7 @@ fun CoreLogsPage(
         padding = padding,
         title = stringResource(R.string.core_logs_title),
         repository = services.coreLogRepository,
-        onClear = {
-            context.clearCoreLogFile(XrayLogFile.Error)
-        },
+        onClear = { context.clearCoreLogFile(XrayLogFile.Error) },
     )
 }
 
@@ -83,9 +81,7 @@ fun AccessLogsPage(
         padding = padding,
         title = stringResource(R.string.access_logs_title),
         repository = services.accessLogRepository,
-        onClear = {
-            context.clearCoreLogFile(XrayLogFile.Access)
-        },
+        onClear = { context.clearCoreLogFile(XrayLogFile.Access) },
     )
 }
 

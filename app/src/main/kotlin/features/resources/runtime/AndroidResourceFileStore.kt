@@ -7,6 +7,9 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import android.system.ErrnoException
+import android.system.Os
+import android.system.OsConstants
 import app.CustomResourceFileState
 import app.CustomResourceFileStatus
 import app.ResourceFileKind
@@ -25,7 +28,6 @@ internal class AndroidResourceFileStore(
     val dataDir: File = appContext.xrayResourceFilesDir()
 
     fun status(customResourceFiles: List<CustomResourceFileState> = emptyList()): ResourceFilesStatus {
-        ensureBundledFiles()
         return currentStatus(customResourceFiles)
     }
 
@@ -73,6 +75,7 @@ internal class AndroidResourceFileStore(
     ) {
         val bundledUpdatedAtMillis = appContext.packageUpdatedAtMillis()
         ResourceFileKind.entries.forEach { kind ->
+            if (kind == ResourceFileKind.XrayCore) return@forEach
             val target = file(kind)
             if (
                 !target.shouldRestoreBundled(
@@ -85,7 +88,6 @@ internal class AndroidResourceFileStore(
                 return@forEach
             }
             if (!kind.hasBundledAsset()) return@forEach
-            if (kind == ResourceFileKind.XrayCore && bundledXrayCoreFileOrNull() == null) return@forEach
             runCatching { restoreBundled(kind) }
                 .onFailure { error ->
                     AndroidResourceFileLogger.warn(
@@ -97,11 +99,8 @@ internal class AndroidResourceFileStore(
     }
 
     fun restoreBundled(kind: ResourceFileKind) {
-        if (kind == ResourceFileKind.XrayCore) {
-            restoreBundledXrayCore()
-        } else {
-            restoreBundledAsset(kind, kind.bundledAssetPathOrNull() ?: error("Bundled ${kind.fileName} is unavailable"))
-        }
+        require(kind != ResourceFileKind.XrayCore) { "Xray core must be restored through the locked publisher" }
+        restoreBundledAsset(kind, kind.bundledAssetPathOrNull() ?: error("Bundled ${kind.fileName} is unavailable"))
     }
 
     private fun restoreBundledAsset(kind: ResourceFileKind, assetPath: String) {
@@ -112,14 +111,54 @@ internal class AndroidResourceFileStore(
         kind.applyPermissions(file(kind))
     }
 
-    private fun restoreBundledXrayCore() {
+    fun stageBundledXrayCoreCandidate(): File {
         val source = bundledXrayCoreFileOrNull()
             ?: error("Bundled ${ResourceFileKind.XrayCore.fileName} is not available for ${currentRuntimeAbi()}")
-        dataDir.mkdirs()
-        source.inputStream().use { input ->
-            writeAtomically(file(ResourceFileKind.XrayCore)) { output -> input.copyTo(output) }
+        return source.inputStream().use(::writeXrayCoreCandidate)
+    }
+
+    fun installInitialXrayCoreCandidate(candidate: File): Boolean {
+        require(candidate.isFile && candidate.length() > 0) { "Xray core candidate is empty" }
+        require(dataDir.exists() || dataDir.mkdirs()) { "Failed to create ${dataDir.absolutePath}" }
+        val target = file(ResourceFileKind.XrayCore)
+        return synchronized(writeLockFor(target)) {
+            if (target.exists()) return@synchronized false
+            val temp = File.createTempFile(".xray-initial-", ".tmp", dataDir)
+            try {
+                candidate.inputStream().use { input ->
+                    temp.outputStream().use { output ->
+                        input.copyTo(output)
+                        output.flush()
+                        output.fd.sync()
+                    }
+                }
+                require(temp.length() > 0) { "Xray core candidate is empty" }
+                Os.chmod(temp.absolutePath, XrayExecutableMode)
+                try {
+                    Os.link(temp.absolutePath, target.absolutePath)
+                } catch (error: ErrnoException) {
+                    if (error.errno == OsConstants.EEXIST) return@synchronized false
+                    throw error
+                }
+                syncDirectory(dataDir)
+                true
+            } finally {
+                temp.delete()
+            }
         }
-        ResourceFileKind.XrayCore.applyPermissions(file(ResourceFileKind.XrayCore))
+    }
+
+    fun shouldPublishBundledXrayCore(
+        resourceFileSource: Int,
+        restoreAfterPackageUpdate: Boolean,
+    ): Boolean {
+        val bundledUpdatedAtMillis = appContext.packageUpdatedAtMillis()
+        return bundledXrayCoreFileOrNull() != null && file(ResourceFileKind.XrayCore).shouldRestoreBundled(
+            kind = ResourceFileKind.XrayCore,
+            resourceFileSource = resourceFileSource,
+            bundledUpdatedAtMillis = bundledUpdatedAtMillis,
+            restoreAfterPackageUpdate = restoreAfterPackageUpdate,
+        )
     }
 
     private fun bundledXrayCoreFileOrNull(): File? {
@@ -129,18 +168,67 @@ internal class AndroidResourceFileStore(
     }
 
     fun replace(kind: ResourceFileKind, uri: Uri) {
+        require(kind != ResourceFileKind.XrayCore) { "Xray core must be replaced through the locked publisher" }
         dataDir.mkdirs()
         val replaceTempFile = file(kind).resolveSibling("${kind.fileName}.replace.tmp")
         appContext.contentResolver.openInputStream(uri)?.use { input ->
             replaceTempFile.outputStream().use { output -> input.copyTo(output) }
         } ?: throw FileNotFoundException(uri.toString())
 
-        if (kind == ResourceFileKind.XrayCore && replaceTempFile.extractZipEntry("xray", file(kind))) {
-            replaceTempFile.delete()
-        } else {
-            replaceFile(replaceTempFile, file(kind))
-        }
+        replaceFile(replaceTempFile, file(kind))
         kind.applyPermissions(file(kind))
+    }
+
+    fun stageXrayCoreCandidate(uri: Uri): File {
+        val uploaded = appContext.contentResolver.openInputStream(uri)?.use(::writeXrayCoreCandidate)
+            ?: throw FileNotFoundException(uri.toString())
+        val extracted = createXrayCoreCandidateFile()
+        val found = runCatching {
+            ZipInputStream(uploaded.inputStream()).use { zip ->
+                var entry = zip.nextEntry
+                while (entry != null) {
+                    if (!entry.isDirectory && entry.name.substringAfterLast('/') == "xray") {
+                        extracted.outputStream().use { output ->
+                            zip.copyTo(output)
+                            output.flush()
+                            output.fd.sync()
+                        }
+                        return@runCatching extracted.length() > 0
+                    }
+                    zip.closeEntry()
+                    entry = zip.nextEntry
+                }
+                false
+            }
+        }.getOrDefault(false)
+        return if (found) {
+            uploaded.delete()
+            extracted
+        } else {
+            extracted.delete()
+            uploaded
+        }
+    }
+
+    private fun writeXrayCoreCandidate(input: java.io.InputStream): File {
+        val candidate = createXrayCoreCandidateFile()
+        try {
+            candidate.outputStream().use { output ->
+                input.copyTo(output)
+                output.flush()
+                output.fd.sync()
+            }
+            require(candidate.length() > 0) { "Xray core candidate is empty" }
+            return candidate
+        } catch (error: Throwable) {
+            candidate.delete()
+            throw error
+        }
+    }
+
+    private fun createXrayCoreCandidateFile(): File {
+        require(appContext.cacheDir.exists() || appContext.cacheDir.mkdirs())
+        return File.createTempFile("xray-core-", ".candidate", appContext.cacheDir)
     }
 
     fun replaceCustom(customFile: CustomResourceFileState, uri: Uri) {
@@ -189,9 +277,12 @@ internal class AndroidResourceFileStore(
         if (restoreBundledFiles) {
             ensureBundledFiles()
         }
+        return currentPaths()
+    }
+
+    fun currentPaths(): XrayResourceFilePaths {
         return XrayResourceFilePaths(
             dataDir = dataDir.absolutePath,
-            setuidgidPath = File(appContext.applicationInfo.nativeLibraryDir, SetuidgidLibraryName).absolutePath,
             asteriskdPath = File(appContext.applicationInfo.nativeLibraryDir, AsteriskdLibraryName).absolutePath,
             bpfMatcherPath = File(appContext.applicationInfo.nativeLibraryDir, BpfMatcherLibraryName).absolutePath,
             bpf2socksPath = File(appContext.applicationInfo.nativeLibraryDir, Bpf2SocksLibraryName).absolutePath,
@@ -239,7 +330,6 @@ internal fun shouldRestoreBundledResourceFile(
 
 internal data class XrayResourceFilePaths(
     val dataDir: String,
-    val setuidgidPath: String,
     val asteriskdPath: String,
     val bpfMatcherPath: String,
     val bpf2socksPath: String,
@@ -257,6 +347,10 @@ internal fun Context.prepareXrayResourceFilePaths(
     restoreBundledFiles: Boolean = true,
 ): XrayResourceFilePaths {
     return AndroidResourceFileStore(this).preparePaths(restoreBundledFiles = restoreBundledFiles)
+}
+
+internal fun Context.xrayResourceFilePaths(): XrayResourceFilePaths {
+    return AndroidResourceFileStore(this).currentPaths()
 }
 
 private fun ResourceFileKind.hasBundledAsset(): Boolean {
@@ -293,15 +387,43 @@ private fun Context.packageUpdatedAtMillis(): Long {
 }
 
 private const val Arm64Abi = "arm64-v8a"
-private const val SetuidgidLibraryName = "libsetuidgid.so"
 private const val AsteriskdLibraryName = "libasteriskd.so"
 private const val BpfMatcherLibraryName = "libbpf-matcher.so"
 private const val Bpf2SocksLibraryName = "libbpf2socks.so"
 private const val XrayCoreLibraryName = "libxray.so"
 private const val HevSocks5TunnelLibraryName = "libhev-socks5-tunnel-cli.so"
 private const val XrayBundledResourceFilesDir = "xray"
+private const val XrayExecutableMode = 493
 
 private val SupportedAndroidAbis = setOf(Arm64Abi, "armeabi-v7a", "x86", "x86_64")
+
+internal enum class CoreCandidateInstallPath {
+    AtomicPublication,
+    InitialNoReplace,
+    Defer,
+}
+
+internal fun chooseCoreCandidateInstallPath(
+    hasRootAccess: Boolean,
+    targetExists: Boolean,
+): CoreCandidateInstallPath = when {
+    hasRootAccess -> CoreCandidateInstallPath.AtomicPublication
+    !targetExists -> CoreCandidateInstallPath.InitialNoReplace
+    else -> CoreCandidateInstallPath.Defer
+}
+
+private fun syncDirectory(directory: File) {
+    val descriptor = Os.open(
+        directory.absolutePath,
+        OsConstants.O_RDONLY,
+        0,
+    )
+    try {
+        Os.fsync(descriptor)
+    } finally {
+        Os.close(descriptor)
+    }
+}
 
 private fun File.toStatus(): ResourceFileStatus {
     return ResourceFileStatus(
@@ -309,25 +431,6 @@ private fun File.toStatus(): ResourceFileStatus {
         sizeBytes = takeIf { exists() }?.length() ?: 0,
         updatedAtMillis = takeIf { exists() }?.lastModified() ?: 0,
     )
-}
-
-private fun File.extractZipEntry(entryName: String, target: File): Boolean {
-    return runCatching {
-        ZipInputStream(inputStream()).use { zip ->
-            var entry = zip.nextEntry
-            while (entry != null) {
-                if (!entry.isDirectory && entry.name.substringAfterLast('/') == entryName) {
-                    writeAtomically(target) { output -> zip.copyTo(output) }
-                    return@runCatching true
-                }
-                zip.closeEntry()
-                entry = zip.nextEntry
-            }
-            false
-        }
-    }.onFailure { error ->
-        AndroidResourceFileLogger.warn("Failed to extract $entryName from $absolutePath", error)
-    }.getOrDefault(false)
 }
 
 private fun replaceFile(source: File, target: File) {

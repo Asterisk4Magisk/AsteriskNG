@@ -39,7 +39,7 @@ internal object XrayConfigFactory {
 
         val config = buildGeneratedXrayConfig(request).toJsonObject()
         logGeneratedXrayConfig(config)
-        return XrayConfigJson.encodeToString(config)
+        return XrayConfigPrettyJson.encodeToString(config).withSingleTrailingLf()
     }
 }
 
@@ -107,7 +107,7 @@ private fun buildCustomXrayConfig(
     val config = CustomXrayConfigRewriter.rewrite(request, server)
         .withXrayStatsApiConfig(request.statsApiConfig)
     logGeneratedXrayConfig(config)
-    return XrayConfigJson.encodeToString(config)
+    return XrayConfigPrettyJson.encodeToString(config).withSingleTrailingLf()
 }
 
 private fun logGeneratedXrayConfig(config: JsonObject) {

@@ -8,86 +8,116 @@ import engine.proxy.LocalProxyRuntime
 import engine.proxy.ProxyEngineStartRequest
 import engine.proxy.ProxyEngineStatus
 import engine.proxy.mode.AndroidModeProxyEngine
-import engine.xray.clearCoreLogs
-import engine.xray.startCoreLogTailers
-import features.logs.AndroidAppLogger
-import features.logs.CoreLogFileTailer
-import system.AndroidRootShellGateway
-import java.io.File
+import engine.root.config.prepareRootConfigBuildContext
+import engine.root.config.RootModeStartConfig
+import engine.root.config.DefaultRootHttpProxyPort as ConfigDefaultRootHttpProxyPort
+import engine.root.config.RootBpf2SocksDefaultBridgePort as ConfigRootBpf2SocksDefaultBridgePort
+import engine.root.mode.RootModeCatalog
+import engine.root.mode.RootModeDefinition
+import engine.root.mode.DefaultTproxyPort as ModeDefaultTproxyPort
+import engine.root.mode.DefaultTun2SocksProxyPort as ModeDefaultTun2SocksProxyPort
+import engine.root.runtime.RootRuntimeBusyException
+import engine.root.runtime.RootRuntimeConflictException
+import engine.root.runtime.RootSupervisorController
+import kotlin.coroutines.cancellation.CancellationException
+import system.RootShellGateway
 
-internal class RootModeEngine<Config : RootModeStartConfig>(
+internal class RootModeEngine(
     private val context: Context,
-    private val rootAccess: AndroidRootShellGateway,
-    private val runner: RootModeRunner<Config>,
-    override val runMode: Int,
-    private val rootRequiredErrorResId: Int,
-    private val startFailedErrorResId: Int,
-    private val modeName: String,
-    private val logTag: String,
-    private val buildConfig: (RootConfigBuildContext) -> Config,
+    private val rootAccess: RootShellGateway,
+    private val definition: RootModeDefinition,
 ) : AndroidModeProxyEngine {
-    private var logFileTailers: List<CoreLogFileTailer> = emptyList()
+    private val controller = RootSupervisorController(context, rootAccess)
+
+    override val runMode: Int
+        get() = definition.runMode
 
     override suspend fun start(request: ProxyEngineStartRequest): ProxyEngineStatus {
-        if (!rootAccess.hasRootAccess()) {
-            error(context.getString(rootRequiredErrorResId))
-        }
-        clearStartupRuntimeState()
+        return start(request, explicitRestart = false)
+    }
+
+    suspend fun restart(request: ProxyEngineStartRequest): ProxyEngineStatus {
+        return start(request, explicitRestart = true)
+    }
+
+    suspend fun resumeIfRunning(request: ProxyEngineStartRequest): ProxyEngineStatus? {
+        if (!rootAccess.hasRootAccess()) error(context.getString(definition.rootRequiredErrorResId))
+        controller.preflightStart(definition.daemonMode, explicitRestart = false) ?: return null
+        val restored = buildLocalProxyOptions(request)
+        val confirmed = controller.preflightStart(definition.daemonMode, explicitRestart = false) ?: return null
+        LocalProxyRuntime.update(restored)
+        return controller.proxyStatus(confirmed, runMode, definition.daemonMode)
+    }
+
+    private suspend fun start(
+        request: ProxyEngineStartRequest,
+        explicitRestart: Boolean,
+    ): ProxyEngineStatus {
+        if (!rootAccess.hasRootAccess()) error(context.getString(definition.rootRequiredErrorResId))
+        if (!explicitRestart) resumeIfRunning(request)?.let { return it }
+        else controller.preflightStart(definition.daemonMode, explicitRestart = true)
+
+        LocalProxyRuntime.clear()
         val rootContext = context.prepareRootConfigBuildContext(request)
-        val config = buildConfig(rootContext)
-        if (!File(config.root.runtimeLayout.xrayCorePath).canExecute()) {
-            File(config.root.runtimeLayout.xrayCorePath).setExecutable(true, false)
-        }
-        runner.prepareCoreLogFiles(config.root.coreLogPaths)
-        config.root.coreLogPaths.clearCoreLogs(logTag)
-        logFileTailers = config.root.coreLogPaths.startCoreLogTailers(config.root.enableAccessLog)
-        runCatching {
-            runner.start(config)
-            LocalProxyRuntime.update(config.localProxyOptions)
-            if (rootContext.appState.enableRootBootScript) {
-                runner.installBootScript(config)
+        val config = definition.buildConfig(rootContext)
+        require(config.asteriskdConfig.mode == definition.daemonMode)
+        return runCatching {
+            val snapshot = if (explicitRestart) {
+                controller.restart(config.root, config.asteriskdConfig)
             } else {
-                runner.uninstallBootScript(config.root)
+                controller.start(config.root, config.asteriskdConfig)
             }
-        }.onFailure { error ->
-            runCatching { runner.stop(config.root.runtimeLayout) }
-                .onFailure { stopError -> AndroidAppLogger.warn(logTag, "Failed to clean up $modeName after startup failure", stopError) }
+            controller.requireRunning(snapshot, definition.daemonMode)
+            LocalProxyRuntime.update(config.localProxyOptions)
+            controller.proxyStatus(snapshot, runMode, definition.daemonMode)
+        }.onFailure {
             LocalProxyRuntime.clear()
-            logFileTailers.forEach { tailer -> tailer.stop() }
-            logFileTailers = emptyList()
-            AndroidAppLogger.error(logTag, "Failed to start $modeName mode", error)
+        }.getOrElse { error ->
+            if (error is CancellationException) throw error
+            if (error is RootRuntimeConflictException || error is RootRuntimeBusyException) throw error
             throw IllegalStateException(
-                context.getString(startFailedErrorResId, error.message.orEmpty()),
+                context.getString(definition.startFailedErrorResId, error.message.orEmpty()),
                 error,
             )
         }
-        return status()
     }
 
+    private fun buildLocalProxyOptions(request: ProxyEngineStartRequest) =
+        LocalProxyRuntime.current() ?: definition
+            .buildConfig(context.prepareRootConfigBuildContext(request))
+            .localProxyOptions
+
     override suspend fun stop(): ProxyEngineStatus {
-        logFileTailers.forEach { tailer -> tailer.stop() }
-        logFileTailers = emptyList()
-        runCatching {
-            runner.stop(context.prepareRootRuntimeLayout())
-        }.onFailure { error ->
-            AndroidAppLogger.warn(logTag, "Failed to stop $modeName mode", error)
-        }
+        controller.stopOwn()
         LocalProxyRuntime.clear()
         return status()
     }
 
     suspend fun ownsRuntime(): Boolean {
-        return runner.ownsRuntime(context.prepareRootRuntimeLayout())
+        return controller.ownsRuntime()
     }
 
     override suspend fun status(): ProxyEngineStatus {
-        val running = runner.isRunning(context.prepareRootRuntimeLayout())
-        return ProxyEngineStatus(running = running, runMode = runMode)
+        return controller.proxyStatus(runMode, definition.daemonMode)
     }
 
-    private fun clearStartupRuntimeState() {
-        logFileTailers.forEach { tailer -> tailer.stop() }
-        logFileTailers = emptyList()
-        LocalProxyRuntime.clear()
+    companion object {
+        const val DefaultTproxyPort = ModeDefaultTproxyPort
+        const val DefaultTun2SocksProxyPort = ModeDefaultTun2SocksProxyPort
+        const val DefaultBpf2SocksBridgePort = ConfigRootBpf2SocksDefaultBridgePort
+        const val DefaultHttpProxyPort = ConfigDefaultRootHttpProxyPort
+
+        fun createAll(context: Context, rootAccess: RootShellGateway): List<RootModeEngine> =
+            RootModeCatalog.definitions.map { definition -> RootModeEngine(context, rootAccess, definition) }
+
+        fun prepareConfig(context: Context, runMode: Int, request: ProxyEngineStartRequest): RootModeStartConfig {
+            val definition = RootModeCatalog.require(runMode)
+            return definition.buildConfig(context.prepareRootConfigBuildContext(request)).also { config ->
+                require(config.asteriskdConfig.mode == definition.daemonMode)
+            }
+        }
+
+        fun generateCoreConfig(context: Context, runMode: Int, request: ProxyEngineStartRequest): String =
+            prepareConfig(context, runMode, request).root.xrayConfigJson
     }
 }

@@ -11,9 +11,9 @@ import app.modes.RunModeTproxy
 import app.modes.RunModeVpnService
 import app.modes.isRootRunMode
 import engine.proxy.AndroidProxyEngine
-import engine.root.deleteAsteriskdLogFile
 import engine.hevtun.deleteHevSocks5TunnelLogFile
 import features.logs.AndroidAppLogger
+import features.logs.clearAsteriskdLogFile
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -88,7 +88,7 @@ internal class SwitchRunModeUseCase(
             deleteHevSocks5TunnelLog()
         }
         if (!normalizedTargetMode.isRootRunMode()) {
-            deleteAsteriskdLog()
+            clearAsteriskdLog()
         }
 
         return SwitchRunModeResult.Success(
@@ -102,9 +102,9 @@ internal class SwitchRunModeUseCase(
             .onFailure { error -> AndroidAppLogger.warn(LogTag, "Failed to delete Hev TUN log", error) }
     }
 
-    private fun deleteAsteriskdLog() {
-        runCatching { appContext.deleteAsteriskdLogFile() }
-            .onFailure { error -> AndroidAppLogger.warn(LogTag, "Failed to delete IPv6 disabler log", error) }
+    private suspend fun clearAsteriskdLog() {
+        runCatching { appContext.clearAsteriskdLogFile() }
+            .onFailure { error -> AndroidAppLogger.warn(LogTag, "Failed to clear asteriskd log", error) }
     }
 }
 

@@ -10,10 +10,7 @@ import app.modes.RunModeBpf2Socks
 import app.modes.RunModeTun2Socks
 import app.modes.RunModeTproxy
 import engine.proxy.ProxyEngineStartRequest
-import engine.bpf2socks.buildBpf2SocksStartConfig
-import engine.root.prepareRootConfigBuildContext
-import engine.tproxy.buildTproxyStartConfig
-import engine.tun2socks.buildTun2SocksStartConfig
+import engine.root.RootModeEngine
 import engine.vpn.VpnXrayConfigFactory
 import features.proxy.server.model.ChainProxy
 import features.proxy.server.model.ProxyServer
@@ -120,13 +117,7 @@ private fun Context.generatedRootProxyServerXrayConfig(
     runMode: Int,
     request: ProxyEngineStartRequest,
 ): String {
-    val rootContext = applicationContext.prepareRootConfigBuildContext(request)
-    return when (runMode) {
-        RunModeTproxy -> rootContext.buildTproxyStartConfig().root.xrayConfigJson
-        RunModeTun2Socks -> rootContext.buildTun2SocksStartConfig().root.xrayConfigJson
-        RunModeBpf2Socks -> rootContext.buildBpf2SocksStartConfig().root.xrayConfigJson
-        else -> error("Unsupported ROOT run mode: $runMode")
-    }
+    return RootModeEngine.generateCoreConfig(applicationContext, runMode, request)
 }
 
 private fun AppState.withCopyTargetServer(target: ProxyServerState): AppState {

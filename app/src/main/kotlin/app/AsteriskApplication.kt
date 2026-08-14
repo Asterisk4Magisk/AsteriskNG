@@ -6,6 +6,7 @@ package app
 import android.app.Application
 import system.AndroidAppIconFetcher
 import features.logs.AndroidAccessLogRepository
+import features.logs.AndroidAsteriskdLogRepository
 import features.logs.AndroidCoreLogRepository
 import features.logs.AndroidLogcatRepository
 import coil3.ImageLoader
@@ -25,6 +26,7 @@ class AsteriskApplication : Application(), SingletonImageLoader.Factory {
         AndroidLogcatRepository.initialize(applicationContext)
         AndroidCoreLogRepository.initialize(applicationContext)
         AndroidAccessLogRepository.initialize(applicationContext)
+        AndroidAsteriskdLogRepository.initialize(applicationContext)
     }
 
     override fun newImageLoader(context: PlatformContext): ImageLoader {

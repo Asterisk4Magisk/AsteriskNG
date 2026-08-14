@@ -5,21 +5,20 @@ package features.settings.usecase
 
 import android.content.Context
 import app.AppState
-import app.modes.RunModeBpf2Socks
-import app.modes.RunModeTproxy
-import app.modes.RunModeTun2Socks
 import app.modes.isRootRunMode
 import engine.proxy.ProxyEngineStartRequest
-import engine.bpf2socks.Bpf2SocksRootRunner
-import engine.bpf2socks.buildBpf2SocksStartConfig
-import engine.root.prepareRootConfigBuildContext
-import engine.root.prepareRootRuntimeLayout
-import engine.root.removeRootBootScript
-import engine.xray.prepareXrayCoreLogPaths
-import engine.tproxy.TproxyRootRunner
-import engine.tproxy.buildTproxyStartConfig
-import engine.tun2socks.Tun2SocksRootRunner
-import engine.tun2socks.buildTun2SocksStartConfig
+import engine.root.runtime.RootConflictStage
+import engine.root.runtime.RootFailureKind
+import engine.root.runtime.RootOperationBlockedException
+import engine.root.runtime.RootOperationResult
+import engine.root.runtime.RootRequestedAction
+import engine.root.runtime.toAppLogMessage
+import engine.root.runtime.model.RootRuntimeOwner
+import engine.root.runtime.RootRuntimeBusyException
+import engine.root.runtime.RootRuntimeConflictException
+import engine.root.runtime.RootSupervisorController
+import engine.root.RootModeEngine
+import features.logs.AndroidAppLogger
 import kotlinx.coroutines.CancellationException
 import system.AndroidRootShellGateway
 
@@ -28,9 +27,7 @@ internal class RootBootScriptUseCase(
     private val rootAccess: AndroidRootShellGateway,
 ) {
     private val appContext = context.applicationContext
-    private val tproxyRootRunner = TproxyRootRunner(rootAccess)
-    private val tun2SocksRootRunner = Tun2SocksRootRunner(rootAccess)
-    private val bpf2SocksRootRunner = Bpf2SocksRootRunner(rootAccess)
+    private val controller = RootSupervisorController(appContext, rootAccess)
 
     suspend fun setEnabled(
         state: AppState,
@@ -40,7 +37,7 @@ internal class RootBootScriptUseCase(
             return RootBootScriptResult.RootUnavailable
         }
         return if (enabled) {
-            install(state)
+            install(state, deferIfRuntimeBound = false)
         } else {
             uninstall(rootAccessVerified = true)
         }
@@ -53,7 +50,7 @@ internal class RootBootScriptUseCase(
         if (!rootAccess.hasRootAccess()) {
             return RootBootScriptResult.RootUnavailable
         }
-        return install(state)
+        return install(state, deferIfRuntimeBound = true)
     }
 
     suspend fun uninstall(rootAccessVerified: Boolean = false): RootBootScriptResult {
@@ -61,24 +58,23 @@ internal class RootBootScriptUseCase(
             return RootBootScriptResult.RootUnavailable
         }
         return runCatching {
-            rootAccess.removeRootBootScript(
-                runtimeLayout = appContext.prepareRootRuntimeLayout(),
-                coreLogPaths = appContext.prepareXrayCoreLogPaths(),
-                failureMessage = "Failed to remove ROOT boot script",
-            )
+            controller.removeBoot()
         }.fold(
             onSuccess = { RootBootScriptResult.Success },
             onFailure = Throwable::toRootBootScriptResult,
         )
     }
 
-    private suspend fun install(state: AppState): RootBootScriptResult {
+    private suspend fun install(
+        state: AppState,
+        deferIfRuntimeBound: Boolean,
+    ): RootBootScriptResult {
         val selectedServer = state.proxyServers.firstOrNull { server -> server.id == state.selectedProxyServerId }
             ?: return RootBootScriptResult.MissingServer
         return runCatching {
             val request = ProxyEngineStartRequest(state, selectedServer)
             if (state.runMode.isRootRunMode()) {
-                installRootBootScript(state.runMode, request)
+                installRootBootScript(state.runMode, request, deferIfRuntimeBound)
             }
         }.fold(
             onSuccess = { RootBootScriptResult.Success },
@@ -89,13 +85,11 @@ internal class RootBootScriptUseCase(
     private suspend fun installRootBootScript(
         runMode: Int,
         request: ProxyEngineStartRequest,
+        deferIfRuntimeBound: Boolean,
     ) {
-        val rootContext = appContext.prepareRootConfigBuildContext(request)
-        when (runMode) {
-            RunModeTproxy -> tproxyRootRunner.installBootScript(rootContext.buildTproxyStartConfig())
-            RunModeTun2Socks -> tun2SocksRootRunner.installBootScript(rootContext.buildTun2SocksStartConfig())
-            RunModeBpf2Socks -> bpf2SocksRootRunner.installBootScript(rootContext.buildBpf2SocksStartConfig())
-        }
+        if (!controller.canPublishBoot(deferIfRuntimeBound)) return
+        val config = RootModeEngine.prepareConfig(appContext, runMode, request)
+        controller.publishBoot(config.root, config.asteriskdConfig)
     }
 }
 
@@ -103,7 +97,27 @@ private fun Throwable.toRootBootScriptResult(): RootBootScriptResult {
     if (this is CancellationException) {
         throw this
     }
-    return RootBootScriptResult.Failed(this)
+    val operationResult = toRootBootOperationResult()
+    operationResult.toAppLogMessage(RootRequestedAction.BootRefresh)?.let { message ->
+        AndroidAppLogger.error(RootBootLogTag, message)
+    }
+    val reportedError = when (this) {
+        is RootRuntimeConflictException, is RootRuntimeBusyException -> RootOperationBlockedException(operationResult)
+        else -> this
+    }
+    return RootBootScriptResult.Failed(reportedError)
+}
+
+private fun Throwable.toRootBootOperationResult(): RootOperationResult = when (this) {
+    is RootRuntimeConflictException -> RootOperationResult.ForeignOwnerConflict(
+        owner = RootRuntimeOwner.entries.single { owner -> owner.wireValue == snapshot.owner.wireValue },
+        action = RootRequestedAction.BootRefresh,
+        stage = RootConflictStage.PublicationRecheck,
+    )
+    is RootRuntimeBusyException -> RootOperationResult.Busy(
+        RootRuntimeOwner.entries.single { owner -> owner.wireValue == snapshot.owner.wireValue },
+    )
+    else -> RootOperationResult.Failure(RootFailureKind.InternalFailure, this)
 }
 
 internal sealed interface RootBootScriptResult {
@@ -115,3 +129,5 @@ internal sealed interface RootBootScriptResult {
 
     data class Failed(val error: Throwable) : RootBootScriptResult
 }
+
+private const val RootBootLogTag = "RootBootScript"

@@ -17,8 +17,8 @@ import app.effects.LauncherIconSynchronizer
 import app.effects.ResourceFileSynchronizer
 import app.effects.SubscriptionAutoUpdater
 import app.effects.RootBootScriptSynchronizer
-import app.effects.Tun2SocksRuntimeFileSynchronizer
 import features.logs.AndroidAccessLogRepository
+import features.logs.AndroidAsteriskdLogRepository
 import features.logs.AndroidCoreLogRepository
 import features.logs.AndroidLogcatRepository
 import data.AndroidAppStateStore
@@ -73,10 +73,11 @@ fun App(
     val networkInterfaces = remember(rootAccess) {
         AndroidNetworkInterfaceProvider(rootAccess)
     }
-    val resourceFileUseCase = remember(appContext, resourceFilePicker) {
+    val resourceFileUseCase = remember(appContext, resourceFilePicker, rootAccess) {
         ResourceFileUseCase(
             context = appContext,
             resourceFilePicker = resourceFilePicker,
+            rootShell = rootAccess,
         )
     }
     val resourceFileUpdateCoordinator = remember(appScope, resourceFileUseCase) {
@@ -198,6 +199,7 @@ fun App(
             logFileCreator = logFileCreator,
             coreLogRepository = AndroidCoreLogRepository,
             accessLogRepository = AndroidAccessLogRepository,
+            rootLogRepository = AndroidAsteriskdLogRepository,
             logcatRepository = AndroidLogcatRepository,
         )
     }
@@ -228,10 +230,6 @@ fun App(
     RootBootScriptSynchronizer(
         stateStore = stateStore,
         rootBootScriptUseCase = rootBootScriptUseCase,
-    )
-    Tun2SocksRuntimeFileSynchronizer(
-        context = appContext,
-        stateStore = stateStore,
     )
 
     ProvideAppLanguage(

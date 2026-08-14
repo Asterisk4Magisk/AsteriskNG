@@ -12,9 +12,7 @@ import engine.network.findAvailableTcpPort
 import engine.network.isTcpPortAvailable
 import engine.network.NetworkDefaults
 import engine.network.toPortOrNull
-import engine.root.RootBpf2SocksDefaultBridgePort
-import engine.tproxy.DefaultTproxyPort
-import engine.tun2socks.DefaultTun2SocksProxyPort
+import engine.root.RootModeEngine
 import engine.vpn.VpnDefaults
 import engine.xray.XrayProtocols
 import engine.xray.toJsonStringArray
@@ -114,14 +112,14 @@ private fun AppState.localProxyListenAddress(): String {
 private fun AppState.localProxyExcludedPorts(): Set<Int> {
     return buildSet {
         if (runMode == RunModeTproxy) {
-            add(transparentProxyPort.toPortOrNull() ?: DefaultTproxyPort)
+            add(transparentProxyPort.toPortOrNull() ?: RootModeEngine.DefaultTproxyPort)
         }
         if (runMode == RunModeTun2Socks) {
-            add(socks5ProxyPort.toPortOrNull() ?: DefaultTun2SocksProxyPort)
+            add(socks5ProxyPort.toPortOrNull() ?: RootModeEngine.DefaultTun2SocksProxyPort)
         }
         if (runMode == RunModeBpf2Socks) {
-            add(bpf2SocksBridgePort.toPortOrNull() ?: RootBpf2SocksDefaultBridgePort)
-            add(socks5ProxyPort.toPortOrNull() ?: DefaultTun2SocksProxyPort)
+            add(bpf2SocksBridgePort.toPortOrNull() ?: RootModeEngine.DefaultBpf2SocksBridgePort)
+            add(socks5ProxyPort.toPortOrNull() ?: RootModeEngine.DefaultTun2SocksProxyPort)
         }
         if (enableHttpProxy) {
             httpProxyPort.toPortOrNull()?.let(::add)

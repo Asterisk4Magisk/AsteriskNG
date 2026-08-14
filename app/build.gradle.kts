@@ -116,7 +116,6 @@ dependencies {
     implementation(libs.coil.compose)
     //noinspection UseTomlInstead
     implementation("com.github.2dust:libv2ray:${ProjectConfig.ANDROID_LIB_XRAY_LITE_VERSION}@aar")
-    implementation(dependencies.project(":setuidgid"))
     implementation(dependencies.project(":asteriskd"))
     implementation(dependencies.project(":bpfmatcher"))
     implementation(dependencies.project(":bpf2socks"))

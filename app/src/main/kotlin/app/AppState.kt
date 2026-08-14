@@ -9,10 +9,7 @@ import app.modes.ProxyAppListModeGlobal
 import app.modes.ProxyServerListLayoutSingle
 import app.modes.ProxyServerListSortDefault
 import app.modes.RunModeVpnService
-import engine.root.DefaultRootHttpProxyPort
-import engine.root.RootBpf2SocksDefaultBridgePort
-import engine.tun2socks.DefaultTun2SocksProxyPort
-import engine.tproxy.DefaultTproxyPort
+import engine.root.RootModeEngine
 import engine.vpn.VpnDefaults
 import engine.xray.DefaultDirectDnsDomains
 import engine.xray.DefaultFragmentInterval
@@ -103,15 +100,15 @@ data class AppState(
     val enableDirectDnsForProxyServerDomains: Boolean = true,
     val dnsHosts: List<String> = emptyList(),
 
-    val transparentProxyPort: String = DefaultTproxyPort.toString(),
+    val transparentProxyPort: String = RootModeEngine.DefaultTproxyPort.toString(),
     val enableRootBootScript: Boolean = false,
     val enableRootEbpfRules: Boolean = false,
     val enableRootEbpfDirectCidrBypass: Boolean = false,
     val enableRootIpv6Disabler: Boolean = false,
-    val bpf2SocksBridgePort: String = RootBpf2SocksDefaultBridgePort.toString(),
-    val socks5ProxyPort: String = DefaultTun2SocksProxyPort.toString(),
+    val bpf2SocksBridgePort: String = RootModeEngine.DefaultBpf2SocksBridgePort.toString(),
+    val socks5ProxyPort: String = RootModeEngine.DefaultTun2SocksProxyPort.toString(),
     val enableHttpProxy: Boolean = false,
-    val httpProxyPort: String = DefaultRootHttpProxyPort.toString(),
+    val httpProxyPort: String = RootModeEngine.DefaultHttpProxyPort.toString(),
 
     val externalInterfaces: List<String> = emptyList(),
     val ignoredInterfaces: List<String> = emptyList(),

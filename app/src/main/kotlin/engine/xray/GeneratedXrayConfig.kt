@@ -35,5 +35,5 @@ internal data class GeneratedXrayConfig(
 }
 
 internal fun GeneratedXrayConfig.encodeToJsonString(): String {
-    return XrayConfigJson.encodeToString(toJsonObject())
+    return XrayConfigPrettyJson.encodeToString(toJsonObject()).withSingleTrailingLf()
 }

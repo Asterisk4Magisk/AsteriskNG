@@ -16,13 +16,18 @@ import engine.network.isPort
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import features.resources.ResourceFileUpdateOptions
+import engine.root.runtime.RootCorePublicationCoordinator
+import system.AndroidRootShellGateway
+import system.RootShellGateway
 
 internal class AndroidResourceFileRepository(
     context: Context,
+    private val rootShell: RootShellGateway = AndroidRootShellGateway(),
 ) {
     private val appContext = context.applicationContext
     private val store = AndroidResourceFileStore(appContext)
     private val downloader = AndroidResourceFileDownloader()
+    private val corePublication = RootCorePublicationCoordinator(appContext, rootShell)
 
     suspend fun status(customResourceFiles: List<CustomResourceFileState> = emptyList()): ResourceFilesStatus =
         withContext(Dispatchers.IO) {
@@ -32,6 +37,24 @@ internal class AndroidResourceFileRepository(
     suspend fun synchronizeBundledFilesAfterPackageUpdate(resourceFileSource: Int) {
         withContext(Dispatchers.IO) {
             store.synchronizeBundledFilesAfterPackageUpdate(resourceFileSource)
+            if (!store.shouldPublishBundledXrayCore(resourceFileSource, restoreAfterPackageUpdate = true)) {
+                return@withContext
+            }
+            when (chooseCoreCandidateInstallPath(rootShell.hasRootAccess(), java.io.File(corePublication.corePath).exists())) {
+                CoreCandidateInstallPath.AtomicPublication -> {
+                    if (!corePublication.isAvailable()) return@withContext
+                    corePublication.prepareDirectories()
+                    publishCoreCandidate(store.stageBundledXrayCoreCandidate())
+                }
+                CoreCandidateInstallPath.InitialNoReplace -> {
+                    installInitialCoreCandidate(store.stageBundledXrayCoreCandidate())
+                }
+                CoreCandidateInstallPath.Defer -> {
+                    AndroidResourceFileLogger.info(
+                        "Bundled Xray core replacement deferred because ROOT access is unavailable",
+                    )
+                }
+            }
         }
     }
 
@@ -196,7 +219,11 @@ internal class AndroidResourceFileRepository(
         uri: Uri,
         customResourceFiles: List<CustomResourceFileState> = emptyList(),
     ): ResourceFilesStatus = withContext(Dispatchers.IO) {
-        store.replace(kind, uri)
+        if (kind == ResourceFileKind.XrayCore) {
+            installOrPublishCoreCandidate { store.stageXrayCoreCandidate(uri) }
+        } else {
+            store.replace(kind, uri)
+        }
         store.currentStatus(customResourceFiles)
     }
 
@@ -204,8 +231,52 @@ internal class AndroidResourceFileRepository(
         kind: ResourceFileKind,
         customResourceFiles: List<CustomResourceFileState> = emptyList(),
     ): ResourceFilesStatus = withContext(Dispatchers.IO) {
-        store.restoreBundled(kind)
+        if (kind == ResourceFileKind.XrayCore) {
+            installOrPublishCoreCandidate(store::stageBundledXrayCoreCandidate)
+        } else {
+            store.restoreBundled(kind)
+        }
         store.currentStatus(customResourceFiles)
+    }
+
+    private suspend fun installOrPublishCoreCandidate(
+        candidateFactory: () -> java.io.File,
+    ) {
+        when (chooseCoreCandidateInstallPath(rootShell.hasRootAccess(), java.io.File(corePublication.corePath).exists())) {
+            CoreCandidateInstallPath.AtomicPublication -> {
+                corePublication.requireAvailable()
+                corePublication.prepareDirectories()
+                publishCoreCandidate(candidateFactory())
+            }
+            CoreCandidateInstallPath.InitialNoReplace -> {
+                installInitialCoreCandidate(candidateFactory())
+            }
+            CoreCandidateInstallPath.Defer -> error(appContext.getString(R.string.settings_root_required))
+        }
+    }
+
+    private fun installInitialCoreCandidate(
+        candidate: java.io.File,
+    ) {
+        try {
+            corePublication.validate(candidate)
+            val installed = store.installInitialXrayCoreCandidate(candidate)
+            require(installed || java.io.File(corePublication.corePath).isFile) {
+                "Failed to install the initial Xray core"
+            }
+        } finally {
+            candidate.delete()
+        }
+    }
+
+    private suspend fun publishCoreCandidate(
+        candidate: java.io.File,
+    ) {
+        try {
+            corePublication.publish(candidate)
+        } finally {
+            candidate.delete()
+        }
     }
 }
 

@@ -10,12 +10,15 @@ import app.ResourceFileKind
 import app.ResourceFilesStatus
 import app.ResourceFileUpdateSource
 import features.resources.runtime.AndroidResourceFileRepository
+import system.AndroidRootShellGateway
+import system.RootShellGateway
 
 class ResourceFileUseCase(
     context: Context,
     private val resourceFilePicker: suspend () -> Uri?,
+    rootShell: RootShellGateway = AndroidRootShellGateway(),
 ) {
-    private val repository = AndroidResourceFileRepository(context.applicationContext)
+    private val repository = AndroidResourceFileRepository(context.applicationContext, rootShell)
 
     suspend fun status(customResourceFiles: List<CustomResourceFileState> = emptyList()): ResourceFilesStatus {
         return repository.status(customResourceFiles)

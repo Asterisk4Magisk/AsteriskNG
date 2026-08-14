@@ -582,4 +582,25 @@
     <string name="subscription_install_existing_url">Совпадающий URL подписки уже найден в группе «{name}»; обновляем эту группу</string>
     <string name="subscription_install_config_invalid">Недопустимая ссылка на подписку</string>
     <string name="subscription_install_config_failed">Не удалось импортировать подписку</string>
+    <string name="error_bpf2socks_root_required">Для работы режима BPF2SOCKS требуются права ROOT</string>
+    <string name="error_bpf2socks_start_failed">Не удалось запустить режим BPF2SOCKS: %1$s</string>
+    <string name="deletion_confirmation_summary">Это действие нельзя отменить.</string>
+    <string name="deletion_confirmation_delete_proxy_server">Удалить прокси-сервер</string>
+    <string name="deletion_confirmation_delete_route">Удалить правило маршрутизации</string>
+    <string name="deletion_confirmation_delete_subscription_group">Удалить группу подписки</string>
+    <string name="deletion_confirmation_delete_resource_file">Удалить файл ресурсов</string>
+    <string name="common_update">Обновить</string>
+    <string name="settings_deletion_confirmation">Подтверждение удаления</string>
+    <string name="settings_deletion_confirmation_summary">Запрашивать подтверждение перед удалением серверов, правил, групп или ресурсов</string>
+    <string name="settings_run_mode_bpf2socks">BPF2SOCKS (ROOT)</string>
+    <string name="settings_proxy_bpf2socks">Настройки прокси (BPF2SOCKS)</string>
+    <string name="settings_broadcast_control">Управление трансляциями</string>
+    <string name="settings_broadcast_control_summary">Разрешить внешним трансляциям запускать и останавливать прокси-службу</string>
+    <string name="settings_inbound_bpf2socks_summary">Порт моста: {bridgePort}, порт SOCKS5: {socksPort}</string>
+    <string name="settings_bpf2socks_bridge_port">Порт моста BPF2SOCKS</string>
+    <string name="settings_bpf2socks_socks5_port">Порт SOCKS5</string>
+    <string name="settings_resource_file_update_queued">Добавлено в очередь обновления</string>
+    <string name="settings_resource_file_updating">Обновление файла ресурсов</string>
+    <string name="proxy_app_list_loading">Загрузка приложений…</string>
+    <string name="subscription_age_secret_key">Секретный ключ Age для Mihomo</string>
 </resources>
