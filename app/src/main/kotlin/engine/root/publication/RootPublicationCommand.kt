@@ -10,6 +10,10 @@ internal object RootPublicationCommand {
         val layout = bundle.runtimeLayout
         val startup = RootBootPublicationCommand.buildStartupScript(layout)
         val service = RootBootPublicationCommand.buildServiceScript(layout)
+        val expectedStartup = startup.trimEnd()
+        val expectedService = service.trimEnd()
+        val startupSize = startup.toByteArray(Charsets.UTF_8).size
+        val serviceSize = service.toByteArray(Charsets.UTF_8).size
         return buildString {
             appendLine("set -eu")
             RootPublicationRequiredTools.forEach { tool ->
@@ -40,17 +44,21 @@ internal object RootPublicationCommand {
             appendLine("asteriskd_config_tmp=\"$(prepare_source_file ${layout.asteriskdConfigPath.shellQuote()} 600 ${bundle.asteriskdConfigSourcePath.shellQuote()})\"")
             if (bundle.bootEnabled) {
                 appendLine("mkdir -p ${RootBootScriptDir.shellQuote()}")
-                appendLine("startup_tmp=\"$(prepare_content_file ${layout.startupScriptPath.shellQuote()} 700 ${startup.shellQuote()})\"")
-                appendLine("service_tmp=\"$(prepare_content_file ${RootBootScriptPath.shellQuote()} 700 ${service.shellQuote()})\"")
+                appendLine("if ! content_file_is_current ${layout.startupScriptPath.shellQuote()} 700 ${expectedStartup.shellQuote()} $startupSize; then")
+                appendLine("  startup_tmp=\"$(prepare_content_file ${layout.startupScriptPath.shellQuote()} 700 ${startup.shellQuote()})\"")
+                appendLine("fi")
+                appendLine("if ! content_file_is_current ${RootBootScriptPath.shellQuote()} 700 ${expectedService.shellQuote()} $serviceSize; then")
+                appendLine("  service_tmp=\"$(prepare_content_file ${RootBootScriptPath.shellQuote()} 700 ${service.shellQuote()})\"")
+                appendLine("fi")
             }
             appendLine("publish_file \"\$core_config_tmp\" ${layout.configPath.shellQuote()}")
             appendLine("core_config_tmp=")
             appendLine("publish_file \"\$asteriskd_config_tmp\" ${layout.asteriskdConfigPath.shellQuote()}")
             appendLine("asteriskd_config_tmp=")
             if (bundle.bootEnabled) {
-                appendLine("publish_file \"\$startup_tmp\" ${layout.startupScriptPath.shellQuote()}")
+                appendLine("[ -z \"\$startup_tmp\" ] || publish_file \"\$startup_tmp\" ${layout.startupScriptPath.shellQuote()}")
                 appendLine("startup_tmp=")
-                appendLine("publish_file \"\$service_tmp\" ${RootBootScriptPath.shellQuote()}")
+                appendLine("[ -z \"\$service_tmp\" ] || publish_file \"\$service_tmp\" ${RootBootScriptPath.shellQuote()}")
                 appendLine("service_tmp=")
             } else {
                 RootBootPublicationCommand.appendRemoveOwnedBoot(this, layout)
@@ -133,6 +141,21 @@ internal object RootPublicationCommand {
         appendLine("  cp -- \"\$source\" \"\$temporary\" || { rm -f \"\$temporary\"; return 1; }")
         appendLine("  prepare_metadata \"\$temporary\" \"\$parent\" \"\$target_mode\" || { rm -f \"\$temporary\"; return 1; }")
         appendLine("  printf '%s\\n' \"\$temporary\"")
+        appendLine("}")
+        appendLine("content_file_is_current() {")
+        appendLine("  target=\"\$1\"")
+        appendLine("  target_mode=\"\$2\"")
+        appendLine("  expected_content=\"\$3\"")
+        appendLine("  expected_size=\"\$4\"")
+        appendLine("  parent=\"${'$'}{target%/*}\"")
+        appendLine("  [ -f \"\$target\" ] && [ ! -L \"\$target\" ] || return 1")
+        appendLine("  target_uid=\"$(stat -c %u \"\$target\")\" || return 1")
+        appendLine("  target_gid=\"$(stat -c %g \"\$target\")\" || return 1")
+        appendLine("  [ \"\$target_uid\" = \"$(stat -c %u \"\$parent\")\" ] || return 1")
+        appendLine("  [ \"\$target_gid\" = \"$(stat -c %g \"\$parent\")\" ] || return 1")
+        appendLine("  [ \"$(stat -c %a \"\$target\")\" = \"\$target_mode\" ] || return 1")
+        appendLine("  [ \"$(wc -c < \"\$target\")\" = \"\$expected_size\" ] || return 1")
+        appendLine("  [ \"$(cat \"\$target\")\" = \"\$expected_content\" ] || return 1")
         appendLine("}")
         appendLine("prepare_content_file() {")
         appendLine("  target=\"\$1\"")

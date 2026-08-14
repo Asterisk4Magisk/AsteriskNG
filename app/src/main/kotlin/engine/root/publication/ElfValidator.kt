@@ -17,19 +17,7 @@ internal fun validateElfFile(
     expectedSha256: String? = null,
 ): ElfIdentity {
     val file = File(path)
-    require(file.isFile && file.length() >= ElfHeaderMinimumSize) { "Core is missing or empty" }
-    val header = file.inputStream().use { input ->
-        val bytes = ByteArray(ElfHeaderReadSize)
-        var length = 0
-        while (length < bytes.size) {
-            val count = input.read(bytes, length, bytes.size - length)
-            if (count < 0) break
-            if (count > 0) length += count
-        }
-        bytes.copyOf(length)
-    }
-    val abi = supportedAbis.firstOrNull { candidate -> runCatching { validateElfHeader(header, candidate) }.isSuccess }
-        ?: error("Core ELF class/machine does not match a supported device ABI")
+    val abi = validateElfHeaderFile(path, supportedAbis)
     val digest = MessageDigest.getInstance("SHA-256")
     file.inputStream().use { input ->
         val buffer = ByteArray(64 * 1024)
@@ -42,6 +30,26 @@ internal fun validateElfFile(
     val sha256 = digest.digest().joinToString("") { byte -> "%02x".format(byte) }
     expectedSha256?.let { expected -> require(sha256.equals(expected, ignoreCase = true)) { "Core SHA-256 mismatch" } }
     return ElfIdentity(abi, sha256)
+}
+
+internal fun validateElfHeaderFile(
+    path: String,
+    supportedAbis: List<String>,
+): String {
+    val file = File(path)
+    require(file.isFile && file.length() >= ElfHeaderMinimumSize) { "Core is missing or empty" }
+    val header = file.inputStream().use { input ->
+        val bytes = ByteArray(ElfHeaderReadSize)
+        var length = 0
+        while (length < bytes.size) {
+            val count = input.read(bytes, length, bytes.size - length)
+            if (count < 0) break
+            if (count > 0) length += count
+        }
+        bytes.copyOf(length)
+    }
+    return supportedAbis.firstOrNull { candidate -> runCatching { validateElfHeader(header, candidate) }.isSuccess }
+        ?: error("Core ELF class/machine does not match a supported device ABI")
 }
 
 internal fun validateElfHeader(header: ByteArray, abi: String) {

@@ -36,11 +36,15 @@ internal class RootModeEngine(
         get() = definition.runMode
 
     override suspend fun start(request: ProxyEngineStartRequest): ProxyEngineStatus {
-        return start(request, explicitRestart = false)
+        return start(request, explicitRestart = false, resumeAlreadyChecked = false)
+    }
+
+    suspend fun startAfterResumeCheck(request: ProxyEngineStartRequest): ProxyEngineStatus {
+        return start(request, explicitRestart = false, resumeAlreadyChecked = true)
     }
 
     suspend fun restart(request: ProxyEngineStartRequest): ProxyEngineStatus {
-        return start(request, explicitRestart = true)
+        return start(request, explicitRestart = true, resumeAlreadyChecked = false)
     }
 
     suspend fun resumeIfRunning(request: ProxyEngineStartRequest): ProxyEngineStatus? {
@@ -55,10 +59,16 @@ internal class RootModeEngine(
     private suspend fun start(
         request: ProxyEngineStartRequest,
         explicitRestart: Boolean,
+        resumeAlreadyChecked: Boolean,
     ): ProxyEngineStatus {
-        if (!rootAccess.hasRootAccess()) error(context.getString(definition.rootRequiredErrorResId))
-        if (!explicitRestart) resumeIfRunning(request)?.let { return it }
-        else controller.preflightStart(definition.daemonMode, explicitRestart = true)
+        if (!resumeAlreadyChecked && !rootAccess.hasRootAccess()) {
+            error(context.getString(definition.rootRequiredErrorResId))
+        }
+        if (!explicitRestart) {
+            if (!resumeAlreadyChecked) resumeIfRunning(request)?.let { return it }
+        } else {
+            controller.preflightStart(definition.daemonMode, explicitRestart = true)
+        }
 
         LocalProxyRuntime.clear()
         val rootContext = context.prepareRootConfigBuildContext(request)

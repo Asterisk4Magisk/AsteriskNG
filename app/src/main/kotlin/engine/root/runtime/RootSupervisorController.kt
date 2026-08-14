@@ -23,7 +23,7 @@ import engine.root.publication.RootPublicationCommand
 import engine.root.publication.RootPublicationStager
 import engine.root.publication.prepareRootPublicationDirectories
 import engine.root.publication.rootRuntimeLayout
-import engine.root.publication.validateElfFile
+import engine.root.publication.validateElfHeaderFile
 import kotlinx.coroutines.delay
 import system.RootShellGateway
 import system.ShellExecOptions
@@ -228,7 +228,7 @@ internal class RootSupervisorController(
 
     private fun preparePublication(config: AsteriskdConfig) {
         appContext.prepareRootPublicationDirectories()
-        validateElfFile(config.coreExecutablePath, Build.SUPPORTED_ABIS.toList())
+        validateElfHeaderFile(config.coreExecutablePath, Build.SUPPORTED_ABIS.toList())
     }
 
 }

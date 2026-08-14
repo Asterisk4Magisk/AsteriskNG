@@ -66,12 +66,14 @@ class AndroidProxyEngine(
     ): ProxyEngineStatus = withContext(Dispatchers.Default) {
         ProxyTrafficStatsService.reconcile(appContext, null)
         val requestedEngine = request.appState.runMode.engine()
+        var rootResumeChecked = false
         if (shouldResumeRootBeforeResolvingPorts(explicitRestart, activeEngine != null, requestedEngine is RootModeEngine)) {
             requestedEngine as RootModeEngine
             requestedEngine.resumeIfRunning(request)?.let { status ->
                 activeEngine = requestedEngine
                 return@withContext status.copy(appState = request.appState)
             }
+            rootResumeChecked = true
         }
         val resolvedBaseRequest = request.copy(appState = request.appState.withResolvedDynamicLocalProxyPort())
         val (resolvedRequest, trafficStatsRuntime) = resolvedBaseRequest.withTrafficStatsConfig()
@@ -83,10 +85,14 @@ class AndroidProxyEngine(
         }
         activeEngine = nextEngine
         runCatching {
-            if (explicitRestart && nextEngine is RootModeEngine) {
-                nextEngine.restart(resolvedRequest)
-            } else {
-                nextEngine.start(resolvedRequest)
+            when {
+                explicitRestart && nextEngine is RootModeEngine -> nextEngine.restart(resolvedRequest)
+                shouldUsePreResolvedRootStart(
+                    explicitRestart = explicitRestart,
+                    resumeChecked = rootResumeChecked,
+                    nextEngineIsRoot = nextEngine is RootModeEngine,
+                ) -> (nextEngine as RootModeEngine).startAfterResumeCheck(resolvedRequest)
+                else -> nextEngine.start(resolvedRequest)
             }
                 .copy(appState = resolvedRequest.appState)
         }.onSuccess { status ->
@@ -262,6 +268,12 @@ internal fun shouldResumeRootBeforeResolvingPorts(
     hasActiveEngine: Boolean,
     requestedIsRoot: Boolean,
 ): Boolean = !explicitRestart && !hasActiveEngine && requestedIsRoot
+
+internal fun shouldUsePreResolvedRootStart(
+    explicitRestart: Boolean,
+    resumeChecked: Boolean,
+    nextEngineIsRoot: Boolean,
+): Boolean = !explicitRestart && resumeChecked && nextEngineIsRoot
 
 private fun ProxyServerState.trafficStatsServerName(): String {
     val info = server.getInfo()
