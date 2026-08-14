@@ -98,7 +98,7 @@ macOS 或 Linux：
 - 下载或准备内置 Xray-core 资源
 - 构建前将 `hev-socks5-tunnel` checkout 到 `ProjectConfig.HEV_SOCKS5_TUNNEL_VERSION`
 - 从 submodule 构建 native `hev-socks5-tunnel` JNI library 和 CLI runtime
-- 将 `asteriskd`、`bpf2socks`、`bpfmatcher` 和 `setuidgid` checkout 到各自的 `ProjectConfig` 版本，再使用 NDK 构建
+- 将 `asteriskd`、`bpf2socks` 和 `bpfmatcher` checkout 到各自的 `ProjectConfig` 版本，再使用 NDK 构建
 - 为 `arm64-v8a`、`armeabi-v7a`、`x86` 和 `x86_64` 打包 native 运行时组件
 
 如果 Gradle 找不到 Android NDK，请在 `local.properties` 中设置 `ndk.dir`，设置 `ANDROID_NDK_HOME`，或在 Android SDK 下安装 NDK。

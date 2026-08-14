@@ -41,7 +41,7 @@
         },
         {
             "uniqueId": "github:Asterisk4Magisk/asteriskd",
-            "artifactVersion": "v2.0.0",
+            "artifactVersion": "v2.0.1",
             "name": "asteriskd",
             "description": "A root Android daemon that synchronizes local-address bypass rules and pinned eBPF maps.",
             "website": "https://github.com/Asterisk4Magisk/asteriskd",
@@ -375,19 +375,6 @@
             },
             "licenses": [
                 "Apache-2.0"
-            ]
-        },
-        {
-            "uniqueId": "github:Asterisk4Magisk/setuidgid",
-            "artifactVersion": "v1.0.0",
-            "name": "setuidgid",
-            "description": "A privileged Android/Linux helper that launches a process under an explicit numeric UID and GID.",
-            "website": "https://github.com/Asterisk4Magisk/setuidgid",
-            "scm": {
-                "url": "https://github.com/Asterisk4Magisk/setuidgid"
-            },
-            "licenses": [
-                "GPL-3.0"
             ]
         },
         {

@@ -21,7 +21,7 @@ internal object RootPublicationCommand {
             appendLine("[ -f ${bundle.asteriskdConfigSourcePath.shellQuote()} ] && [ ! -L ${bundle.asteriskdConfigSourcePath.shellQuote()} ] || exit 70")
             bundle.restartExpectedOwner?.let { owner ->
                 appendConditionalStop(layout, owner)
-            } ?: appendStatusMustBeUnbound(layout)
+            }
             appendStatusMustBeUnbound(layout)
             RootLegacyMigrationCommand.appendGate(this, layout)
             appendLine("set +e")
@@ -57,7 +57,11 @@ internal object RootPublicationCommand {
             }
             appendLine("trap - EXIT HUP INT TERM")
             if (bundle.launchRuntime) {
-                appendLine("exec ${layout.asteriskdPath.shellQuote()} start --config ${layout.asteriskdConfigPath.shellQuote()}")
+                appendLine(
+                    "nohup setsid ${layout.asteriskdPath.shellQuote()} start " +
+                        "--config ${layout.asteriskdConfigPath.shellQuote()} " +
+                        "</dev/null >/dev/null 2>>${layout.asteriskdLogPath.shellQuote()} &",
+                )
             }
         }.trimEnd()
     }
@@ -114,7 +118,7 @@ internal object RootPublicationCommand {
         appendLine("  target_gid=\"$(stat -c %g \"\$parent\")\" || return 1")
         appendLine("  chown \"\$target_uid:\$target_gid\" \"\$temporary\" || return 1")
         appendLine("  chmod \"\$target_mode\" \"\$temporary\" || return 1")
-        appendLine("  restorecon \"\$temporary\" >/dev/null || return 1")
+        appendLine("  restorecon_output=\"$(restorecon \"\$temporary\" 2>&1)\" || { printf '%s\\n' \"\$restorecon_output\" >&2; return 1; }")
         appendLine("  [ \"$(stat -c %u \"\$temporary\")\" = \"\$target_uid\" ] || return 1")
         appendLine("  [ \"$(stat -c %g \"\$temporary\")\" = \"\$target_gid\" ] || return 1")
         appendLine("  [ \"$(stat -c %a \"\$temporary\")\" = \"\$target_mode\" ] || return 1")
@@ -169,4 +173,6 @@ internal val RootPublicationRequiredTools = listOf(
     "mv",
     "rm",
     "sleep",
+    "nohup",
+    "setsid",
 )

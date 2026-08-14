@@ -8,7 +8,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
@@ -22,6 +21,8 @@ import data.AndroidAppStateStore
 import engine.proxy.AndroidProxyEngine
 import engine.proxy.ProxyEngineStatus
 import engine.stats.ProxyTrafficStatsService
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 
 @Composable
 internal fun ProxyStatusSynchronizer(
@@ -32,7 +33,6 @@ internal fun ProxyStatusSynchronizer(
     val appState by stateStore.collectAppState()
     val appContext = LocalContext.current.applicationContext
     val lifecycleOwner = LocalLifecycleOwner.current
-    var statusSynchronized by remember(stateStore, proxyEngine) { mutableStateOf(false) }
     var foregroundSyncGeneration by remember(stateStore, proxyEngine) { mutableIntStateOf(0) }
 
     DisposableEffect(lifecycleOwner, stateStore, proxyEngine) {
@@ -46,8 +46,8 @@ internal fun ProxyStatusSynchronizer(
     }
 
     LaunchedEffect(stateStore, proxyEngine, foregroundSyncGeneration) {
-        statusSynchronized = synchronizeProxyStatus(
-            currentState = { stateStore.state.value },
+        observeProxyStatus(
+            states = stateStore.state,
             readStatus = { snapshot ->
                 runCatching { proxyEngine.status(snapshot.runMode, snapshot) }.getOrNull()
             },
@@ -61,11 +61,27 @@ internal fun ProxyStatusSynchronizer(
         }
     }
 
-    LaunchedEffect(appContext, statusSynchronized, appState.proxyRunning) {
-        if (statusSynchronized && !appState.proxyRunning) {
+    LaunchedEffect(appContext, appState.proxyRunning) {
+        if (!appState.proxyRunning) {
             ProxyTrafficStatsService.reconcile(appContext, null)
         }
     }
+}
+
+internal suspend fun observeProxyStatus(
+    states: Flow<AppState>,
+    readStatus: suspend (AppState) -> ProxyEngineStatus?,
+    updateAppState: (((AppState) -> AppState) -> Unit),
+) {
+    states
+        .distinctUntilChangedBy { state -> state.runMode to state.proxyRunning }
+        .collect { snapshot ->
+            synchronizeProxyStatus(
+                currentState = { snapshot },
+                readStatus = readStatus,
+                updateAppState = updateAppState,
+            )
+        }
 }
 
 internal suspend fun synchronizeProxyStatus(
@@ -79,10 +95,19 @@ internal suspend fun synchronizeProxyStatus(
 
     val status = readStatus(snapshot) ?: return false
     updateAppState { state ->
-        if (state.proxyRunning == status.running) {
+        if (state.runMode != snapshot.runMode || state.proxyRunning != snapshot.proxyRunning) {
+            return@updateAppState state
+        }
+        val synchronizedRunMode = status.runMode
+            ?.takeIf { status.running && it.isRootRunMode() }
+            ?: state.runMode
+        if (state.proxyRunning == status.running && state.runMode == synchronizedRunMode) {
             state
         } else {
-            state.copy(proxyRunning = status.running)
+            state.copy(
+                runMode = synchronizedRunMode,
+                proxyRunning = status.running,
+            )
         }
     }
     return true

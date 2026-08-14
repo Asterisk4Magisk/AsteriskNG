@@ -10,6 +10,3 @@
 [submodule "bpfmatcher/src/main/native"]
 	path = bpfmatcher/src/main/native
 	url = https://github.com/Asterisk4Magisk/bpfmatcher.git
-[submodule "setuidgid/src/main/native"]
-	path = setuidgid/src/main/native
-	url = https://github.com/Asterisk4Magisk/setuidgid.git

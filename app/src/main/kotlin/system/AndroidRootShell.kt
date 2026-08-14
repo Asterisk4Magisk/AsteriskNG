@@ -6,8 +6,6 @@ package system
 import features.logs.AndroidAppLogger
 import com.topjohnwu.superuser.Shell
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.withContext
 import utils.shellQuote
 
@@ -62,40 +60,6 @@ internal object AndroidRootShell {
         runCatching { Shell.getShell().isRoot }
             .onFailure { error -> AndroidAppLogger.warn(LogTag, "Failed to check root access", error) }
             .getOrDefault(false)
-    }
-
-    fun launch(command: String, options: ShellExecOptions): Deferred<ShellExecResult> {
-        val completion = CompletableDeferred<ShellExecResult>()
-        val stdout = mutableListOf<String>()
-        val stderr = mutableListOf<String>()
-        val launcher = runCatching {
-            Shell.Builder.create()
-                .setFlags(Shell.FLAG_MOUNT_MASTER)
-                .setTimeout(10)
-                .build()
-        }.getOrElse { error ->
-            completion.completeExceptionally(error)
-            return completion
-        }
-        runCatching {
-            launcher.newJob()
-                .add(options.toShellCommand(command))
-                .to(stdout, stderr)
-                .submit { result ->
-                    completion.complete(
-                        ShellExecResult(
-                            errno = result.code,
-                            stdout = stdout.joinToString("\n"),
-                            stderr = stderr.joinToString("\n"),
-                        ),
-                    )
-                    runCatching { launcher.close() }
-                }
-        }.onFailure { error ->
-            runCatching { launcher.close() }
-            completion.completeExceptionally(error)
-        }
-        return completion
     }
 
     private const val LogTag = "AndroidRootShell"

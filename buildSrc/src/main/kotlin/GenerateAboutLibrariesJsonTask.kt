@@ -127,15 +127,6 @@ abstract class GenerateAboutLibrariesJsonTask : DefaultTask() {
                 listOf("GPL-3.0"),
             ),
             library(
-                "github:Asterisk4Magisk/setuidgid",
-                ProjectConfig.SETUIDGID_VERSION,
-                "setuidgid",
-                "A privileged Android/Linux helper that launches a process under an explicit numeric UID and GID.",
-                "https://github.com/Asterisk4Magisk/setuidgid",
-                "https://github.com/Asterisk4Magisk/setuidgid",
-                listOf("GPL-3.0"),
-            ),
-            library(
                 "github:XTLS/Xray-core",
                 ProjectConfig.XRAY_CORE_VERSION,
                 "Xray-core",

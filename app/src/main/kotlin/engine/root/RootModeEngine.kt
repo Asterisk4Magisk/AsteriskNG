@@ -29,6 +29,9 @@ internal class RootModeEngine(
 ) : AndroidModeProxyEngine {
     private val controller = RootSupervisorController(context, rootAccess)
 
+    internal val daemonMode: engine.root.daemon.config.AsteriskdMode
+        get() = definition.daemonMode
+
     override val runMode: Int
         get() = definition.runMode
 

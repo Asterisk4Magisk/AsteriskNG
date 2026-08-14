@@ -98,7 +98,7 @@ The build:
 - downloads or prepares the bundled Xray-core asset
 - checks out `hev-socks5-tunnel` to `ProjectConfig.HEV_SOCKS5_TUNNEL_VERSION` before building it
 - builds the native `hev-socks5-tunnel` JNI library and CLI runtime from its submodule
-- checks out `asteriskd`, `bpf2socks`, `bpfmatcher`, and `setuidgid` to their `ProjectConfig` versions before building them with the NDK
+- checks out `asteriskd`, `bpf2socks`, and `bpfmatcher` to their `ProjectConfig` versions before building them with the NDK
 - packages native runtime components for `arm64-v8a`, `armeabi-v7a`, `x86`, and `x86_64`
 
 If Gradle cannot find Android NDK, set `ndk.dir` in `local.properties`, set `ANDROID_NDK_HOME`, or install an NDK under the Android SDK.

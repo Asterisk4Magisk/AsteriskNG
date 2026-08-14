@@ -16,6 +16,8 @@ import engine.stats.resolveXrayStatsApiPort
 import engine.stats.xrayStatsApiExcludedPorts
 import engine.proxy.mode.AndroidModeProxyEngine
 import engine.root.RootModeEngine
+import engine.root.runtime.model.RootRuntimeMode
+import engine.root.runtime.model.RootRuntimeOwner
 import engine.vpn.VpnXrayEngine
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
@@ -129,43 +131,64 @@ class AndroidProxyEngine(
         preferredRunMode: Int? = null,
         appState: AppState? = null,
     ): ProxyEngineStatus = withContext(Dispatchers.Default) {
-        val activeStatus = activeEngine?.status()
+        var rootStatus: ProxyEngineStatus? = null
+
+        suspend fun probeRoot(engine: RootModeEngine): ProxyEngineStatus {
+            rootStatus?.let { return it }
+            return normalizeRootRuntimeStatus(engine.status(), ::rootRunMode).also { rootStatus = it }
+        }
+
+        fun accept(status: ProxyEngineStatus, source: AndroidModeProxyEngine): ProxyEngineStatus {
+            activeEngine = status.runMode?.let(rootEnginesByRunMode::get) ?: source
+            return status.withTrafficStatsReconciled(appState)
+        }
+
+        val active = activeEngine
+        val activeStatus = when (active) {
+            is RootModeEngine -> probeRoot(active)
+            else -> active?.status()
+        }
         if (activeStatus?.running == true) {
-            return@withContext activeStatus
-                .withTrafficStatsReconciled(appState)
+            return@withContext accept(activeStatus, checkNotNull(active))
         }
 
         var fallbackStatus = activeStatus
         preferredRunMode?.engine()?.let { preferredEngine ->
-            val preferredStatus = preferredEngine.status()
+            val preferredStatus = if (preferredEngine is RootModeEngine) {
+                probeRoot(preferredEngine)
+            } else {
+                preferredEngine.status()
+            }
             if (preferredStatus.running) {
-                activeEngine = preferredEngine
-                return@withContext preferredStatus
-                    .withTrafficStatsReconciled(appState)
+                return@withContext accept(preferredStatus, preferredEngine)
             }
             if (preferredStatus.rootSnapshot != null || fallbackStatus?.rootSnapshot == null) {
                 fallbackStatus = preferredStatus
             }
         }
 
-        (rootEngines + vpnXrayEngine)
-            .filterNot { engine -> engine.runMode == preferredRunMode }
-            .forEach { engine ->
-                val status = engine.status()
-                if (status.running) {
-                    activeEngine = engine
-                    return@withContext status
-                        .withTrafficStatsReconciled(appState)
-                }
-                if (status.rootSnapshot != null && fallbackStatus?.rootSnapshot == null) {
-                    fallbackStatus = status
-                }
+        if (rootStatus == null) {
+            val probeEngine = rootEngines.first()
+            val status = probeRoot(probeEngine)
+            if (status.running) return@withContext accept(status, probeEngine)
+            if (status.rootSnapshot != null && fallbackStatus?.rootSnapshot == null) {
+                fallbackStatus = status
             }
+        }
+
+        if (active !== vpnXrayEngine && preferredRunMode != RunModeVpnService) {
+            val status = vpnXrayEngine.status()
+            if (status.running) return@withContext accept(status, vpnXrayEngine)
+        }
 
         activeEngine = null
         (fallbackStatus ?: ProxyEngineStatus(running = false, runMode = preferredRunMode))
             .withTrafficStatsReconciled(appState)
     }
+
+    private fun rootRunMode(mode: RootRuntimeMode): Int? = rootEngines
+        .firstOrNull { engine -> engine.daemonMode.wireValue == mode.wireValue }
+        ?.runMode
 
     private fun Int.engine(): AndroidModeProxyEngine {
         return rootEnginesByRunMode[this] ?: vpnXrayEngine
@@ -219,6 +242,19 @@ class AndroidProxyEngine(
         }
         return this
     }
+}
+
+internal fun normalizeRootRuntimeStatus(
+    probed: ProxyEngineStatus,
+    runModeFor: (RootRuntimeMode) -> Int?,
+): ProxyEngineStatus {
+    val snapshot = probed.rootSnapshot ?: return probed
+    val activeRunMode = runModeFor(snapshot.mode) ?: probed.runMode ?: return probed
+    return ProxyEngineStatus.fromRootSnapshot(
+        localOwner = RootRuntimeOwner.AsteriskNg,
+        runMode = activeRunMode,
+        snapshot = snapshot,
+    )
 }
 
 internal fun shouldResumeRootBeforeResolvingPorts(
