@@ -13,7 +13,7 @@ object ProjectConfig {
     const val PROJECT_NAME = "AsteriskNG"
     const val VERSION_NAME = "1.4.0-dev"
     const val PACKAGE_NAME = "org.asterisk.zcc.ang"
-    const val ASTERISKD_VERSION = "v2.0.2"
+    const val ASTERISKD_VERSION = "v2.0.3"
     const val BPF2SOCKS_VERSION = "v1.0.4"
     const val BPF_MATCHER_VERSION = "v1.0.1"
     const val XRAY_CORE_VERSION = "v26.7.28"

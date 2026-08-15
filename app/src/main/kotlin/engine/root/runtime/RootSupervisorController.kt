@@ -14,7 +14,6 @@ import engine.root.daemon.config.AsteriskdMode
 import engine.root.daemon.config.AsteriskdOwner
 import engine.root.daemon.control.AsteriskdControlCodec
 import engine.root.daemon.control.AsteriskdControlResponse
-import engine.root.daemon.control.AsteriskdPhase
 import engine.root.daemon.control.AsteriskdResultCode
 import engine.root.daemon.control.AsteriskdSnapshot
 import engine.root.publication.RootBootPublicationCommand
@@ -24,7 +23,7 @@ import engine.root.publication.RootPublicationStager
 import engine.root.publication.prepareRootPublicationDirectories
 import engine.root.publication.rootRuntimeLayout
 import engine.root.publication.validateElfHeaderFile
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.withTimeoutOrNull
 import system.RootShellGateway
 import system.ShellExecOptions
 import system.ShellExecResult
@@ -108,7 +107,7 @@ internal class RootSupervisorController(
             root.xrayConfigJson,
             AsteriskdConfigEncoder.encode(config),
         )
-        try {
+        staged.use { staged ->
             val publication = RootPublicationCommand.build(
                 RootPublicationBundle(
                     runtimeLayout = runtimeLayout,
@@ -122,25 +121,12 @@ internal class RootSupervisorController(
             if (launchResult.errno != 0 || launchResult.stdout.isNotBlank()) {
                 throw launchFailure(launchResult)
             }
-            val deadline = System.nanoTime() + StartTimeoutMilliseconds * 1_000_000L
-            while (System.nanoTime() < deadline) {
-                val response = runCatching { status() }.getOrNull()
-                val snapshot = response?.boundSnapshot()
-                if (snapshot != null) {
-                    if (snapshot.owner != AsteriskdOwner.AsteriskNg) throw RootRuntimeConflictException(snapshot)
-                    if (snapshot.phase == AsteriskdPhase.Failed) {
-                        throw IllegalStateException(snapshot.error?.message ?: "asteriskd entered failed phase")
-                    }
-                    if (snapshot.phase == AsteriskdPhase.Running) {
-                        require(snapshot.mode == config.mode) { "Unexpected ROOT mode ${snapshot.mode.wireValue}" }
-                        return snapshot
-                    }
-                }
-                delay(StatusPollIntervalMilliseconds.milliseconds)
-            }
-            throw IllegalStateException("asteriskd did not reach running phase before timeout")
-        } finally {
-            staged.close()
+            val snapshot = withTimeoutOrNull(StartTimeoutMilliseconds.milliseconds) {
+                client.awaitRunning(runtimeLayout.asteriskdPath)
+            } ?: throw IllegalStateException("asteriskd did not reach running phase before timeout")
+            if (snapshot.owner != AsteriskdOwner.AsteriskNg) throw RootRuntimeConflictException(snapshot)
+            require(snapshot.mode == config.mode) { "Unexpected ROOT mode ${snapshot.mode.wireValue}" }
+            return snapshot
         }
     }
 
@@ -176,7 +162,7 @@ internal class RootSupervisorController(
             root.xrayConfigJson,
             AsteriskdConfigEncoder.encode(config),
         )
-        try {
+        staged.use { staged ->
             val result = shell.exec(
                 RootPublicationCommand.build(
                     RootPublicationBundle(
@@ -190,8 +176,6 @@ internal class RootSupervisorController(
                 ShellExecOptions(logFailure = false),
             )
             requirePublicationSuccess(result)
-        } finally {
-            staged.close()
         }
     }
 
@@ -257,4 +241,3 @@ internal fun sanitizeLauncherStderr(stderr: String): String {
 }
 
 private const val StartTimeoutMilliseconds = 15_000L
-private const val StatusPollIntervalMilliseconds = 100L
