@@ -46,6 +46,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -95,6 +96,7 @@ internal fun StringListEditor(
     modifier: Modifier = Modifier,
     description: String? = null,
     validateInput: (String) -> String? = { null },
+    onPendingChange: ((Boolean) -> Unit)? = null,
 ) {
     var input by remember(editorKey, title) { mutableStateOf("") }
     val inputState = rememberTextFieldState()
@@ -128,6 +130,12 @@ internal fun StringListEditor(
         else -> validateInput(trimmedInput)
     }
     val canAddInput = trimmedInput.isNotEmpty() && inputError == null
+    val hasPendingInput = hasPendingStringListEdit(input, editingIndex)
+    val currentOnPendingChange by rememberUpdatedState(onPendingChange)
+
+    LaunchedEffect(hasPendingInput) {
+        currentOnPendingChange?.invoke(hasPendingInput)
+    }
     val addInput = {
         if (canAddInput) {
             onValuesChange((sanitizedValues + trimmedInput).toTrimmedNonEmptyList())
@@ -259,6 +267,13 @@ internal fun StringListEditor(
             }
             inputError?.let {
                 StringListStatusText(text = it, error = true)
+            }
+            AnimatedVisibility(
+                visible = hasPendingInput && onPendingChange != null,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically(),
+            ) {
+                StringListStatusText(text = stringResource(R.string.string_list_pending_value))
             }
             if (sanitizedValues.isEmpty()) {
                 StringListStatusText(text = emptyText)

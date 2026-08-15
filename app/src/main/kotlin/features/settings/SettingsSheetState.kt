@@ -7,14 +7,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import app.AppState
-import features.settings.sheets.orderedBy
-import features.settings.sheets.outletInterfaceOptions
 import features.settings.sheets.sanitizeExternalInterfaces
+import features.settings.sheets.sanitizeIgnoredInterfaceSelectors
 import features.settings.sheets.sanitizePrivateAddressCidrs
-import system.AndroidNetworkInterfaceProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
-import kotlinx.coroutines.CancellationException
 
 internal class SettingsSheetState(
     private val updateAppState: ((AppState) -> AppState) -> Unit,
@@ -41,10 +38,7 @@ internal class SettingsSheetState(
     var externalInterfacesDraft by mutableStateOf(emptyList<String>())
 
     var showIgnoredInterfaces by mutableStateOf(false)
-    var ignoredInterfaceOptions by mutableStateOf(emptyList<String>())
     var ignoredInterfacesDraft by mutableStateOf(emptyList<String>())
-    var ignoredInterfacesLoading by mutableStateOf(false)
-    var ignoredInterfacesError by mutableStateOf<String?>(null)
 
     var showPrivateAddresses by mutableStateOf(false)
     var privateAddressCidrsDraft by mutableStateOf(emptyList<String>())
@@ -89,46 +83,12 @@ internal class SettingsSheetState(
     }
 
     fun openIgnoredInterfaces(appState: AppState) {
-        ignoredInterfaceOptions = emptyList()
-        ignoredInterfacesDraft = appState.ignoredInterfaces
-        ignoredInterfacesLoading = true
-        ignoredInterfacesError = null
+        ignoredInterfacesDraft = appState.ignoredInterfaces.sanitizeIgnoredInterfaceSelectors()
         showIgnoredInterfaces = true
     }
 
     fun closeIgnoredInterfaces() {
         showIgnoredInterfaces = false
-        ignoredInterfacesLoading = false
-    }
-
-    suspend fun loadIgnoredInterfaces(
-        appState: AppState,
-        networkInterfaces: AndroidNetworkInterfaceProvider,
-        errorDetail: String,
-    ) {
-        if (!showIgnoredInterfaces) {
-            ignoredInterfacesLoading = false
-            return
-        }
-
-        ignoredInterfacesLoading = true
-        ignoredInterfacesError = null
-        try {
-            val options = outletInterfaceOptions(networkInterfaces.listNetworkInterfaces())
-            val prunedSelection = appState.ignoredInterfaces.orderedBy(options)
-            ignoredInterfaceOptions = options
-            ignoredInterfacesDraft = ignoredInterfacesDraft.orderedBy(options)
-            if (prunedSelection != appState.ignoredInterfaces) {
-                updateAppState { state ->
-                    state.copy(ignoredInterfaces = state.ignoredInterfaces.orderedBy(options))
-                }
-            }
-        } catch (error: Throwable) {
-            if (error is CancellationException) throw error
-            ignoredInterfacesError = errorDetail
-        } finally {
-            ignoredInterfacesLoading = false
-        }
     }
 
     fun openPrivateAddresses(appState: AppState) {

@@ -66,6 +66,7 @@
     <string name="common_unsupported">Unsupported</string>
     <string name="string_list_item_empty">Entry cannot be empty</string>
     <string name="string_list_line_error">Line %1$d: %2$s</string>
+    <string name="string_list_pending_value">Finish adding or editing this value before saving</string>
 
     <!-- Navigation -->
     <string name="nav_proxy">Proxy</string>
@@ -159,13 +160,12 @@
     <string name="settings_external_interfaces_bluetooth">Bluetooth tethering</string>
     <string name="settings_external_interfaces_ethernet">Ethernet tethering</string>
     <string name="settings_ignored_interfaces">Ignored interfaces</string>
-    <string name="settings_ignored_interfaces_summary">Ignore traffic on selected interfaces to keep it out of the proxy core</string>
+    <string name="settings_ignored_interfaces_input">Interface selectors</string>
+    <string name="settings_ignored_interfaces_summary">Enter one interface name per item. Add + at the end to match a prefix, for example wlan+.</string>
     <string name="settings_ignored_interfaces_none">Not selected</string>
     <string name="settings_ignored_interfaces_selected">Selected: {interfaces}</string>
-    <string name="settings_ignored_interfaces_loading">Loading network interfaces…</string>
-    <string name="settings_ignored_interfaces_empty">No network outlet interfaces found</string>
-    <string name="settings_ignored_interfaces_error">Failed to load interfaces: {message}</string>
-    <string name="settings_ignored_interfaces_error_detail">Unable to read network interfaces</string>
+    <string name="settings_ignored_interfaces_empty">No ignored interfaces configured</string>
+    <string name="settings_ignored_interfaces_invalid">Use 1–15 letters, digits, _, . or -. A single + is allowed only at the end.</string>
     <string name="settings_private_addresses">Private addresses</string>
     <string name="settings_private_addresses_summary">Private addresses do not enter the proxy core. Add them below if needed</string>
     <string name="settings_private_addresses_none">Not configured</string>

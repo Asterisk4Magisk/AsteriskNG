@@ -102,7 +102,6 @@ private fun SettingsContent(
     val updateAppState = LocalUpdateAppState.current
     val navigator = LocalNavigator.current
     val services = LocalAppServices.current
-    val networkInterfaces = services.networkInterfaces
     val switchRunModeUseCase = services.switchRunModeUseCase
     val rootBootScriptUseCase = services.rootBootScriptUseCase
     val rootEbpfProbeUseCase = services.rootEbpfProbeUseCase
@@ -169,7 +168,6 @@ private fun SettingsContent(
     val restoreCompletedMessage = stringResource(R.string.settings_restore_completed)
     val restoreFailedMessage = stringResource(R.string.settings_restore_failed)
     val selectServerFirstMessage = stringResource(R.string.proxy_server_list_select_first)
-    val ignoredInterfacesErrorDetail = stringResource(R.string.settings_ignored_interfaces_error_detail)
     val inboundProxySummary = inboundProxySummary(
         runMode = appState.runMode,
         transparentProxyPort = appState.transparentProxyPort,
@@ -437,16 +435,7 @@ private fun SettingsContent(
                         updateAppState { state -> state.copy(enableRootIpv6Disabler = enabled) }
                     },
                     onOpenExternalInterfaces = { sheetState.openExternalInterfaces(appState) },
-                    onOpenIgnoredInterfaces = {
-                        sheetState.openIgnoredInterfaces(appState)
-                        scope.launch {
-                            sheetState.loadIgnoredInterfaces(
-                                appState = appState,
-                                networkInterfaces = networkInterfaces,
-                                errorDetail = ignoredInterfacesErrorDetail,
-                            )
-                        }
-                    },
+                    onOpenIgnoredInterfaces = { sheetState.openIgnoredInterfaces(appState) },
                     onOpenPrivateAddresses = { sheetState.openPrivateAddresses(appState) },
                 )
             }

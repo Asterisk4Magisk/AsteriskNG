@@ -66,6 +66,7 @@
     <string name="common_unsupported">不支持</string>
     <string name="string_list_item_empty">条目不能为空</string>
     <string name="string_list_line_error">第 %1$d 行：%2$s</string>
+    <string name="string_list_pending_value">请先完成当前值的添加或编辑，再保存</string>
 
     <!-- Navigation -->
     <string name="nav_proxy">代理</string>
@@ -159,13 +160,12 @@
     <string name="settings_external_interfaces_bluetooth">蓝牙热点共享</string>
     <string name="settings_external_interfaces_ethernet">以太网热点共享</string>
     <string name="settings_ignored_interfaces">忽略接口设置</string>
-    <string name="settings_ignored_interfaces_summary">忽略所选接口的流量，避免进入代理核心</string>
+    <string name="settings_ignored_interfaces_input">接口选择器</string>
+    <string name="settings_ignored_interfaces_summary">每项输入一个接口名称。在末尾添加 + 可匹配前缀，例如 wlan+。</string>
     <string name="settings_ignored_interfaces_none">未选择</string>
     <string name="settings_ignored_interfaces_selected">已选择：{interfaces}</string>
-    <string name="settings_ignored_interfaces_loading">正在加载网络接口…</string>
-    <string name="settings_ignored_interfaces_empty">未找到可忽略的网络出口接口</string>
-    <string name="settings_ignored_interfaces_error">接口加载失败：{message}</string>
-    <string name="settings_ignored_interfaces_error_detail">无法读取网络接口</string>
+    <string name="settings_ignored_interfaces_empty">尚未配置忽略接口</string>
+    <string name="settings_ignored_interfaces_invalid">请使用 1–15 个字母、数字、_、. 或 -。+ 仅可出现一次且必须位于末尾。</string>
     <string name="settings_private_addresses">私有地址设置</string>
     <string name="settings_private_addresses_summary">私有地址不会进入代理核心，若需要请添加到下方</string>
     <string name="settings_private_addresses_none">未配置</string>

@@ -58,6 +58,7 @@
     <string name="common_unsupported">Не поддерживается</string>
     <string name="string_list_item_empty">Запись не может быть пустой</string>
     <string name="string_list_line_error">Строка %1$d: %2$s</string>
+    <string name="string_list_pending_value">Завершите добавление или редактирование значения перед сохранением</string>
 
     <string name="nav_proxy">Прокси</string>
     <string name="nav_routing">Правила</string>
@@ -140,13 +141,12 @@
     <string name="settings_external_interfaces_bluetooth">Bluetooth-модем</string>
     <string name="settings_external_interfaces_ethernet">Ethernet-модем</string>
     <string name="settings_ignored_interfaces">Игнорируемые интерфейсы</string>
-    <string name="settings_ignored_interfaces_summary">Исключить трафик выбранных сетевых интерфейсов из обработки ядром прокси</string>
+    <string name="settings_ignored_interfaces_input">Селекторы интерфейсов</string>
+    <string name="settings_ignored_interfaces_summary">Введите по одному имени интерфейса в каждом элементе. Добавьте + в конце для сопоставления по префиксу, например wlan+.</string>
     <string name="settings_ignored_interfaces_none">Не выбрано</string>
     <string name="settings_ignored_interfaces_selected">Выбрано: {interfaces}</string>
-    <string name="settings_ignored_interfaces_loading">Загрузка сетевых интерфейсов…</string>
-    <string name="settings_ignored_interfaces_empty">Сетевые интерфейсы вывода не найдены</string>
-    <string name="settings_ignored_interfaces_error">Не удалось загрузить интерфейсы: {message}</string>
-    <string name="settings_ignored_interfaces_error_detail">Невозможно прочитать структуру сетевых интерфейсов</string>
+    <string name="settings_ignored_interfaces_empty">Игнорируемые интерфейсы не настроены</string>
+    <string name="settings_ignored_interfaces_invalid">Используйте 1–15 букв, цифр или символов _, . и -. Один знак + допускается только в конце.</string>
     <string name="settings_private_addresses">Приватные адреса</string>
     <string name="settings_private_addresses_summary">Трафик приватных адресов не направляется в ядро прокси. Вы можете настроить их ниже</string>
     <string name="settings_private_addresses_none">Не сконфигурировано</string>

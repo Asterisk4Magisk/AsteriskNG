@@ -14,8 +14,8 @@ import features.settings.sheets.MuxSettingsBottomSheet
 import features.settings.sheets.PrivateAddressBottomSheet
 import features.settings.sheets.ProxySettingsBottomSheet
 import features.settings.sheets.TunSettingsBottomSheet
-import features.settings.sheets.orderedBy
 import features.settings.sheets.sanitizeExternalInterfaces
+import features.settings.sheets.sanitizeIgnoredInterfaceSelectors
 import features.settings.sheets.sanitizeMuxUdp443Index
 import features.settings.sheets.sanitizePrivateAddressCidrs
 import app.modes.RunModeBpf2Socks
@@ -275,17 +275,14 @@ internal fun SettingsBottomSheetsHost(
     )
     IgnoredInterfacesBottomSheet(
         show = sheetState.showIgnoredInterfaces,
-        interfaces = sheetState.ignoredInterfaceOptions,
         selectedInterfaces = sheetState.ignoredInterfacesDraft,
-        loading = sheetState.ignoredInterfacesLoading,
-        errorMessage = sheetState.ignoredInterfacesError,
         onSelectedInterfacesChange = {
-            sheetState.ignoredInterfacesDraft = it.orderedBy(sheetState.ignoredInterfaceOptions)
+            sheetState.ignoredInterfacesDraft = it.sanitizeIgnoredInterfaceSelectors()
         },
         onDismissRequest = { sheetState.closeIgnoredInterfaces() },
         onSave = { interfaces ->
             updateAppState { state ->
-                state.copy(ignoredInterfaces = interfaces.orderedBy(sheetState.ignoredInterfaceOptions))
+                state.copy(ignoredInterfaces = interfaces.sanitizeIgnoredInterfaceSelectors())
             }
             sheetState.closeIgnoredInterfaces()
         },
