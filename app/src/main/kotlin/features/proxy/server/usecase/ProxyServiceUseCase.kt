@@ -7,7 +7,6 @@ import app.AppState
 import app.ProxyServerState
 import engine.proxy.AndroidProxyEngine
 import engine.proxy.ProxyEngineStartRequest
-import engine.root.runtime.RootConflictStage
 import engine.root.runtime.RootFailureKind
 import engine.root.runtime.RootOperationBlockedException
 import engine.root.runtime.RootOperationLogRecord
@@ -55,8 +54,6 @@ internal class ProxyServiceUseCase(
         classifyForeignRootConflict(
             LocalRootOwner,
             live,
-            RootRequestedAction.RestartSameOwner,
-            RootConflictStage.InitialStatus,
         )?.let { conflict -> return conflict.toProxyServiceFailure(RootRequestedAction.RestartSameOwner) }
         return runCatching {
             proxyEngine.restart(ProxyEngineStartRequest(state, server))
@@ -88,8 +85,6 @@ internal class ProxyServiceUseCase(
         classifyForeignRootConflict(
             LocalRootOwner,
             live,
-            RootRequestedAction.StopOwn,
-            RootConflictStage.InitialStatus,
         )?.let { conflict -> return conflict.toProxyServiceFailure(RootRequestedAction.StopOwn) }
         return runCatching { proxyEngine.stop(runMode) }.fold(
             onSuccess = { status -> ProxyServiceResult.Success(proxyRunning = status.running, appState = status.appState) },
@@ -98,8 +93,8 @@ internal class ProxyServiceUseCase(
     }
 
     private fun RootOperationResult.toProxyServiceFailure(action: RootRequestedAction): ProxyServiceResult.Failed {
-        toSanitizedLogRecord(action)?.let(::logRootResult)
-        return ProxyServiceResult.Failed(RootOperationBlockedException(this))
+        logRootResult(toSanitizedLogRecord(action))
+        return ProxyServiceResult.Failed(RootOperationBlockedException())
     }
 
     private fun Throwable.toProxyServiceFailure(action: RootRequestedAction): ProxyServiceResult.Failed {
@@ -107,20 +102,18 @@ internal class ProxyServiceUseCase(
         val rootResult = when (this) {
             is RootRuntimeConflictException -> RootOperationResult.ForeignOwnerConflict(
                 owner = RootRuntimeOwner.entries.single { owner -> owner.wireValue == snapshot.owner.wireValue },
-                action = action,
-                stage = RootConflictStage.Bind,
             )
             is RootRuntimeBusyException -> RootOperationResult.Busy(
                 RootRuntimeOwner.entries.single { owner -> owner.wireValue == snapshot.owner.wireValue },
             )
-            else -> RootOperationResult.Failure(RootFailureKind.StartFailure, this)
+            else -> RootOperationResult.Failure(RootFailureKind.StartFailure)
         }
-        rootResult.toSanitizedLogRecord(action)?.let(::logRootResult)
+        logRootResult(rootResult.toSanitizedLogRecord(action))
         if (this !is RootRuntimeConflictException && this !is RootRuntimeBusyException) {
             AndroidAppLogger.error("RootFailureProbe", "unsanitized diagnostic", this)
         }
         return if (this is RootRuntimeConflictException || this is RootRuntimeBusyException) {
-            ProxyServiceResult.Failed(RootOperationBlockedException(rootResult))
+            ProxyServiceResult.Failed(RootOperationBlockedException())
         } else {
             ProxyServiceResult.Failed(this)
         }

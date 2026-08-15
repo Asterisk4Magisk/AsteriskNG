@@ -4,10 +4,7 @@
 package engine.root.runtime
 
 import engine.proxy.ProxyEngineStatus
-import engine.root.runtime.model.RootRuntimeIdentity
 import engine.root.runtime.model.RootRuntimeOwner
-import engine.root.runtime.model.RootRuntimePhase
-import engine.root.runtime.model.RootRuntimeSnapshot
 
 enum class RootRequestedAction(val wireValue: String) {
     OrdinaryStart("ordinary_start"),
@@ -17,53 +14,19 @@ enum class RootRequestedAction(val wireValue: String) {
     BootRefresh("boot_refresh"),
 }
 
-enum class RootConflictStage(val wireValue: String) {
-    InitialStatus("initial_status"),
-    ConditionalStop("conditional_stop"),
-    PublicationRecheck("publication_recheck"),
-    PostRecovery("post_recovery"),
-    Bind("bind"),
-}
-
 enum class RootFailureKind(val wireValue: String) {
-    StatusUnavailable("status_unavailable"),
-    ProtocolFailure("protocol_failure"),
-    PermissionDenied("permission_denied"),
-    ValidationFailure("validation_failure"),
     StartFailure("start_failure"),
     InternalFailure("internal_failure"),
 }
 
 sealed interface RootOperationResult {
-    data class Success(
-        val localRunning: Boolean,
-        val snapshot: RootRuntimeSnapshot? = null,
-    ) : RootOperationResult
-
     data class ForeignOwnerConflict(
         val owner: RootRuntimeOwner,
-        val action: RootRequestedAction,
-        val stage: RootConflictStage,
-    ) : RootOperationResult
-
-    data class RecoveryRequired(
-        val identity: RootRuntimeIdentity?,
-        val coreOwnedEbpfBoundary: Boolean?,
-    ) : RootOperationResult
-
-    data class StopFailed(val snapshot: RootRuntimeSnapshot) : RootOperationResult
-
-    data class SocketReleaseTimeout(
-        val expectedOwner: RootRuntimeOwner,
-        val lastSnapshot: RootRuntimeSnapshot?,
     ) : RootOperationResult
 
     data class Busy(val owner: RootRuntimeOwner?) : RootOperationResult
 
-    data class Failure(
-        val kind: RootFailureKind,
-        val cause: Throwable? = null,
-    ) : RootOperationResult
+    data class Failure(val kind: RootFailureKind) : RootOperationResult
 }
 
 data class RootOperationLogRecord(
@@ -75,33 +38,15 @@ data class RootOperationLogRecord(
         "root_result code=$code action=${action.wireValue} owner=${owner?.wireValue ?: "none"}"
 }
 
-class RootOperationBlockedException(
-    val result: RootOperationResult,
-) : IllegalStateException()
+class RootOperationBlockedException : IllegalStateException()
 
 fun RootOperationResult.toSanitizedLogRecord(
     requestedAction: RootRequestedAction,
-): RootOperationLogRecord? = when (this) {
-    is RootOperationResult.Success -> null
+): RootOperationLogRecord = when (this) {
     is RootOperationResult.ForeignOwnerConflict -> RootOperationLogRecord(
         code = "foreign_owner_conflict",
-        action = action,
+        action = requestedAction,
         owner = owner,
-    )
-    is RootOperationResult.RecoveryRequired -> RootOperationLogRecord(
-        code = "recovery_required",
-        action = requestedAction,
-        owner = identity?.owner,
-    )
-    is RootOperationResult.StopFailed -> RootOperationLogRecord(
-        code = "stop_failed",
-        action = requestedAction,
-        owner = snapshot.owner,
-    )
-    is RootOperationResult.SocketReleaseTimeout -> RootOperationLogRecord(
-        code = "socket_release_timeout",
-        action = requestedAction,
-        owner = expectedOwner,
     )
     is RootOperationResult.Busy -> RootOperationLogRecord(
         code = "runtime_busy",
@@ -117,7 +62,7 @@ fun RootOperationResult.toSanitizedLogRecord(
 
 fun RootOperationResult.toAppLogMessage(
     requestedAction: RootRequestedAction,
-): String? = toSanitizedLogRecord(requestedAction)?.asLogMessage()
+): String = toSanitizedLogRecord(requestedAction).asLogMessage()
 
 sealed interface RootToggleDecision {
     data object OrdinaryStart : RootToggleDecision
@@ -137,14 +82,10 @@ fun decideRootSafeToggle(
     }
     if (snapshot.owner != localOwner) {
         return RootToggleDecision.Blocked(
-            RootOperationResult.ForeignOwnerConflict(
-                owner = snapshot.owner,
-                action = RootRequestedAction.Toggle,
-                stage = RootConflictStage.InitialStatus,
-            ),
+            RootOperationResult.ForeignOwnerConflict(snapshot.owner),
         )
     }
-    return if (snapshot.phase == RootRuntimePhase.Running) {
+    return if (snapshot.running) {
         RootToggleDecision.StopOwn
     } else {
         RootToggleDecision.Blocked(RootOperationResult.Busy(snapshot.owner))
@@ -154,14 +95,8 @@ fun decideRootSafeToggle(
 fun classifyForeignRootConflict(
     localOwner: RootRuntimeOwner,
     status: ProxyEngineStatus,
-    action: RootRequestedAction,
-    stage: RootConflictStage,
 ): RootOperationResult.ForeignOwnerConflict? {
     val owner = status.rootSnapshot?.owner ?: return null
     if (owner == localOwner) return null
-    return RootOperationResult.ForeignOwnerConflict(
-        owner = owner,
-        action = action,
-        stage = stage,
-    )
+    return RootOperationResult.ForeignOwnerConflict(owner)
 }

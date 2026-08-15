@@ -20,11 +20,6 @@ internal enum class AsteriskdResultCode(val wireValue: String) {
     StartFailed("start_failed"), StopFailed("stop_failed"), InternalError("internal_error"),
 }
 
-internal enum class AsteriskdRecoveryCode(val wireValue: String) {
-    Clean("clean"), Recovered("recovered"), RecoveryRequired("recovery_required"),
-    AlreadyRunning("already_running"), PermissionDenied("permission_denied"), InternalError("internal_error"),
-}
-
 internal enum class AsteriskdHelperType(val wireValue: String) {
     HevSocks5Tunnel("hev-socks5-tunnel"), Bpf2Socks("bpf2socks"),
 }
@@ -97,15 +92,6 @@ internal data class AsteriskdControlResult(
 internal data class AsteriskdControlResponse(
     val requestId: String,
     val result: AsteriskdControlResult,
-)
-
-internal data class AsteriskdRecoveryResult(
-    val code: AsteriskdRecoveryCode,
-    val owner: AsteriskdOwner?,
-    val coreType: AsteriskdCoreType?,
-    val mode: AsteriskdMode?,
-    val coreOwnedEbpfBoundary: Boolean?,
-    val message: String?,
 )
 
 internal data class AsteriskdControlEvent(

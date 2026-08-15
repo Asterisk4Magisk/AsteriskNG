@@ -4,10 +4,8 @@
 package engine.root.runtime
 
 import engine.proxy.ProxyEngineStatus
-import engine.root.runtime.model.RootRuntimeCoreType
 import engine.root.runtime.model.RootRuntimeMode
 import engine.root.runtime.model.RootRuntimeOwner
-import engine.root.runtime.model.RootRuntimePhase
 import engine.root.runtime.model.RootRuntimeSnapshot
 import engine.root.daemon.config.AsteriskdMode
 import engine.root.daemon.config.AsteriskdOwner
@@ -74,10 +72,8 @@ internal fun AsteriskdSnapshot.toProxyEngineStatus(
 ): ProxyEngineStatus {
     val rootSnapshot = RootRuntimeSnapshot(
         owner = RootRuntimeOwner.entries.single { candidate -> candidate.wireValue == owner.wireValue },
-        coreType = RootRuntimeCoreType.entries.single { candidate -> candidate.wireValue == coreType.wireValue },
-        phase = RootRuntimePhase.entries.single { candidate -> candidate.wireValue == phase.wireValue },
         mode = RootRuntimeMode.entries.single { candidate -> candidate.wireValue == mode.wireValue },
-        errorCode = error?.code?.wireValue,
+        running = phase == AsteriskdPhase.Running,
     )
     return ProxyEngineStatus.fromRootSnapshot(
         localOwner = RootRuntimeOwner.AsteriskNg,

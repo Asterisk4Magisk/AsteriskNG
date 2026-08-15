@@ -199,13 +199,7 @@ internal class RootSupervisorController(
     private fun launchFailure(result: ShellExecResult): IllegalStateException {
         val controlResponse = result.controlResponseOrNull()
         controlResponse?.result?.snapshot?.rejectBound(AsteriskdOwner.AsteriskNg)
-        val message = runCatching {
-            if (result.stdout.contains("\"recoveryResult\"")) {
-                AsteriskdControlCodec.decodeRecoveryResponse(result.stdout).message
-            } else {
-                controlResponse?.result?.message
-            }
-        }.getOrNull() ?: sanitizeLauncherStderr(result.stderr)
+        val message = controlResponse?.result?.message ?: sanitizeLauncherStderr(result.stderr)
             .ifBlank { "asteriskd launcher exited with ${result.errno}" }
         return IllegalStateException(message)
     }

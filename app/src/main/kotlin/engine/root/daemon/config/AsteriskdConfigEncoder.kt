@@ -19,8 +19,6 @@ internal object AsteriskdConfigEncoder {
     }
 }
 
-internal fun AsteriskdConfig.encodeToJson(): String = AsteriskdConfigEncoder.encode(this)
-
 private fun AsteriskdConfig.toJsonObject(): JsonObject = buildJsonObject {
     put("schemaVersion", 2)
     put("owner", owner.wireValue)

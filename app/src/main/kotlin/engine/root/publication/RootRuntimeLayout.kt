@@ -30,10 +30,6 @@ internal data class RootRuntimeLayout(
         get() = File(File(dataDir, "logs"), "asteriskd.log").absolutePath
 }
 
-internal fun Context.prepareRootRuntimeLayout(): RootRuntimeLayout {
-    return rootRuntimeLayout()
-}
-
 internal fun Context.rootRuntimeLayout(): RootRuntimeLayout = xrayResourceFilePaths().toRootRuntimeLayout()
 
 internal fun Context.prepareRootPublicationDirectories(): RootRuntimeLayout {

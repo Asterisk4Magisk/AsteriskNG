@@ -54,36 +54,6 @@ internal object AsteriskdControlCodec {
         return response
     }
 
-    fun decodeRecoveryResponse(payload: String): AsteriskdRecoveryResult {
-        val root = parseClosedPayload(payload)
-        root.requireExactKeys("protocolVersion", "requestId", "recoveryResult")
-        require(root.requiredInt("protocolVersion") == ProtocolVersion)
-        require(root.requiredString("requestId") == "recover")
-        val value = root.requiredObject("recoveryResult")
-        value.requireExactKeys(
-            "code", "owner", "coreType", "mode", "coreOwnedEbpfBoundary", "message",
-        )
-        val owner = value.getValue("owner").toNullableString()?.let { wire ->
-            enumWire<AsteriskdOwner>(wire)
-        }
-        val coreType = value.getValue("coreType").toNullableString()?.let { wire ->
-            enumWire<AsteriskdCoreType>(wire)
-        }
-        val mode = value.getValue("mode").toNullableString()?.let(AsteriskdMode::fromWire)
-        require(listOf(owner, coreType, mode).all { it == null } || listOf(owner, coreType, mode).all { it != null })
-        if (owner != null) requireOwnerCore(owner, requireNotNull(coreType))
-        val result = AsteriskdRecoveryResult(
-            code = enumWire(value.requiredString("code")),
-            owner = owner,
-            coreType = coreType,
-            mode = mode,
-            coreOwnedEbpfBoundary = value.getValue("coreOwnedEbpfBoundary").toNullableBoolean(),
-            message = value.getValue("message").toNullableString(),
-        )
-        result.validate()
-        return result
-    }
-
     fun decodeEvent(payload: String): AsteriskdControlEvent {
         val root = parseClosedPayload(payload)
         root.requireExactKeys("protocolVersion", "event")
@@ -161,22 +131,6 @@ internal val AsteriskdResultCode.exitCode: Int
         AsteriskdResultCode.InternalError,
         -> 1
     }
-
-private fun AsteriskdRecoveryResult.validate() {
-    val hasIdentity = owner != null
-    val hasBoundary = coreOwnedEbpfBoundary != null
-    val hasMessage = !message.isNullOrEmpty()
-    require(message == null || hasMessage)
-    when (code) {
-        AsteriskdRecoveryCode.Clean -> require(hasBoundary && coreOwnedEbpfBoundary == false && !hasMessage)
-        AsteriskdRecoveryCode.Recovered -> require(hasIdentity && hasBoundary && coreOwnedEbpfBoundary == false && !hasMessage)
-        AsteriskdRecoveryCode.RecoveryRequired -> require(hasMessage && hasIdentity == hasBoundary)
-        AsteriskdRecoveryCode.AlreadyRunning -> require(hasIdentity && !hasBoundary && hasMessage)
-        AsteriskdRecoveryCode.PermissionDenied,
-        AsteriskdRecoveryCode.InternalError,
-        -> require(!hasIdentity && !hasBoundary && hasMessage)
-    }
-}
 
 private fun AsteriskdSnapshot.validate() {
     require(supervisorPid > 0 && (corePid == null || corePid > 0) && (helperPid == null || helperPid > 0))
@@ -275,19 +229,12 @@ private fun JsonElement?.toNullableString(): String? = when (this) {
 }
 
 private fun JsonElement.toNullableInt(): Int? = if (this === JsonNull) null else jsonPrimitive.content.toInt()
-private fun JsonElement.toNullableBoolean(): Boolean? = if (this === JsonNull) {
-    null
-} else {
-    requireNotNull(jsonPrimitive.booleanOrNull)
-}
-
 private inline fun <reified T : Enum<T>> enumWire(value: String): T = enumValues<T>().firstOrNull { entry ->
     val wire = when (entry) {
         is AsteriskdOwner -> entry.wireValue
         is AsteriskdCoreType -> entry.wireValue
         is AsteriskdPhase -> entry.wireValue
         is AsteriskdResultCode -> entry.wireValue
-        is AsteriskdRecoveryCode -> entry.wireValue
         is AsteriskdEventType -> entry.wireValue
         is AsteriskdHelperType -> entry.wireValue
         is AsteriskdRuleCategory -> entry.wireValue

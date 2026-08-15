@@ -28,11 +28,6 @@ internal object RootPublicationCommand {
             }
             appendStatusMustBeUnbound(layout)
             RootLegacyMigrationCommand.appendGate(this, layout)
-            appendLine("set +e")
-            appendLine("asteriskd_recovery=\"$(${layout.asteriskdPath.shellQuote()} recover --config ${layout.asteriskdConfigPath.shellQuote()})\"")
-            appendLine("asteriskd_recovery_code=\"\$?\"")
-            appendLine("set -e")
-            appendLine("[ \"\$asteriskd_recovery_code\" -eq 0 ] || { printf '%s\\n' \"\$asteriskd_recovery\"; exit \"\$asteriskd_recovery_code\"; }")
             appendStatusMustBeUnbound(layout)
             appendStageFunctions(layout)
             appendLine("core_config_tmp=")
