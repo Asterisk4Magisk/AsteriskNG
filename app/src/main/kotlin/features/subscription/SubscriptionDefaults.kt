@@ -7,9 +7,6 @@ const val DefaultSubscriptionGroupId = 1
 const val DefaultSubscriptionUserAgent = "v2rayNG/2.3.2"
 const val ClashMetaSubscriptionUserAgent = "clash.meta"
 const val FlClashXSubscriptionUserAgent = "FlClash X/v0.4.2 Platform/android"
-const val AutoSubscriptionCheckIntervalMillis = 60L * 1000L
-const val AutoSubscriptionRetryDelayMillis = 15L * 60L * 1000L
-
 internal enum class SubscriptionUserAgentSelection {
     V2rayNg,
     ClashMeta,

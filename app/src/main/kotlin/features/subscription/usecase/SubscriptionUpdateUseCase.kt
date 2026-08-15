@@ -7,16 +7,20 @@ import app.AppState
 import app.SubscriptionGroupState
 import features.logs.AndroidAppLogger
 import features.proxy.server.usecase.ProxyServerImportSource
+import features.proxy.server.usecase.ProxyServerListSubscriptionFailure
 import features.proxy.server.usecase.ProxyServerListSubscriptionUpdate
 import features.proxy.server.usecase.ProxyServerListSubscriptionUpdateResult
 import features.proxy.server.usecase.importProxyServersFromText
+import features.proxy.server.usecase.subscriptionFetchIdentity
 import features.subscription.runtime.AndroidSubscriptionFetchOptions
 import features.subscription.runtime.AndroidSubscriptionFetcher
-import engine.network.toPortOrNull
 import java.net.URI
+import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.supervisorScope
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import ui.text.formatTemplate
 import kotlin.time.Clock
 
@@ -26,50 +30,62 @@ internal suspend fun updateSubscriptions(
     groups: List<SubscriptionGroupState>,
     subscriptionFetcher: AndroidSubscriptionFetcher,
     fetchOptions: (SubscriptionGroupState) -> AndroidSubscriptionFetchOptions,
+): ProxyServerListSubscriptionUpdateResult = updateSubscriptions(
+    groups = groups,
+    fetchOptions = fetchOptions,
+    fetchText = { url, userAgent, options ->
+        subscriptionFetcher.fetch(url, userAgent, options)
+    },
+)
+
+internal suspend fun updateSubscriptions(
+    groups: List<SubscriptionGroupState>,
+    fetchOptions: (SubscriptionGroupState) -> AndroidSubscriptionFetchOptions,
+    fetchText: suspend (String, String, AndroidSubscriptionFetchOptions) -> String,
+    coordinator: SubscriptionUpdateCoordinator = DefaultSubscriptionUpdateCoordinator,
 ): ProxyServerListSubscriptionUpdateResult = supervisorScope {
     val results = groups.map { group ->
         async {
-            updateSubscriptionGroup(
-                group = group,
-                subscriptionFetcher = subscriptionFetcher,
-                fetchOptions = fetchOptions(group),
-            )
+            group to coordinator.withGroup(group.id) {
+                updateSubscriptionGroup(
+                    group = group,
+                    fetchText = fetchText,
+                    fetchOptions = fetchOptions(group),
+                )
+            }
         }
     }.awaitAll()
     val updates = results
-        .filterNotNull()
-        .filter { update -> update.servers.isNotEmpty() }
+        .mapNotNull { (_, result) -> result.getOrNull() }
+    val failures = results.mapNotNull { (group, result) ->
+        result.exceptionOrNull()?.let { error ->
+            ProxyServerListSubscriptionFailure(groupId = group.id, error = error)
+        }
+    }
     ProxyServerListSubscriptionUpdateResult(
         updates = updates,
-        failedGroupCount = results.size - updates.size,
+        failures = failures,
         updatedAtMillis = Clock.System.now().toEpochMilliseconds(),
     )
 }
 
 private suspend fun updateSubscriptionGroup(
     group: SubscriptionGroupState,
-    subscriptionFetcher: AndroidSubscriptionFetcher,
+    fetchText: suspend (String, String, AndroidSubscriptionFetchOptions) -> String,
     fetchOptions: AndroidSubscriptionFetchOptions,
-): ProxyServerListSubscriptionUpdate? {
+): Result<ProxyServerListSubscriptionUpdate> {
     return runCatching {
-        val text = subscriptionFetcher.fetch(
-            url = group.url,
-            userAgent = group.userAgent,
-            options = fetchOptions,
-        )
+        val text = fetchText(group.url, group.userAgent, fetchOptions)
         val importResult = importProxyServersFromText(
             text = text,
             source = ProxyServerImportSource.SubscriptionUrl,
             providerUrlFetcher = { providerUrl ->
-                subscriptionFetcher.fetch(
-                    url = providerUrl,
-                    userAgent = group.userAgent,
-                    options = fetchOptions,
-                )
+                fetchText(providerUrl, group.userAgent, fetchOptions)
             },
         )
         ProxyServerListSubscriptionUpdate(
             groupId = group.id,
+            sourceIdentity = group.subscriptionFetchIdentity(),
             urlCount = importResult.urlCount,
             servers = importResult.servers,
         ).also { update ->
@@ -80,6 +96,9 @@ private suspend fun updateSubscriptionGroup(
                         "parsedProxyServerCount=${update.urlCount} responseLength=${text.length}",
                 )
             }
+            require(update.servers.isNotEmpty()) {
+                "Subscription update imported no proxy servers"
+            }
         }
     }.onFailure { error ->
         AndroidAppLogger.warn(
@@ -87,15 +106,22 @@ private suspend fun updateSubscriptionGroup(
             "Subscription update failed ${group.logIdentity()}",
             error,
         )
-    }.getOrNull()
+    }
 }
+
+internal class SubscriptionUpdateCoordinator {
+    private val mutexes = ConcurrentHashMap<Int, Mutex>()
+
+    suspend fun <T> withGroup(groupId: Int, block: suspend () -> T): T {
+        return mutexes.computeIfAbsent(groupId) { Mutex() }.withLock { block() }
+    }
+}
+
+private val DefaultSubscriptionUpdateCoordinator = SubscriptionUpdateCoordinator()
 
 internal fun AppState.toSubscriptionFetchOptions(group: SubscriptionGroupState): AndroidSubscriptionFetchOptions {
     return AndroidSubscriptionFetchOptions(
         useRunningProxy = group.updateViaProxy && proxyRunning,
-        fallbackProxyPort = localProxyPort.toPortOrNull(),
-        fallbackProxyUsername = localProxyUsername,
-        fallbackProxyPassword = localProxyPassword,
         hwid = group.hwid,
         ageSecretKey = group.ageSecretKey,
     )

@@ -24,16 +24,45 @@ import features.proxy.server.model.isCompositeProxyServer
 
 internal data class ProxyServerListSubscriptionUpdate(
     val groupId: Int,
+    val sourceIdentity: SubscriptionGroupFetchIdentity,
     val urlCount: Int,
     val servers: List<ProxyServer<*>>,
 )
 
+internal data class SubscriptionGroupFetchIdentity(
+    val url: String,
+    val userAgent: String,
+    val updateInterval: String,
+    val hwid: String,
+    val ageSecretKey: String,
+    val updateViaProxy: Boolean,
+    val enabled: Boolean,
+)
+
+internal fun SubscriptionGroupState.subscriptionFetchIdentity(): SubscriptionGroupFetchIdentity {
+    return SubscriptionGroupFetchIdentity(
+        url = url,
+        userAgent = userAgent,
+        updateInterval = updateInterval,
+        hwid = hwid,
+        ageSecretKey = ageSecretKey,
+        updateViaProxy = updateViaProxy,
+        enabled = enabled,
+    )
+}
+
+internal data class ProxyServerListSubscriptionFailure(
+    val groupId: Int,
+    val error: Throwable,
+)
+
 internal data class ProxyServerListSubscriptionUpdateResult(
     val updates: List<ProxyServerListSubscriptionUpdate>,
-    val failedGroupCount: Int,
+    val failures: List<ProxyServerListSubscriptionFailure>,
     val updatedAtMillis: Long,
 ) {
     val updatedGroupCount: Int = updates.size
+    val failedGroupCount: Int = failures.size
     val importedServerCount: Int = updates.sumOf { update -> update.servers.size }
 }
 
@@ -117,12 +146,18 @@ internal fun AppState.withUpdatedSubscriptionServers(
     updates: List<ProxyServerListSubscriptionUpdate>,
     updatedAtMillis: Long,
 ): AppState {
-    if (updates.isEmpty()) {
+    val applicableUpdates = updates.filter { update ->
+        subscriptionGroups.any { group ->
+            group.id == update.groupId &&
+                group.subscriptionFetchIdentity() == update.sourceIdentity
+        }
+    }
+    if (applicableUpdates.isEmpty()) {
         return this
     }
-    val updatedGroupIds = updates.map { update -> update.groupId }.toSet()
+    val updatedGroupIds = applicableUpdates.map { update -> update.groupId }.toSet()
     var nextServerId = nextProxyServerId
-    val importedServers = updates.flatMap { update ->
+    val importedServers = applicableUpdates.flatMap { update ->
         update.servers.map { server ->
             ProxyServerState(
                 id = nextServerId++,
@@ -161,21 +196,6 @@ internal fun List<SubscriptionGroupState>.updatableSubscriptionGroups(): List<Su
     return filter { group ->
         group.enabled && group.url.isNotBlank()
     }
-}
-
-internal fun List<SubscriptionGroupState>.dueSubscriptionGroups(nowMillis: Long): List<SubscriptionGroupState> {
-    return updatableSubscriptionGroups().filter { group ->
-        val intervalHours = group.updateIntervalHours() ?: return@filter false
-        group.lastUpdatedAtMillis <= 0L ||
-            nowMillis - group.lastUpdatedAtMillis >= intervalHours * MillisPerHour
-    }
-}
-
-internal fun SubscriptionGroupState.updateIntervalHours(): Long? {
-    return updateInterval.trim()
-        .takeIf(String::isNotBlank)
-        ?.toLongOrNull()
-        ?.takeIf { it > 0L }
 }
 
 internal fun List<ProxyServerState>.deleteDuplicateServersInGroup(
@@ -281,5 +301,3 @@ private fun AppState.selectedProxyServerIdOrFirstAvailable(nextServers: List<Pro
         nextServers.firstOrNull()?.id ?: selectedProxyServerId
     }
 }
-
-private const val MillisPerHour = 60L * 60L * 1000L

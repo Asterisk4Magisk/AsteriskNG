@@ -7,7 +7,7 @@ import android.content.Context
 import android.os.Build
 import data.AppSettingsPreferences
 import features.subscription.DefaultSubscriptionUserAgent
-import engine.network.isPort
+import features.subscription.SubscriptionHttpException
 import engine.proxy.LocalProxyLoopbackAddress
 import engine.proxy.LocalProxyRuntime
 import kotlinx.coroutines.Dispatchers
@@ -61,9 +61,6 @@ internal class AndroidSubscriptionFetcher(
 
 internal data class AndroidSubscriptionFetchOptions(
     val useRunningProxy: Boolean = false,
-    val fallbackProxyPort: Int? = null,
-    val fallbackProxyUsername: String = "",
-    val fallbackProxyPassword: String = "",
     val hwid: String = "",
     val ageSecretKey: String = "",
 )
@@ -73,7 +70,7 @@ private data class SubscriptionRequestCredentials(
     val agePublicKey: String?,
 )
 
-private data class AndroidSubscriptionProxy(
+internal data class AndroidSubscriptionProxy(
     val host: String,
     val port: Int,
     val username: String,
@@ -83,17 +80,14 @@ private data class AndroidSubscriptionProxy(
 private const val MaxRedirects = 3
 private val ProxyAuthenticatorLock = Any()
 
-private fun AndroidSubscriptionFetchOptions.toProxy(): AndroidSubscriptionProxy? {
+internal fun AndroidSubscriptionFetchOptions.toProxy(): AndroidSubscriptionProxy? {
     if (!useRunningProxy) return null
-    val runtimeOptions = LocalProxyRuntime.current()
-    val port = runtimeOptions?.port
-        ?: fallbackProxyPort?.takeIf(Int::isPort)
-        ?: error("Local proxy port is unavailable")
+    val runtimeOptions = LocalProxyRuntime.current() ?: return null
     return AndroidSubscriptionProxy(
         host = LocalProxyLoopbackAddress,
-        port = port,
-        username = runtimeOptions?.username ?: fallbackProxyUsername,
-        password = runtimeOptions?.password ?: fallbackProxyPassword,
+        port = runtimeOptions.port,
+        username = runtimeOptions.username,
+        password = runtimeOptions.password,
     )
 }
 
@@ -123,7 +117,7 @@ private fun fetchWithRedirects(
                 return@repeat
             }
             if (code !in 200..299) {
-                error("HTTP $code")
+                throw SubscriptionHttpException(code)
             }
             return connection.inputStream.bufferedReader().use { reader -> reader.readText() }
         } finally {

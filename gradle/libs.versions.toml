@@ -1,9 +1,10 @@
 [versions]
 agp = "9.3.1"
 androidx-activity-compose = "1.13.0"
-androidx-navigation3 = "1.1.5"
+androidx-navigation3 = "1.1.6"
 androidx-navigationevent = "1.1.0"
 androidx-room = "2.8.4"
+androidx-work = "2.11.2"
 compose = "1.11.1"
 coil = "3.5.0"
 kotlin = "2.4.10"
@@ -27,6 +28,7 @@ androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runt
 androidx-navigationevent = { module = "org.jetbrains.androidx.navigationevent:navigationevent-compose", version.ref = "androidx-navigationevent" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "androidx-room" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "androidx-room" }
+androidx-work-runtime = { module = "androidx.work:work-runtime", version.ref = "androidx-work" }
 compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "compose" }
 compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "compose" }
 coil = { module = "io.coil-kt.coil3:coil", version.ref = "coil" }

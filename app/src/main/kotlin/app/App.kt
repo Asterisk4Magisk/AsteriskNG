@@ -15,13 +15,11 @@ import androidx.compose.ui.unit.dp
 import app.effects.ProxyStatusSynchronizer
 import app.effects.LauncherIconSynchronizer
 import app.effects.ResourceFileSynchronizer
-import app.effects.SubscriptionAutoUpdater
 import app.effects.RootBootScriptSynchronizer
 import features.logs.AndroidAccessLogRepository
 import features.logs.AndroidAsteriskdLogRepository
 import features.logs.AndroidCoreLogRepository
 import features.logs.AndroidLogcatRepository
-import data.AndroidAppStateStore
 import data.backup.AppBackupUseCase
 import engine.proxy.AndroidProxyEngine
 import engine.proxy.latency.AndroidProxyLatencyTester
@@ -36,7 +34,6 @@ import features.settings.locale.RecreateActivityOnAppLanguageChange
 import features.settings.usecase.SwitchRunModeUseCase
 import features.settings.usecase.RootBootScriptUseCase
 import features.settings.usecase.RootEbpfProbeUseCase
-import features.subscription.runtime.AndroidSubscriptionFetcher
 import system.AndroidNetworkInterfaceProvider
 import system.AndroidPackageProvider
 import system.AndroidRootShellGateway
@@ -55,7 +52,8 @@ fun App(
 ) {
     val appContext = LocalContext.current.applicationContext
     val systemUiSnapshot = appContext.currentSystemUiSnapshot()
-    val appScope = (appContext as AsteriskApplication).appScope
+    val application = appContext as AsteriskApplication
+    val appScope = application.appScope
     val rootAccess = remember { AndroidRootShellGateway() }
     val userSpaces = remember(appContext, rootAccess) {
         AndroidUserSpaceProvider(
@@ -113,7 +111,7 @@ fun App(
             fileCreator = logFileCreator,
         )
     }
-    val subscriptionFetcher = remember(appContext) { AndroidSubscriptionFetcher(appContext) }
+    val subscriptionFetcher = remember(application) { application.subscriptionFetcher }
     val qrScanner = remember(qrCodeScanner) { qrCodeScanner }
     val proxyServerImportFileUseCase = remember(appContext, resourceFilePicker) {
         ProxyServerImportFileUseCase(
@@ -154,7 +152,7 @@ fun App(
     val proxyServiceUseCase = remember(proxyEngine) {
         ProxyServiceUseCase(proxyEngine)
     }
-    val stateStore = remember(appContext) { AndroidAppStateStore.get(appContext) }
+    val stateStore = remember(application) { application.stateStore }
     val tipNotifier = remember(appContext) { AndroidToastTipNotifier(appContext) }
     val services = remember(
         appScope,
@@ -221,11 +219,6 @@ fun App(
     LauncherIconSynchronizer(
         context = appContext,
         stateStore = stateStore,
-    )
-    SubscriptionAutoUpdater(
-        stateStore = stateStore,
-        subscriptionFetcher = subscriptionFetcher,
-        updateAppState = updateAppState,
     )
     RootBootScriptSynchronizer(
         stateStore = stateStore,

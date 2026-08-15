@@ -98,7 +98,7 @@ internal fun SubscriptionGroupEditorDialog(
         )
     }
     var interval by remember(show, group?.id) {
-        mutableStateOf(group?.updateInterval?.filter(Char::isDigit).orEmpty())
+        mutableStateOf(sanitizeSubscriptionIntervalInput(group?.updateInterval.orEmpty()))
     }
     var updateViaProxy by remember(show, group?.id) {
         mutableStateOf(group?.updateViaProxy ?: false)
@@ -121,6 +121,7 @@ internal fun SubscriptionGroupEditorDialog(
     val resolvedUserAgent = userAgentSelection.resolveUserAgent(customUserAgent)
 
     fun saveGroup(allowPlainHttp: Boolean = false) {
+        if (!isValidSubscriptionIntervalInput(interval)) return
         val savedUrl = url.trim()
         if (savedUrl.isNotBlank() && !savedUrl.isValidManualSubscriptionUrl()) {
             onInvalidUrl()
@@ -254,7 +255,9 @@ internal fun SubscriptionGroupEditorDialog(
                             TextField(
                                 state = rememberTextFieldState(initialText = interval),
                                 inputTransformation = InputTransformation
-                                    .byValue { _, proposed -> proposed.toString().filter(Char::isDigit) }
+                                    .byValue { _, proposed ->
+                                        sanitizeSubscriptionIntervalInput(proposed.toString())
+                                    }
                                     .then { interval = asCharSequence().toString() },
                                 label = stringResource(R.string.subscription_auto_update_interval),
                                 lineLimits = TextFieldLineLimits.SingleLine,
@@ -275,6 +278,7 @@ internal fun SubscriptionGroupEditorDialog(
                     TextButton(
                         text = stringResource(R.string.common_save),
                         onClick = { saveGroup() },
+                        enabled = isValidSubscriptionIntervalInput(interval),
                         modifier = Modifier.weight(1f),
                     )
                 }
