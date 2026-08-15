@@ -66,7 +66,10 @@ internal fun isSafeRootPrivateDirectoryIdentity(
         absolutePath.removePrefix(AndroidUserDataPrefix) == canonicalPath.removePrefix(AndroidLegacyDataPrefix)
 }
 
+@Suppress("SdCardPath")
 private const val AndroidUserDataPrefix = "/data/user/0/"
+
+@Suppress("SdCardPath")
 private const val AndroidLegacyDataPrefix = "/data/data/"
 
 internal class RootStagedPublication(

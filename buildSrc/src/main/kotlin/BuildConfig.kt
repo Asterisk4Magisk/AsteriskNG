@@ -18,7 +18,7 @@ object ProjectConfig {
     const val BPF_MATCHER_VERSION = "v1.0.1"
     const val XRAY_CORE_VERSION = "v26.7.28"
     const val ANDROID_LIB_XRAY_LITE_VERSION = "v26.7.31"
-    const val HEV_SOCKS5_TUNNEL_VERSION = "2.17.0"
+    const val HEV_SOCKS5_TUNNEL_VERSION = "2.17.1"
     const val TARGET_SDK = 37
     const val MIN_SDK = 24
     val SUPPORTED_ANDROID_ABIS = listOf("arm64-v8a", "armeabi-v7a", "x86", "x86_64")
