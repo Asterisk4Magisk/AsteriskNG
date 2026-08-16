@@ -107,6 +107,7 @@ private fun AppState.toRootStartConfig(
         enableLocalDns = effectiveLocalDnsEnabled,
         enableFakeDns = effectiveFakeDnsEnabled,
         enableBoot = enableRootBootScript,
+        serviceControl = serviceControl,
     )
 }
 

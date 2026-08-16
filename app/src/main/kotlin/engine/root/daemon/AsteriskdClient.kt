@@ -11,6 +11,9 @@ import engine.root.daemon.control.AsteriskdResultCode
 import engine.root.daemon.control.AsteriskdSnapshot
 import features.logs.AndroidAppLogger
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.isActive
 import system.RootShellGateway
 import system.ShellExecOptions
 import utils.shellQuote
@@ -18,10 +21,48 @@ import kotlin.time.Duration.Companion.milliseconds
 
 internal class AsteriskdClient(
     private val shell: RootShellGateway,
+    private val watchRetryDelaysMilliseconds: List<Long> = DefaultWatchRetryDelaysMilliseconds,
 ) {
     suspend fun status(executablePath: String): AsteriskdControlResponse = runControl(executablePath, "status")
 
     suspend fun stop(executablePath: String): AsteriskdControlResponse = runControl(executablePath, "stop")
+
+    suspend fun shutdown(executablePath: String): AsteriskdControlResponse =
+        runControl(executablePath, "shutdown")
+
+    fun observeStatus(executablePath: String): Flow<AsteriskdSnapshot> = channelFlow {
+        var retryIndex = 0
+        while (isActive) {
+            val stream = StatusWatchStream { snapshot -> trySend(snapshot) }
+            val result = shell.execStreaming(
+                "${executablePath.shellQuote()} watch",
+                ShellExecOptions(logFailure = false),
+                stream::accept,
+            )
+            when (stream.termination(result)) {
+                WatchTermination.FinalEvent -> retryIndex = 0
+                WatchTermination.NotRunning,
+                WatchTermination.Disconnected,
+                -> {
+                    val delayMilliseconds = watchRetryDelaysMilliseconds.getOrNull(retryIndex++) ?: break
+                    delay(delayMilliseconds.milliseconds)
+                }
+            }
+        }
+    }
+
+    suspend fun awaitStopped(executablePath: String): AsteriskdSnapshot {
+        var delayMilliseconds = InitialWatchRetryDelayMilliseconds
+        while (true) {
+            val response = status(executablePath)
+            response.result.snapshot?.takeIf { it.phase == AsteriskdPhase.Stopped }?.let { return it }
+            check(response.result.code == AsteriskdResultCode.NotRunning ||
+                response.result.code == AsteriskdResultCode.Ok
+            ) { response.result.message ?: "asteriskd monitor failed" }
+            delay(delayMilliseconds.milliseconds)
+            delayMilliseconds = (delayMilliseconds * 2L).coerceAtMost(MaxWatchRetryDelayMilliseconds)
+        }
+    }
 
     suspend fun awaitRunning(executablePath: String): AsteriskdSnapshot {
         val command =
@@ -74,6 +115,57 @@ internal class AsteriskdClient(
         const val InitialWatchRetryDelayMilliseconds = 10L
         const val MaxWatchRetryDelayMilliseconds = 250L
         const val WatchProcessTimeoutSeconds = 16L
+        val DefaultWatchRetryDelaysMilliseconds = listOf(25L, 50L, 100L, 200L, 400L, 800L)
+    }
+
+    private enum class WatchTermination {
+        FinalEvent,
+        NotRunning,
+        Disconnected,
+    }
+
+    private class StatusWatchStream(
+        private val onSnapshot: (AsteriskdSnapshot) -> Unit,
+    ) {
+        private var initialReceived = false
+        private var lastSequence = 0L
+        private var terminalEventReceived = false
+        private var notRunningReceived = false
+
+        fun accept(line: String) {
+            if (!initialReceived) {
+                val response = AsteriskdControlCodec.decodeResponse(line)
+                require(response.requestId == "watch")
+                initialReceived = true
+                if (response.result.code == AsteriskdResultCode.NotRunning) {
+                    notRunningReceived = true
+                    return
+                }
+                check(response.result.code == AsteriskdResultCode.Ok) {
+                    response.result.message ?: "asteriskd watch request failed"
+                }
+                onSnapshot(requireNotNull(response.result.snapshot))
+                return
+            }
+            check(!notRunningReceived && !terminalEventReceived) {
+                "asteriskd watch emitted data after completion"
+            }
+            val event = AsteriskdControlCodec.decodeEvent(line)
+            require(event.sequence > lastSequence) { "asteriskd watch event sequence regressed" }
+            lastSequence = event.sequence
+            onSnapshot(event.snapshot)
+            terminalEventReceived = event.type == AsteriskdEventType.Stopped ||
+                event.type == AsteriskdEventType.Failed
+        }
+
+        fun termination(result: system.ShellExecResult): WatchTermination {
+            if (terminalEventReceived) return WatchTermination.FinalEvent
+            if (notRunningReceived) return WatchTermination.NotRunning
+            if (!initialReceived && result.stderr.isNotBlank()) {
+                AndroidAppLogger.warn(LogTag, "asteriskd watch disconnected: ${result.stderr}")
+            }
+            return WatchTermination.Disconnected
+        }
     }
 
     private class RunningWatchStream {

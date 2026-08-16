@@ -59,9 +59,14 @@ internal object RootPublicationCommand {
                 RootBootPublicationCommand.appendRemoveOwnedBoot(this, layout)
             }
             appendLine("trap - EXIT HUP INT TERM")
-            if (bundle.launchRuntime) {
+            val launchCommand = when (bundle.launchMode) {
+                RootPublicationLaunchMode.None -> null
+                RootPublicationLaunchMode.Service -> "start"
+                RootPublicationLaunchMode.Monitor -> "monitor"
+            }
+            if (launchCommand != null) {
                 appendLine(
-                    "nohup setsid ${layout.asteriskdPath.shellQuote()} start " +
+                    "nohup setsid ${layout.asteriskdPath.shellQuote()} $launchCommand " +
                         "--config ${layout.asteriskdConfigPath.shellQuote()} " +
                         "</dev/null >/dev/null 2>>${layout.asteriskdLogPath.shellQuote()} &",
                 )
@@ -94,10 +99,10 @@ internal object RootPublicationCommand {
         appendLine("    *) printf '%s\\n' \"\$asteriskd_status\"; exit \"\$asteriskd_status_code\" ;;")
         appendLine("  esac")
         appendLine("  set +e")
-        appendLine("  asteriskd_stop=\"$(${layout.asteriskdPath.shellQuote()} stop)\"")
-        appendLine("  asteriskd_stop_code=\"\$?\"")
+        appendLine("  asteriskd_shutdown=\"$(${layout.asteriskdPath.shellQuote()} shutdown)\"")
+        appendLine("  asteriskd_shutdown_code=\"\$?\"")
         appendLine("  set -e")
-        appendLine("  [ \"\$asteriskd_stop_code\" -eq 0 ] || [ \"\$asteriskd_stop_code\" -eq 3 ] || { printf '%s\\n' \"\$asteriskd_stop\"; exit \"\$asteriskd_stop_code\"; }")
+        appendLine("  [ \"\$asteriskd_shutdown_code\" -eq 0 ] || [ \"\$asteriskd_shutdown_code\" -eq 3 ] || { printf '%s\\n' \"\$asteriskd_shutdown\"; exit \"\$asteriskd_shutdown_code\"; }")
         appendLine("  asteriskd_attempt=0")
         appendLine("  while [ \"\$asteriskd_attempt\" -lt $SocketReleasePollAttempts ]; do")
         appendLine("    set +e")

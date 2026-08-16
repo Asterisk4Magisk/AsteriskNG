@@ -6,14 +6,18 @@ package data
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.core.content.edit
 import app.AppState
 import app.CustomResourceFileState
+import app.ServiceControlSchedule
+import app.ServiceControlSettings
+import app.ServiceControlWifi
+import app.ServiceControlWifiRule
 import app.modes.ColorModeThemeDark
 import app.modes.ColorModeThemeLight
 import app.modes.ColorModeThemeSystem
 import app.modes.normalizeColorMode
-import androidx.core.content.edit
-import features.subscription.DefaultSubscriptionUserAgent
+import features.settings.servicecontrol.normalizeServiceControlSettings
 import java.util.UUID
 
 internal class AppSettingsPreferences(
@@ -218,6 +222,7 @@ internal class AppSettingsPreferences(
             ) ?: defaults.socks5ProxyPort,
             enableHttpProxy = preferences.getBoolean(KeyEnableHttpProxy, defaults.enableHttpProxy),
             httpProxyPort = preferences.getString(KeyHttpProxyPort, defaults.httpProxyPort) ?: defaults.httpProxyPort,
+            serviceControl = preferences.getServiceControl(defaults.serviceControl),
             externalInterfaces = preferences.getStringList(KeyExternalInterfaces, defaults.externalInterfaces),
             ignoredInterfaces = preferences.getStringList(KeyIgnoredInterfaces, defaults.ignoredInterfaces),
             privateAddressCidrs = preferences.getStringList(KeyPrivateAddressCidrs, defaults.privateAddressCidrs),
@@ -297,11 +302,108 @@ internal class AppSettingsPreferences(
             .putString(KeySocks5ProxyPort, state.socks5ProxyPort)
             .putBoolean(KeyEnableHttpProxy, state.enableHttpProxy)
             .putString(KeyHttpProxyPort, state.httpProxyPort)
+            .putServiceControl(state.serviceControl)
             .putStringList(KeyExternalInterfaces, state.externalInterfaces)
             .putStringList(KeyIgnoredInterfaces, state.ignoredInterfaces)
             .putStringList(KeyPrivateAddressCidrs, state.privateAddressCidrs)
             .putInt(KeyProxyAppListMode, state.proxyAppListMode)
     }
+
+    private fun SharedPreferences.getServiceControl(
+        defaults: ServiceControlSettings,
+    ): ServiceControlSettings = normalizeServiceControlSettings(
+        ServiceControlSettings(
+            enabled = getBoolean(KeyServiceControlEnabled, defaults.enabled),
+            schedule = ServiceControlSchedule(
+                enabled = getBoolean(KeyServiceControlScheduleEnabled, defaults.schedule.enabled),
+                startCron = getString(KeyServiceControlScheduleStartCron, defaults.schedule.startCron)
+                    ?: defaults.schedule.startCron,
+                stopCron = getString(KeyServiceControlScheduleStopCron, defaults.schedule.stopCron)
+                    ?: defaults.schedule.stopCron,
+            ),
+            wifi = ServiceControlWifi(
+                enabled = getBoolean(KeyServiceControlWifiEnabled, defaults.wifi.enabled),
+                connectStart = getServiceControlWifiRule(
+                    defaults.wifi.connectStart,
+                    KeyServiceControlWifiConnectStartEnabled,
+                    KeyServiceControlWifiConnectStartSsids,
+                    KeyServiceControlWifiConnectStartBssids,
+                ),
+                connectStop = getServiceControlWifiRule(
+                    defaults.wifi.connectStop,
+                    KeyServiceControlWifiConnectStopEnabled,
+                    KeyServiceControlWifiConnectStopSsids,
+                    KeyServiceControlWifiConnectStopBssids,
+                ),
+                disconnectStart = getServiceControlWifiRule(
+                    defaults.wifi.disconnectStart,
+                    KeyServiceControlWifiDisconnectStartEnabled,
+                    KeyServiceControlWifiDisconnectStartSsids,
+                    KeyServiceControlWifiDisconnectStartBssids,
+                ),
+                disconnectStop = getServiceControlWifiRule(
+                    defaults.wifi.disconnectStop,
+                    KeyServiceControlWifiDisconnectStopEnabled,
+                    KeyServiceControlWifiDisconnectStopSsids,
+                    KeyServiceControlWifiDisconnectStopBssids,
+                ),
+            ),
+        ),
+    )
+
+    private fun SharedPreferences.getServiceControlWifiRule(
+        defaults: ServiceControlWifiRule,
+        enabledKey: String,
+        ssidsKey: String,
+        bssidsKey: String,
+    ): ServiceControlWifiRule = ServiceControlWifiRule(
+        enabled = getBoolean(enabledKey, defaults.enabled),
+        ssids = getStringList(ssidsKey, defaults.ssids),
+        bssids = getStringList(bssidsKey, defaults.bssids),
+    )
+
+    private fun SharedPreferences.Editor.putServiceControl(
+        value: ServiceControlSettings,
+    ): SharedPreferences.Editor =
+        putBoolean(KeyServiceControlEnabled, value.enabled)
+            .putBoolean(KeyServiceControlScheduleEnabled, value.schedule.enabled)
+            .putString(KeyServiceControlScheduleStartCron, value.schedule.startCron)
+            .putString(KeyServiceControlScheduleStopCron, value.schedule.stopCron)
+            .putBoolean(KeyServiceControlWifiEnabled, value.wifi.enabled)
+            .putServiceControlWifiRule(
+                value.wifi.connectStart,
+                KeyServiceControlWifiConnectStartEnabled,
+                KeyServiceControlWifiConnectStartSsids,
+                KeyServiceControlWifiConnectStartBssids,
+            )
+            .putServiceControlWifiRule(
+                value.wifi.connectStop,
+                KeyServiceControlWifiConnectStopEnabled,
+                KeyServiceControlWifiConnectStopSsids,
+                KeyServiceControlWifiConnectStopBssids,
+            )
+            .putServiceControlWifiRule(
+                value.wifi.disconnectStart,
+                KeyServiceControlWifiDisconnectStartEnabled,
+                KeyServiceControlWifiDisconnectStartSsids,
+                KeyServiceControlWifiDisconnectStartBssids,
+            )
+            .putServiceControlWifiRule(
+                value.wifi.disconnectStop,
+                KeyServiceControlWifiDisconnectStopEnabled,
+                KeyServiceControlWifiDisconnectStopSsids,
+                KeyServiceControlWifiDisconnectStopBssids,
+            )
+
+    private fun SharedPreferences.Editor.putServiceControlWifiRule(
+        value: ServiceControlWifiRule,
+        enabledKey: String,
+        ssidsKey: String,
+        bssidsKey: String,
+    ): SharedPreferences.Editor =
+        putBoolean(enabledKey, value.enabled)
+            .putStringList(ssidsKey, value.ssids)
+            .putStringList(bssidsKey, value.bssids)
 
     private fun SharedPreferences.getStringList(key: String, defaultValue: List<String>): List<String> {
         return getString(key, null)?.let(StringListJson::decode) ?: defaultValue
@@ -398,6 +500,23 @@ private const val KeyBpf2SocksBridgePort = "bpf2socks_bridge_port"
 private const val KeySocks5ProxyPort = "socks5_proxy_port"
 private const val KeyEnableHttpProxy = "enable_http_proxy"
 private const val KeyHttpProxyPort = "http_proxy_port"
+private const val KeyServiceControlEnabled = "service_control_enabled"
+private const val KeyServiceControlScheduleEnabled = "service_control_schedule_enabled"
+private const val KeyServiceControlScheduleStartCron = "service_control_schedule_start_cron"
+private const val KeyServiceControlScheduleStopCron = "service_control_schedule_stop_cron"
+private const val KeyServiceControlWifiEnabled = "service_control_wifi_enabled"
+private const val KeyServiceControlWifiConnectStartEnabled = "service_control_wifi_connect_start_enabled"
+private const val KeyServiceControlWifiConnectStartSsids = "service_control_wifi_connect_start_ssids"
+private const val KeyServiceControlWifiConnectStartBssids = "service_control_wifi_connect_start_bssids"
+private const val KeyServiceControlWifiConnectStopEnabled = "service_control_wifi_connect_stop_enabled"
+private const val KeyServiceControlWifiConnectStopSsids = "service_control_wifi_connect_stop_ssids"
+private const val KeyServiceControlWifiConnectStopBssids = "service_control_wifi_connect_stop_bssids"
+private const val KeyServiceControlWifiDisconnectStartEnabled = "service_control_wifi_disconnect_start_enabled"
+private const val KeyServiceControlWifiDisconnectStartSsids = "service_control_wifi_disconnect_start_ssids"
+private const val KeyServiceControlWifiDisconnectStartBssids = "service_control_wifi_disconnect_start_bssids"
+private const val KeyServiceControlWifiDisconnectStopEnabled = "service_control_wifi_disconnect_stop_enabled"
+private const val KeyServiceControlWifiDisconnectStopSsids = "service_control_wifi_disconnect_stop_ssids"
+private const val KeyServiceControlWifiDisconnectStopBssids = "service_control_wifi_disconnect_stop_bssids"
 private const val KeyExternalInterfaces = "external_interfaces"
 private const val KeyIgnoredInterfaces = "ignored_interfaces"
 private const val KeyPrivateAddressCidrs = "private_address_cidrs"

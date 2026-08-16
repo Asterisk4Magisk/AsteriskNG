@@ -29,7 +29,7 @@ internal class AppBackupUseCase(
             appVersionName = ProjectInfo.VERSION_NAME,
             appVersionCode = ProjectInfo.VERSION_CODE,
         )
-        val content = AppBackupJson.encodeToString(backup)
+        val content = encodeAppBackup(backup)
         withContext(Dispatchers.IO) {
             val output = appContext.contentResolver.openOutputStream(uri)
                 ?: error(appContext.getString(R.string.error_backup_file_open_failed))
@@ -47,7 +47,7 @@ internal class AppBackupUseCase(
                 ?: error(appContext.getString(R.string.error_backup_file_open_failed))
             input.use { stream -> stream.readBytes().decodeToString() }
         }
-        return AppBackupJson.decodeFromString<AppBackupFile>(content).toRestorePreview()
+        return decodeAppBackup(content).toRestorePreview()
     }
 }
 
@@ -56,6 +56,12 @@ private val AppBackupJson = Json {
     ignoreUnknownKeys = true
     prettyPrint = true
 }
+
+internal fun encodeAppBackup(backup: AppBackupFile): String =
+    AppBackupJson.encodeToString(backup)
+
+internal fun decodeAppBackup(content: String): AppBackupFile =
+    AppBackupJson.decodeFromString<AppBackupFile>(content)
 
 private fun defaultBackupFileName(): String {
     val timestamp = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(Date())

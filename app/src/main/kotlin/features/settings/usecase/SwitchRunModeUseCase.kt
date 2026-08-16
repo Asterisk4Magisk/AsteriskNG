@@ -52,14 +52,22 @@ internal class SwitchRunModeUseCase(
         }
 
         val targetRequiresRoot = normalizedTargetMode.isRootRunMode()
-        val stopRequiresRoot = currentState.proxyRunning && currentState.runMode.isRootRunMode()
+        val currentRootRequiresShutdown = currentState.runMode.isRootRunMode() &&
+            (currentState.proxyRunning || currentState.serviceControl.enabled)
+        val stopRequiresRoot = currentRootRequiresShutdown
         val needsRootAccess = stopRequiresRoot || currentState.enableRootBootScript || targetRequiresRoot
         if (needsRootAccess && !rootAccess.hasRootAccess()) {
             return SwitchRunModeResult.RootUnavailable(proxyRunning = currentState.proxyRunning)
         }
 
-        val stoppedRunning = if (currentState.proxyRunning) {
-            runCatching { proxyEngine.stopCurrentRunMode(currentState.runMode) }
+        val stoppedRunning = if (currentState.proxyRunning || currentRootRequiresShutdown) {
+            runCatching {
+                if (currentState.runMode.isRootRunMode()) {
+                    proxyEngine.shutdownCurrentRunMode(currentState.runMode)
+                } else {
+                    proxyEngine.stopCurrentRunMode(currentState.runMode)
+                }
+            }
                 .getOrElse { error ->
                     if (error is CancellationException) throw error
                     return SwitchRunModeResult.StopFailed(error)

@@ -37,6 +37,7 @@
     <string name="quick_settings_tile_processing">正在处理…</string>
     <string name="quick_settings_tile_vpn_permission_required">授予 VPN 权限后，再次点击即可启动</string>
     <string name="quick_settings_tile_toggle_failed">代理切换失败</string>
+    <string name="root_foreign_owner_conflict">ROOT 代理服务正被 %1$s 占用，请先在 %1$s 中停止服务后重试。</string>
 <!-- Common -->
     <string name="common_cancel">取消</string>
     <string name="common_save">保存</string>
@@ -613,4 +614,32 @@
     <string name="subscription_install_existing_url">订阅地址已存在于“{name}”，正在更新该分组</string>
     <string name="subscription_install_config_invalid">无效的订阅链接</string>
     <string name="subscription_install_config_failed">导入订阅失败</string>
+    <string name="settings_service_control">服务控制</string>
+    <string name="settings_service_control_summary">根据条件自动启停代理服务</string>
+    <string name="settings_service_control_basic">基础</string>
+    <string name="settings_service_control_enable">启用服务控制</string>
+    <string name="settings_service_control_enable_summary">代理服务停止后保持 asteriskd 常驻</string>
+    <string name="settings_service_control_schedule_enable">启用定时控制</string>
+    <string name="settings_service_control_wifi_enable">启用 WiFi 控制</string>
+    <string name="settings_service_control_schedule">定时控制</string>
+    <string name="settings_service_control_start_cron">服务启动时间</string>
+    <string name="settings_service_control_stop_cron">服务停止时间</string>
+    <string name="settings_service_control_cron_hint">五段数字 Linux cron：分 时 日 月 周；支持 *、逗号、范围和步进。</string>
+    <string name="settings_service_control_cron_invalid">请输入有效的五段数字 cron 表达式</string>
+    <string name="settings_service_control_wifi">WiFi 控制</string>
+    <string name="settings_service_control_connect_start">连接 WiFi 时启动</string>
+    <string name="settings_service_control_connect_stop">连接 WiFi 时停止</string>
+    <string name="settings_service_control_disconnect_start">断开 WiFi 时启动</string>
+    <string name="settings_service_control_disconnect_stop">断开 WiFi 时停止</string>
+    <string name="settings_service_control_ssids">SSID 列表</string>
+    <string name="settings_service_control_bssids">BSSID 列表</string>
+    <string name="settings_service_control_ssids_empty">留空表示任意 SSID</string>
+    <string name="settings_service_control_bssids_empty">留空表示任意 BSSID</string>
+    <string name="settings_service_control_match_note">SSID 与 BSSID 使用“或”匹配；两个列表均为空时匹配任意 WiFi。</string>
+    <string name="settings_service_control_ssid_invalid">SSID 必须为 1–32 个 UTF-8 字节</string>
+    <string name="settings_service_control_bssid_invalid">请输入形如 00:11:22:33:44:55 的 BSSID</string>
+    <string name="settings_service_control_doze_note">定时器不会唤醒设备。Android 挂起进程时，将在恢复后补偿最近一次错过的动作；同时到期时停止优先。</string>
+    <string name="settings_service_control_saving">正在重启…</string>
+    <string name="settings_service_control_save_failed">服务控制应用失败，编辑内容已保留。</string>
+    <string name="settings_service_control_proxy_server_required">启用服务控制前，请先添加并选择一个代理服务器。</string>
 </resources>

@@ -23,7 +23,7 @@ internal object RootLegacyMigrationCommand {
         val pidFiles = legacy.filter { it.name.endsWith(".pid") }
         val legacyTunPid = File(dataDir, "tun2socks.pid")
         appendLine("legacy_migrate() {")
-        appendLine("  if { [ -f ${layout.asteriskdConfigPath.shellQuote()} ] && grep -Eq '\"schemaVersion\"[[:space:]]*:[[:space:]]*2([,}])' ${layout.asteriskdConfigPath.shellQuote()}; } ||")
+        appendLine("  if { [ -f ${layout.asteriskdConfigPath.shellQuote()} ] && grep -Eq '\"schemaVersion\"[[:space:]]*:[[:space:]]*[23]([,}])' ${layout.asteriskdConfigPath.shellQuote()}; } ||")
         appendLine("     { [ -f ${layout.asteriskdStatePath.shellQuote()} ] && grep -Eq '\"schemaVersion\"[[:space:]]*:[[:space:]]*2([,}])' ${layout.asteriskdStatePath.shellQuote()}; }; then")
         appendLine("    return 0")
         appendLine("  fi")

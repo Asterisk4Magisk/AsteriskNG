@@ -20,7 +20,7 @@ internal object AsteriskdConfigEncoder {
 }
 
 private fun AsteriskdConfig.toJsonObject(): JsonObject = buildJsonObject {
-    put("schemaVersion", 2)
+    put("schemaVersion", 3)
     put("owner", owner.wireValue)
     put("coreType", coreType.wireValue)
     put("coreExecutablePath", coreExecutablePath)
@@ -33,6 +33,33 @@ private fun AsteriskdConfig.toJsonObject(): JsonObject = buildJsonObject {
     put("modeOptions", modeOptions.toJsonObject())
     put("matcher", matcher?.toJsonObject() ?: JsonNull)
     put("helper", helper?.toJsonObject() ?: JsonNull)
+    put("serviceControl", serviceControl.toJsonObject())
+}
+
+private fun AsteriskdServiceControlConfig.toJsonObject(): JsonObject = buildJsonObject {
+    put("enabled", enabled)
+    put("schedule", schedule.toJsonObject())
+    put("wifi", wifi.toJsonObject())
+}
+
+private fun AsteriskdScheduleControl.toJsonObject(): JsonObject = buildJsonObject {
+    put("enabled", enabled)
+    put("startCron", startCron)
+    put("stopCron", stopCron)
+}
+
+private fun AsteriskdWifiControl.toJsonObject(): JsonObject = buildJsonObject {
+    put("enabled", enabled)
+    put("connectStart", connectStart.toJsonObject())
+    put("connectStop", connectStop.toJsonObject())
+    put("disconnectStart", disconnectStart.toJsonObject())
+    put("disconnectStop", disconnectStop.toJsonObject())
+}
+
+private fun AsteriskdWifiRule.toJsonObject(): JsonObject = buildJsonObject {
+    put("enabled", enabled)
+    put("ssids", ssids.toJsonArray())
+    put("bssids", bssids.toJsonArray())
 }
 
 private fun AsteriskdCoreConfig.toJsonObject(): JsonObject = buildJsonObject {

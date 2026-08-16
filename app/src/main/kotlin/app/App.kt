@@ -32,6 +32,7 @@ import features.resources.runtime.AndroidResourceFileDownloadCancellation
 import features.settings.locale.ProvideAppLanguage
 import features.settings.locale.RecreateActivityOnAppLanguageChange
 import features.settings.usecase.SwitchRunModeUseCase
+import features.settings.usecase.ApplyServiceControlUseCase
 import features.settings.usecase.RootBootScriptUseCase
 import features.settings.usecase.RootEbpfProbeUseCase
 import system.AndroidNetworkInterfaceProvider
@@ -152,6 +153,9 @@ fun App(
     val proxyServiceUseCase = remember(proxyEngine) {
         ProxyServiceUseCase(proxyEngine)
     }
+    val applyServiceControlUseCase = remember(proxyEngine) {
+        ApplyServiceControlUseCase(proxyEngine)
+    }
     val stateStore = remember(application) { application.stateStore }
     val tipNotifier = remember(appContext) { AndroidToastTipNotifier(appContext) }
     val services = remember(
@@ -170,6 +174,7 @@ fun App(
         proxyLatencyTester,
         proxyServiceUseCase,
         switchRunModeUseCase,
+        applyServiceControlUseCase,
         rootBootScriptUseCase,
         rootEbpfProbeUseCase,
         tipNotifier,
@@ -191,6 +196,7 @@ fun App(
             proxyLatencyTester = proxyLatencyTester,
             proxyServiceUseCase = proxyServiceUseCase,
             switchRunModeUseCase = switchRunModeUseCase,
+            applyServiceControlUseCase = applyServiceControlUseCase,
             rootBootScriptUseCase = rootBootScriptUseCase,
             rootEbpfProbeUseCase = rootEbpfProbeUseCase,
             tipNotifier = tipNotifier,

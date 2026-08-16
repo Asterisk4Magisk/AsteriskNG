@@ -37,6 +37,7 @@
     <string name="quick_settings_tile_processing">Processing…</string>
     <string name="quick_settings_tile_vpn_permission_required">Grant VPN permission, then tap again to start</string>
     <string name="quick_settings_tile_toggle_failed">Failed to toggle proxy</string>
+    <string name="root_foreign_owner_conflict">The ROOT proxy service is being used by %1$s. Stop it in %1$s and try again.</string>
 <!-- Common -->
     <string name="common_cancel">Cancel</string>
     <string name="common_save">Save</string>
@@ -613,4 +614,32 @@
     <string name="subscription_install_existing_url">A matching subscription URL already exists in {name}; updating that group</string>
     <string name="subscription_install_config_invalid">Invalid subscription link</string>
     <string name="subscription_install_config_failed">Failed to import subscription</string>
+    <string name="settings_service_control">Service control</string>
+    <string name="settings_service_control_summary">Automatically start or stop the proxy service when conditions match</string>
+    <string name="settings_service_control_basic">Basic</string>
+    <string name="settings_service_control_enable">Enable service control</string>
+    <string name="settings_service_control_enable_summary">Keep asteriskd resident while the proxy service is stopped</string>
+    <string name="settings_service_control_schedule_enable">Enable scheduled control</string>
+    <string name="settings_service_control_wifi_enable">Enable Wi-Fi control</string>
+    <string name="settings_service_control_schedule">Scheduled control</string>
+    <string name="settings_service_control_start_cron">Service start time</string>
+    <string name="settings_service_control_stop_cron">Service stop time</string>
+    <string name="settings_service_control_cron_hint">Five numeric Linux cron fields: minute hour day month weekday. Supports *, comma, range and step.</string>
+    <string name="settings_service_control_cron_invalid">Enter a valid five-field numeric cron expression</string>
+    <string name="settings_service_control_wifi">Wi-Fi control</string>
+    <string name="settings_service_control_connect_start">Start when Wi-Fi connects</string>
+    <string name="settings_service_control_connect_stop">Stop when Wi-Fi connects</string>
+    <string name="settings_service_control_disconnect_start">Start when Wi-Fi disconnects</string>
+    <string name="settings_service_control_disconnect_stop">Stop when Wi-Fi disconnects</string>
+    <string name="settings_service_control_ssids">SSID list</string>
+    <string name="settings_service_control_bssids">BSSID list</string>
+    <string name="settings_service_control_ssids_empty">Empty matches any SSID</string>
+    <string name="settings_service_control_bssids_empty">Empty matches any BSSID</string>
+    <string name="settings_service_control_match_note">SSID and BSSID lists use OR matching. Leave both empty to match any Wi-Fi.</string>
+    <string name="settings_service_control_ssid_invalid">SSID must be 1–32 UTF-8 bytes</string>
+    <string name="settings_service_control_bssid_invalid">Use a BSSID such as 00:11:22:33:44:55</string>
+    <string name="settings_service_control_doze_note">Timers do not wake the device. If Android suspends the process, the latest missed action is reconciled after resume; stop wins when both are due.</string>
+    <string name="settings_service_control_saving">Restarting…</string>
+    <string name="settings_service_control_save_failed">Could not apply service control. Your edits were kept.</string>
+    <string name="settings_service_control_proxy_server_required">Add and select a proxy server before enabling service control.</string>
 </resources>

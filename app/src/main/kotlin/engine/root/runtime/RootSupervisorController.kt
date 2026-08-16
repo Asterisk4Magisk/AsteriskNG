@@ -14,15 +14,18 @@ import engine.root.daemon.config.AsteriskdMode
 import engine.root.daemon.config.AsteriskdOwner
 import engine.root.daemon.control.AsteriskdControlCodec
 import engine.root.daemon.control.AsteriskdControlResponse
+import engine.root.daemon.control.AsteriskdPhase
 import engine.root.daemon.control.AsteriskdResultCode
 import engine.root.daemon.control.AsteriskdSnapshot
 import engine.root.publication.RootBootPublicationCommand
 import engine.root.publication.RootPublicationBundle
 import engine.root.publication.RootPublicationCommand
+import engine.root.publication.RootPublicationLaunchMode
 import engine.root.publication.RootPublicationStager
 import engine.root.publication.prepareRootPublicationDirectories
 import engine.root.publication.rootRuntimeLayout
 import engine.root.publication.validateElfHeaderFile
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withTimeoutOrNull
 import system.RootShellGateway
 import system.ShellExecOptions
@@ -37,6 +40,8 @@ internal class RootSupervisorController(
     private val runtimeLayout = appContext.rootRuntimeLayout()
     private val client = AsteriskdClient(shell)
     suspend fun status(): AsteriskdControlResponse = client.status(runtimeLayout.asteriskdPath)
+
+    fun observeStatus(): Flow<AsteriskdSnapshot> = client.observeStatus(runtimeLayout.asteriskdPath)
 
     suspend fun preflightStart(expectedMode: AsteriskdMode, explicitRestart: Boolean): AsteriskdSnapshot? {
         return status().preflightStart(AsteriskdOwner.AsteriskNg, expectedMode, explicitRestart)
@@ -75,10 +80,20 @@ internal class RootSupervisorController(
         config: AsteriskdConfig,
     ): AsteriskdSnapshot {
         status().boundSnapshot()?.let { snapshot ->
-            return snapshot.requireOrdinaryStart(AsteriskdOwner.AsteriskNg, config.mode)
+            val disposition = snapshot.ordinaryStartDisposition(AsteriskdOwner.AsteriskNg, config.mode)
+            if (disposition == RootOrdinaryStartDisposition.Reuse) return snapshot
+            if (disposition.shutdownBeforeLaunch) {
+                shutdownOwn()
+            }
+            return launch(
+                root = root,
+                config = config,
+                restartExpectedOwner = snapshot.owner,
+                launchMode = RootPublicationLaunchMode.Service,
+            )
         }
 
-        return launch(root, config, restartExpectedOwner = null)
+        return launch(root, config, restartExpectedOwner = null, RootPublicationLaunchMode.Service)
     }
 
     suspend fun restart(
@@ -93,13 +108,58 @@ internal class RootSupervisorController(
             root = root,
             config = config,
             restartExpectedOwner = snapshot?.owner,
+            launchMode = RootPublicationLaunchMode.Service,
         )
+    }
+
+    suspend fun reconfigureServiceControl(
+        root: RootStartConfig,
+        config: AsteriskdConfig,
+    ): Boolean {
+        val snapshot = status().boundSnapshot()
+        if (snapshot != null && snapshot.owner != AsteriskdOwner.AsteriskNg) {
+            throw RootRuntimeConflictException(snapshot)
+        }
+        val plan = try {
+            serviceControlReconfigurePlan(snapshot?.phase, config.serviceControl.enabled)
+        } catch (_: IllegalArgumentException) {
+            throw RootRuntimeBusyException(requireNotNull(snapshot))
+        }
+        if (plan.shutdownRequired) shutdownOwn()
+        when (plan.launchMode) {
+            RootPublicationLaunchMode.Service -> launch(
+                root,
+                config,
+                restartExpectedOwner = snapshot?.owner,
+                launchMode = RootPublicationLaunchMode.Service,
+            )
+            RootPublicationLaunchMode.Monitor -> launch(
+                root,
+                config,
+                restartExpectedOwner = snapshot?.owner,
+                launchMode = RootPublicationLaunchMode.Monitor,
+            )
+            RootPublicationLaunchMode.None -> Unit
+        }
+        return plan.launchMode == RootPublicationLaunchMode.Service
+    }
+
+    suspend fun disableServiceControlWithoutConfig() {
+        val snapshot = status().boundSnapshot() ?: return
+        if (snapshot.owner != AsteriskdOwner.AsteriskNg) {
+            throw RootRuntimeConflictException(snapshot)
+        }
+        if (snapshot.phase != AsteriskdPhase.Stopped) {
+            throw RootRuntimeBusyException(snapshot)
+        }
+        shutdownOwn()
     }
 
     private suspend fun launch(
         root: RootStartConfig,
         config: AsteriskdConfig,
         restartExpectedOwner: AsteriskdOwner?,
+        launchMode: RootPublicationLaunchMode,
     ): AsteriskdSnapshot {
         preparePublication(config)
         val staged = RootPublicationStager.stage(
@@ -114,6 +174,7 @@ internal class RootSupervisorController(
                     coreConfigSourcePath = staged.coreConfig.absolutePath,
                     asteriskdConfigSourcePath = staged.asteriskdConfig.absolutePath,
                     bootEnabled = root.enableBoot,
+                    launchMode = launchMode,
                     restartExpectedOwner = restartExpectedOwner?.wireValue,
                 ),
             )
@@ -122,8 +183,12 @@ internal class RootSupervisorController(
                 throw launchFailure(launchResult)
             }
             val snapshot = withTimeoutOrNull(StartTimeoutMilliseconds.milliseconds) {
-                client.awaitRunning(runtimeLayout.asteriskdPath)
-            } ?: throw IllegalStateException("asteriskd did not reach running phase before timeout")
+                when (launchMode) {
+                    RootPublicationLaunchMode.Service -> client.awaitRunning(runtimeLayout.asteriskdPath)
+                    RootPublicationLaunchMode.Monitor -> client.awaitStopped(runtimeLayout.asteriskdPath)
+                    RootPublicationLaunchMode.None -> error("A non-launch publication has no runtime snapshot")
+                }
+            } ?: throw IllegalStateException("asteriskd did not reach the requested phase before timeout")
             if (snapshot.owner != AsteriskdOwner.AsteriskNg) throw RootRuntimeConflictException(snapshot)
             require(snapshot.mode == config.mode) { "Unexpected ROOT mode ${snapshot.mode.wireValue}" }
             return snapshot
@@ -151,6 +216,34 @@ internal class RootSupervisorController(
         error(response.result.message ?: "Failed to stop asteriskd")
     }
 
+    suspend fun shutdownOwn(): AsteriskdControlResponse {
+        val initial = status()
+        val initialSnapshot = initial.boundSnapshot() ?: return initial
+        if (initialSnapshot.owner != AsteriskdOwner.AsteriskNg) {
+            throw RootRuntimeConflictException(initialSnapshot)
+        }
+        val result = shell.exec(
+            RootShutdownOwnCommand.build(runtimeLayout),
+            ShellExecOptions(logFailure = false),
+        )
+        val response = AsteriskdControlCodec.decodeShellResponse(result)
+        when (response.requestId) {
+            "status" -> response.boundSnapshot()?.let { snapshot ->
+                if (snapshot.owner != AsteriskdOwner.AsteriskNg) {
+                    throw RootRuntimeConflictException(snapshot)
+                }
+            }
+            "shutdown", "stop" -> Unit
+            else -> error("Unexpected shutdown-own response id")
+        }
+        if (response.result.code == AsteriskdResultCode.Ok ||
+            response.result.code == AsteriskdResultCode.NotRunning
+        ) {
+            return response
+        }
+        error(response.result.message ?: "Failed to shutdown asteriskd")
+    }
+
     suspend fun publishBoot(
         root: RootStartConfig,
         config: AsteriskdConfig,
@@ -170,7 +263,7 @@ internal class RootSupervisorController(
                         coreConfigSourcePath = staged.coreConfig.absolutePath,
                         asteriskdConfigSourcePath = staged.asteriskdConfig.absolutePath,
                         bootEnabled = true,
-                        launchRuntime = false,
+                        launchMode = RootPublicationLaunchMode.None,
                     ),
                 ),
                 ShellExecOptions(logFailure = false),

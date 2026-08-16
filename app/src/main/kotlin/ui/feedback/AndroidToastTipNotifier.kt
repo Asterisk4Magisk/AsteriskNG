@@ -5,6 +5,7 @@ package ui.feedback
 
 import android.content.Context
 import android.widget.Toast
+import app.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -18,7 +19,10 @@ class AndroidToastTipNotifier(context: Context) {
     }
 
     suspend fun showError(error: Throwable, fallbackMessage: String? = null) {
-        val message = error.tipMessage(fallbackMessage)
+        val rootMessage = error.rootOperationTipMessageOrNull { owner ->
+            appContext.getString(R.string.root_foreign_owner_conflict, owner)
+        }
+        val message = rootMessage ?: error.tipMessage(fallbackMessage)
         show(message)
     }
 }

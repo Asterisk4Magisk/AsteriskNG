@@ -38,7 +38,9 @@ data class RootOperationLogRecord(
         "root_result code=$code action=${action.wireValue} owner=${owner?.wireValue ?: "none"}"
 }
 
-class RootOperationBlockedException : IllegalStateException()
+class RootOperationBlockedException(
+    val result: RootOperationResult,
+) : IllegalStateException()
 
 fun RootOperationResult.toSanitizedLogRecord(
     requestedAction: RootRequestedAction,
@@ -88,7 +90,7 @@ fun decideRootSafeToggle(
     return if (snapshot.running) {
         RootToggleDecision.StopOwn
     } else {
-        RootToggleDecision.Blocked(RootOperationResult.Busy(snapshot.owner))
+        RootToggleDecision.OrdinaryStart
     }
 }
 

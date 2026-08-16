@@ -31,6 +31,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import system.AndroidRootShellGateway
+import ui.feedback.rootOperationTipMessageOrNull
 import java.lang.ref.WeakReference
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.cancellation.CancellationException
@@ -88,7 +89,7 @@ class ProxyQuickSettingsTileService : TileService() {
                 finalRunning = toggleProxy()
             } catch (error: Throwable) {
                 if (error is CancellationException) throw error
-                showToast(error.message ?: getString(R.string.quick_settings_tile_toggle_failed))
+                showToast(error.quickSettingsErrorMessage())
             } finally {
                 operationInProgress.set(false)
                 refreshTileAfterToggle(appContext, finalRunning)
@@ -157,10 +158,16 @@ class ProxyQuickSettingsTileService : TileService() {
 
             is ProxyServiceResult.Failed -> {
                 stateStore.update { currentState -> currentState.copy(proxyRunning = false) }
-                showToast(result.error.message ?: getString(R.string.quick_settings_tile_toggle_failed))
+                showToast(result.error.quickSettingsErrorMessage())
                 return false
             }
         }
+    }
+
+    private fun Throwable.quickSettingsErrorMessage(): String {
+        return rootOperationTipMessageOrNull { owner ->
+            getString(R.string.root_foreign_owner_conflict, owner)
+        } ?: message ?: getString(R.string.quick_settings_tile_toggle_failed)
     }
 
     private suspend fun syncProxyRunningState(): Boolean {

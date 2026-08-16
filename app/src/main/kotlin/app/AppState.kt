@@ -110,6 +110,8 @@ data class AppState(
     val enableHttpProxy: Boolean = false,
     val httpProxyPort: String = RootModeEngine.DefaultHttpProxyPort.toString(),
 
+    val serviceControl: ServiceControlSettings = ServiceControlSettings(),
+
     val externalInterfaces: List<String> = emptyList(),
     val ignoredInterfaces: List<String> = emptyList(),
     val privateAddressCidrs: List<String> = emptyList(),

@@ -40,6 +40,9 @@ internal class SettingsSheetState(
     var showIgnoredInterfaces by mutableStateOf(false)
     var ignoredInterfacesDraft by mutableStateOf(emptyList<String>())
 
+    var showServiceControl by mutableStateOf(false)
+    var serviceControlDraft by mutableStateOf(app.ServiceControlSettings())
+
     var showPrivateAddresses by mutableStateOf(false)
     var privateAddressCidrsDraft by mutableStateOf(emptyList<String>())
 
@@ -85,6 +88,11 @@ internal class SettingsSheetState(
     fun openIgnoredInterfaces(appState: AppState) {
         ignoredInterfacesDraft = appState.ignoredInterfaces.sanitizeIgnoredInterfaceSelectors()
         showIgnoredInterfaces = true
+    }
+
+    fun openServiceControl(appState: AppState) {
+        serviceControlDraft = appState.serviceControl
+        showServiceControl = true
     }
 
     fun closeIgnoredInterfaces() {

@@ -435,6 +435,7 @@ private fun SettingsContent(
                         updateAppState { state -> state.copy(enableRootIpv6Disabler = enabled) }
                     },
                     onOpenExternalInterfaces = { sheetState.openExternalInterfaces(appState) },
+                    onOpenServiceControl = { sheetState.openServiceControl(appState) },
                     onOpenIgnoredInterfaces = { sheetState.openIgnoredInterfaces(appState) },
                     onOpenPrivateAddresses = { sheetState.openPrivateAddresses(appState) },
                 )
@@ -516,7 +517,7 @@ private fun SettingsContent(
                     backupRestoreInProgress = true
                     scope.launch {
                         try {
-                            when (val result = proxyServiceUseCase.stop(appState.runMode)) {
+                            when (val result = proxyServiceUseCase.shutdown(appState.runMode)) {
                                 is ProxyServiceResult.Success -> Unit
                                 ProxyServiceResult.MissingServer -> Unit
                                 is ProxyServiceResult.Failed -> {

@@ -3,8 +3,9 @@
 
 package engine.root.config
 
-import engine.proxy.LocalProxyOptions
+import app.ServiceControlSettings
 import engine.network.NetworkLimits
+import engine.proxy.LocalProxyOptions
 import engine.root.daemon.config.AsteriskdConfig
 
 const val RootBpf2SocksDefaultBridgePort = NetworkLimits.PORT_MAX - 3
@@ -33,10 +34,8 @@ internal data class RootStartConfig(
     val enableLocalDns: Boolean,
     val enableFakeDns: Boolean,
     val enableBoot: Boolean,
-) {
-    val configPath: String
-        get() = runtimePaths.coreConfigPath
-}
+    val serviceControl: ServiceControlSettings,
+)
 
 internal data class RootModeStartConfig(
     val root: RootStartConfig,

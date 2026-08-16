@@ -102,7 +102,7 @@ private fun Throwable.toRootBootScriptResult(): RootBootScriptResult {
         operationResult.toAppLogMessage(RootRequestedAction.BootRefresh),
     )
     val reportedError = when (this) {
-        is RootRuntimeConflictException, is RootRuntimeBusyException -> RootOperationBlockedException()
+        is RootRuntimeConflictException, is RootRuntimeBusyException -> RootOperationBlockedException(operationResult)
         else -> this
     }
     return RootBootScriptResult.Failed(reportedError)

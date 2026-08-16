@@ -3,5 +3,8 @@
 
 package ui.components
 
-internal fun hasPendingStringListEdit(input: String, editingIndex: Int): Boolean =
-    input.isNotBlank() || editingIndex >= 0
+internal fun hasPendingStringListEdit(
+    input: String,
+    editingIndex: Int,
+    normalize: (String) -> String = String::trim,
+): Boolean = normalize(input).isNotEmpty() || editingIndex >= 0

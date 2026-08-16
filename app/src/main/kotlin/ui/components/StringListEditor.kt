@@ -82,7 +82,6 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowDialog
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
-import utils.toTrimmedNonEmptyList
 
 private typealias StringListItemValidator = (String) -> String?
 
@@ -96,6 +95,7 @@ internal fun StringListEditor(
     modifier: Modifier = Modifier,
     description: String? = null,
     validateInput: (String) -> String? = { null },
+    normalizeInput: (String) -> String = String::trim,
     onPendingChange: ((Boolean) -> Unit)? = null,
 ) {
     var input by remember(editorKey, title) { mutableStateOf("") }
@@ -116,7 +116,7 @@ internal fun StringListEditor(
         showBulkEditor = false
         bulkInput = ""
     }
-    val sanitizedValues = values.toTrimmedNonEmptyList()
+    val sanitizedValues = values.normalizedStringList(normalizeInput)
     LaunchedEffect(sanitizedValues.size, editingIndex) {
         if (editingIndex != NoEditingIndex && editingIndex !in sanitizedValues.indices) {
             editingIndex = NoEditingIndex
@@ -124,13 +124,13 @@ internal fun StringListEditor(
             editInputState.clearText()
         }
     }
-    val trimmedInput = input.trim()
+    val trimmedInput = normalizeInput(input)
     val inputError = when {
         trimmedInput.isEmpty() -> null
         else -> validateInput(trimmedInput)
     }
     val canAddInput = trimmedInput.isNotEmpty() && inputError == null
-    val hasPendingInput = hasPendingStringListEdit(input, editingIndex)
+    val hasPendingInput = hasPendingStringListEdit(input, editingIndex, normalizeInput)
     val currentOnPendingChange by rememberUpdatedState(onPendingChange)
 
     LaunchedEffect(hasPendingInput) {
@@ -138,7 +138,7 @@ internal fun StringListEditor(
     }
     val addInput = {
         if (canAddInput) {
-            onValuesChange((sanitizedValues + trimmedInput).toTrimmedNonEmptyList())
+            onValuesChange((sanitizedValues + trimmedInput).normalizedStringList(normalizeInput))
             input = ""
             inputState.clearText()
         }
@@ -149,6 +149,7 @@ internal fun StringListEditor(
             input = editInput,
             emptyText = emptyItemText,
             validateInput = validateInput,
+            normalizeInput = normalizeInput,
         )
     } else {
         null
@@ -162,8 +163,8 @@ internal fun StringListEditor(
     val saveEdit = {
         if (canSaveEdit) {
             val nextValues = sanitizedValues.toMutableList()
-            nextValues[editingIndex] = editInput.trim()
-            onValuesChange(nextValues.toTrimmedNonEmptyList())
+            nextValues[editingIndex] = normalizeInput(editInput)
+            onValuesChange(nextValues.normalizedStringList(normalizeInput))
             cancelEdit()
         }
     }
@@ -175,6 +176,7 @@ internal fun StringListEditor(
     val bulkParseResult = parseStringListDraft(
         text = bulkInput,
         validateInput = validateInput,
+        normalizeInput = normalizeInput,
     )
     val bulkErrorText = bulkParseResult.error?.let { error ->
         stringResource(R.string.string_list_line_error, error.lineNumber, error.message)
@@ -630,8 +632,9 @@ private fun validateStringListItem(
     input: String,
     emptyText: String,
     validateInput: StringListItemValidator,
+    normalizeInput: (String) -> String,
 ): String? {
-    val trimmed = input.trim()
+    val trimmed = normalizeInput(input)
     if (trimmed.isEmpty()) return emptyText
 
     return validateInput(trimmed)
@@ -640,11 +643,12 @@ private fun validateStringListItem(
 private fun parseStringListDraft(
     text: String,
     validateInput: StringListItemValidator,
+    normalizeInput: (String) -> String,
 ): StringListParseResult {
     val values = mutableListOf<String>()
 
     text.lineSequence().forEachIndexed { index, line ->
-        val trimmed = line.trim()
+        val trimmed = normalizeInput(line)
         if (trimmed.isEmpty()) return@forEachIndexed
         validateInput(trimmed)?.let { error ->
             return StringListParseResult(error = StringListLineError(index + 1, error))
@@ -654,6 +658,10 @@ private fun parseStringListDraft(
 
     return StringListParseResult(values = values)
 }
+
+private fun List<String>.normalizedStringList(
+    normalizeInput: (String) -> String,
+): List<String> = map(normalizeInput).filter(String::isNotEmpty).distinct()
 
 private data class StringListParseResult(
     val values: List<String> = emptyList(),

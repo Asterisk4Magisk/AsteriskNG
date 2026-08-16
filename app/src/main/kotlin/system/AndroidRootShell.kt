@@ -66,8 +66,11 @@ internal object AndroidRootShell {
         options: ShellExecOptions,
         onStdoutLine: (String) -> Unit,
     ): ShellExecResult = suspendCancellableCoroutine { continuation ->
+        val streamingCommand = StreamingProcessCommand.create(options.toShellCommand(command))
+        val processLifetime = StreamingProcessLifetime(::terminateStreamingProcess)
         val shellReference = AtomicReference<Shell?>()
         continuation.invokeOnCancellation {
+            processLifetime.cancel()
             shellReference.get()?.let { shell -> runCatching { shell.close() } }
         }
         Shell.EXECUTOR.execute {
@@ -91,17 +94,22 @@ internal object AndroidRootShell {
                 }
                 val stdout = object : CallbackList<String>(callbackExecutor, stdoutBacking) {
                     override fun onAddElement(element: String) {
+                        streamingCommand.processIdOrNull(element)?.let { processId ->
+                            processLifetime.publishProcessId(processId)
+                            return
+                        }
                         try {
                             onStdoutLine(element)
                         } catch (error: Throwable) {
                             if (callbackFailure.compareAndSet(null, error)) {
+                                processLifetime.cancel()
                                 shellReference.get()?.close()
                             }
                         }
                     }
                 }
                 val result = dedicatedShell.newJob()
-                    .add(options.toShellCommand(command))
+                    .add(streamingCommand.shellCommand)
                     .to(stdout, stderr)
                     .exec()
                 callbackExecutor.submit {}.get()
@@ -115,7 +123,11 @@ internal object AndroidRootShell {
                 }
                 val value = ShellExecResult(
                     errno = result.code,
-                    stdout = synchronized(stdoutBacking) { stdoutBacking.joinToString("\n") },
+                    stdout = synchronized(stdoutBacking) {
+                        stdoutBacking
+                            .filter { line -> streamingCommand.processIdOrNull(line) == null }
+                            .joinToString("\n")
+                    },
                     stderr = synchronized(stderr) { stderr.joinToString("\n") },
                 )
                 continuation.resumeWith(Result.success(value))
@@ -133,6 +145,16 @@ internal object AndroidRootShell {
         runCatching { Shell.getShell().isRoot }
             .onFailure { error -> AndroidAppLogger.warn(LogTag, "Failed to check root access", error) }
             .getOrDefault(false)
+    }
+
+    private fun terminateStreamingProcess(processId: Long) {
+        Shell.EXECUTOR.execute {
+            runCatching {
+                Shell.cmd("kill -TERM $processId 2>/dev/null || true").exec()
+            }.onFailure { error ->
+                AndroidAppLogger.warn(LogTag, "Failed to terminate streaming process $processId", error)
+            }
+        }
     }
 
     private const val LogTag = "AndroidRootShell"
