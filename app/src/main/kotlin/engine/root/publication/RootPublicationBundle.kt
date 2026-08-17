@@ -10,11 +10,9 @@ internal data class RootPublicationBundle(
     val bootEnabled: Boolean,
     val launchMode: RootPublicationLaunchMode = RootPublicationLaunchMode.Service,
     val restartExpectedOwner: String? = null,
-    val publishWhileRunningOwner: String? = null,
 ) {
     init {
         require(restartExpectedOwner == null || restartExpectedOwner in RootPublicationOwners)
-        require(publishWhileRunningOwner == null || publishWhileRunningOwner in RootPublicationOwners)
     }
 }
 

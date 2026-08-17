@@ -8,12 +8,6 @@ import utils.shellQuote
 internal object RootPublicationCommand {
     fun build(bundle: RootPublicationBundle): String {
         val layout = bundle.runtimeLayout
-        val startup = RootBootPublicationCommand.buildStartupScript(layout)
-        val service = RootBootPublicationCommand.buildServiceScript(layout)
-        val expectedStartup = startup.trimEnd()
-        val expectedService = service.trimEnd()
-        val startupSize = startup.toByteArray(Charsets.UTF_8).size
-        val serviceSize = service.toByteArray(Charsets.UTF_8).size
         return buildString {
             appendLine("set -eu")
             RootPublicationRequiredTools.forEach { tool ->
@@ -26,37 +20,23 @@ internal object RootPublicationCommand {
             bundle.restartExpectedOwner?.let { owner ->
                 appendConditionalStop(layout, owner)
             }
-            appendStatusMustBePublishable(layout, bundle.publishWhileRunningOwner)
+            appendStatusMustBePublishable(layout)
             RootLegacyMigrationCommand.appendGate(this, layout)
-            appendStatusMustBePublishable(layout, bundle.publishWhileRunningOwner)
+            appendStatusMustBePublishable(layout)
             appendStageFunctions()
             appendLine("core_config_tmp=")
             appendLine("asteriskd_config_tmp=")
-            appendLine("startup_tmp=")
-            appendLine("service_tmp=")
-            appendLine("trap 'rm -f \"\$core_config_tmp\" \"\$asteriskd_config_tmp\" \"\$startup_tmp\" \"\$service_tmp\"' EXIT HUP INT TERM")
+            appendLine("trap 'rm -f \"\$core_config_tmp\" \"\$asteriskd_config_tmp\"' EXIT HUP INT TERM")
             appendLine("core_config_tmp=\"$(prepare_source_file ${layout.configPath.shellQuote()} 600 ${bundle.coreConfigSourcePath.shellQuote()})\"")
             appendLine("asteriskd_config_tmp=\"$(prepare_source_file ${layout.asteriskdConfigPath.shellQuote()} 600 ${bundle.asteriskdConfigSourcePath.shellQuote()})\"")
-            if (bundle.bootEnabled) {
-                appendLine("mkdir -p ${RootBootScriptDir.shellQuote()}")
-                appendLine("if ! content_file_is_current ${layout.startupScriptPath.shellQuote()} 700 ${expectedStartup.shellQuote()} $startupSize; then")
-                appendLine("  startup_tmp=\"$(prepare_content_file ${layout.startupScriptPath.shellQuote()} 700 ${startup.shellQuote()})\"")
-                appendLine("fi")
-                appendLine("if ! content_file_is_current ${RootBootScriptPath.shellQuote()} 700 ${expectedService.shellQuote()} $serviceSize; then")
-                appendLine("  service_tmp=\"$(prepare_content_file ${RootBootScriptPath.shellQuote()} 700 ${service.shellQuote()})\"")
-                appendLine("fi")
-            }
             appendLine("publish_file \"\$core_config_tmp\" ${layout.configPath.shellQuote()}")
             appendLine("core_config_tmp=")
             appendLine("publish_file \"\$asteriskd_config_tmp\" ${layout.asteriskdConfigPath.shellQuote()}")
             appendLine("asteriskd_config_tmp=")
             if (bundle.bootEnabled) {
-                appendLine("[ -z \"\$startup_tmp\" ] || publish_file \"\$startup_tmp\" ${layout.startupScriptPath.shellQuote()}")
-                appendLine("startup_tmp=")
-                appendLine("[ -z \"\$service_tmp\" ] || publish_file \"\$service_tmp\" ${RootBootScriptPath.shellQuote()}")
-                appendLine("service_tmp=")
+                RootBootPublicationCommand.appendInstallBoot(this, layout)
             } else {
-                RootBootPublicationCommand.appendRemoveOwnedBoot(this, layout)
+                RootBootPublicationCommand.appendRemoveBoot(this, layout)
             }
             appendLine("trap - EXIT HUP INT TERM")
             val launchCommand = when (bundle.launchMode) {
@@ -74,29 +54,14 @@ internal object RootPublicationCommand {
         }.trimEnd()
     }
 
-    private fun StringBuilder.appendStatusMustBePublishable(
-        layout: RootRuntimeLayout,
-        publishWhileRunningOwner: String?,
-    ) {
+    private fun StringBuilder.appendStatusMustBePublishable(layout: RootRuntimeLayout) {
         appendLine("set +e")
         appendLine("asteriskd_status=\"$(${layout.asteriskdPath.shellQuote()} status)\"")
         appendLine("asteriskd_status_code=\"$?\"")
         appendLine("set -e")
         appendLine("if [ \"\$asteriskd_status_code\" -ne 3 ]; then")
-        if (publishWhileRunningOwner == null) {
-            appendLine("  printf '%s\\n' \"\$asteriskd_status\"")
-            appendLine("  exit \"\$asteriskd_status_code\"")
-        } else {
-            appendLine("  [ \"\$asteriskd_status_code\" -eq 0 ] || { printf '%s\\n' \"\$asteriskd_status\"; exit \"\$asteriskd_status_code\"; }")
-            appendLine("  case \"\$asteriskd_status\" in")
-            appendLine("    *'\"owner\":\"$publishWhileRunningOwner\"'*) ;;")
-            appendLine("    *) printf '%s\\n' \"\$asteriskd_status\"; exit \"\$asteriskd_status_code\" ;;")
-            appendLine("  esac")
-            appendLine("  case \"\$asteriskd_status\" in")
-            appendLine("    *'\"phase\":\"running\"'*) ;;")
-            appendLine("    *) printf '%s\\n' \"\$asteriskd_status\"; exit \"\$asteriskd_status_code\" ;;")
-            appendLine("  esac")
-        }
+        appendLine("  printf '%s\\n' \"\$asteriskd_status\"")
+        appendLine("  exit \"\$asteriskd_status_code\"")
         appendLine("fi")
     }
 
@@ -156,31 +121,6 @@ internal object RootPublicationCommand {
         appendLine("  prepare_metadata \"\$temporary\" \"\$parent\" \"\$target_mode\" || { rm -f \"\$temporary\"; return 1; }")
         appendLine("  printf '%s\\n' \"\$temporary\"")
         appendLine("}")
-        appendLine("content_file_is_current() {")
-        appendLine("  target=\"\$1\"")
-        appendLine("  target_mode=\"\$2\"")
-        appendLine("  expected_content=\"\$3\"")
-        appendLine("  expected_size=\"\$4\"")
-        appendLine("  parent=\"${'$'}{target%/*}\"")
-        appendLine("  [ -f \"\$target\" ] && [ ! -L \"\$target\" ] || return 1")
-        appendLine("  target_uid=\"$(stat -c %u \"\$target\")\" || return 1")
-        appendLine("  target_gid=\"$(stat -c %g \"\$target\")\" || return 1")
-        appendLine("  [ \"\$target_uid\" = \"$(stat -c %u \"\$parent\")\" ] || return 1")
-        appendLine("  [ \"\$target_gid\" = \"$(stat -c %g \"\$parent\")\" ] || return 1")
-        appendLine("  [ \"$(stat -c %a \"\$target\")\" = \"\$target_mode\" ] || return 1")
-        appendLine("  [ \"$(wc -c < \"\$target\")\" = \"\$expected_size\" ] || return 1")
-        appendLine("  [ \"$(cat \"\$target\")\" = \"\$expected_content\" ] || return 1")
-        appendLine("}")
-        appendLine("prepare_content_file() {")
-        appendLine("  target=\"\$1\"")
-        appendLine("  target_mode=\"\$2\"")
-        appendLine("  content=\"\$3\"")
-        appendLine("  parent=\"${'$'}{target%/*}\"")
-        appendLine("  temporary=\"$(mktemp \"\$parent/.asteriskd.XXXXXX\")\"")
-        appendLine("  printf '%s' \"\$content\" > \"\$temporary\" || { rm -f \"\$temporary\"; return 1; }")
-        appendLine("  prepare_metadata \"\$temporary\" \"\$parent\" \"\$target_mode\" || { rm -f \"\$temporary\"; return 1; }")
-        appendLine("  printf '%s\\n' \"\$temporary\"")
-        appendLine("}")
         appendLine("publish_file() {")
         appendLine("  temporary=\"\$1\"")
         appendLine("  target=\"\$2\"")
@@ -199,7 +139,6 @@ internal val RootPublicationRequiredTools = listOf(
     "tail",
     "awk",
     "tr",
-    "cat",
     "cp",
     "mkdir",
     "chown",

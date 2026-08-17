@@ -17,6 +17,7 @@ import engine.root.daemon.control.AsteriskdControlResponse
 import engine.root.daemon.control.AsteriskdPhase
 import engine.root.daemon.control.AsteriskdResultCode
 import engine.root.daemon.control.AsteriskdSnapshot
+import engine.root.publication.RootBootConfigWriter
 import engine.root.publication.RootBootPublicationCommand
 import engine.root.publication.RootPublicationBundle
 import engine.root.publication.RootPublicationCommand
@@ -59,10 +60,6 @@ internal class RootSupervisorController(
 
     fun requireRunning(snapshot: AsteriskdSnapshot, expectedMode: AsteriskdMode) {
         snapshot.requireRunning(AsteriskdOwner.AsteriskNg, expectedMode)
-    }
-
-    suspend fun canPublishBoot(deferIfRuntimeBound: Boolean): Boolean {
-        return status().canPublishBoot(AsteriskdOwner.AsteriskNg, deferIfRuntimeBound)
     }
 
     suspend fun requireUnbound() {
@@ -248,29 +245,17 @@ internal class RootSupervisorController(
         root: RootStartConfig,
         config: AsteriskdConfig,
     ) {
-        check(status().canPublishBoot(AsteriskdOwner.AsteriskNg, deferIfBound = false))
         preparePublication(config)
-        val staged = RootPublicationStager.stage(
-            root.publicationStagingDirectory,
-            root.xrayConfigJson,
-            AsteriskdConfigEncoder.encode(config),
+        RootBootConfigWriter.write(
+            layout = runtimeLayout,
+            coreConfigBytes = root.xrayConfigJson.toByteArray(Charsets.UTF_8),
+            encodedDaemonConfig = AsteriskdConfigEncoder.encode(config),
         )
-        staged.use { staged ->
-            val result = shell.exec(
-                RootPublicationCommand.build(
-                    RootPublicationBundle(
-                        runtimeLayout = runtimeLayout,
-                        coreConfigSourcePath = staged.coreConfig.absolutePath,
-                        asteriskdConfigSourcePath = staged.asteriskdConfig.absolutePath,
-                        bootEnabled = true,
-                        launchMode = RootPublicationLaunchMode.None,
-                        publishWhileRunningOwner = AsteriskdOwner.AsteriskNg.wireValue,
-                    ),
-                ),
-                ShellExecOptions(logFailure = false),
-            )
-            requirePublicationSuccess(result)
-        }
+        val result = shell.exec(
+            RootBootPublicationCommand.buildInstallation(runtimeLayout),
+            ShellExecOptions(logFailure = false),
+        )
+        requirePublicationSuccess(result)
     }
 
     private fun requirePublicationSuccess(result: ShellExecResult) {
@@ -278,11 +263,6 @@ internal class RootSupervisorController(
     }
 
     suspend fun removeBoot() {
-        val initial = status()
-        initial.boundSnapshot()?.let { snapshot ->
-            if (snapshot.owner != AsteriskdOwner.AsteriskNg) throw RootRuntimeConflictException(snapshot)
-            throw RootRuntimeBusyException(snapshot)
-        }
         val result = shell.exec(
             RootBootPublicationCommand.buildRemoval(runtimeLayout),
             ShellExecOptions(logFailure = false),
