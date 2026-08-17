@@ -18,7 +18,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import features.resources.ResourceFileUpdateOptions
 import engine.root.publication.RootCoreRemovalCommand
-import engine.root.runtime.RootSupervisorController
 import system.AndroidRootShellGateway
 import system.RootShellGateway
 import system.ShellExecOptions
@@ -31,7 +30,6 @@ internal class AndroidResourceFileRepository(
     private val appContext = context.applicationContext
     private val store = AndroidResourceFileStore(appContext)
     private val downloader = AndroidResourceFileDownloader()
-    private val rootSupervisor = RootSupervisorController(appContext, rootShell)
 
     suspend fun status(customResourceFiles: List<CustomResourceFileState> = emptyList()): ResourceFilesStatus =
         withContext(Dispatchers.IO) {
@@ -44,17 +42,10 @@ internal class AndroidResourceFileRepository(
             if (!store.shouldPublishBundledXrayCore(resourceFileSource, restoreAfterPackageUpdate = true)) {
                 return@withContext
             }
-            when (coreCandidateInstallPath()) {
-                CoreCandidateInstallPath.ReplaceWithRoot -> {
-                    if (!rootSupervisor.isUnbound()) return@withContext
-                    replaceCoreCandidateWithRoot(store.stageBundledXrayCoreCandidate())
-                }
-                CoreCandidateInstallPath.ReplaceAppOwned -> {
-                    replaceAppOwnedCoreCandidate(store.stageBundledXrayCoreCandidate())
-                }
-                CoreCandidateInstallPath.InitialNoReplace -> {
-                    installInitialCoreCandidate(store.stageBundledXrayCoreCandidate())
-                }
+            executeCoreCandidateInstall(store::stageBundledXrayCoreCandidate) {
+                AndroidResourceFileLogger.info(
+                    "Bundled Xray core replacement deferred because the existing core is ROOT-owned",
+                )
             }
         }
     }
@@ -243,16 +234,25 @@ internal class AndroidResourceFileRepository(
     private suspend fun installOrPublishCoreCandidate(
         candidateFactory: () -> java.io.File,
     ) {
-        when (coreCandidateInstallPath()) {
-            CoreCandidateInstallPath.ReplaceWithRoot -> {
-                rootSupervisor.requireUnbound()
-                replaceCoreCandidateWithRoot(candidateFactory())
-            }
-            CoreCandidateInstallPath.ReplaceAppOwned -> replaceAppOwnedCoreCandidate(candidateFactory())
-            CoreCandidateInstallPath.InitialNoReplace -> {
-                installInitialCoreCandidate(candidateFactory())
-            }
+        executeCoreCandidateInstall(candidateFactory) {
+            error(appContext.getString(R.string.settings_root_required))
         }
+    }
+
+    private suspend fun executeCoreCandidateInstall(
+        candidateFactory: () -> java.io.File,
+        deferRootOwned: suspend () -> Unit,
+    ) {
+        val target = store.file(ResourceFileKind.XrayCore)
+        sharedCoreReplacementCoordinator.execute(
+            targetOwnerUid = target::coreBinaryOwnerUidOrNull,
+            rootModeActive = { currentRunMode().isRootRunMode() },
+            candidateFactory = candidateFactory,
+            installInitial = { candidate -> installInitialCoreCandidate(candidate) },
+            replaceAppOwned = { candidate -> replaceAppOwnedCoreCandidate(candidate) },
+            replaceWithRoot = { candidate -> replaceCoreCandidateWithRoot(candidate) },
+            deferRootOwned = deferRootOwned,
+        )
     }
 
     private fun installInitialCoreCandidate(
@@ -266,11 +266,6 @@ internal class AndroidResourceFileRepository(
         } finally {
             candidate.delete()
         }
-    }
-
-    private suspend fun coreCandidateInstallPath(): CoreCandidateInstallPath {
-        val targetExists = store.file(ResourceFileKind.XrayCore).exists()
-        return resolveCoreCandidateInstallPath(targetExists) { currentRunMode().isRootRunMode() }
     }
 
     private fun replaceAppOwnedCoreCandidate(candidate: java.io.File) {
