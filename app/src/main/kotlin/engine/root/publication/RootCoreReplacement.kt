@@ -36,10 +36,8 @@ internal object RootCoreReplacementCommand {
             appendLine("[ \"$(stat -c %a \"\$core_tmp\")\" = 755 ]")
             appendLine("core_digest=\"$(sha256sum \"\$core_tmp\")\"")
             appendLine("[ \"\${core_digest%% *}\" = ${sha256.shellQuote()} ] || exit 74")
-            appendLine("${layout.asteriskdPath.shellQuote()} sync --file \"\$core_tmp\"")
             appendLine("mv -f \"\$core_tmp\" ${layout.xrayCorePath.shellQuote()}")
             appendLine("core_tmp=")
-            appendLine("${layout.asteriskdPath.shellQuote()} sync --directory ${layout.dataDir.shellQuote()}")
             appendLine("trap - EXIT HUP INT TERM")
         }.trimEnd()
     }

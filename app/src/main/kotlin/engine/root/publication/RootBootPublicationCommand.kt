@@ -25,12 +25,10 @@ internal object RootBootPublicationCommand {
         appendLine("  if [ -f ${layout.startupScriptPath.shellQuote()} ] && [ ! -L ${layout.startupScriptPath.shellQuote()} ] && " +
             "[ \"$(cat ${layout.startupScriptPath.shellQuote()})\" = ${expectedStartup.shellQuote()} ]; then")
         appendLine("    rm -f ${layout.startupScriptPath.shellQuote()}")
-        appendLine("    ${layout.asteriskdPath.shellQuote()} sync --directory ${layout.dataDir.shellQuote()}")
         appendLine("  fi")
         appendLine("  if [ -f ${RootBootScriptPath.shellQuote()} ] && [ ! -L ${RootBootScriptPath.shellQuote()} ] && " +
             "[ \"$(cat ${RootBootScriptPath.shellQuote()})\" = ${expectedService.shellQuote()} ]; then")
         appendLine("    rm -f ${RootBootScriptPath.shellQuote()}")
-        appendLine("    ${layout.asteriskdPath.shellQuote()} sync --directory ${RootBootScriptDir.shellQuote()}")
         appendLine("  fi")
         appendLine("}")
         appendLine("remove_owned_boot")

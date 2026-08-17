@@ -80,6 +80,7 @@ internal fun AsteriskdControlResponse.canPublishBoot(owner: AsteriskdOwner, defe
     val snapshot = boundSnapshot() ?: return true
     snapshot.requireOwner(owner)
     if (deferIfBound) return false
+    if (snapshot.phase == AsteriskdPhase.Running) return true
     snapshot.rejectBound(owner)
 }
 

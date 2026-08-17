@@ -76,7 +76,6 @@ internal object RootLegacyMigrationCommand {
         legacy.forEach { file ->
             appendLine("  if [ -e ${file.absolutePath.shellQuote()} ]; then")
             appendLine("    rm -f -- ${file.absolutePath.shellQuote()} || return 76")
-            appendLine("    ${layout.asteriskdPath.shellQuote()} sync --directory ${checkNotNull(file.parentFile).absolutePath.shellQuote()} || return 76")
             appendLine("  fi")
         }
         appendLine("}")
