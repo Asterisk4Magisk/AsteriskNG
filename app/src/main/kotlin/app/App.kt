@@ -55,6 +55,7 @@ fun App(
     val systemUiSnapshot = appContext.currentSystemUiSnapshot()
     val application = appContext as AsteriskApplication
     val appScope = application.appScope
+    val stateStore = remember(application) { application.stateStore }
     val rootAccess = remember { AndroidRootShellGateway() }
     val userSpaces = remember(appContext, rootAccess) {
         AndroidUserSpaceProvider(
@@ -72,10 +73,11 @@ fun App(
     val networkInterfaces = remember(rootAccess) {
         AndroidNetworkInterfaceProvider(rootAccess)
     }
-    val resourceFileUseCase = remember(appContext, resourceFilePicker, rootAccess) {
+    val resourceFileUseCase = remember(appContext, resourceFilePicker, rootAccess, stateStore) {
         ResourceFileUseCase(
             context = appContext,
             resourceFilePicker = resourceFilePicker,
+            currentRunMode = { stateStore.state.value.runMode },
             rootShell = rootAccess,
         )
     }
@@ -156,7 +158,6 @@ fun App(
     val applyServiceControlUseCase = remember(proxyEngine) {
         ApplyServiceControlUseCase(proxyEngine)
     }
-    val stateStore = remember(application) { application.stateStore }
     val tipNotifier = remember(appContext) { AndroidToastTipNotifier(appContext) }
     val services = remember(
         appScope,

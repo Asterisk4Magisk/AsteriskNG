@@ -7,9 +7,6 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
-import android.system.ErrnoException
-import android.system.Os
-import android.system.OsConstants
 import app.CustomResourceFileState
 import app.CustomResourceFileStatus
 import app.ResourceFileKind
@@ -33,12 +30,12 @@ internal class AndroidResourceFileStore(
 
     fun currentStatus(customResourceFiles: List<CustomResourceFileState> = emptyList()): ResourceFilesStatus {
         return ResourceFilesStatus(
-            geoIp = file(ResourceFileKind.GeoIp).toStatus(),
-            geoSite = file(ResourceFileKind.GeoSite).toStatus(),
-            geoIpOnlyCnPrivate = file(ResourceFileKind.GeoIpOnlyCnPrivate).toStatus(),
-            directCidrIpv4 = file(ResourceFileKind.DirectCidrIpv4).toStatus(),
-            directCidrIpv6 = file(ResourceFileKind.DirectCidrIpv6).toStatus(),
-            xrayCore = file(ResourceFileKind.XrayCore).toStatus(),
+            geoIp = file(ResourceFileKind.GeoIp).toStatus(ResourceFileKind.GeoIp),
+            geoSite = file(ResourceFileKind.GeoSite).toStatus(ResourceFileKind.GeoSite),
+            geoIpOnlyCnPrivate = file(ResourceFileKind.GeoIpOnlyCnPrivate).toStatus(ResourceFileKind.GeoIpOnlyCnPrivate),
+            directCidrIpv4 = file(ResourceFileKind.DirectCidrIpv4).toStatus(ResourceFileKind.DirectCidrIpv4),
+            directCidrIpv6 = file(ResourceFileKind.DirectCidrIpv6).toStatus(ResourceFileKind.DirectCidrIpv6),
+            xrayCore = file(ResourceFileKind.XrayCore).toStatus(ResourceFileKind.XrayCore),
             customResourceFiles = customResourceFiles.map { customFile ->
                 CustomResourceFileStatus(
                     file = customFile,
@@ -118,34 +115,11 @@ internal class AndroidResourceFileStore(
     }
 
     fun installInitialXrayCoreCandidate(candidate: File): Boolean {
-        require(candidate.isFile && candidate.length() > 0) { "Xray core candidate is empty" }
-        require(dataDir.exists() || dataDir.mkdirs()) { "Failed to create ${dataDir.absolutePath}" }
-        val target = file(ResourceFileKind.XrayCore)
-        return synchronized(writeLockFor(target)) {
-            if (target.exists()) return@synchronized false
-            val temp = File.createTempFile(".xray-initial-", ".tmp", dataDir)
-            try {
-                candidate.inputStream().use { input ->
-                    temp.outputStream().use { output ->
-                        input.copyTo(output)
-                        output.flush()
-                        output.fd.sync()
-                    }
-                }
-                require(temp.length() > 0) { "Xray core candidate is empty" }
-                Os.chmod(temp.absolutePath, XrayExecutableMode)
-                try {
-                    Os.link(temp.absolutePath, target.absolutePath)
-                } catch (error: ErrnoException) {
-                    if (error.errno == OsConstants.EEXIST) return@synchronized false
-                    throw error
-                }
-                syncDirectory(dataDir)
-                true
-            } finally {
-                temp.delete()
-            }
-        }
+        return publishCoreBinaryCandidate(candidate, file(ResourceFileKind.XrayCore), replaceExisting = false)
+    }
+
+    fun replaceXrayCoreCandidate(candidate: File) {
+        publishCoreBinaryCandidate(candidate, file(ResourceFileKind.XrayCore), replaceExisting = true)
     }
 
     fun shouldPublishBundledXrayCore(
@@ -164,7 +138,7 @@ internal class AndroidResourceFileStore(
     private fun bundledXrayCoreFileOrNull(): File? {
         if (currentRuntimeAbi() != Arm64Abi) return null
         return File(appContext.applicationInfo.nativeLibraryDir, XrayCoreLibraryName)
-            .takeIf { it.isFile && it.length() > 0 }
+            .takeIf { it.isFile }
     }
 
     fun replace(kind: ResourceFileKind, uri: Uri) {
@@ -193,7 +167,7 @@ internal class AndroidResourceFileStore(
                             output.flush()
                             output.fd.sync()
                         }
-                        return@runCatching extracted.length() > 0
+                        return@runCatching true
                     }
                     zip.closeEntry()
                     entry = zip.nextEntry
@@ -218,7 +192,6 @@ internal class AndroidResourceFileStore(
                 output.flush()
                 output.fd.sync()
             }
-            require(candidate.length() > 0) { "Xray core candidate is empty" }
             return candidate
         } catch (error: Throwable) {
             candidate.delete()
@@ -320,7 +293,7 @@ internal fun shouldRestoreBundledResourceFile(
     bundledUpdatedAtMillis: Long,
     restoreAfterPackageUpdate: Boolean,
 ): Boolean {
-    if (!targetExists || targetLength <= 0) return true
+    if (!targetExists || (kind != ResourceFileKind.XrayCore && targetLength <= 0)) return true
     if (!restoreAfterPackageUpdate) return false
     if (kind != ResourceFileKind.XrayCore && resourceFileSource != ResourceFileSourceLoyalsoldierGithub) {
         return false
@@ -393,43 +366,47 @@ private const val Bpf2SocksLibraryName = "libbpf2socks.so"
 private const val XrayCoreLibraryName = "libxray.so"
 private const val HevSocks5TunnelLibraryName = "libhev-socks5-tunnel-cli.so"
 private const val XrayBundledResourceFilesDir = "xray"
-private const val XrayExecutableMode = 493
 
 private val SupportedAndroidAbis = setOf(Arm64Abi, "armeabi-v7a", "x86", "x86_64")
 
 internal enum class CoreCandidateInstallPath {
-    AtomicPublication,
+    ReplaceAppOwned,
+    ReplaceWithRoot,
     InitialNoReplace,
-    Defer,
 }
 
 internal fun chooseCoreCandidateInstallPath(
-    hasRootAccess: Boolean,
+    rootModeActive: Boolean,
     targetExists: Boolean,
 ): CoreCandidateInstallPath = when {
-    hasRootAccess -> CoreCandidateInstallPath.AtomicPublication
     !targetExists -> CoreCandidateInstallPath.InitialNoReplace
-    else -> CoreCandidateInstallPath.Defer
+    rootModeActive -> CoreCandidateInstallPath.ReplaceWithRoot
+    else -> CoreCandidateInstallPath.ReplaceAppOwned
 }
 
-private fun syncDirectory(directory: File) {
-    val descriptor = Os.open(
-        directory.absolutePath,
-        OsConstants.O_RDONLY,
-        0,
-    )
-    try {
-        Os.fsync(descriptor)
-    } finally {
-        Os.close(descriptor)
-    }
+internal inline fun resolveCoreCandidateInstallPath(
+    targetExists: Boolean,
+    rootModeActive: () -> Boolean,
+): CoreCandidateInstallPath {
+    if (!targetExists) return CoreCandidateInstallPath.InitialNoReplace
+    return chooseCoreCandidateInstallPath(rootModeActive(), targetExists = true)
 }
 
-private fun File.toStatus(): ResourceFileStatus {
+internal fun resourceFileExists(
+    kind: ResourceFileKind?,
+    targetExists: Boolean,
+    targetLength: Long,
+): Boolean {
+    return targetExists && (kind == ResourceFileKind.XrayCore || targetLength > 0)
+}
+
+private fun File.toStatus(kind: ResourceFileKind? = null): ResourceFileStatus {
+    val targetExists = exists()
+    val targetLength = takeIf { targetExists }?.length() ?: 0L
     return ResourceFileStatus(
-        exists = exists() && length() > 0,
-        sizeBytes = takeIf { exists() }?.length() ?: 0,
-        updatedAtMillis = takeIf { exists() }?.lastModified() ?: 0,
+        exists = resourceFileExists(kind, targetExists, targetLength),
+        sizeBytes = targetLength,
+        updatedAtMillis = takeIf { targetExists }?.lastModified() ?: 0,
     )
 }
 
