@@ -16,7 +16,7 @@ internal object RootLegacyMigrationCommand {
             File(dataDir, "stop.sh"), File(dataDir, "bpf-policy.json"),
             File(dataDir, "bpf2socks.json"), File(dataDir, "bpf2socks.pid"),
             File(dataDir, "tun2socks.pid"), File(dataDir, "logs/asteriskd.log"),
-            File(dataDir, "logs/boot.log"), File(layout.asteriskdStatePath),
+            File(layout.asteriskdStatePath),
             File("${layout.asteriskdStatePath}.route-localnet"),
         )
         val stateFiles = legacy.takeLast(2)
