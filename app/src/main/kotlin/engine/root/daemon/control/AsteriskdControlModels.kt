@@ -8,7 +8,7 @@ import engine.root.daemon.config.AsteriskdMode
 import engine.root.daemon.config.AsteriskdOwner
 
 internal enum class AsteriskdPhase(val wireValue: String) {
-    Validating("validating"), Acquiring("acquiring"), Recovering("recovering"),
+    Validating("validating"), Acquiring("acquiring"),
     Starting("starting"), ApplyingRules("applying-rules"), Running("running"),
     Stopping("stopping"), Stopped("stopped"), Failed("failed"),
 }
