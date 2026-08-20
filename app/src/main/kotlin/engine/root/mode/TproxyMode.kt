@@ -11,7 +11,6 @@ import engine.proxy.LocalProxyOptions
 import engine.proxy.buildLocalSocksInbound
 import engine.proxy.toLocalProxyOptions
 import engine.root.config.RootConfigBuildContext
-import engine.root.config.RootIptablesConfig
 import engine.root.config.RootModeStartConfig
 import engine.root.config.buildAsteriskdConfig
 import engine.root.config.buildRootSharedProxyInbounds
@@ -25,12 +24,10 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
-internal val TproxyBaseIptablesConfig = RootIptablesConfig()
-
 internal fun RootConfigBuildContext.buildTproxyStartConfig(): RootModeStartConfig {
     val appState = this.appState
     val tproxyPort = appState.tproxyPortValue()
-    val iptablesConfig = buildRootIptablesConfig(base = TproxyBaseIptablesConfig)
+    val iptablesConfig = buildRootIptablesConfig()
     val rootStartConfig = buildRootStartConfig(
             inbounds = appState.buildTproxyInbounds(appState.toLocalProxyOptions(), tproxyPort),
             dnsHijackInboundTags = listOf(XrayTags.TPROXY_INBOUND),

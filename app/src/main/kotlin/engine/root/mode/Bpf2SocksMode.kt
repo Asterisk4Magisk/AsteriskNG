@@ -9,18 +9,15 @@ import engine.network.NetworkDefaults
 import engine.proxy.LocalProxyOptions
 import engine.proxy.buildLocalSocksInbound
 import engine.proxy.toLocalProxyOptions
-import engine.root.daemon.config.AsteriskdBpf2SocksHelper
-import engine.root.daemon.config.AsteriskdConfig
-import engine.root.daemon.config.AsteriskdMode
-import engine.root.daemon.config.AsteriskdModeOptions
 import engine.root.config.RootConfigBuildContext
-import engine.root.config.RootIptablesConfig
 import engine.root.config.RootModeStartConfig
-import engine.root.config.RootStartConfig
 import engine.root.config.bpf2SocksBridgePortValue
 import engine.root.config.buildAsteriskdConfig
 import engine.root.config.buildRootSharedProxyInbounds
 import engine.root.config.tun2SocksInternalProxyPortValue
+import engine.root.daemon.config.AsteriskdBpf2SocksHelper
+import engine.root.daemon.config.AsteriskdMode
+import engine.root.daemon.config.AsteriskdModeOptions
 import engine.xray.XrayProtocols
 import engine.xray.XrayTags
 import engine.xray.toJsonStringArray
@@ -40,7 +37,7 @@ internal fun RootConfigBuildContext.buildBpf2SocksStartConfig(): RootModeStartCo
         inbounds = appState.buildBpf2SocksInbounds(localProxyOptions, socksPort),
         dnsHijackInboundTags = listOf(XrayTags.BPF2SOCKS_INBOUND),
     )
-    val iptablesConfig = buildRootIptablesConfig(base = Bpf2SocksBasePolicyConfig)
+    val iptablesConfig = buildRootIptablesConfig()
         .copy(enableEbpfRules = true)
     return RootModeStartConfig(
         root = rootStartConfig,
@@ -93,5 +90,3 @@ private fun buildBpf2SocksSocksInbound(appState: AppState, port: Int): JsonObjec
         },
     )
 }
-
-private val Bpf2SocksBasePolicyConfig = RootIptablesConfig()

@@ -8,17 +8,14 @@ import app.effectiveFakeDnsEnabled
 import engine.proxy.LocalProxyOptions
 import engine.proxy.buildLocalSocksInbound
 import engine.proxy.toLocalProxyOptions
-import engine.root.daemon.config.AsteriskdConfig
-import engine.root.daemon.config.AsteriskdHevSocks5TunnelHelper
-import engine.root.daemon.config.AsteriskdMode
-import engine.root.daemon.config.AsteriskdModeOptions
 import engine.root.config.RootConfigBuildContext
-import engine.root.config.RootIptablesConfig
 import engine.root.config.RootModeStartConfig
-import engine.root.config.RootStartConfig
 import engine.root.config.buildAsteriskdConfig
 import engine.root.config.buildRootSharedProxyInbounds
 import engine.root.config.tun2SocksInternalProxyPortValue
+import engine.root.daemon.config.AsteriskdHevSocks5TunnelHelper
+import engine.root.daemon.config.AsteriskdMode
+import engine.root.daemon.config.AsteriskdModeOptions
 import engine.vpn.toTunOptions
 import engine.xray.XrayProtocols
 import engine.xray.XrayTags
@@ -28,14 +25,12 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
-internal val Tun2SocksBaseIptablesConfig = RootIptablesConfig()
-
 internal fun RootConfigBuildContext.buildTun2SocksStartConfig(): RootModeStartConfig {
     val appState = this.appState
     val tunOptions = appState.toTunOptions()
     val localProxyOptions = appState.toLocalProxyOptions()
     val socks5ProxyPort = appState.tun2SocksInternalProxyPortValue()
-    val iptablesConfig = buildRootIptablesConfig(base = Tun2SocksBaseIptablesConfig)
+    val iptablesConfig = buildRootIptablesConfig()
     val rootStartConfig = buildRootStartConfig(
         inbounds = appState.buildTun2SocksInbounds(localProxyOptions, socks5ProxyPort),
         dnsHijackInboundTags = listOf(XrayTags.TUN2SOCKS_INBOUND),
