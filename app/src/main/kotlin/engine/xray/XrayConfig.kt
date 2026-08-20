@@ -5,7 +5,6 @@ package engine.xray
 
 import app.AppState
 import app.ProxyServerState
-import features.logs.AndroidAppLogger
 import features.proxy.server.model.Custom
 import features.proxy.server.model.ProxyServer
 import kotlinx.serialization.json.JsonObject
@@ -38,7 +37,6 @@ internal object XrayConfigFactory {
         }
 
         val config = buildGeneratedXrayConfig(request).toJsonObject()
-        logGeneratedXrayConfig(config)
         return XrayConfigPrettyJson.encodeToString(config).withSingleTrailingLf()
     }
 }
@@ -106,18 +104,5 @@ private fun buildCustomXrayConfig(
 ): String {
     val config = CustomXrayConfigRewriter.rewrite(request, server)
         .withXrayStatsApiConfig(request.statsApiConfig)
-    logGeneratedXrayConfig(config)
     return XrayConfigPrettyJson.encodeToString(config).withSingleTrailingLf()
 }
-
-private fun logGeneratedXrayConfig(config: JsonObject) {
-    val json = XrayConfigPrettyJson.encodeToString(config)
-    val chunks = json.chunked(LogChunkSize)
-    chunks.forEachIndexed { index, chunk ->
-        val progress = if (chunks.size == 1) "" else " (${index + 1}/${chunks.size})"
-        AndroidAppLogger.info(LogTag, "Generated Xray config JSON$progress:\n$chunk")
-    }
-}
-
-private const val LogTag = "XrayConfig"
-private const val LogChunkSize = 3500
