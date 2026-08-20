@@ -5,20 +5,18 @@ package engine.root.mode
 
 import app.AppState
 import app.effectiveFakeDnsEnabled
+import engine.network.NetworkLimits
+import engine.network.toPortOrNull
 import engine.proxy.LocalProxyOptions
 import engine.proxy.buildLocalSocksInbound
 import engine.proxy.toLocalProxyOptions
-import engine.network.toPortOrNull
-import engine.network.NetworkLimits
-import engine.root.daemon.config.AsteriskdConfig
-import engine.root.daemon.config.AsteriskdMode
-import engine.root.daemon.config.AsteriskdModeOptions
 import engine.root.config.RootConfigBuildContext
 import engine.root.config.RootIptablesConfig
 import engine.root.config.RootModeStartConfig
-import engine.root.config.RootStartConfig
 import engine.root.config.buildAsteriskdConfig
 import engine.root.config.buildRootSharedProxyInbounds
+import engine.root.daemon.config.AsteriskdMode
+import engine.root.daemon.config.AsteriskdModeOptions
 import engine.xray.XrayProtocols
 import engine.xray.XrayTags
 import engine.xray.toJsonStringArray
@@ -43,7 +41,7 @@ internal fun RootConfigBuildContext.buildTproxyStartConfig(): RootModeStartConfi
         asteriskdConfig = rootStartConfig.buildAsteriskdConfig(
             mode = AsteriskdMode.Tproxy,
             iptablesConfig = iptablesConfig,
-            virtualInterfaces = listOf(TproxyDummyDevice),
+            virtualInterfaces = emptyList(),
             modeOptions = AsteriskdModeOptions(
                 transparentPort = tproxyPort,
                 tunnelName = null,
@@ -53,7 +51,6 @@ internal fun RootConfigBuildContext.buildTproxyStartConfig(): RootModeStartConfi
 }
 
 internal const val DefaultTproxyPort = NetworkLimits.PORT_MAX
-private const val TproxyDummyDevice = "xdummy"
 
 private fun AppState.buildTproxyInbounds(
     localProxyOptions: LocalProxyOptions,
