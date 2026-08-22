@@ -13,7 +13,6 @@ import app.modes.isRootRunMode
 import engine.proxy.AndroidProxyEngine
 import engine.hevtun.deleteHevSocks5TunnelLogFile
 import features.logs.AndroidAppLogger
-import features.logs.clearAsteriskdLogFile
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -92,11 +91,10 @@ internal class SwitchRunModeUseCase(
             }
         }
 
-        if (normalizedTargetMode != RunModeTun2Socks) {
-            deleteHevSocks5TunnelLog()
-        }
-        if (!normalizedTargetMode.isRootRunMode()) {
-            clearAsteriskdLog()
+        runModeSwitchLogCleanupActions(normalizedTargetMode).forEach { action ->
+            when (action) {
+                RunModeSwitchLogCleanupAction.DeleteHevSocks5TunnelLog -> deleteHevSocks5TunnelLog()
+            }
         }
 
         return SwitchRunModeResult.Success(
@@ -110,9 +108,17 @@ internal class SwitchRunModeUseCase(
             .onFailure { error -> AndroidAppLogger.warn(LogTag, "Failed to delete Hev TUN log", error) }
     }
 
-    private suspend fun clearAsteriskdLog() {
-        runCatching { appContext.clearAsteriskdLogFile() }
-            .onFailure { error -> AndroidAppLogger.warn(LogTag, "Failed to clear asteriskd log", error) }
+}
+
+internal enum class RunModeSwitchLogCleanupAction {
+    DeleteHevSocks5TunnelLog,
+}
+
+internal fun runModeSwitchLogCleanupActions(targetRunMode: Int): List<RunModeSwitchLogCleanupAction> {
+    return if (targetRunMode == RunModeTun2Socks) {
+        emptyList()
+    } else {
+        listOf(RunModeSwitchLogCleanupAction.DeleteHevSocks5TunnelLog)
     }
 }
 
