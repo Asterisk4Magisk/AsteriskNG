@@ -60,7 +60,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import top.yukonga.miuix.kmp.interfaces.ExperimentalScrollBarApi
 
-internal val logViewerPauseResumeIconSize = 20.dp
+internal val logViewerPauseResumeIconSize = 22.dp
 
 @Composable
 fun CoreLogsPage(
