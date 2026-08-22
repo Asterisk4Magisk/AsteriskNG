@@ -327,6 +327,10 @@
     <string name="logs_exported">日志已导出</string>
     <string name="logs_export_failed">日志导出失败</string>
     <string name="logs_output">日志输出</string>
+    <string name="logs_live">实时</string>
+    <string name="logs_paused">已暂停</string>
+    <string name="logs_pause">暂停日志更新</string>
+    <string name="logs_resume">恢复日志更新</string>
     <string name="logs_pull_to_refresh">下拉刷新</string>
     <string name="logs_release_to_refresh">松开刷新</string>
     <string name="logs_refreshing">正在刷新…</string>

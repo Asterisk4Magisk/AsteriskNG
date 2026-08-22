@@ -29,19 +29,6 @@ internal fun XrayCoreLogPaths.startCoreLogTailers(enableAccessLog: Boolean): Lis
     }.onEach { tailer -> tailer.start() }
 }
 
-internal fun XrayCoreLogPaths.clearCoreLogs(logTag: String) {
-    AndroidCoreLogRepository.clear()
-    AndroidAccessLogRepository.clear()
-    clearCoreLogFilesAsApp(
-        logPaths = logFilePaths(),
-        logTag = logTag,
-    )
-}
-
-internal fun XrayCoreLogPaths.logFilePaths(): List<String> {
-    return listOf(accessLogPath, errorLogPath).filter(String::isNotBlank)
-}
-
 internal fun clearCoreLogFilesAsApp(logPaths: List<String>, logTag: String) {
     logPaths
         .filter(String::isNotBlank)

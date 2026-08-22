@@ -46,6 +46,8 @@ import top.yukonga.miuix.kmp.basic.VerticalScrollBar
 import top.yukonga.miuix.kmp.basic.rememberScrollBarAdapter
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Delete
+import top.yukonga.miuix.kmp.icon.extended.Pause
+import top.yukonga.miuix.kmp.icon.extended.Play
 import top.yukonga.miuix.kmp.icon.extended.Share
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import ui.layout.AdaptiveTopAppBar
@@ -117,22 +119,27 @@ private fun LogViewerPage(
     val topAppBarScrollBehavior = MiuixScrollBehavior()
     var refreshing by remember { mutableStateOf(false) }
     var logEntries by remember(repository) { mutableStateOf(repository.entries.value) }
+    var paused by remember { mutableStateOf(false) }
     val displayedLogEntries = remember(logEntries) { logEntries.asReversed() }
     val copiedMessage = stringResource(R.string.logs_copied_to_clipboard)
     val exportDescription = stringResource(R.string.logs_export)
     val exportedMessage = stringResource(R.string.logs_exported)
     val exportFailedMessage = stringResource(R.string.logs_export_failed)
 
-    LaunchedEffect(repository) {
-        repository.refresh()
-        logEntries = repository.entries.value
+    LaunchedEffect(repository, paused) {
+        collectLogViewerEntries(repository, paused) { entries ->
+            logEntries = entries
+        }
     }
 
     Scaffold(
         topBar = {
             AdaptiveTopAppBar(
                 title = title,
-                subtitle = stringResource(R.string.logs_count).formatTemplate("count" to logEntries.size),
+                subtitle = listOf(
+                    stringResource(R.string.logs_count).formatTemplate("count" to logEntries.size),
+                    stringResource(if (paused) R.string.logs_paused else R.string.logs_live),
+                ).joinToString(" · "),
                 isWideScreen = isWideScreen,
                 scrollBehavior = topAppBarScrollBehavior,
                 navigationIcon = {
@@ -141,6 +148,13 @@ private fun LogViewerPage(
                     )
                 },
                 actions = {
+                    NavigationIcon(
+                        onClick = { paused = !paused },
+                        imageVector = if (paused) MiuixIcons.Play else MiuixIcons.Pause,
+                        contentDescription = stringResource(
+                            if (paused) R.string.logs_resume else R.string.logs_pause,
+                        ),
+                    )
                     NavigationIcon(
                         onClick = {
                             val exportEntries = logEntries.toList()

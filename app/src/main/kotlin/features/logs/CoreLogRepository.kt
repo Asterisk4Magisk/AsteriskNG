@@ -51,6 +51,10 @@ open class InMemoryCoreLogRepository(
     }
 
     override fun clear() {
+        clearInMemory()
+    }
+
+    fun clearInMemory() {
         mutableEntries.value = emptyList()
     }
 

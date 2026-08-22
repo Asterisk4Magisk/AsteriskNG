@@ -303,6 +303,10 @@
     <string name="logs_exported">Логи успешно экспортированы</string>
     <string name="logs_export_failed">Не удалось экспортировать логи</string>
     <string name="logs_output">Вывод журнала</string>
+    <string name="logs_live">В реальном времени</string>
+    <string name="logs_paused">Приостановлено</string>
+    <string name="logs_pause">Приостановить обновление журнала</string>
+    <string name="logs_resume">Возобновить обновление журнала</string>
     <string name="logs_pull_to_refresh">Потяните вниз для обновления</string>
     <string name="logs_release_to_refresh">Отпустите для обновления</string>
     <string name="logs_refreshing">Обновление…</string>

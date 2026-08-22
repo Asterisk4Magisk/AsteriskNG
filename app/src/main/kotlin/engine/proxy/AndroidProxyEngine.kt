@@ -142,6 +142,7 @@ class AndroidProxyEngine(
         runCatching {
             when {
                 explicitRestart && nextEngine is RootModeEngine -> nextEngine.restart(resolvedRequest)
+                explicitRestart && nextEngine is VpnXrayEngine -> nextEngine.restart(resolvedRequest)
                 shouldUsePreResolvedRootStart(
                     explicitRestart = explicitRestart,
                     resumeChecked = rootResumeChecked,

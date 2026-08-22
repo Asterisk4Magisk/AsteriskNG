@@ -4,7 +4,6 @@
 package engine.vpn
 
 import android.annotation.SuppressLint
-import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -22,10 +21,11 @@ import engine.network.NetworkDefaults
 import engine.proxy.LocalProxyLoopbackAddress
 import engine.proxy.LocalProxyRuntime
 import engine.vpn.hevtun.HevTunRuntime
-import engine.xray.clearCoreLogs
+import engine.xray.logDirectoryPath
 import engine.xray.startCoreLogTailers
 import features.logs.AndroidAppLogger
 import features.logs.CoreLogFileTailer
+import features.logs.clearServiceLogsAsApp
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -36,6 +36,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeout
 import system.getInstalledApplicationsCompat
 import utils.toTrimmedNonEmptyDistinctList
+import java.io.File
 import kotlin.time.Duration.Companion.milliseconds
 
 @SuppressLint("VpnServicePolicy")
@@ -67,7 +68,7 @@ class AsteriskVpnService : VpnService() {
                 if (config == null) {
                     completeStart(Result.failure(IllegalStateException(getString(R.string.error_vpn_start_config_missing))))
                     stopSelf(startId)
-                    return Service.START_NOT_STICKY
+                    return START_NOT_STICKY
                 }
                 serviceScope.launch {
                     operationMutex.withLock {
@@ -85,7 +86,7 @@ class AsteriskVpnService : VpnService() {
                 }
             }
         }
-        return Service.START_NOT_STICKY
+        return START_NOT_STICKY
     }
 
     override fun onDestroy() {
@@ -117,7 +118,7 @@ class AsteriskVpnService : VpnService() {
 
     private fun startVpn(config: VpnServiceStartConfig) {
         stopVpn()
-        config.coreLogPaths.clearCoreLogs(LogTag)
+        clearServiceLogsAsApp(File(config.coreLogPaths.logDirectoryPath()), LogTag)
         logFileTailers = config.coreLogPaths.startCoreLogTailers(config.enableAccessLog)
         tunFileDescriptor = establishTun(config)
         val tunFd = tunFileDescriptor?.fd ?: error(getString(R.string.error_vpn_tun_fd_unavailable))

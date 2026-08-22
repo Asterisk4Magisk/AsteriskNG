@@ -21,9 +21,12 @@ import engine.root.publication.RootBootPublicationCommand
 import engine.root.publication.RootPublicationBundle
 import engine.root.publication.RootPublicationCommand
 import engine.root.publication.RootPublicationLaunchMode
+import engine.root.publication.RootServiceLogCleanupWarningPrefix
 import engine.root.publication.RootPublicationStager
 import engine.root.publication.prepareRootPublicationDirectories
 import engine.root.publication.rootRuntimeLayout
+import features.logs.AndroidAppLogger
+import features.logs.clearServiceLogRepositories
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withTimeoutOrNull
 import system.RootShellGateway
@@ -58,16 +61,6 @@ internal class RootSupervisorController(
 
     fun requireRunning(snapshot: AsteriskdSnapshot, expectedMode: AsteriskdMode) {
         snapshot.requireRunning(AsteriskdOwner.AsteriskNg, expectedMode)
-    }
-
-    suspend fun requireUnbound() {
-        status().boundSnapshot()?.let(::rejectBoundSnapshot)
-    }
-
-    suspend fun isUnbound(): Boolean = status().boundSnapshot() == null
-
-    fun rejectBoundSnapshot(snapshot: AsteriskdSnapshot): Nothing {
-        snapshot.rejectBound(AsteriskdOwner.AsteriskNg)
     }
 
     suspend fun start(
@@ -173,7 +166,9 @@ internal class RootSupervisorController(
                     restartExpectedOwner = restartExpectedOwner?.wireValue,
                 ),
             )
+            clearInMemoryServiceLogs()
             val launchResult = shell.exec(publication, ShellExecOptions(logFailure = false))
+            reportServiceLogCleanupFailures(launchResult.stderr)
             if (launchResult.errno != 0 || launchResult.stdout.isNotBlank()) {
                 throw launchFailure(launchResult)
             }
@@ -280,12 +275,27 @@ internal class RootSupervisorController(
         appContext.prepareRootPublicationDirectories()
     }
 
+    private fun clearInMemoryServiceLogs() {
+        runCatching { clearServiceLogRepositories() }.onFailure { error ->
+            runCatching { AndroidAppLogger.warn(LogTag, "Failed to clear in-memory service logs", error) }
+        }
+    }
+
+    private fun reportServiceLogCleanupFailures(stderr: String) {
+        stderr.lineSequence()
+            .filter { line -> line.startsWith(RootServiceLogCleanupWarningPrefix) }
+            .forEach { warning -> runCatching { AndroidAppLogger.warn(LogTag, warning) } }
+    }
+
 }
+
+private const val LogTag = "RootSupervisorController"
 
 internal fun sanitizeLauncherStderr(stderr: String): String {
     val retained = mutableListOf<String>()
     var readingFileContexts = false
     stderr.lineSequence().forEach { line ->
+        if (line.startsWith(RootServiceLogCleanupWarningPrefix)) return@forEach
         if (line.trim() == "SELinux: Loaded file context from:") {
             readingFileContexts = true
             return@forEach
@@ -302,7 +312,11 @@ internal fun sanitizeLauncherStderr(stderr: String): String {
         readingFileContexts = false
         retained += line
     }
-    return retained.joinToString("\n").trim().ifBlank { stderr.trim() }
+    val stderrWithoutCleanupWarnings = stderr.lineSequence()
+        .filterNot { line -> line.startsWith(RootServiceLogCleanupWarningPrefix) }
+        .joinToString("\n")
+        .trim()
+    return retained.joinToString("\n").trim().ifBlank { stderrWithoutCleanupWarnings }
 }
 
 private const val StartTimeoutMilliseconds = 15_000L

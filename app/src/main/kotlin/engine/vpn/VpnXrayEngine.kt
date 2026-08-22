@@ -20,6 +20,23 @@ internal class VpnXrayEngine(
     override val runMode: Int = RunModeVpnService
 
     override suspend fun start(request: ProxyEngineStartRequest): ProxyEngineStatus {
+        return startWithPolicy(request, explicitRestart = false)
+    }
+
+    suspend fun restart(request: ProxyEngineStartRequest): ProxyEngineStatus {
+        return startWithPolicy(request, explicitRestart = true)
+    }
+
+    private suspend fun startWithPolicy(
+        request: ProxyEngineStartRequest,
+        explicitRestart: Boolean,
+    ): ProxyEngineStatus {
+        if (!shouldLaunchVpnService(runtimeRunning(), explicitRestart)) return status()
+        launch(request)
+        return status()
+    }
+
+    private suspend fun launch(request: ProxyEngineStartRequest) {
         val prepareIntent = VpnService.prepare(context)
         if (prepareIntent != null && !requestVpnPermission(prepareIntent)) {
             error(context.getString(R.string.error_vpn_permission_denied))
@@ -28,7 +45,6 @@ internal class VpnXrayEngine(
             context = context,
             config = VpnXrayConfigFactory.create(context, request),
         )
-        return status()
     }
 
     override suspend fun stop(): ProxyEngineStatus {
@@ -42,4 +58,8 @@ internal class VpnXrayEngine(
             runMode = runMode,
         )
     }
+}
+
+internal fun shouldLaunchVpnService(isRunning: Boolean, explicitRestart: Boolean): Boolean {
+    return explicitRestart || !isRunning
 }

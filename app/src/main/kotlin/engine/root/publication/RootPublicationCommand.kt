@@ -23,6 +23,7 @@ internal object RootPublicationCommand {
             appendStatusMustBePublishable(layout)
             RootLegacyMigrationCommand.appendGate(this, layout)
             appendStatusMustBePublishable(layout)
+            appendServiceLogCleanup(layout)
             appendStageFunctions()
             appendLine("core_config_tmp=")
             appendLine("asteriskd_config_tmp=")
@@ -63,6 +64,18 @@ internal object RootPublicationCommand {
         appendLine("  printf '%s\\n' \"\$asteriskd_status\"")
         appendLine("  exit \"\$asteriskd_status_code\"")
         appendLine("fi")
+    }
+
+    private fun StringBuilder.appendServiceLogCleanup(layout: RootRuntimeLayout) {
+        appendLine(
+            "for service_log in ${layout.logDirectoryPath.shellQuote()}/* " +
+                "${layout.logDirectoryPath.shellQuote()}/.[!.]* ${layout.logDirectoryPath.shellQuote()}/..?*; do",
+        )
+        appendLine("  [ -e \"\$service_log\" ] || continue")
+        appendLine("  [ \"\${service_log##*/}\" = 'logcat.log' ] && continue")
+        appendLine("  [ -f \"\$service_log\" ] && [ ! -L \"\$service_log\" ] || continue")
+        appendLine("  rm -f -- \"\$service_log\" >/dev/null 2>&1 || { printf '%s\\n' \"$RootServiceLogCleanupWarningPrefix\$service_log\" >&2 || :; }")
+        appendLine("done")
     }
 
     private fun StringBuilder.appendConditionalStop(
@@ -131,6 +144,7 @@ internal object RootPublicationCommand {
 }
 
 private const val SocketReleasePollAttempts = 50
+internal const val RootServiceLogCleanupWarningPrefix = "Failed to clear service log: "
 internal val RootPublicationRequiredTools = listOf(
     "mktemp",
     "grep",

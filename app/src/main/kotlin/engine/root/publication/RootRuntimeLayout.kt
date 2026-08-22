@@ -26,8 +26,11 @@ internal data class RootRuntimeLayout(
     val asteriskdStatePath: String
         get() = File(dataDir, "asteriskd.state").absolutePath
 
+    val logDirectoryPath: String
+        get() = File(dataDir, "logs").absolutePath
+
     val asteriskdLogPath: String
-        get() = File(File(dataDir, "logs"), "asteriskd.log").absolutePath
+        get() = File(logDirectoryPath, "asteriskd.log").absolutePath
 }
 
 internal fun Context.rootRuntimeLayout(): RootRuntimeLayout = xrayResourceFilePaths().toRootRuntimeLayout()
