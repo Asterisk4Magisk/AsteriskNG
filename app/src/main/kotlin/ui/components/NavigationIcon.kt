@@ -20,6 +20,7 @@ internal fun NavigationIcon(
     onClick: () -> Unit,
     imageVector: ImageVector,
     modifier: Modifier = Modifier,
+    iconModifier: Modifier = Modifier,
     contentDescription: String? = null,
 ) {
     val layoutDirection = LocalLayoutDirection.current
@@ -28,7 +29,7 @@ internal fun NavigationIcon(
         onClick = onClick,
     ) {
         Icon(
-            modifier = Modifier.graphicsLayer {
+            modifier = iconModifier.graphicsLayer {
                 if (layoutDirection == LayoutDirection.Rtl) scaleX = -1f
             },
             imageVector = imageVector,

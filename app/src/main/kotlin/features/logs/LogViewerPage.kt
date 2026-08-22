@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -58,6 +59,8 @@ import ui.clipboard.setPlainText
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import top.yukonga.miuix.kmp.interfaces.ExperimentalScrollBarApi
+
+internal val logViewerPauseResumeIconSize = 20.dp
 
 @Composable
 fun CoreLogsPage(
@@ -151,6 +154,7 @@ private fun LogViewerPage(
                     NavigationIcon(
                         onClick = { paused = !paused },
                         imageVector = if (paused) MiuixIcons.Play else MiuixIcons.Pause,
+                        iconModifier = Modifier.size(logViewerPauseResumeIconSize),
                         contentDescription = stringResource(
                             if (paused) R.string.logs_resume else R.string.logs_pause,
                         ),
