@@ -167,7 +167,7 @@ internal data class AsteriskdBpf2SocksHelper(
     val tcpConnectTimeoutMilliseconds: Int = 10000,
     val tcpIdleTimeoutMilliseconds: Int = 300000,
     val udpSocketBufferSize: Int = 524288,
-    val udpBatchSize: Int = 10,
+    val udpBatchSize: Int = 32,
     val maxUdpSessions: Int = 4096,
     val maxUdpBindings: Int = 16384,
     val udpIdleTimeoutSeconds: Int = 60,
