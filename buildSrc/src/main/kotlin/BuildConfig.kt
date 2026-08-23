@@ -13,11 +13,11 @@ object ProjectConfig {
     const val PROJECT_NAME = "AsteriskNG"
     const val VERSION_NAME = "1.4.3-dev"
     const val PACKAGE_NAME = "org.asterisk.zcc.ang"
-    const val ASTERISKD_VERSION = "v2.0.16"
+    const val ASTERISKD_VERSION = "v2.0.17"
     const val BPF2SOCKS_VERSION = "v1.0.5"
     const val BPF_MATCHER_VERSION = "v1.0.1"
     const val XRAY_CORE_VERSION = "v26.7.28"
-    const val ANDROID_LIB_XRAY_LITE_VERSION = "v26.7.31"
+    const val ANDROID_LIB_XRAY_LITE_VERSION = "v26.8.20"
     const val HEV_SOCKS5_TUNNEL_VERSION = "2.17.1"
     const val TARGET_SDK = 37
     const val MIN_SDK = 24
