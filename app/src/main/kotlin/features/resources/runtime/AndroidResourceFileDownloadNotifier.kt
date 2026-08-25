@@ -41,15 +41,13 @@ internal class AndroidResourceFileDownloadNotifier(
     private var lastProgressNotifyAt = 0L
 
     init {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            notificationManager.createNotificationChannel(
-                NotificationChannel(
-                    ChannelId,
-                    appContext.getString(R.string.resource_file_download_notification_channel),
-                    NotificationManager.IMPORTANCE_LOW,
-                ),
-            )
-        }
+        notificationManager.createNotificationChannel(
+            NotificationChannel(
+                ChannelId,
+                appContext.getString(R.string.resource_file_download_notification_channel),
+                NotificationManager.IMPORTANCE_LOW,
+            ),
+        )
     }
 
     fun showProgress(fileName: String, progress: Int?, force: Boolean = false) {
@@ -120,18 +118,12 @@ internal class AndroidResourceFileDownloadNotifier(
         )
     }
 
-    @Suppress("DEPRECATION")
     private fun baseBuilder(
         icon: Int,
         title: String,
         text: String,
     ): Notification.Builder {
-        val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            Notification.Builder(appContext, ResourceFileDownloadNotificationChannelId)
-        } else {
-            Notification.Builder(appContext)
-        }
-        return builder
+        return Notification.Builder(appContext, ResourceFileDownloadNotificationChannelId)
             .setSmallIcon(icon)
             .setContentTitle(title)
             .setContentText(text)

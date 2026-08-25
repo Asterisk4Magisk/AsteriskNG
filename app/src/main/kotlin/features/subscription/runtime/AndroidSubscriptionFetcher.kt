@@ -4,7 +4,6 @@
 package features.subscription.runtime
 
 import android.content.Context
-import android.os.Build
 import data.AppSettingsPreferences
 import features.subscription.DefaultSubscriptionUserAgent
 import features.subscription.SubscriptionHttpException
@@ -28,11 +27,7 @@ internal class AndroidSubscriptionFetcher(
 ) {
     constructor(context: Context) : this(
         installationHwid = AppSettingsPreferences(context.applicationContext).getOrCreateSubscriptionHwid(),
-        ageCrypto = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            KageSubscriptionAgeCrypto
-        } else {
-            UnsupportedSubscriptionAgeCrypto
-        },
+        ageCrypto = KageSubscriptionAgeCrypto,
     )
 
     suspend fun fetch(

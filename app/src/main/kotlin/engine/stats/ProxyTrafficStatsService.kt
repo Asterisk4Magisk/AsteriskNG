@@ -179,17 +179,11 @@ class ProxyTrafficStatsService : Service() {
             .build()
     }
 
-    @Suppress("DEPRECATION")
     private fun notificationBuilder(): Notification.Builder {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            Notification.Builder(this, ChannelId)
-        } else {
-            Notification.Builder(this)
-        }
+        return Notification.Builder(this, ChannelId)
     }
 
     private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         notificationManager.createNotificationChannel(
             NotificationChannel(
                 ChannelId,

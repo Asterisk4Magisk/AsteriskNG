@@ -41,17 +41,3 @@ internal object KageSubscriptionAgeCrypto : SubscriptionAgeCrypto {
         return X25519Identity.decode(secretKey.trim())
     }
 }
-
-internal object UnsupportedSubscriptionAgeCrypto : SubscriptionAgeCrypto {
-    override fun publicKey(secretKey: String): String {
-        unsupported()
-    }
-
-    override fun decryptArmored(text: String, secretKey: String): String {
-        unsupported()
-    }
-
-    private fun unsupported(): Nothing {
-        error("Age-encrypted subscriptions require Android 8.0 or later")
-    }
-}

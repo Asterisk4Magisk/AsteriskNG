@@ -41,7 +41,7 @@
         },
         {
             "uniqueId": "github:Asterisk4Magisk/asteriskd",
-            "artifactVersion": "v2.0.19",
+            "artifactVersion": "v2.0.20",
             "name": "asteriskd",
             "description": "A root Android daemon that synchronizes local-address bypass rules and pinned eBPF maps.",
             "website": "https://github.com/Asterisk4Magisk/asteriskd",
@@ -340,7 +340,7 @@
         },
         {
             "uniqueId": "com.google.protobuf:protobuf-javalite",
-            "artifactVersion": "4.35.1",
+            "artifactVersion": "4.36.0",
             "name": "Protocol Buffers [Lite]",
             "description": "Lite version of Protocol Buffers library.",
             "website": "https://developers.google.com/protocol-buffers/",
