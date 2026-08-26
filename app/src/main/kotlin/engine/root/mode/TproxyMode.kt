@@ -5,6 +5,7 @@ package engine.root.mode
 
 import app.AppState
 import app.effectiveFakeDnsEnabled
+import app.rootIpv6DataPathEnabled
 import engine.network.NetworkLimits
 import engine.network.toPortOrNull
 import engine.proxy.LocalProxyOptions
@@ -70,6 +71,9 @@ private fun buildTproxyTunnelInbound(
 ): JsonObject {
     return buildJsonObject {
         put("tag", XrayTags.TPROXY_INBOUND)
+        if (appState.rootIpv6DataPathEnabled) {
+            put("listen", "::")
+        }
         put("port", port)
         put("protocol", XrayProtocols.TUNNEL)
         put(
