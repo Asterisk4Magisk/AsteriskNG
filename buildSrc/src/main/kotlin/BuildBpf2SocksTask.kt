@@ -71,6 +71,7 @@ abstract class BuildBpf2SocksTask : DefaultTask() {
                     listOf(
                         findNdkClang(ndkDir, target).absolutePath,
                         "-O3",
+                        "-flto=full",
                         "-Wall",
                         "-Wextra",
                         "-Werror",

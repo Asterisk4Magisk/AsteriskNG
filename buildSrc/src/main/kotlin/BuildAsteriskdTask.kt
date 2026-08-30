@@ -63,6 +63,7 @@ abstract class BuildAsteriskdTask : DefaultTask() {
                 commandLine(
                     findNdkClang(ndkDir, target).absolutePath,
                     "-O2",
+                    "-flto=full",
                     "-Wall",
                     "-Wextra",
                     "-std=c17",

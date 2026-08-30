@@ -55,6 +55,7 @@ abstract class BuildBpfMatcherTask : DefaultTask() {
                 commandLine(
                     findNdkClang(ndkDir, target).absolutePath,
                     "-O2",
+                    "-flto=full",
                     "-Wall",
                     "-Wextra",
                     "-fPIE",
