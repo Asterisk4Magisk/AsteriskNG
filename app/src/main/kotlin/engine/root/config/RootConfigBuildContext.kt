@@ -10,10 +10,12 @@ import app.effectiveFakeDnsEnabled
 import app.effectiveLocalDnsEnabled
 import engine.network.toPortOrNull
 import engine.proxy.ProxyEngineStartRequest
+import engine.proxy.xrayStatsApiConfig
 import engine.vpn.xrayDnsHosts
 import engine.xray.XrayConfigFactory
 import engine.xray.XrayConfigRequest
 import engine.xray.XrayCoreLogPaths
+import engine.xray.XrayStatsApiConfig
 import engine.xray.buildXrayOutboundPlan
 import engine.xray.prepareXrayCoreLogPaths
 import engine.xray.validateXrayExternalRoutingResources
@@ -30,10 +32,12 @@ internal class RootConfigBuildContext(
     val resourceFilePaths: XrayResourceFilePaths,
     private val coreLogPaths: XrayCoreLogPaths,
     private val dnsHosts: List<String>,
+    val statsApiConfig: XrayStatsApiConfig? = null,
 ) {
     fun buildRootStartConfig(
         inbounds: List<JsonObject>,
         dnsHijackInboundTags: List<String>,
+        statsApiConfig: XrayStatsApiConfig? = this.statsApiConfig,
     ): RootStartConfig {
         val xrayConfigJson = XrayConfigFactory.buildXrayConfig(
             XrayConfigRequest(
@@ -43,6 +47,7 @@ internal class RootConfigBuildContext(
                 coreLogPaths = coreLogPaths,
                 dnsHosts = dnsHosts,
                 dnsHijackInboundTags = dnsHijackInboundTags,
+                statsApiConfig = statsApiConfig,
             ),
         )
         return appState.toRootStartConfig(
@@ -76,6 +81,7 @@ internal fun Context.prepareRootConfigBuildContext(request: ProxyEngineStartRequ
         resourceFilePaths = resourceFilePaths,
         coreLogPaths = coreLogPaths,
         dnsHosts = appState.xrayDnsHosts(outboundPlan.dnsHostServers),
+        statsApiConfig = request.xrayStatsApiConfig(),
     )
 }
 

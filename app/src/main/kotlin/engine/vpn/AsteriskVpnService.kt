@@ -90,21 +90,21 @@ class AsteriskVpnService : VpnService() {
     }
 
     override fun onDestroy() {
-        serviceScope.launch {
-            runCatching {
-                operationMutex.withLock {
-                    stopVpn()
-                }
-            }.onFailure { error ->
-                AndroidAppLogger.warn(LogTag, "Failed to stop VPN Service while destroying service", error)
-            }
-            serviceJob.cancel()
+        runCatching {
+            stopVpn()
+        }.onFailure { error ->
+            AndroidAppLogger.warn(LogTag, "Failed to stop VPN Service while destroying service", error)
         }
+        serviceJob.cancel()
         super.onDestroy()
     }
 
     override fun onRevoke() {
-        running = false
+        runCatching {
+            stopVpn()
+        }.onFailure { error ->
+            AndroidAppLogger.warn(LogTag, "Failed to stop VPN Service while revoking", error)
+        }
         super.onRevoke()
     }
 

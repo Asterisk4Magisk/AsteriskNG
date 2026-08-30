@@ -36,6 +36,7 @@ internal fun RootConfigBuildContext.buildBpf2SocksStartConfig(): RootModeStartCo
     val rootStartConfig = buildRootStartConfig(
         inbounds = appState.buildBpf2SocksInbounds(localProxyOptions, socksPort),
         dnsHijackInboundTags = listOf(XrayTags.BPF2SOCKS_INBOUND),
+        statsApiConfig = statsApiConfig,
     )
     val iptablesConfig = buildRootIptablesConfig()
         .copy(enableEbpfRules = true)

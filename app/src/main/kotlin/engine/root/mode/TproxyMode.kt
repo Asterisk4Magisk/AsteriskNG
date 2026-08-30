@@ -32,6 +32,7 @@ internal fun RootConfigBuildContext.buildTproxyStartConfig(): RootModeStartConfi
     val rootStartConfig = buildRootStartConfig(
             inbounds = appState.buildTproxyInbounds(appState.toLocalProxyOptions(), tproxyPort),
             dnsHijackInboundTags = listOf(XrayTags.TPROXY_INBOUND),
+            statsApiConfig = statsApiConfig,
         )
     return RootModeStartConfig(
         root = rootStartConfig,
