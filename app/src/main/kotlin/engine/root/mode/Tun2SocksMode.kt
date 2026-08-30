@@ -35,6 +35,7 @@ internal fun RootConfigBuildContext.buildTun2SocksStartConfig(): RootModeStartCo
     val rootStartConfig = buildRootStartConfig(
         inbounds = appState.buildTun2SocksInbounds(localProxyOptions, socks5ProxyPort),
         dnsHijackInboundTags = listOf(XrayTags.TUN2SOCKS_INBOUND),
+        statsApiConfig = statsApiConfig,
     )
     return RootModeStartConfig(
         root = rootStartConfig,

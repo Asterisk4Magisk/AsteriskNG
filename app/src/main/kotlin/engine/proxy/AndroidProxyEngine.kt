@@ -280,7 +280,7 @@ class AndroidProxyEngine(
     }
 
     private fun ProxyEngineStartRequest.withTrafficStatsConfig(): Pair<ProxyEngineStartRequest, ProxyTrafficStatsRuntime?> {
-        if (!appState.enableTrafficStatsNotification || appState.runMode != RunModeVpnService) {
+        if (!appState.enableTrafficStatsNotification) {
             return this to null
         }
         val port = resolveXrayStatsApiPort(
@@ -303,11 +303,6 @@ class AndroidProxyEngine(
 
     private fun ProxyEngineStatus.withTrafficStatsReconciled(appState: AppState?): ProxyEngineStatus {
         if (!running) {
-            ProxyTrafficStatsService.reconcile(appContext, null)
-            return this
-        }
-        val activeRunMode = runMode ?: appState?.runMode
-        if (activeRunMode != RunModeVpnService) {
             ProxyTrafficStatsService.reconcile(appContext, null)
             return this
         }
