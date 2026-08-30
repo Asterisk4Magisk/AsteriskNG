@@ -37,6 +37,8 @@ import kotlinx.coroutines.withTimeout
 import system.getInstalledApplicationsCompat
 import utils.toTrimmedNonEmptyDistinctList
 import java.io.File
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.milliseconds
 
 @SuppressLint("VpnServicePolicy")
@@ -250,16 +252,7 @@ class AsteriskVpnService : VpnService() {
     private fun stopVpn() {
         logFileTailers.forEach { tailer -> tailer.stop() }
         logFileTailers = emptyList()
-        runCatching {
-            hevTunRuntime?.stop()
-        }.onFailure { error ->
-            AndroidAppLogger.warn(LogTag, "Failed to stop Hev TUN while stopping VPN Service", error)
-        }
-        runCatching {
-            AndroidLibXrayLiteRuntime.stop()
-        }.onFailure { error ->
-            AndroidAppLogger.warn(LogTag, "Failed to stop AndroidLibXrayLite while stopping VPN Service", error)
-        }
+        stopNativeRuntimesBounded()
         runCatching {
             tunFileDescriptor?.close()
         }.onFailure { error ->
@@ -270,8 +263,42 @@ class AsteriskVpnService : VpnService() {
         running = false
     }
 
+    private fun stopNativeRuntimesBounded() {
+        val tasks = buildList {
+            add("Hev TUN" to { hevTunRuntime?.stop() })
+            add("AndroidLibXrayLite" to { AndroidLibXrayLiteRuntime.stop() })
+        }
+        val completion = CountDownLatch(tasks.size)
+        val threads = tasks.map { (name, action) ->
+            Thread({
+                runCatching {
+                    action()
+                }.onFailure { error ->
+                    AndroidAppLogger.warn(LogTag, "Failed to stop $name while stopping VPN Service", error)
+                }.also {
+                    completion.countDown()
+                }
+            }, "$LogTag-$name").apply {
+                isDaemon = true
+            }.also { thread ->
+                thread.start()
+            }
+        }
+
+        if (!completion.await(RuntimeShutdownTimeoutMillis, TimeUnit.MILLISECONDS)) {
+            threads.filter(Thread::isAlive).forEach { thread ->
+                thread.interrupt()
+                AndroidAppLogger.warn(
+                    LogTag,
+                    "Timed out stopping VPN runtime after ${RuntimeShutdownTimeoutMillis}ms: ${thread.name}",
+                )
+            }
+        }
+    }
+
     companion object {
         private const val LogTag = "AsteriskVpnService"
+        private const val RuntimeShutdownTimeoutMillis = 1_000L
 
         @Volatile
         private var running = false
