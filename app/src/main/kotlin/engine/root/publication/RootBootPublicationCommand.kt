@@ -44,10 +44,10 @@ internal object RootBootPublicationCommand {
 
         (
         until [ "$(getprop sys.boot_completed)" = "1" ]; do
-            sleep 1
+            sleep 5
         done
         until [ -x ${layout.startupScriptPath.shellQuote()} ]; do
-            sleep 1
+            sleep 5
         done
 
         ${layout.startupScriptPath.shellQuote()}
