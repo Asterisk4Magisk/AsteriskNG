@@ -10,11 +10,10 @@
 
 ## Возможности
 
-- Поддержка режимов работы: VPN Service, TPROXY (с ROOT-правами) и TUN2SOCKS (с ROOT-правами).
-- Поддержка протоколов: VMess, VLESS, Trojan, Shadowsocks, Socks, HTTP, Hysteria2, WireGuard, а также групп стратегий (strategy groups) и цепочек прокси (chain proxy).
-- Поддержка форматов подписок v2rayNG и mihomo.
-- Управление файлами ресурсов: `geoip.dat`, `geosite.dat`, `geoip-only-cn-private.dat` и исполняемым файлом Xray.
-- Генерация скрипта автозапуска с ROOT-правами при загрузке системы через директорию `service.d` в Magisk.
+- Режимы VPN Service, TPROXY (ROOT), TUN2SOCKS (ROOT) и BPF2SOCKS (ROOT).
+- Протоколы VMess, VLESS, Trojan, Shadowsocks, SOCKS, HTTP, Hysteria2 и WireGuard, а также группы стратегий и цепочки прокси.
+- Форматы подписок v2rayNG и Mihomo.
+- Управление конфигурациями, прокси, маршрутизацией, журналами и ресурсами.
 - Интерфейс на базе MIUIX Compose UI.
 
 ## Скриншоты
@@ -31,30 +30,37 @@
 ### VPN Service
 
 - Работает без ROOT-прав.
-- Использует стандартный системный класс Android `VpnService`.
-- Подходит для обычного использования в качестве VPN на уровне приложений Android.
+- Использует Android `VpnService`.
+- Запускает Xray в процессе приложения через AndroidLibXrayLite.
 
 ### TPROXY (ROOT)
 
-- Требуются ROOT-права.
-- Запускает локальный исполняемый файл Xray напрямую с помощью библиотеки `libsu`.
-- Использует `iptables` и политику маршрутизации (policy routing) для прозрачного проксирования трафика.
-- В качестве входящего соединения (inbound) Xray использует настроенный порт прозрачного прокси.
+- Запускает локальный исполняемый файл Xray напрямую через libsu.
+- Использует входящее подключение TPROXY, iptables и policy routing для прозрачного проксирования трафика.
 
 ### TUN2SOCKS (ROOT)
 
-- Требуются ROOT-права.
-- Запускает локальный исполняемый файл Xray напрямую с помощью библиотеки `libsu`.
-- Использует инструмент `hev-socks5-tunnel` для создания фиксированного виртуального интерфейса (TUN) `asterisk0`.
-- Использует локальный входящий порт SOCKS5 в Xray в качестве цели для туннеля.
-- Разделяет большую часть логики ROOT-маршрутизации и проксирования приложений с режимом TPROXY, но направляет трафик через TUN-интерфейс вместо входящего порта TPROXY в Xray.
+- Запускает локальный исполняемый файл Xray напрямую через libsu.
+- Использует `hev-socks5-tunnel` для создания фиксированного TUN-интерфейса `asterisk0`.
+- Передаёт трафик туннеля в локальное входящее подключение SOCKS5 Xray.
+
+### BPF2SOCKS (ROOT)
+
+- Запускает локальный исполняемый файл Xray и нативный компонент `bpf2socks` напрямую через libsu.
+- Использует eBPF без создания TUN-интерфейса и передаёт перехваченный TCP- и UDP-трафик в локальное входящее подключение SOCKS5 Xray.
+- По умолчанию использует порт bridge `65532` и порт SOCKS5 `65534`.
+- Перед запуском требуется успешная проверка поддержки eBPF; на неподдерживаемых устройствах режим не запускается.
+
+### asteriskd
+
+- Отслеживает локальные адреса IPv4/IPv6 и интерфейсы раздачи сети, затем обновляет соответствующие правила iptables или карты BPF.
+- При остановке удаляет сетевые правила, принадлежащие активному ROOT-режиму.
 
 ## Файлы ресурсов
 
-- Файлы среды выполнения хранятся в приватной директории приложения `files/xray` (обычно это `/data/user/0/org.asterisk.zcc.ang/files/xray`).
-- Встроенный исполняемый файл Xray восстанавливается из нативных библиотек. Его можно заменить вручную файлом `xray` или zip-архивом, содержащим `xray`.
-- Файлы `geoip.dat` и `geosite.dat` могут быть восстановлены из встроенных ресурсов (assets), обновлены из онлайн-источников или заменены вручную.
-- Встроенные источники обновлений включают в себя: [Loyalsoldier/v2ray-rules-dat](https://github.com/Loyalsoldier/v2ray-rules-dat), [v2fly/geoip](https://github.com/v2fly/geoip), [v2fly/domain-list-community](https://github.com/v2fly/domain-list-community), [Chocolate4U/Iran-v2ray-rules](https://github.com/Chocolate4U/Iran-v2ray-rules) и [runetfreedom/russia-v2ray-rules-dat](https://github.com/runetfreedom/russia-v2ray-rules-dat).
+- Файлы среды выполнения хранятся в приватной директории приложения `files/xray`.
+- Встроенный Xray можно заменить исполняемым файлом или zip-архивом, содержащим `xray`.
+- `geoip.dat`, `geosite.dat` и другие ресурсы можно восстановить, заменить локально или обновить из встроенных и пользовательских источников.
 
 ## Разработка (Сборка)
 
@@ -76,19 +82,11 @@ git submodule update --init --recursive
 ./gradlew assembleDebug
 ```
 
-Процесс сборки:
-- использует Android SDK и NDK;
-- загружает или подготавливает встроенные ресурсы Xray-core;
-- проверяет ветку/тег `hev-socks5-tunnel` на соответствие значению `ProjectConfig.HEV_SOCKS5_TUNNEL_VERSION` перед компиляцией;
-- собирает нативную JNI-библиотеку `hev-socks5-tunnel` и консольную утилиту (CLI) из подключенного субмодуля;
-- переключает `asteriskd`, `bpf2socks`, `bpfmatcher` и `setuidgid` на версии из `ProjectConfig`, после чего собирает их с помощью NDK;
-- упаковывает нативные компоненты для архитектур `arm64-v8a`, `armeabi-v7a`, `x86` и `x86_64`.
+Сборка подготавливает Xray, собирает настроенные нативные субмодули и упаковывает поддерживаемые ABI.
 
-Если Gradle не может найти Android NDK, укажите путь к нему в параметре `ndk.dir` внутри файла `local.properties`, задайте переменную окружения `ANDROID_NDK_HOME` или установите NDK через менеджер компонентов внутри Android SDK.
+Если Gradle не может найти Android NDK, настройте его через Android Studio, параметр `ndk.dir` в `local.properties` или переменную `ANDROID_NDK_HOME`.
 
-## Поддержка WSA (Windows Subsystem for Android)
-
-Для использования в среде WSA разрешение на запуск VPN можно выдать вручную через ADB-команду:
+## Поддержка WSA
 
 ```bash
 appops set org.asterisk.zcc.ang ACTIVATE_VPN allow
