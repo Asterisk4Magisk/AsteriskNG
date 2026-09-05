@@ -143,12 +143,15 @@ private fun AsteriskdSnapshot.validate() {
     require(helperType == expectedHelper)
     require(helperType != null || helperPid == null)
     require(!matcherActive || matcherConfigured)
-    if (mode == AsteriskdMode.Ebpf) require(!rules.active && rules.generation == 0L && rules.categories.isEmpty())
+    if (mode == AsteriskdMode.Tun || mode == AsteriskdMode.Ebpf) {
+        require(!matcherConfigured && !matcherActive)
+        require(!rules.active && rules.generation == 0L && rules.categories.isEmpty())
+    }
     if (phase == AsteriskdPhase.Running) {
         require(network.ipv4Ready && network.ipv6Ready && corePid != null && error == null)
         require(helperType == null || helperPid != null)
         require(!matcherConfigured || matcherActive)
-        require(mode == AsteriskdMode.Ebpf || rules.active)
+        require(mode == AsteriskdMode.Tun || mode == AsteriskdMode.Ebpf || rules.active)
     } else {
         require(!network.ipv4Ready && !network.ipv6Ready)
     }
