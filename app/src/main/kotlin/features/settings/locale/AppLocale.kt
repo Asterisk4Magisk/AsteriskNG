@@ -23,6 +23,7 @@ import app.modes.ColorModeLight
 import app.modes.LanguageModeEnglish
 import app.modes.LanguageModeRussian
 import app.modes.LanguageModeSimplifiedChinese
+import app.modes.LanguageModeVietnamese
 import app.modes.normalizeColorMode
 import java.util.Locale
 
@@ -30,6 +31,7 @@ private fun languageTagForMode(mode: Int): String? = when (mode) {
     LanguageModeEnglish -> "en"
     LanguageModeSimplifiedChinese -> "zh-CN"
     LanguageModeRussian -> "ru"
+    LanguageModeVietnamese -> "vi"
     else -> null
 }
 

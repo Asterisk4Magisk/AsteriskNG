@@ -32,7 +32,7 @@ android {
     }
 
     androidResources {
-        localeFilters += listOf("en", "zh-rCN", "ru")
+        localeFilters += listOf("en", "zh-rCN", "ru", "vi")
     }
 
     bundle {

@@ -137,6 +137,7 @@ private fun SettingsContent(
         stringResource(R.string.option_english),
         stringResource(R.string.option_simplified_chinese),
         stringResource(R.string.option_russian),
+        stringResource(R.string.option_vietnamese),
     )
     val runModeOptions = listOf(
         stringResource(R.string.settings_run_mode_vpn_service),

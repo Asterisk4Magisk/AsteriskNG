@@ -300,6 +300,7 @@
     <string name="option_english">English</string>
     <string name="option_simplified_chinese">中文（简体）</string>
     <string name="option_russian">Русский</string>
+    <string name="option_vietnamese">Tiếng Việt</string>
     <string name="theme_color_default">System default</string>
     <string name="theme_color_blue">Default blue</string>
     <string name="theme_color_green">Fresh green</string>
