@@ -5,8 +5,6 @@ package engine.root.publication
 
 internal data class RootPublicationBundle(
     val runtimeLayout: RootRuntimeLayout,
-    val coreConfigSourcePath: String,
-    val asteriskdConfigSourcePath: String,
     val bootEnabled: Boolean,
     val launchMode: RootPublicationLaunchMode = RootPublicationLaunchMode.Service,
     val restartExpectedOwner: String? = null,

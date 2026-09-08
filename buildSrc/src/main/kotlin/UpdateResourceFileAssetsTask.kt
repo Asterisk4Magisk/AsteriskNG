@@ -4,11 +4,9 @@
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 import java.net.HttpURLConnection
@@ -19,8 +17,8 @@ abstract class UpdateResourceFileAssetsTask : DefaultTask() {
     @get:Input
     abstract val xrayCoreVersion: Property<String>
 
-    @get:OutputFile
-    abstract val xrayCoreFile: RegularFileProperty
+    @get:OutputDirectory
+    abstract val xrayCoreJniLibsDir: DirectoryProperty
 
     @get:OutputDirectory
     abstract val resourceFileAssetsDir: DirectoryProperty
@@ -32,11 +30,13 @@ abstract class UpdateResourceFileAssetsTask : DefaultTask() {
 
     @TaskAction
     fun updateAssets() {
-        downloadZipEntry(
-            url = xrayCoreArchiveUrl(),
-            entryName = "xray",
-            target = xrayCoreFile.get().asFile,
-        )
+        mapOf("arm64-v8a" to "arm64-v8a", "x86_64" to "amd64").forEach { (abi, archiveArch) ->
+            downloadZipEntry(
+                url = xrayCoreArchiveUrl(archiveArch),
+                entryName = "xray",
+                target = File(xrayCoreJniLibsDir.get().asFile, "$abi/libxray.so"),
+            )
+        }
         AndroidXrayResourceFileAssets.forEach { asset ->
             downloadFile(
                 url = asset.url,
@@ -45,9 +45,9 @@ abstract class UpdateResourceFileAssetsTask : DefaultTask() {
         }
     }
 
-    private fun xrayCoreArchiveUrl(): String {
+    private fun xrayCoreArchiveUrl(archiveArch: String): String {
         val version = xrayCoreVersion.get()
-        return "https://github.com/XTLS/Xray-core/releases/download/$version/Xray-android-arm64-v8a.zip"
+        return "https://github.com/XTLS/Xray-core/releases/download/$version/Xray-android-$archiveArch.zip"
     }
 
     private fun downloadZipEntry(url: String, entryName: String, target: File) {

@@ -52,7 +52,6 @@ internal class RootConfigBuildContext(
         )
         return appState.toRootStartConfig(
             xrayConfigJson = xrayConfigJson,
-            publicationStagingDirectory = androidContext.cacheDir.absolutePath,
             resourceFilePaths = resourceFilePaths,
         )
     }
@@ -87,13 +86,11 @@ internal fun Context.prepareRootConfigBuildContext(request: ProxyEngineStartRequ
 
 private fun AppState.toRootStartConfig(
     xrayConfigJson: String,
-    publicationStagingDirectory: String,
     resourceFilePaths: XrayResourceFilePaths,
 ): RootStartConfig {
     val dataDirectory = File(resourceFilePaths.dataDir)
     return RootStartConfig(
         xrayConfigJson = xrayConfigJson,
-        publicationStagingDirectory = publicationStagingDirectory,
         runtimePaths = RootConfigRuntimePaths(
             coreExecutablePath = resourceFilePaths.xrayCorePath,
             coreConfigPath = File(dataDirectory, "config.json").absolutePath,

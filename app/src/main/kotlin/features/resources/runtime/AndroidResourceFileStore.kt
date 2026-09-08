@@ -136,7 +136,7 @@ internal class AndroidResourceFileStore(
     }
 
     private fun bundledXrayCoreFileOrNull(): File? {
-        if (currentRuntimeAbi() != Arm64Abi) return null
+        if (currentRuntimeAbi() !in setOf("arm64-v8a", "x86_64")) return null
         return File(appContext.applicationInfo.nativeLibraryDir, XrayCoreLibraryName)
             .takeIf { it.isFile }
     }
@@ -359,7 +359,6 @@ private fun Context.packageUpdatedAtMillis(): Long {
     }.getOrDefault(0L)
 }
 
-private const val Arm64Abi = "arm64-v8a"
 private const val AsteriskdLibraryName = "libasteriskd.so"
 private const val BpfMatcherLibraryName = "libbpf-matcher.so"
 private const val Bpf2SocksLibraryName = "libbpf2socks.so"
@@ -367,7 +366,7 @@ private const val XrayCoreLibraryName = "libxray.so"
 private const val HevSocks5TunnelLibraryName = "libhev-socks5-tunnel-cli.so"
 private const val XrayBundledResourceFilesDir = "xray"
 
-private val SupportedAndroidAbis = setOf(Arm64Abi, "armeabi-v7a", "x86", "x86_64")
+private val SupportedAndroidAbis = setOf("arm64-v8a", "armeabi-v7a", "x86", "x86_64")
 
 internal fun resourceFileExists(
     kind: ResourceFileKind?,

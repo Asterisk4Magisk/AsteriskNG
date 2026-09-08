@@ -76,6 +76,9 @@ internal class AsteriskdClient(
                 ShellExecOptions(logFailure = false),
                 stream::accept,
             )
+            if (result.stderr.isNotBlank()) {
+                runCatching { AndroidAppLogger.warn(LogTag, "root_watch exit=${result.errno} stderr=${result.stderr.take(512)}") }
+            }
             stream.runningSnapshot?.let { return it }
             if (stream.retryWhenUnbound) {
                 delay(retryDelayMilliseconds.milliseconds)

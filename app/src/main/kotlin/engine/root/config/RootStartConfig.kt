@@ -25,7 +25,6 @@ internal data class RootConfigRuntimePaths(
 
 internal data class RootStartConfig(
     val xrayConfigJson: String,
-    val publicationStagingDirectory: String,
     val runtimePaths: RootConfigRuntimePaths,
     val directCidrIpv4Path: String,
     val directCidrIpv6Path: String,
