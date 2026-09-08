@@ -80,7 +80,7 @@
         },
         {
             "uniqueId": "io.coil-kt.coil3:coil",
-            "artifactVersion": "3.6.1",
+            "artifactVersion": "3.6.2",
             "name": "coil",
             "description": "An image loading library for Android and Compose Multiplatform.",
             "website": "https://github.com/coil-kt/coil",
@@ -93,7 +93,7 @@
         },
         {
             "uniqueId": "io.coil-kt.coil3:coil-compose",
-            "artifactVersion": "3.6.1",
+            "artifactVersion": "3.6.2",
             "name": "coil-compose",
             "description": "An image loading library for Android and Compose Multiplatform.",
             "website": "https://github.com/coil-kt/coil",
@@ -210,7 +210,7 @@
         },
         {
             "uniqueId": "com.github.android-password-store:kage",
-            "artifactVersion": "0.6.0",
+            "artifactVersion": "0.7.0",
             "name": "kage",
             "description": "Kotlin implementation of the age file encryption library",
             "website": "https://github.com/Android-Password-Store/kage",
@@ -223,7 +223,7 @@
         },
         {
             "uniqueId": "org.jetbrains.kotlin:kotlin-stdlib",
-            "artifactVersion": "2.4.10",
+            "artifactVersion": "2.4.20",
             "name": "Kotlin Stdlib",
             "description": "Kotlin Standard Library",
             "website": "https://kotlinlang.org/",
