@@ -15,7 +15,7 @@
         },
         {
             "uniqueId": "github:2dust/AndroidLibXrayLite",
-            "artifactVersion": "v26.8.20",
+            "artifactVersion": "v26.9.9",
             "name": "AndroidLibXrayLite",
             "description": "Android AAR wrapper for Xray-core, built with gomobile.",
             "website": "https://github.com/2dust/AndroidLibXrayLite",
@@ -405,7 +405,7 @@
         },
         {
             "uniqueId": "github:XTLS/Xray-core",
-            "artifactVersion": "v26.7.28",
+            "artifactVersion": "v26.9.9",
             "name": "Xray-core",
             "description": "An open platform for proxy and anti-censorship networking.",
             "website": "https://github.com/XTLS/Xray-core",

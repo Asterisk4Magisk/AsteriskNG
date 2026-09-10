@@ -172,32 +172,38 @@ private fun String?.isEnabledFlag(): Boolean {
 
 private fun Hysteria2.toXrayFinalMask(): JsonObject {
     return buildJsonObject {
-        if (up.isNotBlank() || down.isNotBlank() || mport.isNotBlank()) {
+        if (up.isNotBlank() || down.isNotBlank()) {
             putJsonObject("quicParams") {
-                if (up.isNotBlank() || down.isNotBlank()) {
-                    put("congestion", "brutal")
-                }
+                put("congestion", "brutal")
                 putIfNotBlank("brutalUp", up)
                 putIfNotBlank("brutalDown", down)
-                if (mport.isNotBlank()) {
-                    putJsonObject("udpHop") {
-                        put("ports", mport)
-                        mportHopInt.toIntOrNull()?.let { put("interval", it) }
-                    }
-                }
             }
         }
-        if (obfs == "salamander" && obfsPassword.isNotBlank()) {
+        val useSalamander = obfs == "salamander" && obfsPassword.isNotBlank()
+        if (useSalamander || mport.isNotBlank()) {
             putJsonArray("udp") {
-                add(
-                    buildJsonObject {
+                if (useSalamander) {
+                    add(buildJsonObject {
                         put("type", "salamander")
                         putJsonObject("settings") {
                             put("password", obfsPassword)
                         }
-                    },
-                )
+                    })
+                }
+                if (mport.isNotBlank()) {
+                    // Xray wraps masks in reverse order; udphop must be outermost.
+                    add(buildJsonObject {
+                        put("type", "udphop")
+                        putJsonObject("settings") {
+                            put("mode", "intervalLocal,intervalRemote")
+                            put("remotePorts", mport)
+                            put("interval", mportHopInt.toIntOrNull() ?: DefaultHopIntervalSeconds)
+                        }
+                    })
+                }
             }
         }
     }
 }
+
+private const val DefaultHopIntervalSeconds = 30
