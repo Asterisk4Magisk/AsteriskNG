@@ -157,12 +157,8 @@ internal fun buildFreedomOutbound(tag: String, domainStrategy: String): JsonObje
     return buildJsonObject {
         put("tag", tag)
         put("protocol", XrayProtocols.FREEDOM)
-        put(
-            "settings",
-            buildJsonObject {
-                put("domainStrategy", domainStrategy)
-            },
-        )
+    }.withSockopt {
+        put("domainStrategy", domainStrategy)
     }
 }
 
@@ -186,7 +182,6 @@ private fun buildFragmentOutbound(appState: AppState): JsonObject {
         put(
             "settings",
             buildJsonObject {
-                put("domainStrategy", appState.xrayDirectOutboundDomainStrategy())
                 put(
                     "fragment",
                     buildJsonObject {
@@ -197,6 +192,8 @@ private fun buildFragmentOutbound(appState: AppState): JsonObject {
                 )
             },
         )
+    }.withSockopt {
+        put("domainStrategy", appState.xrayDirectOutboundDomainStrategy())
     }
 }
 
