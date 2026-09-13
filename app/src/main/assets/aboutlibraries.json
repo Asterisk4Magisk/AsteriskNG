@@ -366,10 +366,10 @@
         },
         {
             "uniqueId": "androidx.room:room-runtime",
-            "artifactVersion": "2.8.4",
+            "artifactVersion": "2.8.5",
             "name": "Room-Runtime",
             "description": "Android Room-Runtime",
-            "website": "https://developer.android.com/jetpack/androidx/releases/room#2.8.4",
+            "website": "https://developer.android.com/jetpack/androidx/releases/room#2.8.5",
             "scm": {
                 "url": "https://cs.android.com/androidx/platform/frameworks/support"
             },
