@@ -62,8 +62,9 @@ import ui.components.IconDropdownMenuEntry
 import ui.components.ImportModeDialog
 import ui.components.DeleteConfirmationDialog
 import ui.components.NavigationIcon
+import ui.components.rememberReorderPreview
+import ui.components.reorderByIds
 import ui.components.longPressReorderDragHandle
-import ui.components.moveItem
 import ui.components.rememberAsteriskReorderableLazyListState
 import ui.components.rememberReorderableLazyListContentPaddingWithoutTop
 import ui.components.rememberReorderableScrollThresholdPadding
@@ -234,6 +235,12 @@ fun RoutingPage(
         val lazyListState = rememberLazyListState()
         val listBottomPadding = listPadding.calculateBottomPadding()
         val lazyContentPadding = rememberReorderableLazyListContentPaddingWithoutTop(listPadding)
+        val preview = rememberReorderPreview(rules, { it.id }) { ids ->
+            updateAppState { state ->
+                state.copy(routeRules = state.routeRules.reorderByIds(ids, { it.id }))
+            }
+            true
+        }
         val reorderableLazyListState = rememberAsteriskReorderableLazyListState(
             lazyListState = lazyListState,
             itemCount = rules.size,
@@ -241,19 +248,8 @@ fun RoutingPage(
             scrollThresholdPadding = rememberReorderableScrollThresholdPadding(
                 bottom = listBottomPadding,
             ),
-        ) { fromRuleIndex, toRuleIndex ->
-            updateAppState { state ->
-                val reorderedRules = state.routeRules.moveItem(
-                    fromIndex = fromRuleIndex,
-                    toIndex = toRuleIndex,
-                )
-                if (reorderedRules === state.routeRules) {
-                    state
-                } else {
-                    state.copy(routeRules = reorderedRules)
-                }
-            }
-        }
+            onMove = preview.onMove,
+        )
 
         Box {
             LazyColumn(
@@ -277,7 +273,7 @@ fun RoutingPage(
                     SmallTitle(text = stringResource(R.string.routing_title))
                 }
                 itemsIndexed(
-                    items = rules,
+                    items = preview.items,
                     key = { _, rule -> rule.id },
                 ) { _, rule ->
                     ReorderableItem(reorderableLazyListState.reorderableState, key = rule.id) { isDragging ->
@@ -289,6 +285,8 @@ fun RoutingPage(
                                 scope = this,
                                 enabled = rules.size > 1,
                                 state = reorderableLazyListState,
+                                onDragStarted = preview.onDragStarted,
+                                onDragStopped = preview.onDragStopped,
                             ),
                             onToggle = { enabled ->
                                 updateAppState { state ->

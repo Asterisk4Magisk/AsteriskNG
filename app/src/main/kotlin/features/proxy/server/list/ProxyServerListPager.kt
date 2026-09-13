@@ -57,8 +57,9 @@ import top.yukonga.miuix.kmp.basic.VerticalScrollBar
 import top.yukonga.miuix.kmp.basic.rememberScrollBarAdapter
 import top.yukonga.miuix.kmp.interfaces.ExperimentalScrollBarApi
 import ui.clipboard.setPlainText
+import ui.components.rememberReorderPreview
+import ui.components.reorderByIds
 import ui.components.longPressReorderDragHandle
-import ui.components.moveItem
 import ui.components.rememberAsteriskReorderableLazyGridState
 import ui.components.rememberReorderableScrollThresholdPadding
 import ui.feedback.AndroidToastTipNotifier
@@ -193,27 +194,20 @@ private fun ProxyServerLazyGrid(
         end = listPadding.calculateEndPadding(layoutDirection) + gridHorizontalExtra,
         bottom = listPadding.calculateBottomPadding(),
     )
+    val preview = rememberReorderPreview(pageServers, ProxyServerState::id, enabled = reorderEnabled) { ids ->
+        updateAppState { state ->
+            state.copy(proxyServers = state.proxyServers.reorderByIds(ids, ProxyServerState::id, allowSubset = true))
+        }
+        true
+    }
     val reorderableLazyGridState = rememberAsteriskReorderableLazyGridState(
         lazyGridState = gridState,
         itemCount = pageServers.size,
         scrollThresholdPadding = rememberReorderableScrollThresholdPadding(
             bottom = dragScrollThresholdBottomPadding,
         ),
-    ) { fromIndex, toIndex ->
-        if (!reorderEnabled) return@rememberAsteriskReorderableLazyGridState
-        updateAppState { state ->
-            val reorderedServers = state.proxyServers.reorderVisibleServer(
-                pageServers = pageServers,
-                fromIndex = fromIndex,
-                toIndex = toIndex,
-            )
-            if (reorderedServers === state.proxyServers) {
-                state
-            } else {
-                state.copy(proxyServers = reorderedServers)
-            }
-        }
-    }
+        onMove = preview.onMove,
+    )
 
     Box(modifier) {
         LazyVerticalGrid(
@@ -236,7 +230,7 @@ private fun ProxyServerLazyGrid(
                 }
             } else {
                 items(
-                    items = pageServers,
+                    items = preview.items,
                     key = { server -> server.id },
                     contentType = { "proxy_server" },
                 ) { server ->
@@ -278,6 +272,8 @@ private fun ProxyServerLazyGrid(
                                 scope = this,
                                 enabled = reorderEnabled && pageServers.size > 1,
                                 state = reorderableLazyGridState,
+                                onDragStarted = preview.onDragStarted,
+                                onDragStopped = preview.onDragStopped,
                             ),
                             modifier = Modifier.fillMaxWidth(),
                         )
@@ -439,20 +435,6 @@ private fun List<ProxyServerState>.filterPageServers(
                 server.server.getInfo().remarks.contains(keyword, ignoreCase = true)
             )
     }
-}
-
-private fun List<ProxyServerState>.reorderVisibleServer(
-    pageServers: List<ProxyServerState>,
-    fromIndex: Int,
-    toIndex: Int,
-): List<ProxyServerState> {
-    val serverId = pageServers.getOrNull(fromIndex)?.id ?: return this
-    val targetServerId = pageServers.getOrNull(toIndex)?.id ?: return this
-
-    return moveItem(
-        fromIndex = indexOfFirst { server -> server.id == serverId },
-        toIndex = indexOfFirst { server -> server.id == targetServerId },
-    )
 }
 
 private val ProxyServerListGridSpacing = 12.dp
