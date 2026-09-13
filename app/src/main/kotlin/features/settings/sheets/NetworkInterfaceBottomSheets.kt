@@ -24,7 +24,7 @@ private data class ExternalInterfaceGroup(
 
 private val ExternalInterfaceGroups = listOf(
     ExternalInterfaceGroup("wifi", listOf("wlan+", "ap+", "softap+")),
-    ExternalInterfaceGroup("usb", listOf("rndis+", "usb+")),
+    ExternalInterfaceGroup("usb", listOf("rndis+", "usb+", "ncm+")),
     ExternalInterfaceGroup("bluetooth", listOf("bnep+", "bt-pan+")),
     ExternalInterfaceGroup("ethernet", listOf("eth+")),
 )
