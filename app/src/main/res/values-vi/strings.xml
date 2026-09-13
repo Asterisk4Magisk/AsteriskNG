@@ -145,11 +145,6 @@
     <string name="settings_tun_dns_invalid">VPN DNS phải là địa chỉ IPv4</string>
     <string name="settings_tun_ipv4_cidr_invalid">IPv4 CIDR không hợp lệ</string>
     <string name="settings_tun_ipv6_cidr_invalid">IPv6 CIDR không hợp lệ</string>
-    <string name="settings_inbound">Cài đặt proxy vào (inbound)</string>
-    <string name="settings_inbound_tproxy_port">Cổng proxy trong suốt: {port}</string>
-    <string name="settings_inbound_socks5_port">Cổng SOCKS5 TUN2SOCKS: {port}</string>
-    <string name="settings_inbound_bpf2socks_summary">Cổng Bridge: {bridgePort}, Cổng SOCKS5: {socksPort}</string>
-    <string name="settings_inbound_selected">Đã bật: {inbounds}</string>
     <string name="settings_bpf2socks_bridge_port">Cổng Bridge BPF2SOCKS</string>
     <string name="settings_bpf2socks_socks5_port">Cổng SOCKS5</string>
     <string name="settings_external_interfaces">Cài đặt chia sẻ điểm phát sóng</string>
@@ -271,9 +266,6 @@
     <string name="settings_open_source_licenses">Giấy phép mã nguồn mở</string>
     <string name="settings_transparent_proxy_port">Cổng proxy trong suốt</string>
     <string name="settings_tun2socks_socks5_port">Cổng SOCKS5 TUN2SOCKS</string>
-    <string name="settings_http_proxy">Proxy HTTP</string>
-    <string name="settings_http_proxy_summary">Bật inbound proxy HTTP</string>
-    <string name="settings_http_proxy_port">Cổng proxy HTTP</string>
     <string name="settings_fake_dns_summary">Bật FakeDNS</string>
     <string name="settings_proxy_dns">DNS proxy</string>
     <string name="settings_proxy_dns_empty">Chưa thêm DNS proxy nào</string>

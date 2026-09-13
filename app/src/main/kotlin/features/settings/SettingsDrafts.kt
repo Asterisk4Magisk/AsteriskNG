@@ -7,24 +7,6 @@ import app.AppState
 import app.effectiveFakeDnsEnabled
 import features.settings.sheets.sanitizeMuxUdp443Index
 
-internal data class ProxySettingsDraft(
-    val transparentProxyPort: String = "",
-    val bpf2SocksBridgePort: String = "",
-    val socks5ProxyPort: String = "",
-    val enableHttpProxy: Boolean = false,
-    val httpProxyPort: String = "",
-)
-
-internal fun AppState.toProxySettingsDraft(): ProxySettingsDraft {
-    return ProxySettingsDraft(
-        transparentProxyPort = transparentProxyPort,
-        bpf2SocksBridgePort = bpf2SocksBridgePort,
-        socks5ProxyPort = socks5ProxyPort,
-        enableHttpProxy = enableHttpProxy,
-        httpProxyPort = httpProxyPort,
-    )
-}
-
 internal data class TunSettingsDraft(
     val mtu: String = "",
     val vpnDns: String = "",
@@ -42,6 +24,9 @@ internal fun AppState.toTunSettingsDraft(): TunSettingsDraft {
 }
 
 internal data class LocalProxySettingsDraft(
+    val transparentProxyPort: String = "",
+    val bpf2SocksBridgePort: String = "",
+    val socks5ProxyPort: String = "",
     val port: String = "",
     val enableDynamicPort: Boolean = false,
     val listenAllInterfaces: Boolean = false,
@@ -51,6 +36,9 @@ internal data class LocalProxySettingsDraft(
 
 internal fun AppState.toLocalProxySettingsDraft(): LocalProxySettingsDraft {
     return LocalProxySettingsDraft(
+        transparentProxyPort = transparentProxyPort,
+        bpf2SocksBridgePort = bpf2SocksBridgePort,
+        socks5ProxyPort = socks5ProxyPort,
         port = localProxyPort,
         enableDynamicPort = enableDynamicLocalProxyPort,
         listenAllInterfaces = localProxyListenAllInterfaces,

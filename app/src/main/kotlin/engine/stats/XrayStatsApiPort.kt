@@ -18,9 +18,6 @@ internal fun AppState.xrayStatsApiExcludedPorts(): Set<Int> {
         add(transparentProxyPort.toPortOrNull() ?: RootModeEngine.DefaultTproxyPort)
         add(bpf2SocksBridgePort.toPortOrNull() ?: RootModeEngine.DefaultBpf2SocksBridgePort)
         add(socks5ProxyPort.toPortOrNull() ?: RootModeEngine.DefaultTun2SocksProxyPort)
-        if (enableHttpProxy) {
-            httpProxyPort.toPortOrNull()?.let(::add)
-        }
         if (enableVpnAppendHttpProxy) {
             add(VpnDefaults.VPN_APPEND_HTTP_PROXY_FALLBACK_PORT)
             add(VpnDefaults.VPN_APPEND_HTTP_PROXY_FALLBACK_PORT + 1)

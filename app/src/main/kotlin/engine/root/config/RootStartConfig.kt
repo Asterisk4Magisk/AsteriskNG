@@ -9,7 +9,6 @@ import engine.proxy.LocalProxyOptions
 import engine.root.daemon.config.AsteriskdConfig
 
 const val RootBpf2SocksDefaultBridgePort = NetworkLimits.PORT_MAX - 3
-const val DefaultRootHttpProxyPort = NetworkLimits.PORT_MAX - 2
 internal const val DefaultRootTun2SocksProxyPort = NetworkLimits.PORT_MAX - 1
 
 internal data class RootConfigRuntimePaths(

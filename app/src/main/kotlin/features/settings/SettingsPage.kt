@@ -169,13 +169,6 @@ private fun SettingsContent(
     val restoreCompletedMessage = stringResource(R.string.settings_restore_completed)
     val restoreFailedMessage = stringResource(R.string.settings_restore_failed)
     val selectServerFirstMessage = stringResource(R.string.proxy_server_list_select_first)
-    val inboundProxySummary = inboundProxySummary(
-        runMode = appState.runMode,
-        transparentProxyPort = appState.transparentProxyPort,
-        bpf2SocksBridgePort = appState.bpf2SocksBridgePort,
-        socks5ProxyPort = appState.socks5ProxyPort,
-        enableHttpProxy = appState.enableHttpProxy,
-    )
     val localProxySettingsSummary = localProxySettingsSummary(
         port = appState.localProxyPort,
         listenAllInterfaces = appState.localProxyListenAllInterfaces,
@@ -325,7 +318,6 @@ private fun SettingsContent(
                     enableVpnAppendHttpProxy = appState.enableVpnAppendHttpProxy,
                     enableVpnHevTun = appState.enableVpnHevTun,
                     tunSettingsSummary = tunSettingsSummary,
-                    inboundProxySummary = inboundProxySummary,
                     enableIpv6 = appState.enableIpv6,
                     enableRootBootScript = appState.enableRootBootScript,
                     enableRootEbpfRules = appState.enableRootEbpfRules,
@@ -345,7 +337,6 @@ private fun SettingsContent(
                         updateAppState { state -> state.copy(enableVpnHevTun = enabled) }
                     },
                     onOpenTunSettings = { sheetState.openTunSettings(appState) },
-                    onOpenProxySettings = { sheetState.openProxySettings(appState) },
                     onEnableRootBootScriptChange = { enabled ->
                         if (!rootBootScriptSwitchInProgress) {
                             val currentState = appState

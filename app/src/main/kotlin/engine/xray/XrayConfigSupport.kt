@@ -23,11 +23,6 @@ internal data class XrayCoreLogPaths(
     val errorLogPath: String,
 )
 
-internal val XrayConfigJson = Json {
-    ignoreUnknownKeys = true
-    encodeDefaults = true
-}
-
 internal val XrayConfigPrettyJson = Json {
     ignoreUnknownKeys = true
     encodeDefaults = true
@@ -45,13 +40,10 @@ internal object XrayTags {
     const val LOCAL_SOCKS_INBOUND = "socks-in"
     const val VPN_APPEND_HTTP_INBOUND = "vpn-http-in"
     const val TPROXY_INBOUND = "tproxy-in"
-    const val TPROXY_HTTP_INBOUND = "tproxy-http-in"
     const val FRAGMENT = "fragment"
     const val VPN_TUN_INBOUND = "vpn-tun-in"
     const val TUN2SOCKS_INBOUND = "tun2socks-in"
-    const val TUN2SOCKS_HTTP_INBOUND = "tun2socks-http-in"
     const val BPF2SOCKS_INBOUND = "bpf2socks-in"
-    const val BPF2SOCKS_HTTP_INBOUND = "bpf2socks-http-in"
     const val DEFAULT_ROUTE_LOOPBACK = "asterisk-internal-default-route-loopback"
     const val DEFAULT_ROUTE_LOOPBACK_INBOUND = "asterisk-internal-default-route-loopback-in"
 

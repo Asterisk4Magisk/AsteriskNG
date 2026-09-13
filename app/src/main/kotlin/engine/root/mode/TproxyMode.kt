@@ -14,7 +14,6 @@ import engine.proxy.toLocalProxyOptions
 import engine.root.config.RootConfigBuildContext
 import engine.root.config.RootModeStartConfig
 import engine.root.config.buildAsteriskdConfig
-import engine.root.config.buildRootSharedProxyInbounds
 import engine.root.daemon.config.AsteriskdMode
 import engine.root.daemon.config.AsteriskdModeOptions
 import engine.xray.XrayProtocols
@@ -58,11 +57,6 @@ private fun AppState.buildTproxyInbounds(
     return buildList {
         add(buildTproxyTunnelInbound(this@buildTproxyInbounds, tproxyPort))
         add(buildLocalSocksInbound(this@buildTproxyInbounds, XrayTags.LOCAL_SOCKS_INBOUND, localProxyOptions))
-        addAll(
-            buildRootSharedProxyInbounds(
-                httpInboundTag = XrayTags.TPROXY_HTTP_INBOUND,
-            ),
-        )
     }
 }
 

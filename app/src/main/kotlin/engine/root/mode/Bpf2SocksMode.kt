@@ -13,7 +13,6 @@ import engine.root.config.RootConfigBuildContext
 import engine.root.config.RootModeStartConfig
 import engine.root.config.bpf2SocksBridgePortValue
 import engine.root.config.buildAsteriskdConfig
-import engine.root.config.buildRootSharedProxyInbounds
 import engine.root.config.tun2SocksInternalProxyPortValue
 import engine.root.daemon.config.AsteriskdBpf2SocksHelper
 import engine.root.daemon.config.AsteriskdMode
@@ -65,7 +64,6 @@ private fun AppState.buildBpf2SocksInbounds(
 ): List<JsonObject> = buildList {
     add(buildBpf2SocksSocksInbound(this@buildBpf2SocksInbounds, socksPort))
     add(buildLocalSocksInbound(this@buildBpf2SocksInbounds, XrayTags.LOCAL_SOCKS_INBOUND, localProxyOptions))
-    addAll(buildRootSharedProxyInbounds(httpInboundTag = XrayTags.BPF2SOCKS_HTTP_INBOUND))
 }
 
 private fun buildBpf2SocksSocksInbound(appState: AppState, port: Int): JsonObject = buildJsonObject {

@@ -222,7 +222,6 @@ internal fun SettingsProxyModeSections(
     enableVpnAppendHttpProxy: Boolean,
     enableVpnHevTun: Boolean,
     tunSettingsSummary: String,
-    inboundProxySummary: String,
     enableIpv6: Boolean,
     enableRootBootScript: Boolean,
     enableRootEbpfRules: Boolean,
@@ -236,7 +235,6 @@ internal fun SettingsProxyModeSections(
     onEnableVpnAppendHttpProxyChange: (Boolean) -> Unit,
     onEnableVpnHevTunChange: (Boolean) -> Unit,
     onOpenTunSettings: () -> Unit,
-    onOpenProxySettings: () -> Unit,
     onEnableRootBootScriptChange: (Boolean) -> Unit,
     onEnableRootEbpfRulesChange: (Boolean) -> Unit,
     onEnableRootEbpfDirectCidrBypassChange: (Boolean) -> Unit,
@@ -364,11 +362,6 @@ internal fun SettingsProxyModeSections(
                     title = stringResource(R.string.settings_local_proxy),
                     summary = localProxySettingsSummary,
                     onClick = onOpenLocalProxySettings,
-                )
-                ArrowPreference(
-                    title = stringResource(R.string.settings_inbound),
-                    summary = inboundProxySummary,
-                    onClick = onOpenProxySettings,
                 )
                 AnimatedVisibility(
                     visible = runMode == RunModeTun2Socks,

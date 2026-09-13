@@ -129,10 +129,6 @@
     <string name="settings_tun_dns_invalid">VPN DNS должен быть валидным IPv4-адресом</string>
     <string name="settings_tun_ipv4_cidr_invalid">Некорректный IPv4 CIDR</string>
     <string name="settings_tun_ipv6_cidr_invalid">Некорректный IPv6 CIDR</string>
-    <string name="settings_inbound">Настройки входящих подключений (Inbound)</string>
-    <string name="settings_inbound_tproxy_port">Порт прозрачного прокси (TPROXY): {port}</string>
-    <string name="settings_inbound_socks5_port">Порт TUN2SOCKS SOCKS5: {port}</string>
-    <string name="settings_inbound_selected">Включено: {inbounds}</string>
     <string name="settings_external_interfaces">Раздача интернета (Тетенринг)</string>
     <string name="settings_external_interfaces_summary">Выберите типы общего доступа, которые будут принимать внешний входящий трафик</string>
     <string name="settings_external_interfaces_none">Не включено</string>
@@ -250,9 +246,6 @@
     <string name="settings_open_source_licenses">Лицензии ПО с открытым исходным кодом</string>
     <string name="settings_transparent_proxy_port">Порт прозрачного прокси</string>
     <string name="settings_tun2socks_socks5_port">Порт TUN2SOCKS SOCKS5</string>
-    <string name="settings_http_proxy">HTTP-прокси</string>
-    <string name="settings_http_proxy_summary">Включить входящие подключения по протоколу HTTP</string>
-    <string name="settings_http_proxy_port">Порт HTTP-прокси</string>
     <string name="settings_fake_dns_summary">Включить подмену адресов FakeDNS</string>
     <string name="settings_proxy_dns">DNS для прокси-серверов</string>
     <string name="settings_proxy_dns_empty">DNS для прокси не добавлен</string>
@@ -602,7 +595,6 @@
     <string name="settings_proxy_bpf2socks">Настройки прокси (BPF2SOCKS)</string>
     <string name="settings_broadcast_control">Управление трансляциями</string>
     <string name="settings_broadcast_control_summary">Разрешить внешним трансляциям запускать и останавливать прокси-службу</string>
-    <string name="settings_inbound_bpf2socks_summary">Порт моста: {bridgePort}, порт SOCKS5: {socksPort}</string>
     <string name="settings_bpf2socks_bridge_port">Порт моста BPF2SOCKS</string>
     <string name="settings_bpf2socks_socks5_port">Порт SOCKS5</string>
     <string name="settings_resource_file_update_queued">Добавлено в очередь обновления</string>

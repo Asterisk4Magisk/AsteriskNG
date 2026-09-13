@@ -10,7 +10,6 @@ import engine.proxy.ProxyEngineStatus
 import engine.proxy.mode.AndroidModeProxyEngine
 import engine.root.config.prepareRootConfigBuildContext
 import engine.root.config.RootModeStartConfig
-import engine.root.config.DefaultRootHttpProxyPort as ConfigDefaultRootHttpProxyPort
 import engine.root.config.RootBpf2SocksDefaultBridgePort as ConfigRootBpf2SocksDefaultBridgePort
 import engine.root.mode.RootModeCatalog
 import engine.root.mode.RootModeDefinition
@@ -153,7 +152,6 @@ internal class RootModeEngine(
         const val DefaultTproxyPort = ModeDefaultTproxyPort
         const val DefaultTun2SocksProxyPort = ModeDefaultTun2SocksProxyPort
         const val DefaultBpf2SocksBridgePort = ConfigRootBpf2SocksDefaultBridgePort
-        const val DefaultHttpProxyPort = ConfigDefaultRootHttpProxyPort
 
         fun createAll(context: Context, rootAccess: RootShellGateway): List<RootModeEngine> =
             RootModeCatalog.definitions.map { definition -> RootModeEngine(context, rootAccess, definition) }

@@ -21,7 +21,6 @@ import features.settings.sheets.IgnoredInterfacesBottomSheet
 import features.settings.sheets.LocalProxySettingsBottomSheet
 import features.settings.sheets.MuxSettingsBottomSheet
 import features.settings.sheets.PrivateAddressBottomSheet
-import features.settings.sheets.ProxySettingsBottomSheet
 import features.settings.sheets.ServiceControlBottomSheet
 import features.settings.sheets.TunSettingsBottomSheet
 import features.settings.sheets.sanitizeExternalInterfaces
@@ -31,7 +30,7 @@ import features.settings.sheets.sanitizePrivateAddressCidrs
 import app.modes.RunModeBpf2Socks
 import app.modes.RunModeTun2Socks
 import app.modes.RunModeVpnService
-import app.modes.isRootRunMode
+import app.modes.RunModeTproxy
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
@@ -46,71 +45,42 @@ internal fun SettingsBottomSheetsHost(
     val serviceControlFailedMessage = stringResource(R.string.settings_service_control_save_failed)
     var serviceControlSaving by remember { mutableStateOf(false) }
     var serviceControlError by remember { mutableStateOf<String?>(null) }
-    ProxySettingsBottomSheet(
-        show = sheetState.showProxySettings,
-        useTun2SocksProxyPort = appState.runMode == RunModeTun2Socks,
-        useBpf2SocksProxyPort = appState.runMode == RunModeBpf2Socks,
-        lockPrimaryPortSettings = appState.runMode.isRootRunMode() && appState.proxyRunning,
-        lockSharedInboundSettings = appState.runMode.isRootRunMode() && appState.proxyRunning,
-        transparentProxyPort = sheetState.proxySettingsDraft.transparentProxyPort,
-        bpf2SocksBridgePort = sheetState.proxySettingsDraft.bpf2SocksBridgePort,
-        socks5ProxyPort = sheetState.proxySettingsDraft.socks5ProxyPort,
-        enableHttpProxy = sheetState.proxySettingsDraft.enableHttpProxy,
-        httpProxyPort = sheetState.proxySettingsDraft.httpProxyPort,
-        onTransparentProxyPortChange = {
-            sheetState.proxySettingsDraft = sheetState.proxySettingsDraft.copy(
-                transparentProxyPort = it,
-            )
-        },
-        onBpf2SocksBridgePortChange = {
-            sheetState.proxySettingsDraft = sheetState.proxySettingsDraft.copy(
-                bpf2SocksBridgePort = it,
-            )
-        },
-        onSocks5ProxyPortChange = {
-            sheetState.proxySettingsDraft = sheetState.proxySettingsDraft.copy(
-                socks5ProxyPort = it,
-            )
-        },
-        onEnableHttpProxyChange = {
-            sheetState.proxySettingsDraft = sheetState.proxySettingsDraft.copy(enableHttpProxy = it)
-        },
-        onHttpProxyPortChange = {
-            sheetState.proxySettingsDraft = sheetState.proxySettingsDraft.copy(
-                httpProxyPort = it,
-            )
-        },
-        onDismissRequest = { sheetState.showProxySettings = false },
-        onSave = { transparentProxyPort, bpf2SocksBridgePort, socks5ProxyPort, enableHttpProxy, httpProxyPort ->
-            updateAppState { state ->
-                val lockPrimaryPortSettings = state.runMode.isRootRunMode() && state.proxyRunning
-                val lockSharedInboundSettings = state.runMode.isRootRunMode() && state.proxyRunning
-                state.copy(
-                    transparentProxyPort = if (lockPrimaryPortSettings) {
-                        state.transparentProxyPort
-                    } else {
-                        transparentProxyPort
-                    },
-                    bpf2SocksBridgePort = if (lockPrimaryPortSettings) {
-                        state.bpf2SocksBridgePort
-                    } else {
-                        bpf2SocksBridgePort
-                    },
-                    socks5ProxyPort = if (lockPrimaryPortSettings) state.socks5ProxyPort else socks5ProxyPort,
-                    enableHttpProxy = if (lockSharedInboundSettings) state.enableHttpProxy else enableHttpProxy,
-                    httpProxyPort = if (lockSharedInboundSettings) state.httpProxyPort else httpProxyPort,
-                )
-            }
-            sheetState.showProxySettings = false
-        },
-    )
     LocalProxySettingsBottomSheet(
         show = sheetState.showLocalProxySettings,
+        showInboundProxyPort = appState.runMode == RunModeTproxy ||
+            appState.runMode == RunModeTun2Socks ||
+            appState.runMode == RunModeBpf2Socks,
+        useTun2SocksProxyPort = appState.runMode == RunModeTun2Socks,
+        useBpf2SocksProxyPort = appState.runMode == RunModeBpf2Socks,
+        lockInboundProxyPort = (appState.runMode == RunModeTproxy ||
+            appState.runMode == RunModeTun2Socks ||
+            appState.runMode == RunModeBpf2Socks) &&
+            appState.proxyRunning,
+        inboundProxyPort = if (appState.runMode == RunModeTun2Socks) {
+            sheetState.localProxySettingsDraft.socks5ProxyPort
+        } else if (appState.runMode == RunModeBpf2Socks) {
+            sheetState.localProxySettingsDraft.socks5ProxyPort
+        } else {
+            sheetState.localProxySettingsDraft.transparentProxyPort
+        },
+        bpf2SocksBridgePort = sheetState.localProxySettingsDraft.bpf2SocksBridgePort,
         port = sheetState.localProxySettingsDraft.port,
         enableDynamicPort = sheetState.localProxySettingsDraft.enableDynamicPort,
         listenAllInterfaces = sheetState.localProxySettingsDraft.listenAllInterfaces,
         username = sheetState.localProxySettingsDraft.username,
         password = sheetState.localProxySettingsDraft.password,
+        onInboundProxyPortChange = {
+            sheetState.localProxySettingsDraft = if (appState.runMode == RunModeTun2Socks) {
+                sheetState.localProxySettingsDraft.copy(socks5ProxyPort = it)
+            } else if (appState.runMode == RunModeBpf2Socks) {
+                sheetState.localProxySettingsDraft.copy(socks5ProxyPort = it)
+            } else {
+                sheetState.localProxySettingsDraft.copy(transparentProxyPort = it)
+            }
+        },
+        onBpf2SocksBridgePortChange = {
+            sheetState.localProxySettingsDraft = sheetState.localProxySettingsDraft.copy(bpf2SocksBridgePort = it)
+        },
         onPortChange = {
             sheetState.localProxySettingsDraft = sheetState.localProxySettingsDraft.copy(
                 port = it,
@@ -129,9 +99,28 @@ internal fun SettingsBottomSheetsHost(
             sheetState.localProxySettingsDraft = sheetState.localProxySettingsDraft.copy(password = it)
         },
         onDismissRequest = { sheetState.showLocalProxySettings = false },
-        onSave = { port, enableDynamicPort, listenAllInterfaces, username, password ->
+        onSave = { inboundProxyPort, bpf2SocksBridgePort, port, enableDynamicPort, listenAllInterfaces, username, password ->
             updateAppState { state ->
+                val lockInboundProxyPort = (state.runMode == RunModeTproxy ||
+                    state.runMode == RunModeTun2Socks ||
+                    state.runMode == RunModeBpf2Socks) &&
+                    state.proxyRunning
                 state.copy(
+                    transparentProxyPort = when {
+                        lockInboundProxyPort -> state.transparentProxyPort
+                        state.runMode == RunModeTproxy -> inboundProxyPort
+                        else -> state.transparentProxyPort
+                    },
+                    socks5ProxyPort = when {
+                        lockInboundProxyPort -> state.socks5ProxyPort
+                        state.runMode == RunModeTun2Socks || state.runMode == RunModeBpf2Socks -> inboundProxyPort
+                        else -> state.socks5ProxyPort
+                    },
+                    bpf2SocksBridgePort = when {
+                        lockInboundProxyPort -> state.bpf2SocksBridgePort
+                        state.runMode == RunModeBpf2Socks -> bpf2SocksBridgePort
+                        else -> state.bpf2SocksBridgePort
+                    },
                     localProxyPort = port,
                     enableDynamicLocalProxyPort = enableDynamicPort,
                     localProxyListenAllInterfaces = listenAllInterfaces,

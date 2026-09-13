@@ -107,8 +107,6 @@ data class AppState(
     val enableRootIpv6Disabler: Boolean = false,
     val bpf2SocksBridgePort: String = RootModeEngine.DefaultBpf2SocksBridgePort.toString(),
     val socks5ProxyPort: String = RootModeEngine.DefaultTun2SocksProxyPort.toString(),
-    val enableHttpProxy: Boolean = false,
-    val httpProxyPort: String = RootModeEngine.DefaultHttpProxyPort.toString(),
 
     val serviceControl: ServiceControlSettings = ServiceControlSettings(),
 

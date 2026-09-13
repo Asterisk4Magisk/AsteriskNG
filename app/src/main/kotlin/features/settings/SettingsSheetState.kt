@@ -16,9 +16,6 @@ import androidx.compose.runtime.setValue
 internal class SettingsSheetState(
     private val updateAppState: ((AppState) -> AppState) -> Unit,
 ) {
-    var showProxySettings by mutableStateOf(false)
-    var proxySettingsDraft by mutableStateOf(ProxySettingsDraft())
-
     var showLocalProxySettings by mutableStateOf(false)
     var localProxySettingsDraft by mutableStateOf(LocalProxySettingsDraft())
 
@@ -45,11 +42,6 @@ internal class SettingsSheetState(
 
     var showPrivateAddresses by mutableStateOf(false)
     var privateAddressCidrsDraft by mutableStateOf(emptyList<String>())
-
-    fun openProxySettings(appState: AppState) {
-        proxySettingsDraft = appState.toProxySettingsDraft()
-        showProxySettings = true
-    }
 
     fun openLocalProxySettings(appState: AppState) {
         localProxySettingsDraft = appState.toLocalProxySettingsDraft()

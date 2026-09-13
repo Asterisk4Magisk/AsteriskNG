@@ -220,8 +220,6 @@ internal class AppSettingsPreferences(
                 KeySocks5ProxyPort,
                 defaults.socks5ProxyPort,
             ) ?: defaults.socks5ProxyPort,
-            enableHttpProxy = preferences.getBoolean(KeyEnableHttpProxy, defaults.enableHttpProxy),
-            httpProxyPort = preferences.getString(KeyHttpProxyPort, defaults.httpProxyPort) ?: defaults.httpProxyPort,
             serviceControl = preferences.getServiceControl(defaults.serviceControl),
             externalInterfaces = preferences.getStringList(KeyExternalInterfaces, defaults.externalInterfaces),
             ignoredInterfaces = preferences.getStringList(KeyIgnoredInterfaces, defaults.ignoredInterfaces),
@@ -300,8 +298,6 @@ internal class AppSettingsPreferences(
             .putBoolean(KeyEnableRootIpv6Disabler, state.enableRootIpv6Disabler)
             .putString(KeyBpf2SocksBridgePort, state.bpf2SocksBridgePort)
             .putString(KeySocks5ProxyPort, state.socks5ProxyPort)
-            .putBoolean(KeyEnableHttpProxy, state.enableHttpProxy)
-            .putString(KeyHttpProxyPort, state.httpProxyPort)
             .putServiceControl(state.serviceControl)
             .putStringList(KeyExternalInterfaces, state.externalInterfaces)
             .putStringList(KeyIgnoredInterfaces, state.ignoredInterfaces)
@@ -498,8 +494,6 @@ private const val KeyEnableRootEbpfDirectCidrBypass = "enable_root_ebpf_direct_c
 private const val KeyEnableRootIpv6Disabler = "enable_root_ipv6_disabler"
 private const val KeyBpf2SocksBridgePort = "bpf2socks_bridge_port"
 private const val KeySocks5ProxyPort = "socks5_proxy_port"
-private const val KeyEnableHttpProxy = "enable_http_proxy"
-private const val KeyHttpProxyPort = "http_proxy_port"
 private const val KeyServiceControlEnabled = "service_control_enabled"
 private const val KeyServiceControlScheduleEnabled = "service_control_schedule_enabled"
 private const val KeyServiceControlScheduleStartCron = "service_control_schedule_start_cron"

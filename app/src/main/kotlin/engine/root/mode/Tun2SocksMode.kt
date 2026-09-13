@@ -12,7 +12,6 @@ import engine.proxy.toLocalProxyOptions
 import engine.root.config.RootConfigBuildContext
 import engine.root.config.RootModeStartConfig
 import engine.root.config.buildAsteriskdConfig
-import engine.root.config.buildRootSharedProxyInbounds
 import engine.root.config.tun2SocksInternalProxyPortValue
 import engine.root.daemon.config.AsteriskdHevSocks5TunnelHelper
 import engine.root.daemon.config.AsteriskdMode
@@ -75,11 +74,6 @@ private fun AppState.buildTun2SocksInbounds(
     return buildList {
         add(buildTun2SocksInbound(this@buildTun2SocksInbounds, socks5ProxyPort))
         add(buildLocalSocksInbound(this@buildTun2SocksInbounds, XrayTags.LOCAL_SOCKS_INBOUND, localProxyOptions))
-        addAll(
-            buildRootSharedProxyInbounds(
-                httpInboundTag = XrayTags.TUN2SOCKS_HTTP_INBOUND,
-            ),
-        )
     }
 }
 
