@@ -7,6 +7,7 @@ androidx-room = "2.8.5"
 androidx-work = "2.11.2"
 compose = "1.12.0"
 coil = "3.6.2"
+dexlib2 = "3.0.10"
 kotlin = "2.4.20"
 kotlinx-serialization-json = "1.11.0"
 ksp = "2.3.11"
@@ -33,6 +34,7 @@ compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", v
 compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "compose" }
 coil = { module = "io.coil-kt.coil3:coil", version.ref = "coil" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
+dexlib2 = { module = "com.android.tools.smali:smali-dexlib2", version.ref = "dexlib2" }
 grpc-okhttp = { module = "io.grpc:grpc-okhttp", version.ref = "grpc" }
 grpc-protobuf-lite = { module = "io.grpc:grpc-protobuf-lite", version.ref = "grpc" }
 grpc-stub = { module = "io.grpc:grpc-stub", version.ref = "grpc" }

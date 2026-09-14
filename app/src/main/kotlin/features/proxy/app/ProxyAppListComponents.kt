@@ -60,6 +60,9 @@ import ui.components.IconDropdownMenuEntry
 
 internal enum class ProxyAppListMoreAction {
     ToggleSystemApps,
+    ScanChinaApps,
+    InvertSelection,
+    ClearSelection,
     ImportClipboard,
     ExportClipboard,
 }
@@ -108,6 +111,21 @@ internal fun ProxyAppListMoreActionsMenu(
                 title = stringResource(R.string.proxy_app_list_show_system_apps),
                 selected = showSystemApps,
                 action = ProxyAppListMoreAction.ToggleSystemApps,
+            ),
+            IconDropdownMenuEntry(
+                key = "scan-china-apps",
+                title = stringResource(R.string.proxy_app_list_scan_china_apps),
+                action = ProxyAppListMoreAction.ScanChinaApps,
+            ),
+            IconDropdownMenuEntry(
+                key = "invert-selection",
+                title = stringResource(R.string.proxy_app_list_invert_selection),
+                action = ProxyAppListMoreAction.InvertSelection,
+            ),
+            IconDropdownMenuEntry(
+                key = "clear-selection",
+                title = stringResource(R.string.proxy_app_list_clear_selection),
+                action = ProxyAppListMoreAction.ClearSelection,
             ),
             IconDropdownMenuEntry(
                 key = "import-clipboard",

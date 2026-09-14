@@ -640,4 +640,13 @@
     <string name="settings_service_control_save_failed">服务控制应用失败，编辑内容已保留。</string>
     <string name="settings_service_control_proxy_server_required">启用服务控制前，请先添加并选择一个代理服务器。</string>
     <string name="broadcast_update_notification_title">正在更新订阅和资源</string>
+    <string name="proxy_app_list_scan_china_apps">扫描中国应用</string>
+    <string name="proxy_app_list_scan_china_progress">已扫描 %1$d / %2$d，命中 %3$d</string>
+    <string name="proxy_app_list_scan_china_done">已扫描 %1$d 个应用，发现 %2$d 个中国应用</string>
+    <string name="proxy_app_list_scan_china_no_match">已扫描 {scanned} 个应用，未发现中国应用</string>
+    <string name="proxy_app_list_scan_china_skipped_global">全应用模式下已跳过</string>
+    <string name="proxy_app_list_invert_selection">反选</string>
+    <string name="proxy_app_list_clear_selection">清空</string>
+    <string name="proxy_app_list_invert_done">已反选</string>
+    <string name="proxy_app_list_clear_done">已清空</string>
 </resources>

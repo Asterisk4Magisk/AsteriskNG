@@ -131,6 +131,19 @@
             ]
         },
         {
+            "uniqueId": "com.android.tools.smali:smali-dexlib2",
+            "artifactVersion": "3.0.10",
+            "name": "dexlib2",
+            "description": "dexlib2 is a library for reading/modifying/writing Android dex files",
+            "website": "https://github.com/google/smali",
+            "scm": {
+                "url": "https://github.com/google/smali/tree/master/dexlib2"
+            },
+            "licenses": [
+                "BSD-3-Clause"
+            ]
+        },
+        {
             "uniqueId": "io.github.rosemoe:editor",
             "artifactVersion": "0.24.6",
             "name": "editor",

@@ -640,4 +640,13 @@
     <string name="settings_service_control_save_failed">Áp dụng điều khiển dịch vụ thất bại, nội dung đã sửa vẫn được giữ lại.</string>
     <string name="settings_service_control_proxy_server_required">Vui lòng thêm và chọn một máy chủ proxy trước khi bật điều khiển dịch vụ.</string>
     <string name="broadcast_update_notification_title">Đang cập nhật đăng ký và tài nguyên</string>
+    <string name="proxy_app_list_scan_china_apps">Quét ứng dụng Trung Quốc</string>
+    <string name="proxy_app_list_scan_china_progress">Đã quét %1$d / %2$d, tìm thấy %3$d</string>
+    <string name="proxy_app_list_scan_china_done">Đã quét %1$d ứng dụng, tìm thấy %2$d ứng dụng Trung Quốc</string>
+    <string name="proxy_app_list_scan_china_no_match">Đã quét {scanned} ứng dụng, không tìm thấy ứng dụng Trung Quốc</string>
+    <string name="proxy_app_list_scan_china_skipped_global">Bỏ qua trong chế độ tất cả ứng dụng</string>
+    <string name="proxy_app_list_invert_selection">Đảo ngược lựa chọn</string>
+    <string name="proxy_app_list_clear_selection">Xóa lựa chọn</string>
+    <string name="proxy_app_list_invert_done">Đã đảo ngược lựa chọn</string>
+    <string name="proxy_app_list_clear_done">Đã xóa lựa chọn</string>
 </resources>

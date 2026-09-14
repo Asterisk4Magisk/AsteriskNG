@@ -132,3 +132,4 @@ appops set org.asterisk.zcc.ang ACTIVATE_VPN allow
 - [@Chocolate4U/Iran-v2ray-rules](https://github.com/Chocolate4U/Iran-v2ray-rules)
 - [@runetfreedom/russia-v2ray-rules-dat](https://github.com/runetfreedom/russia-v2ray-rules-dat)
 - [@mayaxcn/china-ip-list](https://github.com/mayaxcn/china-ip-list)
+- [@xchacha20-poly1305/husi](https://github.com/xchacha20-poly1305/husi) — heuristic idea for the per-app proxy "Scan Chinese apps" feature

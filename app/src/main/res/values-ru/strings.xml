@@ -630,4 +630,13 @@
     <string name="settings_service_control_save_failed">Не удалось применить управление сервисом. Внесённые изменения не потеряны.</string>
     <string name="settings_service_control_proxy_server_required">Перед включением управления сервисом добавьте и выберите прокси-сервер.</string>
     <string name="broadcast_update_notification_title">Обновление подписок и ресурсов</string>
+    <string name="proxy_app_list_scan_china_apps">Сканировать китайские приложения</string>
+    <string name="proxy_app_list_scan_china_progress">Проверено %1$d из %2$d, найдено %3$d</string>
+    <string name="proxy_app_list_scan_china_done">Проверено приложений: %1$d, найдено китайских: %2$d</string>
+    <string name="proxy_app_list_scan_china_no_match">Проверено приложений: {scanned}, китайские приложения не найдены</string>
+    <string name="proxy_app_list_scan_china_skipped_global">Пропущено в режиме всех приложений</string>
+    <string name="proxy_app_list_invert_selection">Инвертировать выбор</string>
+    <string name="proxy_app_list_clear_selection">Очистить выбор</string>
+    <string name="proxy_app_list_invert_done">Выбор инвертирован</string>
+    <string name="proxy_app_list_clear_done">Выбор очищен</string>
 </resources>
