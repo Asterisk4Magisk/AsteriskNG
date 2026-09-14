@@ -62,6 +62,28 @@ An Xray client for Android, powered by [Xray-core](https://github.com/XTLS/Xray-
 - The bundled Xray executable can be replaced with an executable file or a zip archive containing `xray`.
 - `geoip.dat`, `geosite.dat`, and other resources can be restored, replaced locally, or updated from built-in and custom sources.
 
+## Broadcast Control
+
+Enable **Broadcast Control** in settings, then send an explicit broadcast to the receiver below. Actions use the `org.asterisk.zcc.ang.action.` prefix.
+
+| Operation | Action suffix |
+| --- | --- |
+| Start proxy | `PROXY_START` |
+| Stop proxy | `PROXY_STOP` |
+| Toggle proxy | `PROXY_TOGGLE` |
+| Update all URL subscriptions | `SUBSCRIPTION_UPDATE` |
+| Cancel broadcast subscription update | `SUBSCRIPTION_UPDATE_CANCEL` |
+| Update all resources | `RESOURCE_UPDATE` |
+| Cancel resource updates | `RESOURCE_UPDATE_CANCEL` |
+
+```sh
+adb shell am broadcast -n org.asterisk.zcc.ang/features.automation.BroadcastControlReceiver -a org.asterisk.zcc.ang.action.SUBSCRIPTION_UPDATE
+```
+
+Subscription updates skip local entries; cancellation preserves completed results and scheduled update settings. Resources use the current Resource Management configuration; resource cancellation also clears its shared queue. Repeated update commands of the same kind are merged while running.
+
+Updates run in the background without starting the proxy. Broadcast delivery does not mean the update has finished; check the `BroadcastControl` app logs for results.
+
 ## Development
 
 Initialize submodules before building:

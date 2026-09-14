@@ -10,7 +10,14 @@ import app.ResourceFilesStatus
 import features.resources.runtime.AndroidResourceFileDownloadCancelledException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -134,6 +141,7 @@ internal class ResourceFileUpdateCoordinator(
     private var completionRevision = 0L
     private var nextEntryId = 1L
     private var worker: Job? = null
+    private var runningJob: Job? = null
 
     private val mutableState = MutableStateFlow(ResourceFileUpdateQueueState())
     val state: StateFlow<ResourceFileUpdateQueueState> = mutableState.asStateFlow()
@@ -163,38 +171,68 @@ internal class ResourceFileUpdateCoordinator(
         true
     }
 
-    fun cancelAll() {
-        val hasRunningRequest = synchronized(lock) {
-            pending.clear()
-            publishStateLocked()
-            running != null
+    // Broadcast updates wait for UI work rather than silently dropping a busy All request.
+    suspend fun enqueueAndAwait(request: ResourceFileUpdateRequest): ResourceFileUpdateResult? = coroutineScope {
+        if (request.targets.isEmpty()) return@coroutineScope null
+        val completion = async(start = CoroutineStart.UNDISPATCHED) {
+            results.first { it.request === request }
         }
-        if (hasRunningRequest) {
-            cancelRunning()
+        var accepted = false
+        try {
+            while (!accepted) {
+                state.first { !it.isBusy }
+                accepted = enqueue(request)
+            }
+            completion.await()
+        } catch (error: CancellationException) {
+            if (accepted) cancel(request)
+            throw error
+        } finally {
+            completion.cancel()
         }
     }
 
-    private suspend fun drainQueue() {
+    fun cancelAll() = cancel(null)
+
+    private fun cancel(request: ResourceFileUpdateRequest?) = synchronized(lock) {
+        val removed = pending.filter { request == null || it.request === request }
+        pending.removeAll(removed.toSet())
+        removed.forEach { mutableResults.tryEmit(ResourceFileUpdateResult.Cancelled(it)) }
+        if (running != null && (request == null || running?.request === request)) {
+            runningJob?.cancel()
+            cancelRunning()
+        }
+        publishStateLocked()
+    }
+
+    private suspend fun drainQueue() = supervisorScope {
         while (true) {
-            val entry = synchronized(lock) {
-                val next = pending.removeFirstOrNull()
-                if (next == null) {
+            val execution = synchronized(lock) {
+                val entry = pending.removeFirstOrNull()
+                if (entry == null) {
                     worker = null
                     publishStateLocked()
                     null
                 } else {
-                    running = next
+                    val job = async(start = CoroutineStart.LAZY) { execute(entry.request) }
+                    running = entry
+                    runningJob = job
                     publishStateLocked()
-                    next
+                    entry to job
                 }
-            } ?: return
-
+            } ?: return@supervisorScope
+            val (entry, job) = execution
             val result = try {
-                execute(entry.request)
+                job.await()
                 ResourceFileUpdateResult.Success(entry)
             } catch (error: CancellationException) {
-                clearAfterScopeCancellation()
-                throw error
+                try {
+                    currentCoroutineContext().ensureActive()
+                } catch (scopeError: CancellationException) {
+                    clearAfterScopeCancellation()
+                    throw scopeError
+                }
+                ResourceFileUpdateResult.Cancelled(entry)
             } catch (_: AndroidResourceFileDownloadCancelledException) {
                 ResourceFileUpdateResult.Cancelled(entry)
             } catch (error: Throwable) {
@@ -203,6 +241,7 @@ internal class ResourceFileUpdateCoordinator(
 
             synchronized(lock) {
                 running = null
+                runningJob = null
                 completionRevision += 1
                 publishStateLocked()
             }
@@ -211,6 +250,7 @@ internal class ResourceFileUpdateCoordinator(
     }
 
     private fun clearAfterScopeCancellation() = synchronized(lock) {
+        runningJob = null
         running = null
         pending.clear()
         worker = null

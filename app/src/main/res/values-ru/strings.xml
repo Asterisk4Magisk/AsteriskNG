@@ -594,7 +594,7 @@
     <string name="settings_run_mode_bpf2socks">BPF2SOCKS (ROOT)</string>
     <string name="settings_proxy_bpf2socks">Настройки прокси (BPF2SOCKS)</string>
     <string name="settings_broadcast_control">Управление трансляциями</string>
-    <string name="settings_broadcast_control_summary">Разрешить внешним трансляциям запускать и останавливать прокси-службу</string>
+    <string name="settings_broadcast_control_summary">Разрешить внешним трансляциям управлять службами приложения</string>
     <string name="settings_bpf2socks_bridge_port">Порт моста BPF2SOCKS</string>
     <string name="settings_bpf2socks_socks5_port">Порт SOCKS5</string>
     <string name="settings_resource_file_update_queued">Добавлено в очередь обновления</string>
@@ -629,4 +629,5 @@
     <string name="settings_service_control_saving">Перезапуск…</string>
     <string name="settings_service_control_save_failed">Не удалось применить управление сервисом. Внесённые изменения не потеряны.</string>
     <string name="settings_service_control_proxy_server_required">Перед включением управления сервисом добавьте и выберите прокси-сервер.</string>
+    <string name="broadcast_update_notification_title">Обновление подписок и ресурсов</string>
 </resources>

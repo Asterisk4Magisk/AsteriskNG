@@ -62,6 +62,28 @@
 - Có thể thay thế tệp thực thi Xray đi kèm bằng một tệp thực thi hoặc tệp nén zip chứa `xray`.
 - Có thể khôi phục, thay thế bằng tệp cục bộ hoặc cập nhật `geoip.dat`, `geosite.dat` và các tài nguyên khác từ nguồn tích hợp sẵn hoặc nguồn tùy chỉnh.
 
+## Điều khiển qua broadcast
+
+Bật **Điều khiển qua broadcast** trong cài đặt, sau đó gửi broadcast chỉ định rõ bộ nhận như bên dưới. Tiền tố Action là `org.asterisk.zcc.ang.action.`.
+
+| Thao tác | Hậu tố Action |
+| --- | --- |
+| Khởi động proxy | `PROXY_START` |
+| Dừng proxy | `PROXY_STOP` |
+| Bật/tắt proxy | `PROXY_TOGGLE` |
+| Cập nhật tất cả đăng ký URL | `SUBSCRIPTION_UPDATE` |
+| Hủy cập nhật đăng ký qua broadcast | `SUBSCRIPTION_UPDATE_CANCEL` |
+| Cập nhật tất cả tài nguyên | `RESOURCE_UPDATE` |
+| Hủy cập nhật tài nguyên | `RESOURCE_UPDATE_CANCEL` |
+
+```sh
+adb shell am broadcast -n org.asterisk.zcc.ang/features.automation.BroadcastControlReceiver -a org.asterisk.zcc.ang.action.SUBSCRIPTION_UPDATE
+```
+
+Cập nhật đăng ký bỏ qua mục cục bộ; khi hủy, kết quả đã hoàn thành và cài đặt cập nhật theo lịch được giữ nguyên. Tài nguyên được cập nhật theo cấu hình hiện tại trong Quản lý tài nguyên; thao tác hủy cũng xóa hàng đợi tài nguyên dùng chung. Các lệnh cập nhật cùng loại được gộp khi tác vụ đang chạy.
+
+Cập nhật chạy trong nền mà không khởi động proxy. Broadcast đã được gửi đến không có nghĩa là cập nhật đã hoàn tất; xem kết quả trong nhật ký ứng dụng với thẻ `BroadcastControl`.
+
 ## Phát triển
 
 Khởi tạo các submodule trước khi biên dịch:

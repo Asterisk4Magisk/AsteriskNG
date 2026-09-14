@@ -111,7 +111,7 @@
     <string name="settings_root_ebpf_matcher_failed">Failed to probe eBPF matcher support</string>
     <string name="settings_root_ebpf_matcher_unsupported">This device does not support eBPF matcher</string>
     <string name="settings_broadcast_control">Broadcast control</string>
-    <string name="settings_broadcast_control_summary">Allow external broadcasts to start and stop the proxy service</string>
+    <string name="settings_broadcast_control_summary">Allow external broadcasts to control app services</string>
     <string name="settings_root_ebpf_selinux_policy_warning_title">Enable eBPF matcher?</string>
     <string name="settings_root_ebpf_selinux_policy_warning_summary">No SELinux policy tool was detected. AsteriskNG may be unable to add the required eBPF permission rules when the proxy starts. You can still enable eBPF matching, but hotspot or tethering sharing may not work until your root framework provides magiskpolicy/supolicy or the rules are added manually.</string>
     <string name="settings_root_ebpf_selinux_policy_warning_confirm">Enable anyway</string>
@@ -639,4 +639,5 @@
     <string name="settings_service_control_saving">Restarting…</string>
     <string name="settings_service_control_save_failed">Could not apply service control. Your edits were kept.</string>
     <string name="settings_service_control_proxy_server_required">Add and select a proxy server before enabling service control.</string>
+    <string name="broadcast_update_notification_title">Updating subscriptions and resources</string>
 </resources>

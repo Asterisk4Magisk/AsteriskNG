@@ -11,10 +11,10 @@ import features.logs.AndroidAppLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -84,42 +84,51 @@ class AndroidAppStateStore private constructor(
         }
     }
 
-    private fun persist(nextState: AppState, revision: Long) {
-        scope.launch {
-            saveMutex.withLock {
-                if (revision != saveRevision.get()) {
-                    return@withLock
-                }
-                val plan = persistenceTracker.plan(
-                    nextState = nextState,
-                    hasPersistedRoomState = hasPersistedState.get(),
+    private fun persist(nextState: AppState, revision: Long) = scope.async {
+        saveMutex.withLock {
+            if (revision != saveRevision.get()) {
+                return@withLock
+            }
+            val plan = persistenceTracker.plan(
+                nextState = nextState,
+                hasPersistedRoomState = hasPersistedState.get(),
+            )
+            runCatching {
+                settingsPreferences.save(plan.nextState)
+                dao.saveState(
+                    previousState = plan.previousState,
+                    nextState = plan.nextState,
+                    replaceAll = plan.replaceAll,
                 )
+                hasPersistedState.set(true)
+                persistenceTracker.markPersisted(plan.nextState)
+            }.onFailure { error ->
+                AndroidAppLogger.error(LogTag, "Failed to persist app state", error)
+                resetDatabase()
                 runCatching {
-                    settingsPreferences.save(plan.nextState)
+                    settingsPreferences.save(nextState)
                     dao.saveState(
-                        previousState = plan.previousState,
-                        nextState = plan.nextState,
-                        replaceAll = plan.replaceAll,
+                        previousState = AppState(),
+                        nextState = nextState,
+                        replaceAll = true,
                     )
                     hasPersistedState.set(true)
-                    persistenceTracker.markPersisted(plan.nextState)
-                }.onFailure { error ->
-                    AndroidAppLogger.error(LogTag, "Failed to persist app state", error)
-                    resetDatabase()
-                    runCatching {
-                        settingsPreferences.save(nextState)
-                        dao.saveState(
-                            previousState = AppState(),
-                            nextState = nextState,
-                            replaceAll = true,
-                        )
-                        hasPersistedState.set(true)
-                        persistenceTracker.markPersisted(nextState)
-                    }.onFailure { retryError ->
-                        AndroidAppLogger.error(LogTag, "Failed to persist app state after database reset", retryError)
-                    }
+                    persistenceTracker.markPersisted(nextState)
+                }.onFailure { retryError ->
+                    AndroidAppLogger.error(LogTag, "Failed to persist app state after database reset", retryError)
+                    throw retryError
                 }
             }
+        }
+    }
+
+    internal suspend fun awaitPersistence() {
+        while (true) {
+            val snapshot = synchronized(updateLock) {
+                PendingStateSave(state.value, saveRevision.get())
+            }
+            persist(snapshot.nextState, snapshot.revision).await()
+            if (snapshot.revision == saveRevision.get()) return
         }
     }
 

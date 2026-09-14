@@ -9,8 +9,7 @@ import features.subscription.DefaultSubscriptionUserAgent
 import features.subscription.SubscriptionHttpException
 import engine.proxy.LocalProxyLoopbackAddress
 import engine.proxy.LocalProxyRuntime
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import utils.runCancellableHttpRequest
 import utils.encodeBase64
 import java.net.Authenticator
 import java.net.HttpURLConnection
@@ -34,7 +33,7 @@ internal class AndroidSubscriptionFetcher(
         url: String,
         userAgent: String,
         options: AndroidSubscriptionFetchOptions,
-    ): String = withContext(Dispatchers.IO) {
+    ): String = runCancellableHttpRequest { track ->
         val proxy = options.toProxy()
         val requestCredentials = options.toRequestCredentials(
             installationHwid = installationHwid,
@@ -42,6 +41,7 @@ internal class AndroidSubscriptionFetcher(
         )
         proxy.withAuthenticator {
             fetchWithRedirects(
+                track = track,
                 url = url.toIdnUrl(),
                 userAgent = userAgent.ifBlank { DefaultSubscriptionUserAgent },
                 requestCredentials = requestCredentials,
@@ -87,6 +87,7 @@ internal fun AndroidSubscriptionFetchOptions.toProxy(): AndroidSubscriptionProxy
 }
 
 private fun fetchWithRedirects(
+    track: (HttpURLConnection) -> Unit,
     url: String,
     userAgent: String,
     requestCredentials: SubscriptionRequestCredentials,
@@ -96,6 +97,7 @@ private fun fetchWithRedirects(
     repeat(MaxRedirects) {
         val connection = currentUrl.toConnection(proxy)
         try {
+            track(connection)
             connection.setRequestProperty("User-Agent", userAgent)
             connection.setRequestProperty("Connection", "close")
             connection.setRequestProperty("X-Hwid", requestCredentials.hwid)

@@ -111,7 +111,7 @@
     <string name="settings_root_ebpf_matcher_failed">eBPF 匹配器支持探测失败</string>
     <string name="settings_root_ebpf_matcher_unsupported">当前设备不支持 eBPF 匹配器</string>
     <string name="settings_broadcast_control">广播控制</string>
-    <string name="settings_broadcast_control_summary">允许外部广播启动和停止代理服务</string>
+    <string name="settings_broadcast_control_summary">允许外部广播控制应用服务</string>
     <string name="settings_root_ebpf_selinux_policy_warning_title">启用 eBPF 匹配器？</string>
     <string name="settings_root_ebpf_selinux_policy_warning_summary">未检测到 SELinux policy 工具。启动代理时，AsteriskNG 可能无法添加必要的 eBPF 权限规则。仍可启用 eBPF 匹配器，但热点或网络共享可能无法正常使用，直到 root 框架提供 magiskpolicy/supolicy，或手动添加这些规则。</string>
     <string name="settings_root_ebpf_selinux_policy_warning_confirm">仍然启用</string>
@@ -639,4 +639,5 @@
     <string name="settings_service_control_saving">正在重启…</string>
     <string name="settings_service_control_save_failed">服务控制应用失败，编辑内容已保留。</string>
     <string name="settings_service_control_proxy_server_required">启用服务控制前，请先添加并选择一个代理服务器。</string>
+    <string name="broadcast_update_notification_title">正在更新订阅和资源</string>
 </resources>

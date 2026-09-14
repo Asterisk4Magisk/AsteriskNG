@@ -3,6 +3,10 @@
 
 package app
 
+import features.resources.ResourceFileUseCase
+import features.resources.ResourceFileUpdateCoordinator
+import features.resources.ResourceFileUpdateRequest
+import features.resources.runtime.AndroidResourceFileDownloadCancellation
 import android.app.Application
 import system.AndroidAppIconFetcher
 import features.logs.AndroidAccessLogRepository
@@ -34,6 +38,40 @@ class AsteriskApplication : Application(), SingletonImageLoader.Factory {
     }
     private val subscriptionScheduler: SubscriptionScheduler by lazy {
         SubscriptionScheduler(AndroidSubscriptionScheduleGateway(applicationContext))
+    }
+
+    private val resourceFileUseCase by lazy {
+        ResourceFileUseCase(
+            context = this,
+            resourceFilePicker = { null },
+            currentRunMode = { stateStore.state.value.runMode },
+        )
+    }
+    internal val resourceFileUpdateCoordinator by lazy {
+        ResourceFileUpdateCoordinator(
+            scope = appScope,
+            execute = { request ->
+                when (request) {
+                    is ResourceFileUpdateRequest.BuiltIn -> resourceFileUseCase.update(
+                        kind = request.kind,
+                        source = request.source,
+                        options = request.options,
+                        customResourceFiles = request.customResourceFiles,
+                    )
+                    is ResourceFileUpdateRequest.Custom -> resourceFileUseCase.updateCustom(
+                        customFile = request.file,
+                        options = request.options,
+                        customResourceFiles = request.customResourceFiles,
+                    )
+                    is ResourceFileUpdateRequest.All -> resourceFileUseCase.update(
+                        source = request.source,
+                        options = request.options,
+                        customResourceFiles = request.customResourceFiles,
+                    )
+                }
+            },
+            cancelRunning = AndroidResourceFileDownloadCancellation::cancel,
+        )
     }
 
     override fun onCreate() {

@@ -25,10 +25,7 @@ import engine.proxy.AndroidProxyEngine
 import engine.proxy.latency.AndroidProxyLatencyTester
 import features.proxy.server.usecase.ProxyServerImportFileUseCase
 import features.proxy.server.usecase.ProxyServiceUseCase
-import features.resources.ResourceFileUpdateCoordinator
-import features.resources.ResourceFileUpdateRequest
 import features.resources.ResourceFileUseCase
-import features.resources.runtime.AndroidResourceFileDownloadCancellation
 import features.settings.locale.ProvideAppLanguage
 import features.settings.locale.RecreateActivityOnAppLanguageChange
 import features.settings.usecase.SwitchRunModeUseCase
@@ -81,32 +78,7 @@ fun App(
             rootShell = rootAccess,
         )
     }
-    val resourceFileUpdateCoordinator = remember(appScope, resourceFileUseCase) {
-        ResourceFileUpdateCoordinator(
-            scope = appScope,
-            execute = { request ->
-                when (request) {
-                    is ResourceFileUpdateRequest.BuiltIn -> resourceFileUseCase.update(
-                        kind = request.kind,
-                        source = request.source,
-                        options = request.options,
-                        customResourceFiles = request.customResourceFiles,
-                    )
-                    is ResourceFileUpdateRequest.Custom -> resourceFileUseCase.updateCustom(
-                        customFile = request.file,
-                        options = request.options,
-                        customResourceFiles = request.customResourceFiles,
-                    )
-                    is ResourceFileUpdateRequest.All -> resourceFileUseCase.update(
-                        source = request.source,
-                        options = request.options,
-                        customResourceFiles = request.customResourceFiles,
-                    )
-                }
-            },
-            cancelRunning = AndroidResourceFileDownloadCancellation::cancel,
-        )
-    }
+    val resourceFileUpdateCoordinator = application.resourceFileUpdateCoordinator
     val appBackupUseCase = remember(appContext, resourceFilePicker, logFileCreator) {
         AppBackupUseCase(
             context = appContext,

@@ -23,7 +23,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import app.AppState
 import app.CustomResourceFileState
 import app.CustomResourceFileStatus
 import app.LocalAppServices
@@ -38,7 +37,6 @@ import app.collectAppState
 import app.customResourceFileNameOrNull
 import app.resourceFileUpdateSource
 import app.statusOf
-import engine.network.toPortOrNull
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -495,15 +493,7 @@ fun ResourceManagementPage(
     }
 }
 
-private fun AppState.resourceFileUpdateOptions(): ResourceFileUpdateOptions {
-    return ResourceFileUpdateOptions(
-        useRunningProxy = proxyRunning,
-        fallbackProxyPort = localProxyPort.toPortOrNull(),
-        fallbackProxyUsername = localProxyUsername,
-        fallbackProxyPassword = localProxyPassword,
-        userAgent = resourceFileUserAgent,
-    )
-}
+
 
 private fun ResourceFilesStatus.statusOf(customFile: CustomResourceFileState): CustomResourceFileStatus {
     return customResourceFiles.firstOrNull { fileStatus -> fileStatus.file.id == customFile.id }
