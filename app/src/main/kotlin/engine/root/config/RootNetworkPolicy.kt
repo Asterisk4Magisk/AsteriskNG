@@ -39,11 +39,7 @@ internal fun RootIptablesConfig.withAppSettings(
     val proxyPrivateCidrs = appState.privateAddressCidrs.toTrimmedNonEmptyDistinctList()
     val bypassPrivateCidrs = RootDefaultBypassPrivateCidrs.toTrimmedNonEmptyDistinctList()
     val selectedAppKeys = appState.proxyAppListSelectedApps.toTrimmedNonEmptyDistinctList()
-    val appListMode = if (selectedAppKeys.isEmpty()) {
-        ProxyAppListModeGlobal
-    } else {
-        appState.proxyAppListMode.toRootProxyAppListMode()
-    }
+    val appListMode = appState.proxyAppListMode.toRootProxyAppListMode()
 
     return copy(
         externalInterfacePrefixes = appState.externalInterfaces.toTrimmedNonEmptyDistinctList(),
