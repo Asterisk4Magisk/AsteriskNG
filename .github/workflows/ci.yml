@@ -39,6 +39,13 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v4
+        with:
+          # The action defaults to `tools platform-tools`, but the legacy `tools`
+          # package is no longer published: sdkmanager now fails with
+          # "Failed to find package 'tools'" and the job never reaches Gradle.
+          # The step below installs whatever platform, build-tools and NDK the
+          # project asks for, so only platform-tools is needed here.
+          packages: platform-tools
 
       - name: Install Android SDK packages
         shell: bash
