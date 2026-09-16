@@ -356,7 +356,6 @@ private fun CustomUserAgentDialog(
 private fun SubscriptionUserAgentSelection.labelResId(): Int = when (this) {
     SubscriptionUserAgentSelection.V2rayNg -> R.string.subscription_user_agent_v2rayng
     SubscriptionUserAgentSelection.ClashMeta -> R.string.subscription_user_agent_clash_meta
-    SubscriptionUserAgentSelection.FlClashX -> R.string.subscription_user_agent_flclash_x
     SubscriptionUserAgentSelection.Custom -> R.string.subscription_user_agent_custom
 }
 

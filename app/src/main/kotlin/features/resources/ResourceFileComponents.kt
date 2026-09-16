@@ -123,7 +123,6 @@ internal fun ResourceFileSourceCard(
             text = when (selection) {
                 SubscriptionUserAgentSelection.V2rayNg -> "v2rayNG"
                 SubscriptionUserAgentSelection.ClashMeta -> "Clash Meta"
-                SubscriptionUserAgentSelection.FlClashX -> "FlClash X"
                 SubscriptionUserAgentSelection.Custom -> stringResource(R.string.subscription_user_agent_custom)
             },
         )

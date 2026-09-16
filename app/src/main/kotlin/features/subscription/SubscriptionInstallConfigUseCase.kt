@@ -196,11 +196,6 @@ private enum class InstallConfigSource(
     V2rayNg(scheme = "v2rayng", userAgent = DefaultSubscriptionUserAgent, defaultName = V2rayNgDefaultSubscriptionName),
     Clash(scheme = "clash", userAgent = ClashMetaSubscriptionUserAgent, defaultName = ClashDefaultSubscriptionName),
     ClashMeta(scheme = "clashmeta", userAgent = ClashMetaSubscriptionUserAgent, defaultName = ClashDefaultSubscriptionName),
-    FlClashX(
-        scheme = "flclashx",
-        userAgent = FlClashXSubscriptionUserAgent,
-        defaultName = ClashDefaultSubscriptionName,
-    ),
 }
 
 private fun Url.isSubscriptionInstallConfigUri(): Boolean {

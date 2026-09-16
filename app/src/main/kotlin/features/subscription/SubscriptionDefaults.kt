@@ -6,25 +6,21 @@ package features.subscription
 const val DefaultSubscriptionGroupId = 1
 const val DefaultSubscriptionUserAgent = "v2rayNG/2.3.8"
 const val ClashMetaSubscriptionUserAgent = "clash.meta"
-const val FlClashXSubscriptionUserAgent = "FlClash X/v0.4.2 Platform/android"
 internal enum class SubscriptionUserAgentSelection {
     V2rayNg,
     ClashMeta,
-    FlClashX,
     Custom,
 }
 
 internal val SubscriptionUserAgentSelections = listOf(
     SubscriptionUserAgentSelection.V2rayNg,
     SubscriptionUserAgentSelection.ClashMeta,
-    SubscriptionUserAgentSelection.FlClashX,
     SubscriptionUserAgentSelection.Custom,
 )
 
 internal fun SubscriptionUserAgentSelection.userAgentOrNull(): String? = when (this) {
     SubscriptionUserAgentSelection.V2rayNg -> DefaultSubscriptionUserAgent
     SubscriptionUserAgentSelection.ClashMeta -> ClashMetaSubscriptionUserAgent
-    SubscriptionUserAgentSelection.FlClashX -> FlClashXSubscriptionUserAgent
     SubscriptionUserAgentSelection.Custom -> null
 }
 

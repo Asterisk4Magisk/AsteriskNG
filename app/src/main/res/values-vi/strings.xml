@@ -600,7 +600,6 @@
     <string name="subscription_user_agent">User-Agent</string>
     <string name="subscription_user_agent_v2rayng">v2rayNG</string>
     <string name="subscription_user_agent_clash_meta">Clash Meta</string>
-    <string name="subscription_user_agent_flclash_x">FlClash X</string>
     <string name="subscription_user_agent_custom">Tùy chỉnh</string>
     <string name="subscription_custom_user_agent">User-Agent tùy chỉnh</string>
     <string name="subscription_user_agent_custom_summary">Nhập giá trị tùy chỉnh</string>

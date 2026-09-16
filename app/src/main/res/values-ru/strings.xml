@@ -570,7 +570,6 @@
     <string name="subscription_user_agent">Идентификатор клиента (User-Agent)</string>
     <string name="subscription_user_agent_v2rayng">v2rayNG</string>
     <string name="subscription_user_agent_clash_meta">Clash Meta</string>
-    <string name="subscription_user_agent_flclash_x">FlClash X</string>
     <string name="subscription_user_agent_custom">Кастомный User-Agent</string>
     <string name="subscription_custom_user_agent">Пользовательский User-Agent</string>
     <string name="subscription_user_agent_custom_summary">Введите собственное значение заголовка User-Agent</string>
