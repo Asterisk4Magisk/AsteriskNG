@@ -222,6 +222,7 @@ fun AppContent(
             onBack = { navigator.pop() },
             transitionEffects = transitionEffects,
         )
+        features.proxy.ProxyErrorHost()
     }
 }
 

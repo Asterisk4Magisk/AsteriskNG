@@ -648,4 +648,14 @@
     <string name="proxy_app_list_clear_selection">清空</string>
     <string name="proxy_app_list_invert_done">已反选</string>
     <string name="proxy_app_list_clear_done">已清空</string>
+    <string name="proxy_error_dialog_title">代理启动失败</string>
+    <string name="proxy_error_dialog_mode_title">模式：%1$s</string>
+    <string name="proxy_error_dialog_occurred_at">时间：%1$s</string>
+    <string name="proxy_error_dialog_details">错误详情</string>
+    <string name="proxy_error_dialog_device_info">设备与系统</string>
+    <string name="proxy_error_dialog_service_log">启动日志</string>
+    <string name="proxy_error_dialog_diagnostics">建议操作</string>
+    <string name="proxy_error_dialog_copy">复制日志</string>
+    <string name="proxy_error_dialog_copied">已复制到剪贴板</string>
+    <string name="proxy_error_dialog_close">关闭</string>
 </resources>

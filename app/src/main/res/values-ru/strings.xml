@@ -638,4 +638,14 @@
     <string name="proxy_app_list_clear_selection">Очистить выбор</string>
     <string name="proxy_app_list_invert_done">Выбор инвертирован</string>
     <string name="proxy_app_list_clear_done">Выбор очищен</string>
+    <string name="proxy_error_dialog_title">Не удалось запустить прокси</string>
+    <string name="proxy_error_dialog_mode_title">Режим: %1$s</string>
+    <string name="proxy_error_dialog_occurred_at">Время: %1$s</string>
+    <string name="proxy_error_dialog_details">Сведения об ошибке</string>
+    <string name="proxy_error_dialog_device_info">Устройство и система</string>
+    <string name="proxy_error_dialog_service_log">Журнал запуска</string>
+    <string name="proxy_error_dialog_diagnostics">Рекомендуемые действия</string>
+    <string name="proxy_error_dialog_copy">Копировать журнал</string>
+    <string name="proxy_error_dialog_copied">Скопировано в буфер обмена</string>
+    <string name="proxy_error_dialog_close">Закрыть</string>
 </resources>

@@ -15,6 +15,10 @@ import engine.root.mode.RootModeCatalog
 import engine.root.mode.RootModeDefinition
 import engine.root.mode.DefaultTproxyPort as ModeDefaultTproxyPort
 import engine.root.mode.DefaultTun2SocksProxyPort as ModeDefaultTun2SocksProxyPort
+import engine.root.publication.rootRuntimeLayout
+import engine.root.runtime.RootFailureAnalyzer
+import engine.root.runtime.RootFailureReport
+import engine.root.runtime.RootFailureWatcher
 import engine.root.runtime.RootRuntimeBusyException
 import engine.root.runtime.RootRuntimeConflictException
 import engine.root.runtime.RootSupervisorController
@@ -91,6 +95,23 @@ internal class RootModeEngine(
         }.getOrElse { error ->
             if (error is CancellationException) throw error
             if (error is RootRuntimeConflictException || error is RootRuntimeBusyException) throw error
+            // Diagnostics are best effort; keep the original startup failure as the cause.
+            val attempt = RootFailureWatcher.currentAttempt()
+            val occurredAt = System.currentTimeMillis()
+            val explanation = RootFailureAnalyzer.analyze(runMode, error, occurredAt)
+            val report = try {
+                RootFailureReport.build(context, rootAccess, context.rootRuntimeLayout(), occurredAt)
+            } catch (diagnosticError: Exception) {
+                if (diagnosticError is CancellationException) throw diagnosticError
+                null
+            }
+            RootFailureWatcher.publish(
+                if (report == null) explanation else explanation.copy(
+                    deviceInfo = report.deviceInfo,
+                    serviceLog = report.serviceLog,
+                ),
+                expectedAttempt = attempt,
+            )
             throw IllegalStateException(
                 context.getString(definition.startFailedErrorResId, error.message.orEmpty()),
                 error,

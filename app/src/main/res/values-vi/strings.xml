@@ -648,4 +648,14 @@
     <string name="proxy_app_list_clear_selection">Xóa lựa chọn</string>
     <string name="proxy_app_list_invert_done">Đã đảo ngược lựa chọn</string>
     <string name="proxy_app_list_clear_done">Đã xóa lựa chọn</string>
+    <string name="proxy_error_dialog_title">Không thể khởi động proxy</string>
+    <string name="proxy_error_dialog_mode_title">Chế độ: %1$s</string>
+    <string name="proxy_error_dialog_occurred_at">Thời gian: %1$s</string>
+    <string name="proxy_error_dialog_details">Chi tiết lỗi</string>
+    <string name="proxy_error_dialog_device_info">Thiết bị và hệ thống</string>
+    <string name="proxy_error_dialog_service_log">Nhật ký khởi động</string>
+    <string name="proxy_error_dialog_diagnostics">Hành động đề xuất</string>
+    <string name="proxy_error_dialog_copy">Sao chép nhật ký</string>
+    <string name="proxy_error_dialog_copied">Đã sao chép vào bộ nhớ tạm</string>
+    <string name="proxy_error_dialog_close">Đóng</string>
 </resources>

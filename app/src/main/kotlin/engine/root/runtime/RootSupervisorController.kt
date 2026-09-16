@@ -28,6 +28,7 @@ import engine.root.publication.rootRuntimeLayout
 import features.logs.AndroidAppLogger
 import features.logs.clearServiceLogRepositories
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.withTimeoutOrNull
 import system.RootShellGateway
 import system.ShellExecOptions
@@ -44,16 +45,25 @@ internal class RootSupervisorController(
     suspend fun status(): AsteriskdControlResponse = client.status(runtimeLayout.asteriskdPath)
 
     fun observeStatus(): Flow<AsteriskdSnapshot> = client.observeStatus(runtimeLayout.asteriskdPath)
+        .onEach { snapshot -> observeRunningFailure(snapshot) }
 
     suspend fun preflightStart(expectedMode: AsteriskdMode, explicitRestart: Boolean): AsteriskdSnapshot? {
         return status().preflightStart(AsteriskdOwner.AsteriskNg, expectedMode, explicitRestart)
+            ?.also { snapshot -> observeRunningFailure(snapshot, explicitRootAction = true) }
     }
 
     suspend fun ownsRuntime(): Boolean = status().boundSnapshot()?.owner == AsteriskdOwner.AsteriskNg
 
     suspend fun proxyStatus(runMode: Int, expectedMode: AsteriskdMode): ProxyEngineStatus {
         val snapshot = status().boundSnapshot() ?: return ProxyEngineStatus(running = false, runMode = runMode)
+        observeRunningFailure(snapshot)
         return snapshot.toProxyEngineStatus(runMode, expectedMode)
+    }
+
+    private suspend fun observeRunningFailure(snapshot: AsteriskdSnapshot, explicitRootAction: Boolean = false) {
+        if (snapshot.owner == AsteriskdOwner.AsteriskNg && snapshot.phase == AsteriskdPhase.Running) {
+            RootFailureWatcher.ensureStarted(appContext, shell, runtimeLayout, explicitRootAction)
+        }
     }
 
     fun proxyStatus(snapshot: AsteriskdSnapshot, runMode: Int, expectedMode: AsteriskdMode): ProxyEngineStatus =
@@ -67,9 +77,13 @@ internal class RootSupervisorController(
         root: RootStartConfig,
         config: AsteriskdConfig,
     ): AsteriskdSnapshot {
+        RootFailureWatcher.beginAttempt()
         status().boundSnapshot()?.let { snapshot ->
             val disposition = snapshot.ordinaryStartDisposition(AsteriskdOwner.AsteriskNg, config.mode)
-            if (disposition == RootOrdinaryStartDisposition.Reuse) return snapshot
+            if (disposition == RootOrdinaryStartDisposition.Reuse) {
+                observeRunningFailure(snapshot)
+                return snapshot
+            }
             if (disposition.shutdownBeforeLaunch) {
                 shutdownOwn()
             }
@@ -88,6 +102,7 @@ internal class RootSupervisorController(
         root: RootStartConfig,
         config: AsteriskdConfig,
     ): AsteriskdSnapshot {
+        RootFailureWatcher.beginAttempt()
         val snapshot = status().boundSnapshot()
         if (snapshot != null && snapshot.owner != AsteriskdOwner.AsteriskNg) {
             throw RootRuntimeConflictException(snapshot)
@@ -104,6 +119,7 @@ internal class RootSupervisorController(
         root: RootStartConfig,
         config: AsteriskdConfig,
     ): Boolean {
+        RootFailureWatcher.beginAttempt()
         val snapshot = status().boundSnapshot()
         if (snapshot != null && snapshot.owner != AsteriskdOwner.AsteriskNg) {
             throw RootRuntimeConflictException(snapshot)
@@ -127,13 +143,16 @@ internal class RootSupervisorController(
                 restartExpectedOwner = snapshot?.owner,
                 launchMode = RootPublicationLaunchMode.Monitor,
             )
-            RootPublicationLaunchMode.None -> Unit
+            RootPublicationLaunchMode.None -> RootFailureWatcher.stop()
         }
         return plan.launchMode == RootPublicationLaunchMode.Service
     }
 
     suspend fun disableServiceControlWithoutConfig() {
-        val snapshot = status().boundSnapshot() ?: return
+        val snapshot = status().boundSnapshot() ?: run {
+            RootFailureWatcher.stop()
+            return
+        }
         if (snapshot.owner != AsteriskdOwner.AsteriskNg) {
             throw RootRuntimeConflictException(snapshot)
         }
@@ -149,6 +168,8 @@ internal class RootSupervisorController(
         restartExpectedOwner: AsteriskdOwner?,
         launchMode: RootPublicationLaunchMode,
     ): AsteriskdSnapshot {
+        // Only an actual ROOT launch may arm diagnostics; constructing engines also happens in VPN.
+        RootFailureWatcher.ensureStarted(appContext, shell, runtimeLayout)
         var stage = "prepare_directories"
         runCatching { AndroidAppLogger.info(LogTag, "root_start mode=${config.mode.wireValue} launch=$launchMode stage=$stage") }
         try {
@@ -204,7 +225,10 @@ internal class RootSupervisorController(
 
     suspend fun stopOwn(): AsteriskdControlResponse {
         val initial = status()
-        val initialSnapshot = initial.boundSnapshot() ?: return initial
+        val initialSnapshot = initial.boundSnapshot() ?: run {
+            RootFailureWatcher.stop()
+            return initial
+        }
         if (initialSnapshot.owner != AsteriskdOwner.AsteriskNg) {
             throw RootRuntimeConflictException(initialSnapshot)
         }
@@ -218,6 +242,7 @@ internal class RootSupervisorController(
             else -> error("Unexpected stop-own response id")
         }
         if (response.result.code == AsteriskdResultCode.Ok || response.result.code == AsteriskdResultCode.NotRunning) {
+            RootFailureWatcher.stop()
             return response
         }
         error(response.result.message ?: "Failed to stop asteriskd")
@@ -225,7 +250,10 @@ internal class RootSupervisorController(
 
     suspend fun shutdownOwn(): AsteriskdControlResponse {
         val initial = status()
-        val initialSnapshot = initial.boundSnapshot() ?: return initial
+        val initialSnapshot = initial.boundSnapshot() ?: run {
+            RootFailureWatcher.stop()
+            return initial
+        }
         if (initialSnapshot.owner != AsteriskdOwner.AsteriskNg) {
             throw RootRuntimeConflictException(initialSnapshot)
         }
@@ -246,6 +274,7 @@ internal class RootSupervisorController(
         if (response.result.code == AsteriskdResultCode.Ok ||
             response.result.code == AsteriskdResultCode.NotRunning
         ) {
+            RootFailureWatcher.stop()
             return response
         }
         error(response.result.message ?: "Failed to shutdown asteriskd")

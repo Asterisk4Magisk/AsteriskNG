@@ -641,11 +641,21 @@
     <string name="broadcast_update_notification_title">Updating subscriptions and resources</string>
     <string name="proxy_app_list_scan_china_apps">Scan Chinese apps</string>
     <string name="proxy_app_list_scan_china_progress">Scanned %1$d of %2$d, matched %3$d</string>
-    <string name="proxy_app_list_scan_china_done">Scanned %1$d apps, found %2$d Chinese apps</string>
+    <string name="proxy_app_list_scan_china_done">Apps scanned: %1$d; Chinese apps found: %2$d</string>
     <string name="proxy_app_list_scan_china_no_match">Scanned {scanned} apps, no Chinese apps found</string>
     <string name="proxy_app_list_scan_china_skipped_global">Skipped in all-app mode</string>
     <string name="proxy_app_list_invert_selection">Invert selection</string>
     <string name="proxy_app_list_clear_selection">Clear selection</string>
     <string name="proxy_app_list_invert_done">Selection inverted</string>
     <string name="proxy_app_list_clear_done">Selection cleared</string>
+    <string name="proxy_error_dialog_title">Failed to start proxy</string>
+    <string name="proxy_error_dialog_mode_title">Mode: %1$s</string>
+    <string name="proxy_error_dialog_occurred_at">Time: %1$s</string>
+    <string name="proxy_error_dialog_details">Error details</string>
+    <string name="proxy_error_dialog_device_info">Device &amp; system</string>
+    <string name="proxy_error_dialog_service_log">Start log</string>
+    <string name="proxy_error_dialog_diagnostics">Suggested actions</string>
+    <string name="proxy_error_dialog_copy">Copy log</string>
+    <string name="proxy_error_dialog_copied">Copied to clipboard</string>
+    <string name="proxy_error_dialog_close">Close</string>
 </resources>

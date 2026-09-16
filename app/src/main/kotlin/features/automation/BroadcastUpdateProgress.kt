@@ -3,6 +3,7 @@
 
 package features.automation
 
+import android.annotation.SuppressLint
 import android.content.Context
 
 /** A system-stopped Worker keeps its ID; a new user request gets a fresh checkpoint. */
@@ -15,6 +16,8 @@ internal class BroadcastUpdateProgress(context: Context, kind: String, workId: S
         item in preferences.getStringSet("$key.items", emptySet()).orEmpty()
     }
 
+    // KTX edit discards commit()'s result; a failed checkpoint must be reported.
+    @SuppressLint("UseKtx")
     fun record(item: String, success: Boolean) = synchronized(Lock) {
         val items = preferences.getStringSet("$key.items", emptySet()).orEmpty()
         check(preferences.edit()
@@ -27,6 +30,8 @@ internal class BroadcastUpdateProgress(context: Context, kind: String, workId: S
         !preferences.getBoolean("$key.failed", false)
     }
 
+    // KTX edit discards commit()'s result; a failed cleanup must be reported.
+    @SuppressLint("UseKtx")
     fun clear() = synchronized(Lock) {
         check(preferences.edit().remove("$key.items").remove("$key.failed").commit())
     }
