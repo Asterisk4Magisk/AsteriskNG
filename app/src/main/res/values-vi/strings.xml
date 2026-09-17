@@ -299,8 +299,9 @@
     <string name="theme_color_violet">Tím violet</string>
     <string name="theme_color_yellow">Vàng ấm</string>
     <string name="theme_color_orange">Cam năng động</string>
-    <string name="theme_color_rose">Đỏ hồng</string>
+    <string name="theme_color_sakura">Hồng hoa anh đào</string>
     <string name="theme_color_cyan">Xanh lam ngọc</string>
+    <string name="theme_color_coffee">Nâu cà phê</string>
 
     <!-- About and licenses -->
     <string name="about_title">Giới thiệu</string>

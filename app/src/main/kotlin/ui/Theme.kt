@@ -128,8 +128,9 @@ val KeyColors: List<Color> = listOf(
     Color(0xFF7C4DFF),
     Color(0xFFFFB21D),
     Color(0xFFFF5722),
-    Color(0xFFE91E63),
+    Color(0xFFFEDFE1),
     Color(0xFF00BCD4),
+    Color(0xFF6F4E37),
 )
 
 fun keyColorFor(index: Int): Color? = if (index <= 0) null else KeyColors.getOrNull(index - 1)

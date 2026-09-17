@@ -299,8 +299,9 @@
     <string name="theme_color_violet">Violet</string>
     <string name="theme_color_yellow">Warm yellow</string>
     <string name="theme_color_orange">Vibrant orange</string>
-    <string name="theme_color_rose">Rose</string>
+    <string name="theme_color_sakura">Sakura pink</string>
     <string name="theme_color_cyan">Cyan blue</string>
+    <string name="theme_color_coffee">Coffee brown</string>
 
     <!-- About and licenses -->
     <string name="about_title">About</string>

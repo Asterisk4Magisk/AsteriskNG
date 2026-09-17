@@ -152,8 +152,9 @@ private fun SettingsContent(
         stringResource(R.string.theme_color_violet),
         stringResource(R.string.theme_color_yellow),
         stringResource(R.string.theme_color_orange),
-        stringResource(R.string.theme_color_rose),
+        stringResource(R.string.theme_color_sakura),
         stringResource(R.string.theme_color_cyan),
+        stringResource(R.string.theme_color_coffee),
     ).take(KeyColors.size + 1)
     val rootRequiredMessage = stringResource(R.string.settings_root_required)
     val rootBootScriptFailedMessage = stringResource(R.string.settings_root_boot_script_failed)

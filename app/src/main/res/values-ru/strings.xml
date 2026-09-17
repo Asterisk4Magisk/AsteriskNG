@@ -278,8 +278,9 @@
     <string name="theme_color_violet">Фиолетовый</string>
     <string name="theme_color_yellow">Тёплый жёлтый</string>
     <string name="theme_color_orange">Яркий оранжевый</string>
-    <string name="theme_color_rose">Розовый</string>
+    <string name="theme_color_sakura">Розовый цвет сакуры</string>
     <string name="theme_color_cyan">Циановый</string>
+    <string name="theme_color_coffee">Кофейный</string>
 
     <string name="about_title">О программе</string>
     <string name="about_runtime">Среда выполнения</string>

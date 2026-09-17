@@ -299,8 +299,9 @@
     <string name="theme_color_violet">紫罗兰</string>
     <string name="theme_color_yellow">暖黄色</string>
     <string name="theme_color_orange">活力橙</string>
-    <string name="theme_color_rose">玫红色</string>
+    <string name="theme_color_sakura">樱花粉</string>
     <string name="theme_color_cyan">青蓝色</string>
+    <string name="theme_color_coffee">咖啡色</string>
 
     <!-- About and licenses -->
     <string name="about_title">关于</string>
