@@ -268,12 +268,40 @@ jobs:
           ls -lh release-artifacts
           ls -lh github-release-artifacts
 
-      - name: Upload GitHub artifact
+      - name: Upload arm64-v8a APK artifact
         uses: actions/upload-artifact@v7
         with:
-          name: AsteriskNG_${{ steps.collect.outputs.version_name }}-${{ steps.collect.outputs.version_code }}
-          path: release-artifacts/*.apk
+          path: release-artifacts/*-arm64-v8a.apk
           if-no-files-found: error
+          archive: false
+
+      - name: Upload armeabi-v7a APK artifact
+        uses: actions/upload-artifact@v7
+        with:
+          path: release-artifacts/*-armeabi-v7a.apk
+          if-no-files-found: error
+          archive: false
+
+      - name: Upload x86 APK artifact
+        uses: actions/upload-artifact@v7
+        with:
+          path: release-artifacts/*-x86.apk
+          if-no-files-found: error
+          archive: false
+
+      - name: Upload x86_64 APK artifact
+        uses: actions/upload-artifact@v7
+        with:
+          path: release-artifacts/*-x86_64.apk
+          if-no-files-found: error
+          archive: false
+
+      - name: Upload universal APK artifact
+        uses: actions/upload-artifact@v7
+        with:
+          path: release-artifacts/*-universal.apk
+          if-no-files-found: error
+          archive: false
 
       - name: Create tag and release notes
         if: steps.version.outputs.create_github_release == 'true'
