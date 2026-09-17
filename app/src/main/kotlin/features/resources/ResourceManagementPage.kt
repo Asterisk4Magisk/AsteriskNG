@@ -350,13 +350,20 @@ fun ResourceManagementPage(
                     ResourceFileSourceCard(
                         sourceOptions = sourceOptions,
                         selectedSource = appState.resourceFileSource,
+                        enableResourceAutoUpdate = appState.enableResourceAutoUpdate,
+                        autoUpdateInterval = appState.resourceAutoUpdateInterval,
+                        onEnableResourceAutoUpdateChange = { enabled ->
+                            updateAppState { state -> state.copy(enableResourceAutoUpdate = enabled) }
+                        },
+                        onAutoUpdateIntervalChange = { interval ->
+                            updateAppState { state -> state.copy(resourceAutoUpdateInterval = interval) }
+                        },
                         selectedUpdateSource = appState.resourceFileUpdateSource(),
                         customGeoIpUrl = appState.customResourceFileGeoIpUrl,
                         customGeoSiteUrl = appState.customResourceFileGeoSiteUrl,
                         customGeoIpOnlyCnPrivateUrl = appState.customResourceFileGeoIpOnlyCnPrivateUrl,
                         customDirectCidrIpv4Url = appState.customResourceFileDirectCidrIpv4Url,
                         customDirectCidrIpv6Url = appState.customResourceFileDirectCidrIpv6Url,
-                        userAgent = appState.resourceFileUserAgent,
                         updating = updateQueueState.isBusy,
                         actionsEnabled = !resourceActionRunning,
                         onSourceChange = { index ->
@@ -377,11 +384,6 @@ fun ResourceManagementPage(
                                     customResourceFileDirectCidrIpv4Url = directCidrIpv4Url,
                                     customResourceFileDirectCidrIpv6Url = directCidrIpv6Url,
                                 )
-                            }
-                        },
-                        onUserAgentChange = { userAgent ->
-                            updateAppState { state ->
-                                state.copy(resourceFileUserAgent = userAgent)
                             }
                         },
                         onUpdate = {

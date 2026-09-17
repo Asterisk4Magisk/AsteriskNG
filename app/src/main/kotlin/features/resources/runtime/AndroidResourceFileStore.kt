@@ -3,6 +3,8 @@
 
 package features.resources.runtime
 
+import utils.writeAtomically
+
 import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -399,46 +401,6 @@ private fun replaceFile(source: File, target: File) {
             writeAtomically(target) { output -> input.copyTo(output) }
         }
         source.delete()
-    }
-}
-
-internal fun writeAtomically(
-    target: File,
-    write: (java.io.OutputStream) -> Unit,
-) {
-    val parent = target.parentFile ?: error("Parent directory is unavailable for ${target.absolutePath}")
-    parent.mkdirs()
-    synchronized(writeLockFor(target)) {
-        val tempPrefix = "${target.name}.".let { prefix ->
-            if (prefix.length >= 3) prefix else prefix.padEnd(3, '_')
-        }
-        val tempFile = File.createTempFile(tempPrefix, ".tmp", parent)
-        try {
-            tempFile.outputStream().use(write)
-            if (tempFile.length() <= 0) {
-                tempFile.delete()
-                error("${target.name} is empty")
-            }
-            if (target.exists() && !target.delete()) {
-                tempFile.delete()
-                error("Failed to replace ${target.name}")
-            }
-            if (!tempFile.renameTo(target)) {
-                tempFile.delete()
-                error("Failed to replace ${target.name}")
-            }
-        } catch (error: Throwable) {
-            tempFile.delete()
-            throw error
-        }
-    }
-}
-
-private val WriteLocks = mutableMapOf<String, Any>()
-
-private fun writeLockFor(target: File): Any {
-    return synchronized(WriteLocks) {
-        WriteLocks.getOrPut(target.absolutePath) { Any() }
     }
 }
 

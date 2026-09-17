@@ -12,6 +12,5 @@ internal fun AppState.resourceFileUpdateOptions(): ResourceFileUpdateOptions {
         fallbackProxyPort = localProxyPort.toPortOrNull(),
         fallbackProxyUsername = localProxyUsername,
         fallbackProxyPassword = localProxyPassword,
-        userAgent = resourceFileUserAgent,
     )
 }

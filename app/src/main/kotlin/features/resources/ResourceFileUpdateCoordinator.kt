@@ -172,7 +172,10 @@ internal class ResourceFileUpdateCoordinator(
     }
 
     // Broadcast updates wait for UI work rather than silently dropping a busy All request.
-    suspend fun enqueueAndAwait(request: ResourceFileUpdateRequest): ResourceFileUpdateResult? = coroutineScope {
+    suspend fun enqueueAndAwait(
+        request: ResourceFileUpdateRequest,
+        isStillValid: () -> Boolean = { true },
+    ): ResourceFileUpdateResult? = coroutineScope {
         if (request.targets.isEmpty()) return@coroutineScope null
         val completion = async(start = CoroutineStart.UNDISPATCHED) {
             results.first { it.request === request }
@@ -181,6 +184,7 @@ internal class ResourceFileUpdateCoordinator(
         try {
             while (!accepted) {
                 state.first { !it.isBusy }
+                if (!isStillValid()) return@coroutineScope null
                 accepted = enqueue(request)
             }
             completion.await()

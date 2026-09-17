@@ -63,6 +63,7 @@
     <string name="common_clipboard_unsupported_format">Unsupported clipboard format</string>
     <string name="common_replace">Replace</string>
     <string name="common_update">Update</string>
+    <string name="common_error_update_interval">Enter at least 0.25 hours</string>
     <string name="common_restore">Restore</string>
     <string name="common_unsupported">Unsupported</string>
     <string name="string_list_item_empty">Entry cannot be empty</string>
@@ -187,6 +188,10 @@
     <string name="settings_resource_files_source_runetfreedom_github">RunetFreedom (GitHub)</string>
     <string name="settings_resource_files_source_custom">Custom</string>
     <string name="settings_resource_files_source_custom_title">Custom geodata URLs</string>
+    <string name="settings_resource_files_auto_update_title">Automatic resource updates</string>
+    <string name="settings_resource_files_auto_update_summary">Periodically update resource files when connected</string>
+    <string name="settings_resource_files_auto_update_interval">Update interval (hours)</string>
+    <string name="settings_resource_files_auto_update_hours">Every %1$s hours</string>
     <string name="settings_resource_files_update">Update resource files</string>
     <string name="settings_resource_files_add_custom">Add custom resource file</string>
     <string name="settings_resource_files_custom_file">Custom resource file</string>

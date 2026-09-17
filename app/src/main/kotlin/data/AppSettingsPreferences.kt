@@ -121,6 +121,9 @@ internal class AppSettingsPreferences(
             nextRouteRuleId = preferences.getInt(KeyNextRouteRuleId, defaults.nextRouteRuleId),
             coreLogLevel = preferences.getInt(KeyCoreLogLevel, defaults.coreLogLevel),
             enableAccessLog = preferences.getBoolean(KeyEnableAccessLog, defaults.enableAccessLog),
+            enableResourceAutoUpdate = preferences.getBoolean(KeyEnableResourceAutoUpdate, defaults.enableResourceAutoUpdate),
+            resourceAutoUpdateInterval = preferences.getString(KeyResourceAutoUpdateInterval, defaults.resourceAutoUpdateInterval)
+                ?: defaults.resourceAutoUpdateInterval,
             resourceFileSource = preferences.getInt(KeyResourceFileSource, defaults.resourceFileSource),
             customResourceFileGeoIpUrl = preferences.getString(
                 KeyCustomResourceFileGeoIpUrl,
@@ -144,10 +147,6 @@ internal class AppSettingsPreferences(
             ) ?: defaults.customResourceFileDirectCidrIpv6Url,
             customResourceFiles = customResourceFiles,
             nextCustomResourceFileId = nextCustomResourceFileId,
-            resourceFileUserAgent = preferences.getString(
-                KeyResourceFileUserAgent,
-                defaults.resourceFileUserAgent,
-            ) ?: defaults.resourceFileUserAgent,
             enableSniffing = preferences.getBoolean(KeyEnableSniffing, defaults.enableSniffing),
             enableSniffingRouteOnly = preferences.getBoolean(
                 KeyEnableSniffingRouteOnly,
@@ -262,6 +261,8 @@ internal class AppSettingsPreferences(
             .putInt(KeyNextRouteRuleId, state.nextRouteRuleId)
             .putInt(KeyCoreLogLevel, state.coreLogLevel)
             .putBoolean(KeyEnableAccessLog, state.enableAccessLog)
+            .putBoolean(KeyEnableResourceAutoUpdate, state.enableResourceAutoUpdate)
+            .putString(KeyResourceAutoUpdateInterval, state.resourceAutoUpdateInterval)
             .putInt(KeyResourceFileSource, state.resourceFileSource)
             .putString(KeyCustomResourceFileGeoIpUrl, state.customResourceFileGeoIpUrl)
             .putString(KeyCustomResourceFileGeoSiteUrl, state.customResourceFileGeoSiteUrl)
@@ -270,7 +271,6 @@ internal class AppSettingsPreferences(
             .putString(KeyCustomResourceFileDirectCidrIpv6Url, state.customResourceFileDirectCidrIpv6Url)
             .putCustomResourceFileList(KeyCustomResourceFiles, state.customResourceFiles)
             .putInt(KeyNextCustomResourceFileId, state.nextCustomResourceFileId)
-            .putString(KeyResourceFileUserAgent, state.resourceFileUserAgent)
             .putBoolean(KeyEnableSniffing, state.enableSniffing)
             .putBoolean(KeyEnableSniffingRouteOnly, state.enableSniffingRouteOnly)
             .putBoolean(KeyEnableMux, state.enableMux)
@@ -458,6 +458,8 @@ private const val KeyDefaultRouteOutboundTag = "default_route_outbound_tag"
 private const val KeyNextRouteRuleId = "next_route_rule_id"
 private const val KeyCoreLogLevel = "core_log_level"
 private const val KeyEnableAccessLog = "enable_access_log"
+private const val KeyEnableResourceAutoUpdate = "enable_resource_auto_update"
+private const val KeyResourceAutoUpdateInterval = "resource_auto_update_interval"
 private const val KeyResourceFileSource = "resource_file_source"
 private const val KeyCustomResourceFileGeoIpUrl = "custom_resource_file_geoip_url"
 private const val KeyCustomResourceFileGeoSiteUrl = "custom_resource_file_geosite_url"
@@ -466,7 +468,6 @@ private const val KeyCustomResourceFileDirectCidrIpv4Url = "custom_resource_file
 private const val KeyCustomResourceFileDirectCidrIpv6Url = "custom_resource_file_direct_cidr_ipv6_url"
 private const val KeyCustomResourceFiles = "custom_resource_files"
 private const val KeyNextCustomResourceFileId = "next_custom_resource_file_id"
-private const val KeyResourceFileUserAgent = "resource_file_user_agent"
 private const val KeyEnableSniffing = "enable_sniffing"
 private const val KeyEnableSniffingRouteOnly = "enable_sniffing_route_only"
 private const val KeyEnableMux = "enable_mux"

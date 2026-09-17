@@ -3,6 +3,9 @@
 
 package features.resources.runtime
 
+import app.ProjectInfo
+import utils.writeAtomically
+
 import java.io.File
 import java.io.IOException
 import java.net.Authenticator
@@ -17,33 +20,31 @@ internal class AndroidResourceFileDownloader {
         url: String,
         target: File,
         proxy: AndroidResourceFileDownloadProxy? = null,
-        userAgent: String? = null,
         onProgress: (downloadedBytes: Long, totalBytes: Long) -> Unit = { _, _ -> },
     ) {
         if (proxy != null) {
             proxy.withAuthenticator {
                 try {
-                    downloadWithRetries(url, target, proxy, userAgent, onProgress)
+                    downloadWithRetries(url, target, proxy, onProgress)
                     return
                 } catch (_: IOException) {
                     AndroidResourceFileLogger.info("Proxy download failed, falling back to direct connection")
                 }
             }
         }
-        downloadWithRetries(url, target, null, userAgent, onProgress)
+        downloadWithRetries(url, target, null, onProgress)
     }
 
     private fun downloadWithRetries(
         url: String,
         target: File,
         proxy: AndroidResourceFileDownloadProxy?,
-        userAgent: String?,
         onProgress: (downloadedBytes: Long, totalBytes: Long) -> Unit,
     ) {
         var lastError: Throwable? = null
         repeat(MaxRetries) { attempt ->
             try {
-                downloadWithRedirects(url, target, proxy, userAgent, onProgress)
+                downloadWithRedirects(url, target, proxy, onProgress)
                 return
             } catch (error: Throwable) {
                 if (AndroidResourceFileDownloadCancellation.isCancelled()) {
@@ -64,12 +65,11 @@ internal class AndroidResourceFileDownloader {
         url: String,
         target: File,
         proxy: AndroidResourceFileDownloadProxy?,
-        userAgent: String?,
         onProgress: (downloadedBytes: Long, totalBytes: Long) -> Unit,
     ) {
         var currentUrl = url
         repeat(MaxRedirects) {
-            val connection = URI.create(currentUrl).toUrlConnection(proxy, userAgent)
+            val connection = URI.create(currentUrl).toUrlConnection(proxy)
             try {
                 AndroidResourceFileDownloadCancellation.track(connection)
                 AndroidResourceFileDownloadCancellation.throwIfCancelled()
@@ -107,7 +107,7 @@ internal data class AndroidResourceFileDownloadProxy(
     val password: String,
 )
 
-private fun URI.toUrlConnection(proxy: AndroidResourceFileDownloadProxy?, userAgent: String? = null): HttpURLConnection {
+private fun URI.toUrlConnection(proxy: AndroidResourceFileDownloadProxy?): HttpURLConnection {
     val url = toURL()
     val connection = if (proxy == null) {
         url.openConnection()
@@ -119,7 +119,7 @@ private fun URI.toUrlConnection(proxy: AndroidResourceFileDownloadProxy?, userAg
         readTimeout = 60_000
         instanceFollowRedirects = false
         requestMethod = "GET"
-        setRequestProperty("User-Agent", userAgent ?: ResourceFileDefaultUserAgent)
+        setRequestProperty("User-Agent", ResourceFileDefaultUserAgent)
     }
 }
 
@@ -153,7 +153,7 @@ private val ProxyAuthenticatorLock = Any()
 private const val MaxRedirects = 5
 private const val MaxRetries = 3
 private const val RetryBackoffMs = 1000L
-private const val ResourceFileDefaultUserAgent = "AsteriskNG/1.0"
+private const val ResourceFileDefaultUserAgent = "${ProjectInfo.PROJECT_NAME}/v${ProjectInfo.VERSION_NAME}"
 
 internal fun overallProgress(
     fileIndex: Int,

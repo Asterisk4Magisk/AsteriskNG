@@ -24,7 +24,6 @@ import features.resources.ResourceFileLoyalsoldierGeoSiteUrl
 import features.resources.ResourceFileDirectCidrIpv4Url
 import features.resources.ResourceFileDirectCidrIpv6Url
 import features.resources.ResourceFileV2FlyGeoIpOnlyCnPrivateUrl
-import features.subscription.DefaultSubscriptionUserAgent
 import features.routing.model.RouteRule
 
 data class AppState(
@@ -67,6 +66,8 @@ data class AppState(
 
     val coreLogLevel: Int = 3,
     val enableAccessLog: Boolean = false,
+    val enableResourceAutoUpdate: Boolean = false,
+    val resourceAutoUpdateInterval: String = "24",
     val resourceFileSource: Int = ResourceFileSourceLoyalsoldierGithub,
     val customResourceFileGeoIpUrl: String = ResourceFileLoyalsoldierGeoIpUrl,
     val customResourceFileGeoSiteUrl: String = ResourceFileLoyalsoldierGeoSiteUrl,
@@ -75,7 +76,6 @@ data class AppState(
     val customResourceFileDirectCidrIpv6Url: String = ResourceFileDirectCidrIpv6Url,
     val customResourceFiles: List<CustomResourceFileState> = emptyList(),
     val nextCustomResourceFileId: Int = 1,
-    val resourceFileUserAgent: String = DefaultSubscriptionUserAgent,
     val enableSniffing: Boolean = true,
     val enableSniffingRouteOnly: Boolean = true,
 

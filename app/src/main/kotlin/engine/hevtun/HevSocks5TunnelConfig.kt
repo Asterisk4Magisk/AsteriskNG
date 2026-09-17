@@ -8,7 +8,7 @@ import engine.proxy.LocalProxyLoopbackAddress
 import engine.proxy.LocalProxyOptions
 import engine.xray.XrayCoreLogPaths
 import engine.xray.logDirectoryPath
-import features.resources.runtime.writeAtomically
+import utils.writeAtomically
 import java.io.File
 
 internal data class HevSocks5TunnelConfig(

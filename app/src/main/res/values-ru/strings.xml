@@ -169,6 +169,10 @@
     <string name="settings_resource_files_source_runetfreedom_github">RunetFreedom (GitHub)</string>
     <string name="settings_resource_files_source_custom">Кастомный (Пользовательский URL)</string>
     <string name="settings_resource_files_source_custom_title">Кастомные URL геоданных</string>
+    <string name="settings_resource_files_auto_update_title">Автообновление ресурсов</string>
+    <string name="settings_resource_files_auto_update_summary">Периодически обновлять файлы ресурсов при подключении к сети</string>
+    <string name="settings_resource_files_auto_update_interval">Интервал обновления (часы)</string>
+    <string name="settings_resource_files_auto_update_hours">Каждые %1$s ч</string>
     <string name="settings_resource_files_update">Обновить файлы ресурсов</string>
     <string name="settings_resource_files_add_custom">Добавить кастомный файл ресурсов</string>
     <string name="settings_resource_files_custom_file">Кастомный файл ресурсов</string>
@@ -589,6 +593,7 @@
     <string name="deletion_confirmation_delete_subscription_group">Удалить группу подписки</string>
     <string name="deletion_confirmation_delete_resource_file">Удалить файл ресурсов</string>
     <string name="common_update">Обновить</string>
+    <string name="common_error_update_interval">Введите значение не менее 0,25 часа</string>
     <string name="settings_deletion_confirmation">Подтверждение удаления</string>
     <string name="settings_deletion_confirmation_summary">Запрашивать подтверждение перед удалением серверов, правил, групп или ресурсов</string>
     <string name="settings_run_mode_bpf2socks">BPF2SOCKS (ROOT)</string>

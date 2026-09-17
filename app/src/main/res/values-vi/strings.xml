@@ -63,6 +63,7 @@
     <string name="common_clipboard_unsupported_format">Định dạng khay nhớ tạm không được hỗ trợ</string>
     <string name="common_replace">Thay thế</string>
     <string name="common_update">Cập nhật</string>
+    <string name="common_error_update_interval">Nhập giá trị ít nhất 0,25 giờ</string>
     <string name="common_restore">Khôi phục</string>
     <string name="common_unsupported">Không được hỗ trợ</string>
     <string name="string_list_item_empty">Mục không được để trống</string>
@@ -187,6 +188,10 @@
     <string name="settings_resource_files_source_runetfreedom_github">RunetFreedom (GitHub)</string>
     <string name="settings_resource_files_source_custom">Tùy chỉnh</string>
     <string name="settings_resource_files_source_custom_title">Địa chỉ geodata tùy chỉnh</string>
+    <string name="settings_resource_files_auto_update_title">Tự động cập nhật tài nguyên</string>
+    <string name="settings_resource_files_auto_update_summary">Định kỳ cập nhật tệp tài nguyên khi có kết nối mạng</string>
+    <string name="settings_resource_files_auto_update_interval">Chu kỳ cập nhật (giờ)</string>
+    <string name="settings_resource_files_auto_update_hours">Mỗi %1$s giờ</string>
     <string name="settings_resource_files_update">Cập nhật tệp tài nguyên</string>
     <string name="settings_resource_files_add_custom">Thêm tệp tài nguyên tùy chỉnh</string>
     <string name="settings_resource_files_custom_file">Tệp tài nguyên tùy chỉnh</string>
