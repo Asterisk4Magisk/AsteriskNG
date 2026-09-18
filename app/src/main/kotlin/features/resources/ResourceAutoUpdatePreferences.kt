@@ -46,7 +46,7 @@ internal fun ResourceAutoUpdatePreferences(
         onCheckedChange = onEnabledChange,
     )
     ArrowPreference(
-        title = stringResource(R.string.settings_resource_files_auto_update_interval),
+        title = stringResource(R.string.settings_resource_files_auto_update_interval_title),
         summary = stringResource(R.string.settings_resource_files_auto_update_hours, interval),
         onClick = {
             draft.setTextAndPlaceCursorAtEnd(interval)
@@ -55,7 +55,7 @@ internal fun ResourceAutoUpdatePreferences(
     )
     WindowDialog(
         show = editing,
-        title = stringResource(R.string.settings_resource_files_auto_update_interval),
+        title = stringResource(R.string.settings_resource_files_auto_update_interval_title),
         onDismissRequest = { editing = false },
         content = {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {

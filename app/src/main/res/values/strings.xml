@@ -190,6 +190,7 @@
     <string name="settings_resource_files_source_custom_title">Custom geodata URLs</string>
     <string name="settings_resource_files_auto_update_title">Automatic resource updates</string>
     <string name="settings_resource_files_auto_update_summary">Periodically update resource files when connected</string>
+    <string name="settings_resource_files_auto_update_interval_title">Update interval</string>
     <string name="settings_resource_files_auto_update_interval">Update interval (hours)</string>
     <string name="settings_resource_files_auto_update_hours">Every %1$s hours</string>
     <string name="settings_resource_files_update">Update resource files</string>

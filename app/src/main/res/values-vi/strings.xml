@@ -190,6 +190,7 @@
     <string name="settings_resource_files_source_custom_title">Địa chỉ geodata tùy chỉnh</string>
     <string name="settings_resource_files_auto_update_title">Tự động cập nhật tài nguyên</string>
     <string name="settings_resource_files_auto_update_summary">Định kỳ cập nhật tệp tài nguyên khi có kết nối mạng</string>
+    <string name="settings_resource_files_auto_update_interval_title">Chu kỳ cập nhật</string>
     <string name="settings_resource_files_auto_update_interval">Chu kỳ cập nhật (giờ)</string>
     <string name="settings_resource_files_auto_update_hours">Mỗi %1$s giờ</string>
     <string name="settings_resource_files_update">Cập nhật tệp tài nguyên</string>

@@ -190,6 +190,7 @@
     <string name="settings_resource_files_source_custom_title">自定义 geodata 地址</string>
     <string name="settings_resource_files_auto_update_title">资源自动更新</string>
     <string name="settings_resource_files_auto_update_summary">联网时定期更新资源文件</string>
+    <string name="settings_resource_files_auto_update_interval_title">更新周期</string>
     <string name="settings_resource_files_auto_update_interval">更新周期（小时）</string>
     <string name="settings_resource_files_auto_update_hours">每 %1$s 小时</string>
     <string name="settings_resource_files_update">更新资源文件</string>

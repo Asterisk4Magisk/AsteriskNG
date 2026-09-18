@@ -171,6 +171,7 @@
     <string name="settings_resource_files_source_custom_title">Кастомные URL геоданных</string>
     <string name="settings_resource_files_auto_update_title">Автообновление ресурсов</string>
     <string name="settings_resource_files_auto_update_summary">Периодически обновлять файлы ресурсов при подключении к сети</string>
+    <string name="settings_resource_files_auto_update_interval_title">Интервал обновления</string>
     <string name="settings_resource_files_auto_update_interval">Интервал обновления (часы)</string>
     <string name="settings_resource_files_auto_update_hours">Каждые %1$s ч</string>
     <string name="settings_resource_files_update">Обновить файлы ресурсов</string>
