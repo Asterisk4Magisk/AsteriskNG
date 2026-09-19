@@ -34,7 +34,7 @@ dependencyResolutionManagement {
             forRepository {
                 ivy {
                     name = "AndroidLibXrayLiteGitHubRelease"
-                    url = uri("https://github.com/2dust/AndroidLibXrayLite/releases/download")
+                    url = uri("https://github.com/Asterisk4Magisk/AndroidLibXrayLite/releases/download")
                     patternLayout {
                         artifact("[revision]/[artifact].[ext]")
                     }
@@ -44,7 +44,7 @@ dependencyResolutionManagement {
                 }
             }
             filter {
-                includeModule("com.github.2dust", "libv2ray")
+                includeModule("com.github.Asterisk4Magisk", "libv2ray")
             }
         }
     }

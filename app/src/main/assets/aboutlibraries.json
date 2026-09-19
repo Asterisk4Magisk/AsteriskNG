@@ -14,13 +14,13 @@
             ]
         },
         {
-            "uniqueId": "github:2dust/AndroidLibXrayLite",
-            "artifactVersion": "v26.9.9",
+            "uniqueId": "github:Asterisk4Magisk/AndroidLibXrayLite",
+            "artifactVersion": "v26.9.19",
             "name": "AndroidLibXrayLite",
             "description": "Android AAR wrapper for Xray-core, built with gomobile.",
-            "website": "https://github.com/2dust/AndroidLibXrayLite",
+            "website": "https://github.com/Asterisk4Magisk/AndroidLibXrayLite",
             "scm": {
-                "url": "https://github.com/2dust/AndroidLibXrayLite"
+                "url": "https://github.com/Asterisk4Magisk/AndroidLibXrayLite"
             },
             "licenses": [
                 "LGPL-3.0"
@@ -41,7 +41,7 @@
         },
         {
             "uniqueId": "github:Asterisk4Magisk/asteriskd",
-            "artifactVersion": "v2.0.32",
+            "artifactVersion": "v2.0.33",
             "name": "asteriskd",
             "description": "A root Android daemon that synchronizes local-address bypass rules and pinned eBPF maps.",
             "website": "https://github.com/Asterisk4Magisk/asteriskd",
@@ -418,7 +418,6 @@
         },
         {
             "uniqueId": "github:XTLS/Xray-core",
-            "artifactVersion": "v26.9.9",
             "name": "Xray-core",
             "description": "An open platform for proxy and anti-censorship networking.",
             "website": "https://github.com/XTLS/Xray-core",

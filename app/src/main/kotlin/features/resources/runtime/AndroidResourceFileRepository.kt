@@ -3,23 +3,23 @@
 
 package features.resources.runtime
 
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.ensureActive
 import android.content.Context
 import android.net.Uri
-import app.R
 import app.CustomResourceFileState
+import app.R
 import app.ResourceFileKind
-import app.ResourceFilesStatus
 import app.ResourceFileUpdateSource
+import app.ResourceFilesStatus
 import app.modes.isRootRunMode
+import engine.network.isPort
 import engine.proxy.LocalProxyLoopbackAddress
 import engine.proxy.LocalProxyRuntime
-import engine.network.isPort
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import features.resources.ResourceFileUpdateOptions
 import engine.root.publication.RootCoreRemovalCommand
+import features.resources.ResourceFileUpdateOptions
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.withContext
 import system.AndroidRootShellGateway
 import system.RootShellGateway
 import system.ShellExecOptions
@@ -38,17 +38,32 @@ internal class AndroidResourceFileRepository(
             store.status(customResourceFiles)
         }
 
+    suspend fun hasCustomXrayCore(): Boolean = withContext(Dispatchers.IO) {
+        store.hasCustomXrayCore()
+    }
+
+    private suspend fun removeCustomXrayCore() {
+        val target = store.file(ResourceFileKind.XrayCore)
+        sharedCoreReplacementCoordinator.execute(
+            targetOwnerUid = target::coreBinaryOwnerUidOrNull,
+            rootModeActive = { currentRunMode().isRootRunMode() },
+            candidateFactory = { },
+            installInitial = {},
+            replaceAppOwned = { check(target.delete()) { "Failed to remove the custom Xray core" } },
+            replaceWithRoot = {
+                val result = rootShell.exec(
+                    RootCoreRemovalCommand.build(target.absolutePath),
+                    ShellExecOptions(logFailure = false),
+                )
+                check(result.errno == 0) { result.stderr.ifBlank { "Failed to remove the custom Xray core" } }
+            },
+            deferRootOwned = { error(appContext.getString(R.string.settings_root_required)) },
+        )
+    }
+
     suspend fun synchronizeBundledFilesAfterPackageUpdate(resourceFileSource: Int) {
         withContext(Dispatchers.IO) {
             store.synchronizeBundledFilesAfterPackageUpdate(resourceFileSource)
-            if (!store.shouldPublishBundledXrayCore(resourceFileSource, restoreAfterPackageUpdate = true)) {
-                return@withContext
-            }
-            executeCoreCandidateInstall(store::stageBundledXrayCoreCandidate) {
-                AndroidResourceFileLogger.info(
-                    "Bundled Xray core replacement deferred because the existing core is ROOT-owned",
-                )
-            }
         }
     }
 
@@ -226,7 +241,7 @@ internal class AndroidResourceFileRepository(
         customResourceFiles: List<CustomResourceFileState> = emptyList(),
     ): ResourceFilesStatus = withContext(Dispatchers.IO) {
         if (kind == ResourceFileKind.XrayCore) {
-            installOrPublishCoreCandidate(store::stageBundledXrayCoreCandidate)
+            removeCustomXrayCore()
         } else {
             store.restoreBundled(kind)
         }

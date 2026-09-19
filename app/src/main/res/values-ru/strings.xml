@@ -655,4 +655,9 @@
     <string name="proxy_error_dialog_copy">Копировать журнал</string>
     <string name="proxy_error_dialog_copied">Скопировано в буфер обмена</string>
     <string name="proxy_error_dialog_close">Закрыть</string>
+    <string name="shared_core_migration_title">Приложение обновлено</string>
+    <string name="shared_core_migration_message">VPN и ROOT теперь используют общее встроенное ядро. Удалить пользовательское ядро для экономии места? Позже его можно загрузить снова.</string>
+    <string name="shared_core_migration_stop_root">Перед удалением служба ROOT будет остановлена.</string>
+    <string name="shared_core_migration_keep">Сохранить</string>
+    <string name="shared_core_migration_remove">Удалить</string>
 </resources>

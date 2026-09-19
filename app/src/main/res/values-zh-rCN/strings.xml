@@ -665,4 +665,9 @@
     <string name="proxy_error_dialog_copy">复制日志</string>
     <string name="proxy_error_dialog_copied">已复制到剪贴板</string>
     <string name="proxy_error_dialog_close">关闭</string>
+    <string name="shared_core_migration_title">软件已更新</string>
+    <string name="shared_core_migration_message">VPN 和 ROOT 现已共用内置 Core。是否移除自定义 Core 以节省空间？之后仍可上传自定义 Core。</string>
+    <string name="shared_core_migration_stop_root">移除前将停止 ROOT 服务。</string>
+    <string name="shared_core_migration_keep">保留</string>
+    <string name="shared_core_migration_remove">移除</string>
 </resources>

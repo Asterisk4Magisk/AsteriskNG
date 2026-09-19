@@ -7,7 +7,5 @@ plugins {
 }
 
 tasks.register<UpdateResourceFileAssetsTask>("updateResourceFileAssets") {
-    xrayCoreVersion.set(ProjectConfig.XRAY_CORE_VERSION)
-    xrayCoreJniLibsDir.set(layout.projectDirectory.dir("app/build/generated/xrayCoreJniLibs"))
     resourceFileAssetsDir.set(layout.projectDirectory.dir("app/build/generated/resourceFileAssets"))
 }

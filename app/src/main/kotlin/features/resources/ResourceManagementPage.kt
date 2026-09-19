@@ -331,13 +331,22 @@ fun ResourceManagementPage(
                         description = stringResource(R.string.settings_resource_files_root_only),
                         onReplace = {
                             runResourceFileAction(
-                                action = { resourceFileUseCase.replace(kind) },
+                                action = {
+                                    resourceFileUseCase.replace(kind)?.also {
+                                        services.refreshXrayCoreBoot(appState)
+                                    }
+                                },
                                 successMessage = replacedMessage.formatTemplate("name" to kind.displayName),
                             )
                         },
                         onRestore = {
                             runResourceFileAction(
-                                action = { resourceFileUseCase.restoreBundled(kind) },
+                                action = {
+                                    services.restoreSharedXrayCore(
+                                        state = appState,
+                                        onRootStopped = { updateAppState { it.copy(proxyRunning = false) } },
+                                    )
+                                },
                                 successMessage = restoredMessage.formatTemplate("name" to kind.displayName),
                             )
                         },

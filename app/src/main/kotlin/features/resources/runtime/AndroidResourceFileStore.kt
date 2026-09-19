@@ -37,7 +37,7 @@ internal class AndroidResourceFileStore(
             geoIpOnlyCnPrivate = file(ResourceFileKind.GeoIpOnlyCnPrivate).toStatus(ResourceFileKind.GeoIpOnlyCnPrivate),
             directCidrIpv4 = file(ResourceFileKind.DirectCidrIpv4).toStatus(ResourceFileKind.DirectCidrIpv4),
             directCidrIpv6 = file(ResourceFileKind.DirectCidrIpv6).toStatus(ResourceFileKind.DirectCidrIpv6),
-            xrayCore = file(ResourceFileKind.XrayCore).toStatus(ResourceFileKind.XrayCore),
+            xrayCore = effectiveXrayCoreFile().toStatus(ResourceFileKind.XrayCore),
             customResourceFiles = customResourceFiles.map { customFile ->
                 CustomResourceFileStatus(
                     file = customFile,
@@ -110,10 +110,14 @@ internal class AndroidResourceFileStore(
         kind.applyPermissions(file(kind))
     }
 
-    fun stageBundledXrayCoreCandidate(): File {
-        val source = bundledXrayCoreFileOrNull()
-            ?: error("Bundled ${ResourceFileKind.XrayCore.fileName} is not available for ${currentRuntimeAbi()}")
-        return source.inputStream().use(::writeXrayCoreCandidate)
+    fun hasCustomXrayCore(): Boolean {
+        return file(ResourceFileKind.XrayCore).coreBinaryOwnerUidOrNull() != null
+    }
+
+    fun effectiveXrayCoreFile(): File {
+        // Only a missing custom Core falls back; invalid uploads remain visible as errors.
+        return if (hasCustomXrayCore()) file(ResourceFileKind.XrayCore)
+        else File(appContext.applicationInfo.nativeLibraryDir, XrayCoreLibraryName)
     }
 
     fun installInitialXrayCoreCandidate(candidate: File): Boolean {
@@ -122,25 +126,6 @@ internal class AndroidResourceFileStore(
 
     fun replaceXrayCoreCandidate(candidate: File) {
         publishCoreBinaryCandidate(candidate, file(ResourceFileKind.XrayCore), replaceExisting = true)
-    }
-
-    fun shouldPublishBundledXrayCore(
-        resourceFileSource: Int,
-        restoreAfterPackageUpdate: Boolean,
-    ): Boolean {
-        val bundledUpdatedAtMillis = appContext.packageUpdatedAtMillis()
-        return bundledXrayCoreFileOrNull() != null && file(ResourceFileKind.XrayCore).shouldRestoreBundled(
-            kind = ResourceFileKind.XrayCore,
-            resourceFileSource = resourceFileSource,
-            bundledUpdatedAtMillis = bundledUpdatedAtMillis,
-            restoreAfterPackageUpdate = restoreAfterPackageUpdate,
-        )
-    }
-
-    private fun bundledXrayCoreFileOrNull(): File? {
-        if (currentRuntimeAbi() !in setOf("arm64-v8a", "x86_64")) return null
-        return File(appContext.applicationInfo.nativeLibraryDir, XrayCoreLibraryName)
-            .takeIf { it.isFile }
     }
 
     fun replace(kind: ResourceFileKind, uri: Uri) {
@@ -328,6 +313,12 @@ internal fun Context.xrayResourceFilePaths(): XrayResourceFilePaths {
     return AndroidResourceFileStore(this).currentPaths()
 }
 
+internal fun Context.xrayRootResourceFilePaths(): XrayResourceFilePaths {
+    val store = AndroidResourceFileStore(this)
+    // VPN only needs resource paths; inspecting the custom CLI belongs to ROOT configuration.
+    return store.currentPaths().copy(xrayCorePath = store.effectiveXrayCoreFile().absolutePath)
+}
+
 private fun ResourceFileKind.hasBundledAsset(): Boolean {
     return this == ResourceFileKind.XrayCore || bundledAssetPathOrNull() != null
 }
@@ -341,11 +332,6 @@ private fun ResourceFileKind.bundledAssetPathOrNull(): String? {
         ResourceFileKind.DirectCidrIpv6 -> "$XrayBundledResourceFilesDir/$fileName"
         ResourceFileKind.XrayCore -> error("Xray-core is restored from native libraries")
     }
-}
-
-private fun currentRuntimeAbi(): String {
-    return Build.SUPPORTED_ABIS.firstOrNull { abi -> abi in SupportedAndroidAbis }
-        ?: error("Unsupported CPU ABI: ${Build.SUPPORTED_ABIS.joinToString()}")
 }
 
 private fun Context.packageUpdatedAtMillis(): Long {
@@ -367,8 +353,6 @@ private const val Bpf2SocksLibraryName = "libbpf2socks.so"
 private const val XrayCoreLibraryName = "libxray.so"
 private const val HevSocks5TunnelLibraryName = "libhev-socks5-tunnel-cli.so"
 private const val XrayBundledResourceFilesDir = "xray"
-
-private val SupportedAndroidAbis = setOf("arm64-v8a", "armeabi-v7a", "x86", "x86_64")
 
 internal fun resourceFileExists(
     kind: ResourceFileKind?,

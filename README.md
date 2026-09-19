@@ -2,7 +2,7 @@ English | [简体中文](README_zh_CN.md) | [Русский](README_ru.md) | [Ti
 
 # AsteriskNG
 
-An Xray client for Android, powered by [Xray-core](https://github.com/XTLS/Xray-core), [AndroidLibXrayLite](https://github.com/2dust/AndroidLibXrayLite), [hev-socks5-tunnel](https://github.com/heiher/hev-socks5-tunnel).
+An Xray client for Android, powered by [Xray-core](https://github.com/XTLS/Xray-core), [AndroidLibXrayLite](https://github.com/Asterisk4Magisk/AndroidLibXrayLite), [hev-socks5-tunnel](https://github.com/heiher/hev-socks5-tunnel).
 
 ## Telegram Channel
 
@@ -121,7 +121,7 @@ appops set org.asterisk.zcc.ang ACTIVATE_VPN allow
 ## Credits
 
 - [@XTLS/Xray-core](https://github.com/XTLS/Xray-core)
-- [@2dust/AndroidLibXrayLite](https://github.com/2dust/AndroidLibXrayLite)
+- [@Asterisk4Magisk/AndroidLibXrayLite](https://github.com/Asterisk4Magisk/AndroidLibXrayLite)
 - [@heiher/hev-socks5-tunnel](https://github.com/heiher/hev-socks5-tunnel)
 - [@topjohnwu/libsu](https://github.com/topjohnwu/libsu)
 - [@compose-miuix-ui/miuix](https://github.com/compose-miuix-ui/miuix)

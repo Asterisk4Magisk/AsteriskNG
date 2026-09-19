@@ -3,8 +3,6 @@
 
 package features.resources
 
-import app.ProjectInfo
-
 const val ResourceFileSourceLoyalsoldierGithub = 0
 const val ResourceFileSourceV2FlyGithub = 1
 const val ResourceFileSourceChocolate4UGithub = 2
@@ -38,5 +36,3 @@ const val ResourceFileDirectCidrIpv4Url =
     "https://raw.githubusercontent.com/mayaxcn/china-ip-list/master/chnroute.txt"
 const val ResourceFileDirectCidrIpv6Url =
     "https://raw.githubusercontent.com/mayaxcn/china-ip-list/master/chnroute_v6.txt"
-
-const val XrayCoreVersion = ProjectInfo.XRAY_CORE_VERSION

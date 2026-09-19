@@ -29,6 +29,8 @@ class ResourceFileUseCase(
         return repository.status(customResourceFiles)
     }
 
+    suspend fun hasCustomXrayCore(): Boolean = repository.hasCustomXrayCore()
+
     suspend fun synchronizeBundledFilesAfterPackageUpdate(resourceFileSource: Int) {
         repository.synchronizeBundledFilesAfterPackageUpdate(resourceFileSource)
     }

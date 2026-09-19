@@ -28,7 +28,10 @@ internal fun LibraryLicenseCard(
     ) {
         ArrowPreference(
             title = library.name,
-            summary = "${library.artifactVersion}, ${library.licenses.firstOrNull()}",
+            summary = listOfNotNull(
+                library.artifactVersion?.takeIf(String::isNotBlank),
+                library.licenses.firstOrNull(),
+            ).joinToString(", "),
             onClick = {
                 library.website?.let { url -> uriHandler.openUri(url) }
             },

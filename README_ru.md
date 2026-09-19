@@ -2,7 +2,7 @@
 
 # AsteriskNG
 
-Клиент Xray для Android, работающий на базе [Xray-core](https://github.com/XTLS/Xray-core), [AndroidLibXrayLite](https://github.com/2dust/AndroidLibXrayLite) и [hev-socks5-tunnel](https://github.com/heiher/hev-socks5-tunnel).
+Клиент Xray для Android, работающий на базе [Xray-core](https://github.com/XTLS/Xray-core), [AndroidLibXrayLite](https://github.com/Asterisk4Magisk/AndroidLibXrayLite) и [hev-socks5-tunnel](https://github.com/heiher/hev-socks5-tunnel).
 
 ## Telegram-канал
 
@@ -121,7 +121,7 @@ appops set org.asterisk.zcc.ang ACTIVATE_VPN allow
 ## Благодарности и используемые компоненты
 
 - [@XTLS/Xray-core](https://github.com/XTLS/Xray-core)
-- [@2dust/AndroidLibXrayLite](https://github.com/2dust/AndroidLibXrayLite)
+- [@Asterisk4Magisk/AndroidLibXrayLite](https://github.com/Asterisk4Magisk/AndroidLibXrayLite)
 - [@heiher/hev-socks5-tunnel](https://github.com/heiher/hev-socks5-tunnel)
 - [@topjohnwu/libsu](https://github.com/topjohnwu/libsu)
 - [@compose-miuix-ui/miuix](https://github.com/compose-miuix-ui/miuix)

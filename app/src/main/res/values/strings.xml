@@ -665,4 +665,9 @@
     <string name="proxy_error_dialog_copy">Copy log</string>
     <string name="proxy_error_dialog_copied">Copied to clipboard</string>
     <string name="proxy_error_dialog_close">Close</string>
+    <string name="shared_core_migration_title">App updated</string>
+    <string name="shared_core_migration_message">VPN and ROOT now share the built-in Core. Remove the custom Core to save space? You can still upload a custom Core later.</string>
+    <string name="shared_core_migration_stop_root">Any ROOT service will stop before removal.</string>
+    <string name="shared_core_migration_keep">Keep</string>
+    <string name="shared_core_migration_remove">Remove</string>
 </resources>

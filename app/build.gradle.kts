@@ -14,7 +14,6 @@ plugins {
 }
 
 val generatedSrcDir: Provider<Directory> = layout.buildDirectory.dir("generated/projectInfo")
-val generatedXrayCoreJniLibsDir: Provider<Directory> = layout.buildDirectory.dir("generated/xrayCoreJniLibs")
 val versionCatalog = extensions.getByType<VersionCatalogsExtension>().named("libs")
 val protobufVersion = versionCatalog.findVersion("protobuf").get().requiredVersion
 val grpcVersion = versionCatalog.findVersion("grpc").get().requiredVersion
@@ -117,7 +116,7 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.dexlib2)
     //noinspection UseTomlInstead
-    implementation("com.github.2dust:libv2ray:${ProjectConfig.ANDROID_LIB_XRAY_LITE_VERSION}@aar")
+    implementation("com.github.Asterisk4Magisk:libv2ray:${ProjectConfig.ANDROID_LIB_XRAY_LITE_VERSION}@aar")
     implementation(dependencies.project(":asteriskd"))
     implementation(dependencies.project(":bpfmatcher"))
     implementation(dependencies.project(":bpf2socks"))
@@ -179,7 +178,6 @@ val generateProjectInfo = tasks.register<GenerateProjectInfoTask>("generateProje
     projectName.set(ProjectConfig.PROJECT_NAME)
     versionName.set(ProjectConfig.VERSION_NAME)
     versionCode.set(getGitVersionCode())
-    xrayCoreVersion.set(ProjectConfig.XRAY_CORE_VERSION)
     androidLibXrayLiteVersion.set(ProjectConfig.ANDROID_LIB_XRAY_LITE_VERSION)
     hevSocks5TunnelVersion.set(ProjectConfig.HEV_SOCKS5_TUNNEL_VERSION)
     outputDirectory.set(generatedSrcDir.map { it.dir("kotlin") })
@@ -199,7 +197,6 @@ androidComponents {
             task.outputDirectory
         }
         variant.sources.assets?.addStaticSourceDirectory("build/generated/resourceFileAssets")
-        variant.sources.jniLibs?.addStaticSourceDirectory("build/generated/xrayCoreJniLibs")
     }
 }
 

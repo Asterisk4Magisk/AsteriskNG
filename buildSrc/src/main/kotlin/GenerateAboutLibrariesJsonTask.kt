@@ -24,7 +24,7 @@ abstract class GenerateAboutLibrariesJsonTask : DefaultTask() {
     @TaskAction
     fun generate() {
         val library =
-            { id: String, version: String, name: String, description: String, website: String, scmUrl: String, licenses: List<String> ->
+            { id: String, version: String?, name: String, description: String, website: String, scmUrl: String, licenses: List<String> ->
                 mapOf(
                     "uniqueId" to id,
                     "artifactVersion" to version,
@@ -33,7 +33,7 @@ abstract class GenerateAboutLibrariesJsonTask : DefaultTask() {
                     "website" to website,
                     "scm" to mapOf("url" to scmUrl),
                     "licenses" to licenses,
-                )
+                ).filterValues { it != null }
             }
         val text = { element: Element, tag: String ->
             element.getElementsByTagName(tag).item(0)?.textContent?.trim()?.takeIf { it.isNotEmpty() }
@@ -49,15 +49,15 @@ abstract class GenerateAboutLibrariesJsonTask : DefaultTask() {
         }
         val dependencyBucketSuffixes = listOf("api", "implementation", "compileonly", "runtimeonly")
         val libraryOverrides = mapOf(
-            "com.github.2dust:libv2ray" to
+            "com.github.Asterisk4Magisk:libv2ray" to
                 { version: String ->
                     library(
-                        "github:2dust/AndroidLibXrayLite",
+                        "github:Asterisk4Magisk/AndroidLibXrayLite",
                         version,
                         "AndroidLibXrayLite",
                         "Android AAR wrapper for Xray-core, built with gomobile.",
-                        "https://github.com/2dust/AndroidLibXrayLite",
-                        "https://github.com/2dust/AndroidLibXrayLite",
+                        "https://github.com/Asterisk4Magisk/AndroidLibXrayLite",
+                        "https://github.com/Asterisk4Magisk/AndroidLibXrayLite",
                         listOf("LGPL-3.0"),
                     )
                 },
@@ -128,7 +128,7 @@ abstract class GenerateAboutLibrariesJsonTask : DefaultTask() {
             ),
             library(
                 "github:XTLS/Xray-core",
-                ProjectConfig.XRAY_CORE_VERSION,
+                null,
                 "Xray-core",
                 "An open platform for proxy and anti-censorship networking.",
                 "https://github.com/XTLS/Xray-core",

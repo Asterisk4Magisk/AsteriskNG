@@ -2,7 +2,7 @@
 
 # AsteriskNG
 
-Ứng dụng khách Xray cho Android, sử dụng [Xray-core](https://github.com/XTLS/Xray-core), [AndroidLibXrayLite](https://github.com/2dust/AndroidLibXrayLite) và [hev-socks5-tunnel](https://github.com/heiher/hev-socks5-tunnel).
+Ứng dụng khách Xray cho Android, sử dụng [Xray-core](https://github.com/XTLS/Xray-core), [AndroidLibXrayLite](https://github.com/Asterisk4Magisk/AndroidLibXrayLite) và [hev-socks5-tunnel](https://github.com/heiher/hev-socks5-tunnel).
 
 ## Kênh Telegram
 
@@ -121,7 +121,7 @@ appops set org.asterisk.zcc.ang ACTIVATE_VPN allow
 ## Ghi nhận đóng góp
 
 - [@XTLS/Xray-core](https://github.com/XTLS/Xray-core)
-- [@2dust/AndroidLibXrayLite](https://github.com/2dust/AndroidLibXrayLite)
+- [@Asterisk4Magisk/AndroidLibXrayLite](https://github.com/Asterisk4Magisk/AndroidLibXrayLite)
 - [@heiher/hev-socks5-tunnel](https://github.com/heiher/hev-socks5-tunnel)
 - [@topjohnwu/libsu](https://github.com/topjohnwu/libsu)
 - [@compose-miuix-ui/miuix](https://github.com/compose-miuix-ui/miuix)

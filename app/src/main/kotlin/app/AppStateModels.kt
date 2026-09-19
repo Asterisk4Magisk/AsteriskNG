@@ -26,7 +26,6 @@ import features.resources.ResourceFileV2FlyGeoIpUrl
 import features.resources.ResourceFileV2FlyGeoIpOnlyCnPrivateUrl
 import features.resources.ResourceFileV2FlyGeoSiteUrl
 import features.resources.ResourceFileXrayCoreName
-import features.resources.XrayCoreVersion
 import features.proxy.server.model.ProxyServer
 
 @Stable
@@ -73,7 +72,7 @@ enum class ResourceFileKind(
             GeoIpOnlyCnPrivate,
             DirectCidrIpv4,
             DirectCidrIpv6 -> fileName
-            XrayCore -> "Xray-core $XrayCoreVersion"
+            XrayCore -> "Xray-core"
         }
 }
 

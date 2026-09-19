@@ -665,4 +665,9 @@
     <string name="proxy_error_dialog_copy">Sao chép nhật ký</string>
     <string name="proxy_error_dialog_copied">Đã sao chép vào bộ nhớ tạm</string>
     <string name="proxy_error_dialog_close">Đóng</string>
+    <string name="shared_core_migration_title">Ứng dụng đã cập nhật</string>
+    <string name="shared_core_migration_message">VPN và ROOT hiện dùng chung Core tích hợp. Xóa Core tùy chỉnh để tiết kiệm dung lượng? Bạn vẫn có thể tải lên Core tùy chỉnh sau.</string>
+    <string name="shared_core_migration_stop_root">Dịch vụ ROOT sẽ dừng trước khi xóa.</string>
+    <string name="shared_core_migration_keep">Giữ lại</string>
+    <string name="shared_core_migration_remove">Xóa</string>
 </resources>
