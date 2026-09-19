@@ -2,7 +2,7 @@
 
 # AsteriskNG
 
-Ứng dụng khách Xray cho Android, sử dụng [Xray-core](https://github.com/XTLS/Xray-core), [AndroidLibXrayLite](https://github.com/Asterisk4Magisk/AndroidLibXrayLite) và [hev-socks5-tunnel](https://github.com/heiher/hev-socks5-tunnel).
+Ứng dụng khách Xray cho Android.
 
 ## Kênh Telegram
 

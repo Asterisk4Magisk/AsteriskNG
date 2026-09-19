@@ -2,7 +2,7 @@
 
 # AsteriskNG
 
-Клиент Xray для Android, работающий на базе [Xray-core](https://github.com/XTLS/Xray-core), [AndroidLibXrayLite](https://github.com/Asterisk4Magisk/AndroidLibXrayLite) и [hev-socks5-tunnel](https://github.com/heiher/hev-socks5-tunnel).
+Клиент Xray для Android.
 
 ## Telegram-канал
 

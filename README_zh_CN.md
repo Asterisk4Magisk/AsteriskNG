@@ -2,7 +2,7 @@
 
 # AsteriskNG
 
-一个 Android Xray GUI 客户端，使用 [Xray-core](https://github.com/XTLS/Xray-core)、[AndroidLibXrayLite](https://github.com/Asterisk4Magisk/AndroidLibXrayLite)、[hev-socks5-tunnel](https://github.com/heiher/hev-socks5-tunnel) 实现。
+一个 Android Xray GUI 客户端。
 
 ## Telegram Channel
 
