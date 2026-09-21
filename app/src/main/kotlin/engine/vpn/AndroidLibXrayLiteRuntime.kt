@@ -12,6 +12,9 @@ import libv2ray.CoreController
 import libv2ray.Libv2ray
 
 internal object AndroidLibXrayLiteRuntime {
+    private val controllerLock = Any()
+    private var processFinderOwner: CoreController? = null
+    @Volatile
     private var coreController: CoreController? = null
 
     fun start(
@@ -25,18 +28,25 @@ internal object AndroidLibXrayLiteRuntime {
         context.initializeAndroidXrayCoreEnvironment(config.dataDir)
         val controller = Libv2ray.newCoreController(AndroidLibXrayLiteCallbackHandler())
         runCatching {
-            controller.startLoop(config.xrayConfigJson, tunFd)
+            synchronized(controllerLock) {
+                controller.registerProcessFinder(AndroidXrayProcessFinder(context))
+                processFinderOwner = controller
+            }
+            controller.startLoop(context.resolveVpnXrayProcessRules(config.xrayConfigJson), tunFd)
         }.onFailure { error ->
             runCatching { controller.stopLoop() }
                 .onFailure { stopError ->
                     AndroidAppLogger.warn(LogTag, "Failed to stop AndroidLibXrayLite after start failure", stopError)
                 }
+            controller.clearProcessFinder()
             throw IllegalStateException(
                 context.getString(R.string.error_android_lib_xray_lite_start_failed, error.readableMessage()),
                 error,
             )
         }
-        coreController = controller
+        synchronized(controllerLock) {
+            coreController = controller
+        }
     }
 
     fun stop() {
@@ -46,11 +56,27 @@ internal object AndroidLibXrayLiteRuntime {
         }.onFailure { error ->
             AndroidAppLogger.error(LogTag, "Failed to stop AndroidLibXrayLite", error)
         }
-        coreController = null
+        controller.clearProcessFinder()
+        synchronized(controllerLock) {
+            if (coreController === controller) coreController = null
+        }
     }
 
     fun isRunning(): Boolean {
         return coreController?.isRunning == true
+    }
+
+    private fun CoreController.clearProcessFinder() {
+        synchronized(controllerLock) {
+            // Native shutdown may outlive the service's bounded wait. The Go finder is global,
+            // so an old controller must never unregister a replacement controller's finder.
+            if (processFinderOwner !== this) return
+            runCatching { registerProcessFinder(null) }
+                .onFailure { error ->
+                    AndroidAppLogger.warn(LogTag, "Failed to unregister Android process finder", error)
+                }
+            processFinderOwner = null
+        }
     }
 
     private const val LogTag = "AndroidLibXrayLite"
