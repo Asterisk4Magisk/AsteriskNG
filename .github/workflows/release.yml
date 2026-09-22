@@ -8,7 +8,7 @@ on:
         required: false
         type: string
       send_to_telegram:
-        description: "Upload release APKs to Telegram"
+        description: "Upload arm64-v8a release APKs to Telegram"
         required: true
         default: true
         type: boolean
@@ -431,15 +431,15 @@ jobs:
             exit 1
           fi
 
-      - name: Upload release APKs to Telegram
+      - name: Upload arm64-v8a release APKs to Telegram
         if: env.SEND_TO_TELEGRAM == 'true'
         shell: bash
         run: |
           set -euo pipefail
 
-          mapfile -d '' apks < <(find release-artifacts -maxdepth 1 -type f -name '*.apk' -print0 | sort -z)
+          mapfile -d '' apks < <(find release-artifacts -maxdepth 1 -type f -name '*-arm64-v8a.apk' -print0 | sort -z)
           if [ "${#apks[@]}" -eq 0 ]; then
-            echo "::error::No APK files were found in release-artifacts before Telegram upload."
+            echo "::error::No arm64-v8a APK files were found in release-artifacts before Telegram upload."
             find release-artifacts -maxdepth 1 -type f -print || true
             exit 1
           fi
