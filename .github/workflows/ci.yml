@@ -23,6 +23,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          # Initialize submodules before parallel Gradle sync tasks can contend for .git/config.
           submodules: recursive
 
       - name: Make Gradle wrapper executable
