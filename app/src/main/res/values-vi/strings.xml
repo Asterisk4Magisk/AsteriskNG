@@ -118,7 +118,7 @@
     <string name="settings_root_ebpf_selinux_policy_warning_confirm">Vẫn bật</string>
     <string name="settings_root_ipv6_disabler">Tắt IPv6 hệ thống</string>
     <string name="settings_root_ipv6_disabler_summary">Ngăn WebRTC lộ địa chỉ IPv6</string>
-    <string name="settings_vpn_local_dns">Bật DNS cục bộ</string>
+    <string name="settings_vpn_local_dns">Bật chuyển hướng DNS</string>
     <string name="settings_vpn_local_dns_summary">Sử dụng lõi để xử lý yêu cầu DNS</string>
     <string name="settings_local_proxy">Cài đặt proxy cục bộ</string>
     <string name="settings_local_proxy_port">Cổng proxy cục bộ</string>
