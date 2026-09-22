@@ -3,6 +3,7 @@
 
 package features.subscription
 
+import androidx.compose.animation.core.animateFloatAsState
 import app.SubscriptionGroupState
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -33,10 +34,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
+import top.yukonga.miuix.kmp.anim.folmeSpring
 import app.R
 import androidx.compose.ui.res.stringResource
 import top.yukonga.miuix.kmp.basic.Card
@@ -57,6 +61,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowDialog
 import features.proxy.server.display.displayName
 import ui.components.WarningConfirmDialog
+import ui.components.draggedCardShadow
 import ui.text.formatTemplate
 
 @Composable
@@ -362,18 +367,42 @@ private fun SubscriptionUserAgentSelection.labelResId(): Int = when (this) {
 @Composable
 internal fun SubscriptionGroupCard(
     group: SubscriptionGroupState,
+    isDragging: Boolean,
     onToggle: (Boolean) -> Unit,
     onUpdate: (() -> Unit)?,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     modifier: Modifier = Modifier,
+    dragModifier: Modifier = Modifier,
 ) {
     val defaultGroupName = stringResource(R.string.subscription_default_group)
+    val animatedScale by animateFloatAsState(
+        targetValue = if (isDragging) 1.025f else 1f,
+        animationSpec = folmeSpring(damping = 0.9f, response = 0.38f),
+        label = "subscriptionGroupDragScale",
+    )
+    val animatedShadowAlpha by animateFloatAsState(
+        targetValue = if (isDragging) 1f else 0f,
+        animationSpec = folmeSpring(damping = 0.9f, response = 0.38f),
+        label = "subscriptionGroupDragShadowAlpha",
+    )
+    val shadowColor = MiuixTheme.colorScheme.primary
+
     Card(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp)
-            .padding(bottom = 12.dp),
+            .padding(bottom = 12.dp)
+            .zIndex(if (isDragging) 1f else 0f)
+            .graphicsLayer {
+                scaleX = animatedScale
+                scaleY = animatedScale
+            }
+            .draggedCardShadow(
+                alpha = animatedShadowAlpha,
+                color = shadowColor,
+            )
+            .then(dragModifier),
         insideMargin = PaddingValues(16.dp),
     ) {
         Row(

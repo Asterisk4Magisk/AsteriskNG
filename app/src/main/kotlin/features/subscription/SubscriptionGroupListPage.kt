@@ -17,6 +17,7 @@ import app.collectAppState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -51,7 +52,17 @@ import features.subscription.usecase.subscriptionUpdateMessage
 import features.subscription.usecase.toSubscriptionFetchOptions
 import features.subscription.usecase.updateSubscriptions
 import kotlinx.coroutines.launch
+import sh.calvin.reorderable.ReorderableItem
+import top.yukonga.miuix.kmp.anim.folmeSpring
 import top.yukonga.miuix.kmp.interfaces.ExperimentalScrollBarApi
+import ui.components.longPressReorderDragHandle
+import ui.components.rememberAsteriskReorderableLazyListState
+import ui.components.rememberReorderPreview
+import ui.components.rememberReorderableLazyListContentPaddingWithoutTop
+import ui.components.rememberReorderableScrollThresholdPadding
+import ui.components.reorderByIds
+
+private const val SubscriptionGroupListHeaderItemCount = 1
 
 @Composable
 fun SubscriptionGroupListPage(
@@ -156,53 +167,86 @@ fun SubscriptionGroupListPage(
             isWideScreen = isWideScreen,
         )
         val listPadding = pageListPadding(contentPadding)
+        val lazyContentPadding = rememberReorderableLazyListContentPaddingWithoutTop(listPadding)
+        val preview = rememberReorderPreview(groups, SubscriptionGroupState::id) { ids ->
+            updateAppState { state ->
+                state.copy(
+                    subscriptionGroups = state.subscriptionGroups.reorderByIds(ids, SubscriptionGroupState::id),
+                )
+            }
+            true
+        }
+        val reorderableLazyListState = rememberAsteriskReorderableLazyListState(
+            lazyListState = lazyListState,
+            itemCount = groups.size,
+            itemIndexOffset = SubscriptionGroupListHeaderItemCount,
+            scrollThresholdPadding = rememberReorderableScrollThresholdPadding(
+                bottom = listPadding.calculateBottomPadding(),
+            ),
+            onMove = preview.onMove,
+        )
 
         Box {
             LazyColumn(
                 state = lazyListState,
-                modifier = Modifier.pageScrollModifiers(
-                    topAppBarScrollBehavior,
-                ),
-                contentPadding = listPadding,
+                modifier = Modifier
+                    .padding(top = listPadding.calculateTopPadding())
+                    .pageScrollModifiers(topAppBarScrollBehavior),
+                contentPadding = lazyContentPadding,
             ) {
                 item(key = "subscription_title") {
                     SmallTitle(text = stringResource(R.string.subscription_group_list))
                 }
                 items(
-                    items = groups,
+                    items = preview.items,
                     key = { it.id },
                 ) { group ->
-                    SubscriptionGroupCard(
-                        group = group,
-                        onToggle = { enabled ->
-                            updateAppState { state ->
-                                state.copy(
-                                    subscriptionGroups = state.subscriptionGroups.map {
-                                        if (it.id == group.id) it.copy(enabled = enabled) else it
-                                    },
-                                )
-                            }
-                        },
-                        onUpdate = if (group.url.isNotBlank()) {
-                            {
-                                updateSubscriptionGroup(
-                                    group = group,
-                                    stateStore = stateStore,
-                                    services = services,
-                                    updateAppState = updateAppState,
-                                    successTemplate = subscriptionUpdateResultTemplate,
-                                    failedTemplate = subscriptionUpdateResultWithFailedTemplate,
-                                )
-                            }
-                        } else {
-                            null
-                        },
-                        onEdit = {
-                            editingGroupId = group.id
-                            showGroupEditor = true
-                        },
-                        onDelete = { requestGroupDeletion(group) },
-                    )
+                    ReorderableItem(reorderableLazyListState.reorderableState, key = group.id) { isDragging ->
+                        SubscriptionGroupCard(
+                            group = group,
+                            isDragging = isDragging,
+                            dragModifier = Modifier.longPressReorderDragHandle(
+                                scope = this,
+                                enabled = groups.size > 1,
+                                state = reorderableLazyListState,
+                                onDragStarted = preview.onDragStarted,
+                                onDragStopped = preview.onDragStopped,
+                            ),
+                            onToggle = { enabled ->
+                                updateAppState { state ->
+                                    state.copy(
+                                        subscriptionGroups = state.subscriptionGroups.map {
+                                            if (it.id == group.id) it.copy(enabled = enabled) else it
+                                        },
+                                    )
+                                }
+                            },
+                            onUpdate = if (group.url.isNotBlank()) {
+                                {
+                                    updateSubscriptionGroup(
+                                        group = group,
+                                        stateStore = stateStore,
+                                        services = services,
+                                        updateAppState = updateAppState,
+                                        successTemplate = subscriptionUpdateResultTemplate,
+                                        failedTemplate = subscriptionUpdateResultWithFailedTemplate,
+                                    )
+                                }
+                            } else {
+                                null
+                            },
+                            onEdit = {
+                                editingGroupId = group.id
+                                showGroupEditor = true
+                            },
+                            onDelete = { requestGroupDeletion(group) },
+                            modifier = Modifier.animateItem(
+                                fadeInSpec = null,
+                                fadeOutSpec = null,
+                                placementSpec = folmeSpring(damping = 0.9f, response = 0.38f),
+                            ),
+                        )
+                    }
                 }
             }
             VerticalScrollBar(
