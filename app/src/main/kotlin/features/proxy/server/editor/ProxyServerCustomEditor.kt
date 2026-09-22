@@ -147,7 +147,6 @@ internal fun CustomProxyServerEditor(
                 .imePadding(),
         ) {
             JsonCodeEditor(
-                label = stringResource(R.string.proxy_editor_custom_json),
                 state = configJsonState,
                 modifier = Modifier.fillMaxSize(),
             )

@@ -18,8 +18,7 @@ internal fun rememberJsonEditorColors(): JsonEditorColors {
     val foreground = colorScheme.onSurface
     val darkTheme = isInDarkTheme()
     val onSurfaceVariantSummary = colorScheme.onSurfaceVariantSummary
-    val onSecondaryContainer = colorScheme.onSecondaryContainer
-    return remember(primary, background, foreground, darkTheme, onSurfaceVariantSummary, onSecondaryContainer) {
+    return remember(primary, background, foreground, darkTheme, onSurfaceVariantSummary) {
         val primaryHue = primary.hue()
         JsonEditorColors(
             darkTheme = darkTheme,
@@ -30,7 +29,6 @@ internal fun rememberJsonEditorColors(): JsonEditorColors {
             separator = primary.copy(alpha = if (darkTheme) 0.24f else 0.18f),
             border = primary.copy(alpha = if (darkTheme) 0.20f else 0.14f),
             lineNumber = onSurfaceVariantSummary.copy(alpha = if (darkTheme) 0.78f else 0.68f),
-            placeholder = onSecondaryContainer.copy(alpha = if (darkTheme) 0.70f else 0.58f),
             selection = primary.copy(alpha = if (darkTheme) 0.34f else 0.24f),
             currentLine = primary.copy(alpha = if (darkTheme) 0.10f else 0.06f),
             formatButtonBackground = primary.copy(alpha = if (darkTheme) 0.18f else 0.14f),
@@ -54,7 +52,6 @@ internal data class JsonEditorColors(
     val separator: Color,
     val border: Color,
     val lineNumber: Color,
-    val placeholder: Color,
     val selection: Color,
     val currentLine: Color,
     val formatButtonBackground: Color,

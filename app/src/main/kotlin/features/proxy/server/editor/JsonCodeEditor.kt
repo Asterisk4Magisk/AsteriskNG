@@ -12,9 +12,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -22,7 +20,6 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.toArgb
@@ -41,7 +38,6 @@ import io.github.rosemoe.sora.text.Content
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 import top.yukonga.miuix.kmp.basic.TextFieldDefaults
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Stable
 internal class JsonCodeEditorState(
@@ -52,9 +48,6 @@ internal class JsonCodeEditorState(
     private var moveCursorToEnd = true
 
     var documentVersion by mutableIntStateOf(0)
-        private set
-
-    var isEmpty by mutableStateOf(initialText.isEmpty())
         private set
 
     var isFocused by mutableStateOf(false)
@@ -69,14 +62,12 @@ internal class JsonCodeEditorState(
     internal fun detach(editor: CodeEditor) {
         if (this.editor !== editor) return
         retainedText = editor.text.toString()
-        isEmpty = editor.text.length == 0
         isFocused = false
         this.editor = null
     }
 
     internal fun onContentChanged(editor: CodeEditor, action: Int) {
         if (this.editor !== editor || action == ContentChangeEvent.ACTION_SET_NEW_TEXT) return
-        isEmpty = editor.text.length == 0
         documentVersion += 1
     }
 
@@ -92,7 +83,6 @@ internal class JsonCodeEditorState(
         if (text == retainedText && editor?.text?.toString() == text) return
         retainedText = text
         moveCursorToEnd = placeCursorAtEnd
-        isEmpty = text.isEmpty()
         editor?.let(::applyRetainedText)
         documentVersion += 1
     }
@@ -110,7 +100,6 @@ internal class JsonCodeEditorState(
 
 @Composable
 internal fun JsonCodeEditor(
-    label: String,
     state: JsonCodeEditorState,
     modifier: Modifier = Modifier,
     readOnly: Boolean = false,
@@ -152,15 +141,6 @@ internal fun JsonCodeEditor(
             },
             modifier = Modifier.fillMaxSize(),
         )
-        if (state.isEmpty) {
-            BasicText(
-                text = label,
-                style = MiuixTheme.textStyles.body2.copy(color = colors.placeholder),
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(start = PlaceholderStartPadding, top = PlaceholderTopPadding),
-            )
-        }
     }
 }
 
@@ -296,5 +276,3 @@ private const val EditorTabWidth = 2
 private const val LineNumberMargin = 4f
 private const val DividerWidth = 1f
 private val FocusedBorderWidth = 2.dp
-private val PlaceholderStartPadding = 50.dp
-private val PlaceholderTopPadding = 9.dp
