@@ -3,14 +3,16 @@
 
 package app.navigation
 
-import androidx.navigation3.runtime.NavKey
+import top.yukonga.miuix.kmp.nav.core.NavKey
 import features.proxy.server.model.ProxyServer
 import kotlinx.serialization.Serializable
+import java.util.UUID
 
 /**
- * Type-safe navigation keys for Navigation3.
+ * Type-safe navigation keys for Miuix navigation.
  * Each destination is a NavKey (data object/data class) and can be saved/restored in the back stack.
  */
+@Serializable
 sealed interface Route : NavKey {
     @Serializable
     data object Main : Route
@@ -38,11 +40,14 @@ sealed interface Route : NavKey {
 
     @Serializable
     data class ProxyServerEditor(
+        @Serializable(with = ProxyServerRouteSerializer::class)
         val ps: ProxyServer<*>,
         val serverId: Int? = null,
         val groupId: Int? = null,
         val returnGroupId: Int? = null,
         val resultKey: String? = null,
+        // Keep saved entry state independent of the mutable proxy configuration.
+        val entryId: String = UUID.randomUUID().toString(),
     ) : Route
 }
 

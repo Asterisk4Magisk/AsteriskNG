@@ -34,7 +34,6 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -43,12 +42,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
-import androidx.navigation3.runtime.NavKey
-import androidx.navigation3.runtime.entryProvider
-import androidx.navigation3.runtime.rememberDecoratedNavEntries
-import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
-import androidx.navigation3.ui.NavDisplay
-import androidx.navigation3.ui.NavDisplayTransitionEffects
+import top.yukonga.miuix.kmp.nav.core.NavDisplay
+import top.yukonga.miuix.kmp.nav.core.NavDisplayEffects
+import top.yukonga.miuix.kmp.nav.core.rememberNavBackStack
+import top.yukonga.miuix.kmp.nav.core.rememberNavSystemCornerRadius
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
@@ -131,7 +128,7 @@ fun AppContent(
         mainPagerState.syncPage()
     }
 
-    val backStack = remember { mutableStateListOf<NavKey>().apply { add(Route.Main) } }
+    val backStack = rememberNavBackStack<Route>(Route.Main)
     val navigator = remember { Navigator(backStack) }
 
     MainScreenBackHandler(mainPagerState, navigator)
@@ -142,86 +139,77 @@ fun AppContent(
         LocalNavigator provides navigator,
         LocalIsWideScreen provides isWideScreen,
     ) {
-        val entryProvider = remember(backStack, languageMode) {
-            entryProvider<NavKey> {
-                entry<Route.Main> {
-                    key(languageMode) {
-                        Home(
-                            padding = padding,
-                            mainPagerState = mainPagerState,
-                        )
-                    }
-                }
-                entry<Route.About> {
-                    key(languageMode) {
-                        AboutPage(padding = padding)
-                    }
-                }
-                entry<Route.License> {
-                    key(languageMode) {
-                        LicensePage(padding = padding)
-                    }
-                }
-                entry<Route.CoreLogs> {
-                    key(languageMode) {
-                        CoreLogsPage(padding = padding)
-                    }
-                }
-                entry<Route.AccessLogs> {
-                    key(languageMode) {
-                        AccessLogsPage(padding = padding)
-                    }
-                }
-                entry<Route.LogcatLogs> {
-                    key(languageMode) {
-                        LogcatLogsPage(padding = padding)
-                    }
-                }
-                entry<Route.ResourceManagement> {
-                    key(languageMode) {
-                        ResourceManagementPage(padding = padding)
-                    }
-                }
-                entry<Route.SubscriptionGroupList> {
-                    key(languageMode) {
-                        SubscriptionGroupListPage(padding = padding)
-                    }
-                }
-                entry<Route.ProxyServerEditor> {
-                    key(languageMode) {
-                        ProxyServerPage(
-                            padding = padding,
-                            ps = it.ps,
-                            serverId = it.serverId,
-                            groupId = it.groupId,
-                            returnGroupId = it.returnGroupId,
-                            resultKey = it.resultKey,
-                        )
-                    }
-                }
-            }
-        }
-
-        val entries = rememberDecoratedNavEntries(
-            backStack = backStack,
-            entryDecorators = listOf(rememberSaveableStateHolderNavEntryDecorator()),
-            entryProvider = entryProvider,
-        )
-
-        val transitionEffects = remember {
-            NavDisplayTransitionEffects(
+        val cornerRadius = rememberNavSystemCornerRadius()
+        val effects = remember(cornerRadius) {
+            NavDisplayEffects(
                 enableCornerClip = true,
+                cornerClipRadius = cornerRadius,
                 dimAmount = 0.5f,
                 blockInputDuringTransition = true,
-                popDirectionFollowsSwipeEdge = false,
             )
         }
 
         NavDisplay(
-            entries = entries,
+            backStack = backStack,
             onBack = { navigator.pop() },
-            transitionEffects = transitionEffects,
-        )
+            effects = effects,
+        ) {
+            entry<Route.Main> {
+                key(languageMode) {
+                    Home(
+                        padding = padding,
+                        mainPagerState = mainPagerState,
+                    )
+                }
+            }
+            entry<Route.About> {
+                key(languageMode) {
+                    AboutPage(padding = padding)
+                }
+            }
+            entry<Route.License> {
+                key(languageMode) {
+                    LicensePage(padding = padding)
+                }
+            }
+            entry<Route.CoreLogs> {
+                key(languageMode) {
+                    CoreLogsPage(padding = padding)
+                }
+            }
+            entry<Route.AccessLogs> {
+                key(languageMode) {
+                    AccessLogsPage(padding = padding)
+                }
+            }
+            entry<Route.LogcatLogs> {
+                key(languageMode) {
+                    LogcatLogsPage(padding = padding)
+                }
+            }
+            entry<Route.ResourceManagement> {
+                key(languageMode) {
+                    ResourceManagementPage(padding = padding)
+                }
+            }
+            entry<Route.SubscriptionGroupList> {
+                key(languageMode) {
+                    SubscriptionGroupListPage(padding = padding)
+                }
+            }
+            entry<Route.ProxyServerEditor>(contentKey = { it.entryId }) {
+                key(languageMode) {
+                    ProxyServerPage(
+                        padding = padding,
+                        ps = it.ps,
+                        serverId = it.serverId,
+                        groupId = it.groupId,
+                        returnGroupId = it.returnGroupId,
+                        resultKey = it.resultKey,
+                    )
+                }
+            }
+        }
         features.proxy.ProxyErrorHost()
     }
 }

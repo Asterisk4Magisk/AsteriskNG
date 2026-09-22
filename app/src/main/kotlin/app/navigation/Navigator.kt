@@ -3,7 +3,7 @@
 
 package app.navigation
 
-import androidx.navigation3.runtime.NavKey
+import top.yukonga.miuix.kmp.nav.core.NavKey
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -21,7 +21,10 @@ class Navigator(
      * Push a key onto the back stack.
      */
     fun push(key: NavKey) {
-        backStack.add(key)
+        // Repeated taps must not create duplicate keys in the navigation host.
+        if (backStack.lastOrNull() != key) {
+            backStack.add(key)
+        }
     }
 
     /**

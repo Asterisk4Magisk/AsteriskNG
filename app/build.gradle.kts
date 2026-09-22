@@ -22,6 +22,12 @@ android {
     namespace = "app"
     compileSdk = ProjectConfig.TARGET_SDK
 
+    // Built-in Kotlin inherits this JVM target.
+    compileOptions {
+        sourceCompatibility = JavaVersion.toVersion(ProjectConfig.JVM_VERSION)
+        targetCompatibility = JavaVersion.toVersion(ProjectConfig.JVM_VERSION)
+    }
+
     defaultConfig {
         applicationId = ProjectConfig.PACKAGE_NAME
         minSdk = ProjectConfig.MIN_SDK
@@ -107,7 +113,6 @@ tasks.named("preBuild") {
 dependencies {
     implementation(libs.compose.ui)
     implementation(libs.compose.foundation)
-    implementation(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.navigationevent)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.work.runtime)
@@ -130,7 +135,7 @@ dependencies {
     implementation(libs.libsu.core)
     implementation(libs.miuix.ui)
     implementation(libs.miuix.icons)
-    implementation(libs.miuix.navigation3.ui)
+    implementation(libs.miuix.nav)
     implementation(libs.miuix.preference)
     implementation(libs.protobuf.javalite)
     implementation(libs.reorderable)
