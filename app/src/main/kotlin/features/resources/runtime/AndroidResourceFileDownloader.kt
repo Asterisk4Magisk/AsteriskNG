@@ -4,7 +4,7 @@
 package features.resources.runtime
 
 import app.ProjectInfo
-import utils.writeAtomically
+import features.resources.runtime.writeResourceAtomically as writeAtomically
 
 import java.io.File
 import java.io.IOException

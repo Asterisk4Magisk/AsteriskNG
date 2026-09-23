@@ -20,7 +20,7 @@ internal fun Context.initializeAndroidXrayCoreEnvironment(dataDir: String) {
             return
         }
         Seq.setContext(applicationContext)
-        Libv2ray.initCoreEnv(dataDir, xrayCoreBaseKey())
+        Libv2ray.initCoreEnv(java.io.File(dataDir, "assets").absolutePath, xrayCoreBaseKey())
         InitializedDataDir.set(dataDir)
     }
 }

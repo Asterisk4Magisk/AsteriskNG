@@ -10,6 +10,7 @@ import java.nio.file.StandardCopyOption
 
 internal fun writeAtomically(
     target: File,
+    temporaryDirectory: File? = null,
     write: (OutputStream) -> Unit,
 ) {
     val parent = target.parentFile ?: error("Parent directory is unavailable for ${target.absolutePath}")
@@ -18,7 +19,9 @@ internal fun writeAtomically(
         val tempPrefix = "${target.name}.".let { prefix ->
             if (prefix.length >= 3) prefix else prefix.padEnd(3, '_')
         }
-        val tempFile = File.createTempFile(tempPrefix, ".tmp", parent)
+        val staging = temporaryDirectory ?: parent
+        check(staging.isDirectory || staging.mkdirs()) { "Cannot create staging directory" }
+        val tempFile = File.createTempFile(tempPrefix, ".tmp", staging)
         try {
             tempFile.outputStream().use(write)
             if (tempFile.length() <= 0) {

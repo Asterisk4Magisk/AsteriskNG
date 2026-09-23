@@ -60,7 +60,7 @@ internal object VpnXrayConfigFactory {
         val coreLogPaths = context.prepareXrayCoreLogPaths()
         val resourceFilePaths = context.prepareXrayResourceFilePaths()
         if (request.selectedServer.server !is Custom) {
-            appState.validateXrayExternalRoutingResources(resourceFilePaths.dataDir)
+            appState.validateXrayExternalRoutingResources(resourceFilePaths.assetsDir)
         }
         val tunOptions = appState.toTunOptions()
         val localProxyOptions = appState.toLocalProxyOptions()

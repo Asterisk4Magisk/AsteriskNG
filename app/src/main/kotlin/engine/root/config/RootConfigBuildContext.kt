@@ -69,7 +69,7 @@ internal fun Context.prepareRootConfigBuildContext(request: ProxyEngineStartRequ
     val appState = request.appState
     val resourceFilePaths = xrayRootResourceFilePaths()
     if (request.selectedServer.server !is Custom) {
-        appState.validateXrayExternalRoutingResources(resourceFilePaths.dataDir)
+        appState.validateXrayExternalRoutingResources(resourceFilePaths.assetsDir)
     }
     val coreLogPaths = applicationContext.prepareXrayCoreLogPaths()
     val outboundPlan = appState.buildXrayOutboundPlan(request.selectedServer)
@@ -97,7 +97,7 @@ private fun AppState.toRootStartConfig(
             matcherExecutablePath = resourceFilePaths.bpfMatcherPath,
             bpf2SocksExecutablePath = resourceFilePaths.bpf2socksPath,
             hevSocks5TunnelExecutablePath = resourceFilePaths.hevSocks5TunnelPath,
-            workingDirectory = resourceFilePaths.dataDir,
+            workingDirectory = resourceFilePaths.assetsDir,
             statePath = File(dataDirectory, "asteriskd.state").absolutePath,
             logPath = File(File(dataDirectory, "logs"), "asteriskd.log").absolutePath,
         ),
