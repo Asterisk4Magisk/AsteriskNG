@@ -68,6 +68,7 @@ internal class AndroidResourceFileStore(
         assetDirectory.migrateRegistered(
             ResourceFileKind.entries.filterNot { it == ResourceFileKind.XrayCore }.map { it.fileName } +
                 customResourceFiles.map { it.name },
+            marker = File(appContext.noBackupFilesDir, "resource-assets-migration-v1"),
         )
     }
 

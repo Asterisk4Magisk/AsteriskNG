@@ -24,9 +24,10 @@ internal class ResourceAssetDirectory(private val runtimeDir: File) {
         return target
     }
 
-    fun migrateRegistered(names: Collection<String>) = synchronized(Lock) {
-        val marker = File(runtimeDir, ".assets-migrated")
+    fun migrateRegistered(names: Collection<String>, marker: File) = synchronized(Lock) {
         if (marker.exists()) return@synchronized
+        val markerDir = checkNotNull(marker.parentFile)
+        check(markerDir.isDirectory || markerDir.mkdirs()) { "Cannot create migration marker directory" }
         check(assetsDir.isDirectory || assetsDir.mkdirs()) { "Cannot create resource directory" }
         names.distinct().forEach { name ->
             val target = file(name)
@@ -35,7 +36,7 @@ internal class ResourceAssetDirectory(private val runtimeDir: File) {
                 Files.move(source.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING)
             }
         }
-        marker.writeText("1")
+        check(marker.createNewFile()) { "Cannot save resource migration marker" }
     }
 
     fun scan(supported: (String) -> Boolean): List<File> = synchronized(Lock) {
