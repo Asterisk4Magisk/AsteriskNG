@@ -77,7 +77,8 @@ internal class SwitchRunModeUseCase(
             false
         }
 
-        if (currentState.enableRootBootScript) {
+        // ROOT-to-ROOT keeps boot enabled; the synchronizer refreshes it for the new mode.
+        if (currentState.enableRootBootScript && !targetRequiresRoot) {
             when (val result = rootBootScriptUseCase.uninstall(rootAccessVerified = true)) {
                 RootBootScriptResult.Success,
                 RootBootScriptResult.MissingServer -> Unit

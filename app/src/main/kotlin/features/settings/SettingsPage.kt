@@ -33,7 +33,7 @@ import app.collectAppState
 import app.modes.ColorModeThemeDark
 import app.modes.ColorModeThemeSystem
 import app.modes.RunModeVpnService
-import app.modes.supportsRootEbpfMatcher
+import app.modes.isRootRunMode
 import app.navigation.Route
 import data.backup.AppBackupRestorePreview
 import engine.proxy.withResolvedDynamicLocalProxyPort
@@ -285,9 +285,8 @@ private fun SettingsContent(
                                                 state.copy(
                                                     runMode = result.runMode,
                                                     proxyRunning = result.proxyRunning,
-                                                    enableRootBootScript = false,
-                                                    enableRootEbpfRules = state.enableRootEbpfRules &&
-                                                        result.runMode.supportsRootEbpfMatcher(),
+                                                    enableRootBootScript = state.enableRootBootScript && result.runMode.isRootRunMode(),
+                                                    enableRootEbpfRules = state.enableRootEbpfRules && result.runMode.isRootRunMode(),
                                                 )
                                             }
                                         }
