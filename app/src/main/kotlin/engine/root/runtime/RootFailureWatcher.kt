@@ -21,7 +21,6 @@ import kotlinx.coroutines.sync.withLock
 import org.json.JSONObject
 import system.RootShellGateway
 import java.io.File
-import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Duration.Companion.milliseconds
 
 /** Started by ROOT operations, never by constructing an engine or rendering the dialog. */
@@ -29,21 +28,34 @@ internal object RootFailureWatcher {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val lifecycle = Mutex()
     private var job: Job? = null
+    private var deadline: Job? = null
     private val delivery = RootFailureDelivery()
-    private val watchingAllowed = AtomicBoolean(true)
+    private var watchingAllowed = true
+    private var launchInProgress = false
 
     suspend fun ensureStarted(
         context: Context,
         shell: RootShellGateway,
         layout: RootRuntimeLayout,
         explicitRootAction: Boolean = false,
+        running: Boolean = true,
     ) {
         lifecycle.withLock {
-            if (explicitRootAction) watchingAllowed.set(true)
-            if (!watchingAllowed.get()) return
-            if (job?.isActive == true) return
             val store = AndroidAppStateStore.get(context.applicationContext)
             if (store.state.value.runMode == RunModeVpnService) return
+            // Status streams may still contain Running from the previous service cycle.
+            if (launchInProgress && running && !explicitRootAction) return
+            if (explicitRootAction) launchInProgress = !running
+            if (job?.isActive == true) {
+                if (running) startDeadline()
+                return
+            }
+            if (explicitRootAction) watchingAllowed = true
+            if (!watchingAllowed) return
+            // Consume this attempt before launching. Status queries cannot rearm an expired watcher.
+            watchingAllowed = false
+            deadline?.cancelAndJoin()
+            deadline = null
             // Capture before scheduling: a failure arriving immediately after launch is fresh.
             val baseline = File(layout.asteriskdStatePath).lastModified()
             // Attaching to an externally restarted resident service is also a new episode.
@@ -53,12 +65,17 @@ internal object RootFailureWatcher {
                     store.state.value.runMode != RunModeVpnService
                 }
             }
+            if (running) startDeadline()
         }
     }
 
-    fun beginAttempt() {
-        watchingAllowed.set(true)
-        delivery.beginAttempt()
+    suspend fun beginAttempt() {
+        lifecycle.withLock {
+            cancelMonitoring()
+            watchingAllowed = true
+            launchInProgress = true
+            delivery.beginAttempt()
+        }
     }
 
     fun currentAttempt(): Long = delivery.currentAttempt()
@@ -68,12 +85,32 @@ internal object RootFailureWatcher {
     }
 
     /** Await cancellation before returning from the ROOT stop boundary. */
-    suspend fun stop(suspendUntilNextAttempt: Boolean = false) {
+    suspend fun stop() {
         lifecycle.withLock {
-            if (suspendUntilNextAttempt) watchingAllowed.set(false)
-            job?.cancelAndJoin()
-            job = null
+            watchingAllowed = false
+            launchInProgress = false
+            cancelMonitoring()
         }
+    }
+
+    // Called under lifecycle. The first Running confirmation owns the deadline;
+    // subsequent status events must not extend the observation window.
+    private fun startDeadline() {
+        if (deadline != null) return
+        deadline = scope.launch {
+            delay(30_000L.milliseconds)
+            lifecycle.withLock {
+                job?.cancelAndJoin()
+                job = null
+            }
+        }
+    }
+
+    private suspend fun cancelMonitoring() {
+        deadline?.cancelAndJoin()
+        deadline = null
+        job?.cancelAndJoin()
+        job = null
     }
 
     private suspend fun watch(

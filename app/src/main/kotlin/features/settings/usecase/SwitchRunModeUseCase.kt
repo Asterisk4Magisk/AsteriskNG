@@ -102,7 +102,7 @@ internal class SwitchRunModeUseCase(
         // A failed ROOT cycle can leave diagnostics active even when no service is running.
         // Finish that work before publishing the new mode, including transitions into VPN.
         if (currentState.runMode.isRootRunMode()) {
-            RootFailureWatcher.stop(suspendUntilNextAttempt = true)
+            RootFailureWatcher.stop()
         }
 
         return SwitchRunModeResult.Success(
