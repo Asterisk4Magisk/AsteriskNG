@@ -109,13 +109,8 @@
     <string name="settings_root_ebpf_matcher_summary">Cải thiện hiệu năng với danh sách ứng dụng lớn, hỗ trợ lọc địa chỉ</string>
     <string name="settings_root_ebpf_bypass_direct_cidrs">Bỏ qua địa chỉ kết nối trực tiếp</string>
     <string name="settings_root_ebpf_bypass_direct_cidrs_summary">Mặc định là danh sách địa chỉ Trung Quốc, có thể điều chỉnh trong quản lý tài nguyên</string>
-    <string name="settings_root_ebpf_matcher_failed">Kiểm tra hỗ trợ bộ khớp eBPF thất bại</string>
-    <string name="settings_root_ebpf_matcher_unsupported">Thiết bị hiện tại không hỗ trợ bộ khớp eBPF</string>
     <string name="settings_broadcast_control">Điều khiển qua broadcast</string>
     <string name="settings_broadcast_control_summary">Cho phép broadcast bên ngoài điều khiển dịch vụ ứng dụng</string>
-    <string name="settings_root_ebpf_selinux_policy_warning_title">Bật bộ khớp eBPF?</string>
-    <string name="settings_root_ebpf_selinux_policy_warning_summary">Không phát hiện công cụ SELinux policy. Khi khởi động proxy, AsteriskNG có thể không thêm được các quy tắc quyền eBPF cần thiết. Vẫn có thể bật bộ khớp eBPF, nhưng chia sẻ điểm phát sóng hoặc mạng có thể không hoạt động bình thường cho đến khi framework root cung cấp magiskpolicy/supolicy, hoặc bạn tự thêm các quy tắc này.</string>
-    <string name="settings_root_ebpf_selinux_policy_warning_confirm">Vẫn bật</string>
     <string name="settings_root_ipv6_disabler">Tắt IPv6 hệ thống</string>
     <string name="settings_root_ipv6_disabler_summary">Ngăn WebRTC lộ địa chỉ IPv6</string>
     <string name="settings_vpn_local_dns">Bật chuyển hướng DNS</string>

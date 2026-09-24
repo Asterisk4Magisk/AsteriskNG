@@ -57,7 +57,6 @@ import top.yukonga.miuix.kmp.basic.VerticalScrollBar
 import top.yukonga.miuix.kmp.basic.rememberScrollBarAdapter
 import top.yukonga.miuix.kmp.interfaces.ExperimentalScrollBarApi
 import ui.KeyColors
-import ui.components.WarningConfirmDialog
 import ui.layout.AdaptiveTopAppBar
 import ui.layout.pageContentPaddingWithCutout
 import ui.layout.pageListPadding
@@ -113,7 +112,6 @@ private fun SettingsContent(
     var runModeSwitchInProgress by rememberSaveable { mutableStateOf(false) }
     var rootBootScriptSwitchInProgress by rememberSaveable { mutableStateOf(false) }
     var rootEbpfSwitchInProgress by rememberSaveable { mutableStateOf(false) }
-    var showRootEbpfSelinuxPolicyWarning by rememberSaveable { mutableStateOf(false) }
     var backupRestoreInProgress by rememberSaveable { mutableStateOf(false) }
     var pendingRestorePreview by remember { mutableStateOf<AppBackupRestorePreview?>(null) }
     val contentPadding = pageContentPaddingWithCutout(
@@ -158,11 +156,6 @@ private fun SettingsContent(
     ).take(KeyColors.size + 1)
     val rootRequiredMessage = stringResource(R.string.settings_root_required)
     val rootBootScriptFailedMessage = stringResource(R.string.settings_root_boot_script_failed)
-    val rootEbpfRulesFailedMessage = stringResource(R.string.settings_root_ebpf_matcher_failed)
-    val rootEbpfRulesUnsupportedMessage = stringResource(R.string.settings_root_ebpf_matcher_unsupported)
-    val rootEbpfSelinuxPolicyWarningTitle = stringResource(R.string.settings_root_ebpf_selinux_policy_warning_title)
-    val rootEbpfSelinuxPolicyWarningSummary = stringResource(R.string.settings_root_ebpf_selinux_policy_warning_summary)
-    val rootEbpfSelinuxPolicyWarningConfirm = stringResource(R.string.settings_root_ebpf_selinux_policy_warning_confirm)
     val serviceStoppedMessage = stringResource(R.string.proxy_server_list_service_stopped)
     val backupExportedMessage = stringResource(R.string.settings_backup_exported)
     val backupExportFailedMessage = stringResource(R.string.settings_backup_export_failed)
@@ -387,28 +380,13 @@ private fun SettingsContent(
                             rootEbpfSwitchInProgress = true
                             services.appScope.launch {
                                 try {
-                                    when (val result = rootEbpfProbeUseCase.probe(currentState)) {
+                                    when (rootEbpfProbeUseCase.probe(currentState)) {
                                         is RootEbpfProbeResult.Success -> {
-                                            if (result.selinuxPolicyApplicator == null) {
-                                                showRootEbpfSelinuxPolicyWarning = true
-                                            } else {
-                                                updateAppState { state -> state.copy(enableRootEbpfRules = true) }
-                                            }
-                                        }
-
-                                        is RootEbpfProbeResult.Unsupported -> {
-                                            tipNotifier.show(
-                                                result.probe.message.takeIf(String::isNotBlank)
-                                                    ?: rootEbpfRulesUnsupportedMessage,
-                                            )
+                                            updateAppState { state -> state.copy(enableRootEbpfRules = true) }
                                         }
 
                                         RootEbpfProbeResult.RootUnavailable -> {
                                             tipNotifier.show(rootRequiredMessage)
-                                        }
-
-                                        is RootEbpfProbeResult.Failed -> {
-                                            tipNotifier.showError(result.error, rootEbpfRulesFailedMessage)
                                         }
                                     }
                                 } finally {
@@ -544,18 +522,6 @@ private fun SettingsContent(
                         }
                     }
                 }
-            },
-        )
-        WarningConfirmDialog(
-            show = showRootEbpfSelinuxPolicyWarning,
-            title = rootEbpfSelinuxPolicyWarningTitle,
-            summary = rootEbpfSelinuxPolicyWarningSummary,
-            dismissText = stringResource(R.string.common_cancel),
-            confirmText = rootEbpfSelinuxPolicyWarningConfirm,
-            onDismissRequest = { showRootEbpfSelinuxPolicyWarning = false },
-            onConfirm = {
-                updateAppState { state -> state.copy(enableRootEbpfRules = true) }
-                showRootEbpfSelinuxPolicyWarning = false
             },
         )
     }
