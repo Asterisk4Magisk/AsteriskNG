@@ -93,7 +93,7 @@
         },
         {
             "uniqueId": "org.jetbrains.compose.foundation:foundation",
-            "artifactVersion": "1.12.0",
+            "artifactVersion": "1.12.1",
             "name": "Compose Foundation",
             "description": "Higher level abstractions of the Compose UI primitives. This library is design system agnostic, providing the high-level building blocks for both application and design-system developers",
             "website": "https://github.com/JetBrains/compose-multiplatform",
@@ -106,7 +106,7 @@
         },
         {
             "uniqueId": "org.jetbrains.compose.ui:ui",
-            "artifactVersion": "1.12.0",
+            "artifactVersion": "1.12.1",
             "name": "Compose UI",
             "description": "Compose UI primitives. This library contains the primitives that form the Compose UI Toolkit, such as drawing, measurement and layout.",
             "website": "https://github.com/JetBrains/compose-multiplatform",
@@ -392,10 +392,10 @@
         },
         {
             "uniqueId": "androidx.work:work-runtime",
-            "artifactVersion": "2.11.2",
+            "artifactVersion": "2.12.0",
             "name": "WorkManager Runtime",
             "description": "Android WorkManager runtime library",
-            "website": "https://developer.android.com/jetpack/androidx/releases/work#2.11.2",
+            "website": "https://developer.android.com/jetpack/androidx/releases/work#2.12.0",
             "scm": {
                 "url": "https://cs.android.com/androidx/platform/frameworks/support"
             },
