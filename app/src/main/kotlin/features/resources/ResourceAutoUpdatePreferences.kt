@@ -3,6 +3,11 @@
 
 package features.resources
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -45,14 +50,20 @@ internal fun ResourceAutoUpdatePreferences(
         checked = enabled,
         onCheckedChange = onEnabledChange,
     )
-    ArrowPreference(
-        title = stringResource(R.string.settings_resource_files_auto_update_interval_title),
-        summary = stringResource(R.string.settings_resource_files_auto_update_hours, interval),
-        onClick = {
-            draft.setTextAndPlaceCursorAtEnd(interval)
-            editing = true
-        },
-    )
+    AnimatedVisibility(
+        visible = enabled,
+        enter = fadeIn() + expandVertically(),
+        exit = shrinkVertically() + fadeOut(),
+    ) {
+        ArrowPreference(
+            title = stringResource(R.string.settings_resource_files_auto_update_interval_title),
+            summary = stringResource(R.string.settings_resource_files_auto_update_hours, interval),
+            onClick = {
+                draft.setTextAndPlaceCursorAtEnd(interval)
+                editing = true
+            },
+        )
+    }
     WindowDialog(
         show = editing,
         title = stringResource(R.string.settings_resource_files_auto_update_interval_title),
