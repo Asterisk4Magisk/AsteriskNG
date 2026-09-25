@@ -655,4 +655,10 @@
     <string name="shared_core_migration_stop_root">Перед удалением служба ROOT будет остановлена.</string>
     <string name="shared_core_migration_keep">Сохранить</string>
     <string name="shared_core_migration_remove">Удалить</string>
+    <string name="settings_service_control_keyguard_enable">Включить управление по блокировке экрана</string>
+    <string name="settings_service_control_keyguard">Управление по блокировке экрана</string>
+    <string name="settings_service_control_lock_start">Запускать при блокировке</string>
+    <string name="settings_service_control_lock_stop">Останавливать при блокировке</string>
+    <string name="settings_service_control_unlock_start">Запускать при разблокировке</string>
+    <string name="settings_service_control_unlock_stop">Останавливать при разблокировке</string>
 </resources>

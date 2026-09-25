@@ -28,7 +28,7 @@
         },
         {
             "uniqueId": "github:Asterisk4Magisk/asteriskd",
-            "artifactVersion": "v2.0.35",
+            "artifactVersion": "v2.0.36",
             "name": "asteriskd",
             "description": "A root Android daemon that synchronizes local-address bypass rules and pinned eBPF maps.",
             "website": "https://github.com/Asterisk4Magisk/asteriskd",

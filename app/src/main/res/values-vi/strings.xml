@@ -665,4 +665,10 @@
     <string name="shared_core_migration_stop_root">Dịch vụ ROOT sẽ dừng trước khi xóa.</string>
     <string name="shared_core_migration_keep">Giữ lại</string>
     <string name="shared_core_migration_remove">Xóa</string>
+    <string name="settings_service_control_keyguard_enable">Bật điều khiển theo khóa màn hình</string>
+    <string name="settings_service_control_keyguard">Điều khiển theo khóa màn hình</string>
+    <string name="settings_service_control_lock_start">Khởi động khi khóa màn hình</string>
+    <string name="settings_service_control_lock_stop">Dừng khi khóa màn hình</string>
+    <string name="settings_service_control_unlock_start">Khởi động khi mở khóa màn hình</string>
+    <string name="settings_service_control_unlock_stop">Dừng khi mở khóa màn hình</string>
 </resources>

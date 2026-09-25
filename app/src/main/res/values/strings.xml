@@ -665,4 +665,10 @@
     <string name="shared_core_migration_stop_root">Any ROOT service will stop before removal.</string>
     <string name="shared_core_migration_keep">Keep</string>
     <string name="shared_core_migration_remove">Remove</string>
+    <string name="settings_service_control_keyguard_enable">Enable lock screen control</string>
+    <string name="settings_service_control_keyguard">Lock screen control</string>
+    <string name="settings_service_control_lock_start">Start on lock</string>
+    <string name="settings_service_control_lock_stop">Stop on lock</string>
+    <string name="settings_service_control_unlock_start">Start on unlock</string>
+    <string name="settings_service_control_unlock_stop">Stop on unlock</string>
 </resources>

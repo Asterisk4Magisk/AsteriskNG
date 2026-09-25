@@ -42,6 +42,8 @@ internal object AsteriskdConfigValidator {
     }
 
     private fun validateServiceControl(value: AsteriskdServiceControlConfig) {
+        require(!(value.keyguard.lockStart && value.keyguard.lockStop))
+        require(!(value.keyguard.unlockStart && value.keyguard.unlockStop))
         require(!(value.wifi.connectStart.enabled && value.wifi.connectStop.enabled))
         require(!(value.wifi.disconnectStart.enabled && value.wifi.disconnectStop.enabled))
         if (value.enabled && value.schedule.enabled) {

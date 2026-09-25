@@ -5,6 +5,8 @@ package data.backup
 
 import app.AppState
 import app.ServiceControlSchedule
+import app.ServiceControlKeyguard
+import features.settings.servicecontrol.normalizeServiceControlSettings
 import app.ServiceControlSettings
 import app.ServiceControlWifi
 import app.ServiceControlWifiRule
@@ -123,6 +125,13 @@ private fun AppState.toBackupSettings(): AppBackupSettings {
 private fun ServiceControlSettings.toBackup(): AppBackupServiceControl {
     return AppBackupServiceControl(
         enabled = enabled,
+        keyguard = AppBackupServiceControlKeyguard(
+            enabled = keyguard.enabled,
+            lockStart = keyguard.lockStart,
+            lockStop = keyguard.lockStop,
+            unlockStart = keyguard.unlockStart,
+            unlockStop = keyguard.unlockStop,
+        ),
         schedule = AppBackupServiceControlSchedule(
             enabled = schedule.enabled,
             startCron = schedule.startCron,
@@ -145,6 +154,13 @@ private fun ServiceControlWifiRule.toBackup(): AppBackupServiceControlWifiRule {
 private fun AppBackupServiceControl.toState(): ServiceControlSettings {
     return ServiceControlSettings(
         enabled = enabled,
+        keyguard = ServiceControlKeyguard(
+            enabled = keyguard.enabled,
+            lockStart = keyguard.lockStart,
+            lockStop = keyguard.lockStop,
+            unlockStart = keyguard.unlockStart,
+            unlockStop = keyguard.unlockStop,
+        ),
         schedule = ServiceControlSchedule(
             enabled = schedule.enabled,
             startCron = schedule.startCron,
@@ -320,7 +336,7 @@ private fun AppBackupData.toAppState(): AppState {
         socks5ProxyPort = settings.socks5ProxyPort,
         externalInterfaces = settings.externalInterfaces,
         ignoredInterfaces = settings.ignoredInterfaces,
-        serviceControl = settings.serviceControl.toState(),
+        serviceControl = normalizeServiceControlSettings(settings.serviceControl.toState()),
         privateAddressCidrs = settings.privateAddressCidrs,
         proxyAppListMode = settings.proxyAppListMode,
         proxyAppListSelectedApps = proxyAppListSelectedApps,

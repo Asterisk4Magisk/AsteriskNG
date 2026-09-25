@@ -122,6 +122,10 @@ private fun ServiceControlWifiRule.isValidForSave(): Boolean =
 
 fun normalizeServiceControlSettings(value: ServiceControlSettings): ServiceControlSettings =
     value.copy(
+        keyguard = value.keyguard.copy(
+            lockStart = value.keyguard.lockStart && !value.keyguard.lockStop,
+            unlockStart = value.keyguard.unlockStart && !value.keyguard.unlockStop,
+        ),
         schedule = value.schedule.copy(
             startCron = value.schedule.startCron.trim(),
             stopCron = value.schedule.stopCron.trim(),

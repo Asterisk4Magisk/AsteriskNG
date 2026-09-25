@@ -106,6 +106,7 @@ internal data class AppBackupServiceControl(
     val enabled: Boolean = BackupDefaults.serviceControl.enabled,
     val schedule: AppBackupServiceControlSchedule = AppBackupServiceControlSchedule(),
     val wifi: AppBackupServiceControlWifi = AppBackupServiceControlWifi(),
+    val keyguard: AppBackupServiceControlKeyguard = AppBackupServiceControlKeyguard(),
 )
 
 @Serializable
@@ -195,3 +196,12 @@ internal sealed interface AppBackupWarning {
         val count: Int,
     ) : AppBackupWarning
 }
+
+@Serializable
+internal data class AppBackupServiceControlKeyguard(
+    val enabled: Boolean = false,
+    val lockStart: Boolean = false,
+    val lockStop: Boolean = false,
+    val unlockStart: Boolean = false,
+    val unlockStop: Boolean = false,
+)

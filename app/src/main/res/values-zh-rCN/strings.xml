@@ -665,4 +665,10 @@
     <string name="shared_core_migration_stop_root">移除前将停止 ROOT 服务。</string>
     <string name="shared_core_migration_keep">保留</string>
     <string name="shared_core_migration_remove">移除</string>
+    <string name="settings_service_control_keyguard_enable">启用锁屏控制</string>
+    <string name="settings_service_control_keyguard">锁屏控制</string>
+    <string name="settings_service_control_lock_start">锁屏时启动</string>
+    <string name="settings_service_control_lock_stop">锁屏时停止</string>
+    <string name="settings_service_control_unlock_start">解锁时启动</string>
+    <string name="settings_service_control_unlock_stop">解锁时停止</string>
 </resources>

@@ -20,7 +20,7 @@ internal object AsteriskdConfigEncoder {
 }
 
 private fun AsteriskdConfig.toJsonObject(): JsonObject = buildJsonObject {
-    put("schemaVersion", 3)
+    put("schemaVersion", 4)
     put("owner", owner.wireValue)
     put("coreType", coreType.wireValue)
     put("coreExecutablePath", coreExecutablePath)
@@ -40,6 +40,13 @@ private fun AsteriskdServiceControlConfig.toJsonObject(): JsonObject = buildJson
     put("enabled", enabled)
     put("schedule", schedule.toJsonObject())
     put("wifi", wifi.toJsonObject())
+    put("keyguard", buildJsonObject {
+        put("enabled", keyguard.enabled)
+        put("lockStart", keyguard.lockStart)
+        put("lockStop", keyguard.lockStop)
+        put("unlockStart", keyguard.unlockStart)
+        put("unlockStop", keyguard.unlockStop)
+    })
 }
 
 private fun AsteriskdScheduleControl.toJsonObject(): JsonObject = buildJsonObject {

@@ -3,6 +3,9 @@
 
 package engine.root.daemon.config
 
+import android.os.Build
+import app.ServiceControlKeyguard
+import app.supportsKeyguardControl
 import app.ServiceControlSettings
 import features.settings.servicecontrol.normalizeServiceControlSettings
 
@@ -58,6 +61,7 @@ internal data class AsteriskdServiceControlConfig(
     val enabled: Boolean,
     val schedule: AsteriskdScheduleControl,
     val wifi: AsteriskdWifiControl,
+    val keyguard: ServiceControlKeyguard = ServiceControlKeyguard(),
 )
 
 internal data class AsteriskdScheduleControl(
@@ -84,6 +88,7 @@ internal fun ServiceControlSettings.toAsteriskdServiceControlConfig(): Asteriskd
     val value = normalizeServiceControlSettings(this)
     return AsteriskdServiceControlConfig(
         enabled = value.enabled,
+        keyguard = value.keyguard.copy(enabled = value.keyguard.enabled && supportsKeyguardControl(Build.VERSION.SDK_INT)),
         schedule = AsteriskdScheduleControl(
             enabled = value.schedule.enabled,
             startCron = value.schedule.startCron,
