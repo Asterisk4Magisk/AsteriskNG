@@ -28,7 +28,7 @@ internal fun serviceControlReconfigurePlan(
             shutdownRequired = true,
             launchMode = RootPublicationLaunchMode.Service,
         )
-        AsteriskdPhase.Stopped -> ServiceControlReconfigurePlan(
+        AsteriskdPhase.Stopped, AsteriskdPhase.Paused -> ServiceControlReconfigurePlan(
             shutdownRequired = true,
             launchMode = if (enabled) {
                 RootPublicationLaunchMode.Monitor

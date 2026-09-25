@@ -156,6 +156,12 @@ private fun AsteriskdSnapshot.validate() {
         require(!network.ipv4Ready && !network.ipv6Ready)
     }
     require(phase != AsteriskdPhase.Failed || error != null)
+    if (phase == AsteriskdPhase.Paused) {
+        require(mode == AsteriskdMode.Tproxy || mode == AsteriskdMode.Tun2Socks || mode == AsteriskdMode.Bpf2Socks)
+        require(corePid != null && error == null && !rules.active)
+        require((helperPid != null) == (mode == AsteriskdMode.Tun2Socks))
+        require(!matcherConfigured || matcherActive)
+    }
 }
 
 private fun requireOwnerCore(

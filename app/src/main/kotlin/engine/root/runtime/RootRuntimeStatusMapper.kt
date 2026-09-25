@@ -56,7 +56,7 @@ internal fun AsteriskdSnapshot.ordinaryStartDisposition(
     if (phase == AsteriskdPhase.Running && mode == expectedMode) {
         return RootOrdinaryStartDisposition.Reuse
     }
-    if (phase == AsteriskdPhase.Stopped) {
+    if (phase == AsteriskdPhase.Stopped || phase == AsteriskdPhase.Paused) {
         return RootOrdinaryStartDisposition.Relaunch
     }
     rejectBound(owner)
@@ -98,6 +98,7 @@ internal fun AsteriskdSnapshot.toStableProxyEngineStatus(
 ): ProxyEngineStatus? = when (phase) {
     AsteriskdPhase.Running,
     AsteriskdPhase.Stopped,
+    AsteriskdPhase.Paused,
     AsteriskdPhase.Failed,
     -> toProxyEngineStatus(runMode, expectedMode)
     else -> null

@@ -10,7 +10,7 @@ import engine.root.daemon.config.AsteriskdOwner
 internal enum class AsteriskdPhase(val wireValue: String) {
     Validating("validating"), Acquiring("acquiring"),
     Starting("starting"), ApplyingRules("applying-rules"), Running("running"),
-    Stopping("stopping"), Stopped("stopped"), Failed("failed"),
+    Stopping("stopping"), Stopped("stopped"), Failed("failed"), Paused("paused"),
 }
 
 internal enum class AsteriskdResultCode(val wireValue: String) {
@@ -27,7 +27,7 @@ internal enum class AsteriskdHelperType(val wireValue: String) {
 internal enum class AsteriskdEventType(val wireValue: String) {
     Starting("starting"), Running("running"), RulesChanged("rules-changed"),
     Stopping("stopping"), Stopped("stopped"), CoreExited("core-exited"),
-    HelperFailed("helper-failed"), Failed("failed"),
+    HelperFailed("helper-failed"), Failed("failed"), Paused("paused"),
 }
 
 internal enum class AsteriskdRuleCategory(val wireValue: String) {
