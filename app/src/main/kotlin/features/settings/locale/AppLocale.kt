@@ -3,21 +3,16 @@
 
 package features.settings.locale
 
-import android.app.Activity
 import android.content.Context
-import android.content.ContextWrapper
 import android.content.res.Configuration
 import android.os.LocaleList
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import app.modes.ColorModeDark
 import app.modes.ColorModeLight
 import app.modes.LanguageModeEnglish
@@ -43,7 +38,7 @@ fun ProvideAppLanguage(
 ) {
     val context = LocalContext.current
     val locale = remember(languageMode, systemLocale) {
-        languageTagForMode(languageMode).toAppLocale(systemLocale)
+        resolveAppLocale(languageMode, systemLocale)
     }
     val configuration = remember(context, locale) { context.localizedConfiguration(locale) }
     val localizedContext = remember(context, configuration) {
@@ -59,33 +54,22 @@ fun ProvideAppLanguage(
     CompositionLocalProvider(
         LocalContext provides localizedContext,
         LocalConfiguration provides configuration,
+        // Dialog and sheet windows use the Activity's Context. Keep resource lookups
+        // tied to the current app language across those separate compositions.
+        LocalResources provides localizedContext.resources,
         content = content,
     )
 }
 
-@Composable
-fun RecreateActivityOnAppLanguageChange(languageMode: Int) {
-    val activity = LocalContext.current.findActivity()
-    var previousLanguageMode by remember { mutableIntStateOf(languageMode) }
-
-    LaunchedEffect(activity, languageMode) {
-        if (previousLanguageMode == languageMode) {
-            return@LaunchedEffect
-        }
-        previousLanguageMode = languageMode
-        activity?.recreate()
-    }
-}
-
-private fun String?.toAppLocale(systemLocale: Locale): Locale {
-    return this?.let(Locale::forLanguageTag) ?: systemLocale
+internal fun resolveAppLocale(languageMode: Int, systemLocale: Locale): Locale {
+    return languageTagForMode(languageMode)?.let(Locale::forLanguageTag) ?: systemLocale
 }
 
 internal fun Context.localizedAppContext(
     languageMode: Int,
     colorMode: Int? = null,
 ): Context {
-    val locale = languageTagForMode(languageMode).toAppLocale(resources.configuration.primaryLocale())
+    val locale = resolveAppLocale(languageMode, resources.configuration.primaryLocale())
     return createConfigurationContext(localizedConfiguration(locale, colorMode))
 }
 
@@ -111,12 +95,4 @@ private fun Configuration.applyAppColorMode(colorMode: Int) {
         else -> return
     }
     uiMode = (uiMode and Configuration.UI_MODE_NIGHT_MASK.inv()) or nightMode
-}
-
-private tailrec fun Context.findActivity(): Activity? {
-    return when (this) {
-        is Activity -> this
-        is ContextWrapper -> baseContext.findActivity()
-        else -> null
-    }
 }
