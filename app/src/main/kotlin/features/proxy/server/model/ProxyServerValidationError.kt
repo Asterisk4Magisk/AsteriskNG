@@ -22,6 +22,7 @@ enum class ProxyServerValidationError {
     RealityShortIdInvalid,
     RealityMldsa65VerifyInvalid,
     WireguardKeyInvalid,
+    WireguardRemoteDnsInvalid,
     WireguardReservedCountInvalid,
     WireguardReservedValueInvalid,
     LocalAddressCidrRequired,

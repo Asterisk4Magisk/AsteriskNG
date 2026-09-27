@@ -47,6 +47,7 @@ internal fun rememberProxyServerValidationMessageResolver(): (ProxyServerValidat
         realityShortIdInvalid = stringResource(R.string.proxy_validation_reality_short_id_invalid),
         realityMldsa65VerifyInvalid = stringResource(R.string.proxy_validation_reality_mldsa65_verify_invalid),
         wireguardKeyInvalid = stringResource(R.string.proxy_validation_wireguard_key_invalid),
+        wireguardRemoteDnsInvalid = stringResource(R.string.proxy_validation_wireguard_remote_dns_invalid),
         wireguardReservedCountInvalid = stringResource(R.string.proxy_validation_wireguard_reserved_count_invalid),
         wireguardReservedValueInvalid = stringResource(R.string.proxy_validation_wireguard_reserved_value_invalid),
         localAddressCidrRequired = stringResource(R.string.proxy_validation_local_address_cidr_required),
@@ -103,6 +104,7 @@ private data class ProxyServerValidationMessages(
     val realityShortIdInvalid: String,
     val realityMldsa65VerifyInvalid: String,
     val wireguardKeyInvalid: String,
+    val wireguardRemoteDnsInvalid: String,
     val wireguardReservedCountInvalid: String,
     val wireguardReservedValueInvalid: String,
     val localAddressCidrRequired: String,
@@ -151,6 +153,7 @@ private data class ProxyServerValidationMessages(
             ProxyServerValidationError.RealityShortIdInvalid -> realityShortIdInvalid
             ProxyServerValidationError.RealityMldsa65VerifyInvalid -> realityMldsa65VerifyInvalid
             ProxyServerValidationError.WireguardKeyInvalid -> wireguardKeyInvalid
+            ProxyServerValidationError.WireguardRemoteDnsInvalid -> wireguardRemoteDnsInvalid
             ProxyServerValidationError.WireguardReservedCountInvalid -> wireguardReservedCountInvalid
             ProxyServerValidationError.WireguardReservedValueInvalid -> wireguardReservedValueInvalid.formatRange(values)
             ProxyServerValidationError.LocalAddressCidrRequired -> localAddressCidrRequired

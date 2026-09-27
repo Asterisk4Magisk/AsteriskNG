@@ -152,6 +152,7 @@
     <string name="proxy_editor_properties">Свойства</string>
     <string name="proxy_editor_reality_settings">Настройки REALITY</string>
     <string name="proxy_editor_remarks">Имя конфигурации (Заметка)</string>
+    <string name="proxy_editor_remote_dns_optional">Удалённый DNS (необязательно, IPv4/IPv6 через запятую или local для DNS устройства; по умолчанию Cloudflare)</string>
     <string name="proxy_editor_reserved_optional">Зарезервировано (опционально, через запятую)</string>
     <string name="proxy_editor_return_edit">Вернуться к редактированию</string>
     <string name="proxy_editor_security">Безопасность транспорта</string>
@@ -220,6 +221,7 @@
     <string name="proxy_validation_vless_padding_range_invalid">Недопустимый диапазон паддинга или задержки VLESS</string>
     <string name="proxy_validation_vless_vision_flow_unsupported">Поток VLESS Vision поддерживает работу только в связке RAW + TLS/REALITY</string>
     <string name="proxy_validation_wireguard_key_invalid">Ключ WireGuard должен быть валидным base64 ключом</string>
+    <string name="proxy_validation_wireguard_remote_dns_invalid">Удалённый DNS должен содержать IPv4/IPv6 через запятую или только local</string>
     <string name="proxy_validation_wireguard_reserved_count_invalid">Поле Reserved должно содержать три числа, разделенные запятыми</string>
     <string name="proxy_validation_wireguard_reserved_value_invalid">Каждое зарезервированное значение должно быть в диапазоне {min}–{max}</string>
     <string name="proxy_validation_xray_user_id_invalid">User ID должен быть в формате UUID либо короче {max} байт</string>

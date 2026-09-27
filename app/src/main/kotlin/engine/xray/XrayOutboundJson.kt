@@ -8,12 +8,15 @@ import app.effectiveLocalDnsEnabled
 import engine.network.NetworkDefaults
 import features.proxy.server.model.Hysteria2
 import features.proxy.server.model.ProxyServerConstants
+import features.proxy.server.model.Wireguard
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonObjectBuilder
+import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonArray
 import utils.toIntCoercedInOrDefault
 
 internal fun buildXrayOutbounds(
@@ -104,7 +107,7 @@ private fun buildProxyOutbound(appState: AppState, outboundServer: XrayProxyOutb
     val tag = outboundServer.tag
     val server = outboundServer.server
     var outbound = server.toXrayOutbound(tag).toJsonObject()
-        .applyProxyOutboundDomainStrategy(appState)
+        .applyProxyOutboundSettings(appState, (server as? Wireguard)?.remoteDnsAddresses(appState.enableIpv6))
         .updated {
             put("tag", tag)
         }
@@ -128,7 +131,7 @@ private fun buildProxyOutbound(appState: AppState, outboundServer: XrayProxyOutb
     return outbound
 }
 
-private fun JsonObject.applyProxyOutboundDomainStrategy(appState: AppState): JsonObject {
+private fun JsonObject.applyProxyOutboundSettings(appState: AppState, remoteDns: List<String>?): JsonObject {
     if (stringValue("protocol") == ProxyServerConstants.PROTOCOL_WIREGUARD) {
         val settings = objectValue("settings") ?: buildJsonObject {}
         return updated {
@@ -136,6 +139,11 @@ private fun JsonObject.applyProxyOutboundDomainStrategy(appState: AppState): Jso
                 "settings",
                 settings.updated {
                     put("domainStrategy", appState.wireguardDomainStrategy())
+                    if (remoteDns != null) {
+                        putJsonArray("remoteDNS") {
+                            remoteDns.forEach { add(it) }
+                        }
+                    }
                 },
             )
         }

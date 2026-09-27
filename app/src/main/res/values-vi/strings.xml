@@ -151,6 +151,7 @@
     <string name="proxy_editor_properties">Mục cấu hình</string>
     <string name="proxy_editor_reality_settings">Cấu hình mã hóa lớp truyền tải (realitySettings)</string>
     <string name="proxy_editor_remarks">Tên gợi nhớ</string>
+    <string name="proxy_editor_remote_dns_optional">DNS từ xa (tùy chọn, IPv4/IPv6 cách nhau bằng dấu phẩy, hoặc local để dùng DNS thiết bị; mặc định Cloudflare)</string>
     <string name="proxy_editor_reserved_optional">Reserved (tùy chọn, cách nhau bằng dấu phẩy)</string>
     <string name="proxy_editor_return_edit">Quay lại chỉnh sửa</string>
     <string name="proxy_editor_security">Bảo mật lớp truyền tải</string>
@@ -219,6 +220,7 @@
     <string name="proxy_validation_vless_padding_range_invalid">Phạm vi padding hoặc delay VLESS không hợp lệ</string>
     <string name="proxy_validation_vless_vision_flow_unsupported">Flow VLESS Vision chỉ hỗ trợ RAW + TLS/REALITY</string>
     <string name="proxy_validation_wireguard_key_invalid">Khóa WireGuard phải là khóa base64 hợp lệ</string>
+    <string name="proxy_validation_wireguard_remote_dns_invalid">DNS từ xa phải chứa địa chỉ IPv4/IPv6 cách nhau bằng dấu phẩy hoặc chỉ local</string>
     <string name="proxy_validation_wireguard_reserved_count_invalid">Reserved phải chứa ba số cách nhau bằng dấu phẩy</string>
     <string name="proxy_validation_wireguard_reserved_value_invalid">Mỗi giá trị Reserved phải trong phạm vi {min}–{max}</string>
     <string name="proxy_validation_xray_user_id_invalid">ID người dùng phải là UUID hoặc chuỗi nhỏ hơn {max} byte</string>

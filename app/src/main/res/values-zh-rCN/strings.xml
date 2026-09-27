@@ -151,6 +151,7 @@
     <string name="proxy_editor_properties">配置项</string>
     <string name="proxy_editor_reality_settings">传输层加密配置（realitySettings）</string>
     <string name="proxy_editor_remarks">别名</string>
+    <string name="proxy_editor_remote_dns_optional">远程 DNS（可选，IPv4/IPv6 用逗号分隔，local 使用设备 DNS，默认 Cloudflare）</string>
     <string name="proxy_editor_reserved_optional">Reserved（可选，逗号隔开）</string>
     <string name="proxy_editor_return_edit">返回修改</string>
     <string name="proxy_editor_security">传输层安全</string>
@@ -219,6 +220,7 @@
     <string name="proxy_validation_vless_padding_range_invalid">VLESS padding 或 delay 范围无效</string>
     <string name="proxy_validation_vless_vision_flow_unsupported">VLESS Vision flow 仅支持 RAW + TLS/REALITY</string>
     <string name="proxy_validation_wireguard_key_invalid">WireGuard 密钥必须是有效的 base64 密钥</string>
+    <string name="proxy_validation_wireguard_remote_dns_invalid">远程 DNS 必须是逗号分隔的 IPv4/IPv6 地址，或仅填写 local</string>
     <string name="proxy_validation_wireguard_reserved_count_invalid">Reserved 必须包含三个逗号分隔的数字</string>
     <string name="proxy_validation_wireguard_reserved_value_invalid">每个 Reserved 值范围应为 {min}–{max}</string>
     <string name="proxy_validation_xray_user_id_invalid">用户 ID 必须是 UUID 或小于 {max} 字节的字符串</string>

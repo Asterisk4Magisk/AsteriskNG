@@ -151,6 +151,7 @@
     <string name="proxy_editor_properties">Properties</string>
     <string name="proxy_editor_reality_settings">Reality settings</string>
     <string name="proxy_editor_remarks">Remarks</string>
+    <string name="proxy_editor_remote_dns_optional">Remote DNS (optional, comma-separated IPv4/IPv6, or local for device DNS; default Cloudflare)</string>
     <string name="proxy_editor_reserved_optional">Reserved (optional, comma-separated)</string>
     <string name="proxy_editor_return_edit">Return to edit</string>
     <string name="proxy_editor_security">Transport security</string>
@@ -219,6 +220,7 @@
     <string name="proxy_validation_vless_padding_range_invalid">Invalid VLESS padding or delay range</string>
     <string name="proxy_validation_vless_vision_flow_unsupported">VLESS Vision flow only supports RAW + TLS/REALITY</string>
     <string name="proxy_validation_wireguard_key_invalid">WireGuard key must be a valid base64 key</string>
+    <string name="proxy_validation_wireguard_remote_dns_invalid">Remote DNS must contain comma-separated IPv4/IPv6 addresses or only local</string>
     <string name="proxy_validation_wireguard_reserved_count_invalid">Reserved must contain three comma-separated numbers</string>
     <string name="proxy_validation_wireguard_reserved_value_invalid">Each reserved value must be {min}–{max}</string>
     <string name="proxy_validation_xray_user_id_invalid">User ID must be a UUID or shorter than {max} bytes</string>

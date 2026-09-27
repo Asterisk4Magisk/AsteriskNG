@@ -4,7 +4,7 @@
 package features.subscription
 
 const val DefaultSubscriptionGroupId = 1
-const val DefaultSubscriptionUserAgent = "v2rayNG/2.3.8"
+const val DefaultSubscriptionUserAgent = "v2rayNG/2.3.9"
 const val ClashMetaSubscriptionUserAgent = "clash.meta"
 internal enum class SubscriptionUserAgentSelection {
     V2rayNg,
