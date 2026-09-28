@@ -2,28 +2,11 @@ English | [简体中文](README_zh_CN.md) | [Русский](README_ru.md) | [Ti
 
 # AsteriskNG
 
-An Xray client for Android.
+An Android Xray GUI client.
 
 ## Telegram Channel
 
 [Asterisk4Magisk](https://t.me/Asterisk4Magisk)
-
-## Features
-
-- VPN Service, TPROXY(ROOT), TUN2SOCKS(ROOT), and BPF2SOCKS(ROOT) run modes
-- VMess, VLESS, Trojan, Shadowsocks, SOCKS, HTTP, Hysteria2, WireGuard, strategy groups, and chained proxies
-- v2rayNG and Mihomo subscription formats
-- Profile, proxy, routing, log, and resource management
-- MIUIX Compose UI
-
-## Screenshots
-
-<p align="center">
-  <img src="image/screenshot/5.jpg" width="24%" alt="Screenshot 1" />
-  <img src="image/screenshot/6.jpg" width="24%" alt="Screenshot 2" />
-  <img src="image/screenshot/7.jpg" width="24%" alt="Screenshot 3" />
-  <img src="image/screenshot/8.jpg" width="24%" alt="Screenshot 4" />
-</p>
 
 ## Run Modes
 
@@ -31,25 +14,22 @@ An Xray client for Android.
 
 - Works without root permission.
 - Uses Android `VpnService`.
-- Runs Xray in the app process through AndroidLibXrayLite.
 
 ### TPROXY(ROOT)
 
 - Runs the local Xray executable directly with libsu.
-- Uses a TPROXY inbound with iptables and policy routing for transparent proxy traffic.
+- Uses iptables and policy routing for transparent proxy traffic.
 
 ### TUN2SOCKS(ROOT)
 
 - Runs the local Xray executable directly with libsu.
-- Uses `hev-socks5-tunnel` to create the fixed TUN device `asterisk0`.
-- Sends tunnel traffic to a local Xray SOCKS5 inbound.
+- Uses `hev-socks5-tunnel` to create a TUN device and send traffic to the Xray SOCKS5 inbound.
 
 ### BPF2SOCKS(ROOT)
 
-- Runs the local Xray executable and native `bpf2socks` helper directly with libsu.
-- Uses eBPF without creating a TUN device and sends captured TCP and UDP traffic to a local Xray SOCKS5 inbound.
-- Defaults to bridge port `65532` and SOCKS5 inbound port `65534`.
-- Requires the eBPF capability probe to pass before startup. Devices with insufficient support cannot start this mode.
+- Runs the local Xray executable directly with libsu.
+- Uses `bpf2socks` to capture traffic and send it to the Xray SOCKS5 inbound.
+- Availability depends on eBPF support in the device kernel.
 
 ### asteriskd
 
@@ -58,9 +38,8 @@ An Xray client for Android.
 
 ## Resource Files
 
-- Runtime files are stored in the app-private `files/xray` directory.
-- The bundled Xray executable can be replaced with an executable file or a zip archive containing `xray`.
-- `geoip.dat`, `geosite.dat`, and other resources can be restored, replaced locally, or updated from built-in and custom sources.
+- ROOT runtime files are stored in the app-private `files/xray` directory.
+- Custom resources can be added or replaced locally and updated from configured URLs.
 
 ## Broadcast Control
 
@@ -104,15 +83,9 @@ On macOS or Linux:
 ./gradlew assembleDebug
 ```
 
-The build prepares Xray, builds the configured native helper submodules, and packages the supported ABIs.
+The build downloads the pinned AndroidLibXrayLite AAR, builds the native submodules, and produces ABI split APKs plus a universal APK.
 
 If Gradle cannot find the Android NDK, configure it through Android Studio, `ndk.dir` in `local.properties`, or `ANDROID_NDK_HOME`.
-
-## WSA
-
-```bash
-appops set org.asterisk.zcc.ang ACTIVATE_VPN allow
-```
 
 ## License
 
@@ -132,4 +105,4 @@ appops set org.asterisk.zcc.ang ACTIVATE_VPN allow
 - [@Chocolate4U/Iran-v2ray-rules](https://github.com/Chocolate4U/Iran-v2ray-rules)
 - [@runetfreedom/russia-v2ray-rules-dat](https://github.com/runetfreedom/russia-v2ray-rules-dat)
 - [@mayaxcn/china-ip-list](https://github.com/mayaxcn/china-ip-list)
-- [@xchacha20-poly1305/husi](https://github.com/xchacha20-poly1305/husi) — heuristic idea for the per-app proxy "Scan Chinese apps" feature
+- [@xchacha20-poly1305/husi](https://github.com/xchacha20-poly1305/husi) — reference implementation for the per-app proxy "Scan Chinese apps" feature

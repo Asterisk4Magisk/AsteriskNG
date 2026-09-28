@@ -2,28 +2,11 @@
 
 # AsteriskNG
 
-Клиент Xray для Android.
+Клиент Xray для Android с графическим интерфейсом.
 
 ## Telegram-канал
 
 [Asterisk4Magisk](https://t.me/Asterisk4Magisk)
-
-## Возможности
-
-- Режимы VPN Service, TPROXY (ROOT), TUN2SOCKS (ROOT) и BPF2SOCKS (ROOT).
-- Протоколы VMess, VLESS, Trojan, Shadowsocks, SOCKS, HTTP, Hysteria2 и WireGuard, а также группы стратегий и цепочки прокси.
-- Форматы подписок v2rayNG и Mihomo.
-- Управление конфигурациями, прокси, маршрутизацией, журналами и ресурсами.
-- Интерфейс на базе MIUIX Compose UI.
-
-## Скриншоты
-
-<p align="center">
-  <img src="image/screenshot/5.jpg" width="24%" alt="Скриншот 1" />
-  <img src="image/screenshot/6.jpg" width="24%" alt="Скриншот 2" />
-  <img src="image/screenshot/7.jpg" width="24%" alt="Скриншот 3" />
-  <img src="image/screenshot/8.jpg" width="24%" alt="Скриншот 4" />
-</p>
 
 ## Режимы работы
 
@@ -31,25 +14,22 @@
 
 - Работает без ROOT-прав.
 - Использует Android `VpnService`.
-- Запускает Xray в процессе приложения через AndroidLibXrayLite.
 
 ### TPROXY (ROOT)
 
 - Запускает локальный исполняемый файл Xray напрямую через libsu.
-- Использует входящее подключение TPROXY, iptables и policy routing для прозрачного проксирования трафика.
+- Использует iptables и маршрутизацию на основе политик для прозрачного проксирования трафика.
 
 ### TUN2SOCKS (ROOT)
 
 - Запускает локальный исполняемый файл Xray напрямую через libsu.
-- Использует `hev-socks5-tunnel` для создания фиксированного TUN-интерфейса `asterisk0`.
-- Передаёт трафик туннеля в локальное входящее подключение SOCKS5 Xray.
+- Использует `hev-socks5-tunnel` для создания TUN-интерфейса и передачи трафика на вход SOCKS5 Xray.
 
 ### BPF2SOCKS (ROOT)
 
-- Запускает локальный исполняемый файл Xray и нативный компонент `bpf2socks` напрямую через libsu.
-- Использует eBPF без создания TUN-интерфейса и передаёт перехваченный TCP- и UDP-трафик в локальное входящее подключение SOCKS5 Xray.
-- По умолчанию использует порт bridge `65532` и порт SOCKS5 `65534`.
-- Перед запуском требуется успешная проверка поддержки eBPF; на неподдерживаемых устройствах режим не запускается.
+- Запускает локальный исполняемый файл Xray напрямую через libsu.
+- Использует `bpf2socks` для перехвата трафика и его передачи на вход SOCKS5 Xray.
+- Доступность зависит от поддержки eBPF ядром устройства.
 
 ### asteriskd
 
@@ -58,9 +38,8 @@
 
 ## Файлы ресурсов
 
-- Файлы среды выполнения хранятся в приватной директории приложения `files/xray`.
-- Встроенный Xray можно заменить исполняемым файлом или zip-архивом, содержащим `xray`.
-- `geoip.dat`, `geosite.dat` и другие ресурсы можно восстановить, заменить локально или обновить из встроенных и пользовательских источников.
+- Файлы для работы в режиме ROOT хранятся в приватной директории приложения `files/xray`.
+- Пользовательские ресурсы можно добавлять или заменять локально, а также обновлять по заданным URL.
 
 ## Управление через broadcast
 
@@ -104,15 +83,9 @@ git submodule update --init --recursive
 ./gradlew assembleDebug
 ```
 
-Сборка подготавливает Xray, собирает настроенные нативные субмодули и упаковывает поддерживаемые ABI.
+При сборке загружается AAR AndroidLibXrayLite фиксированной версии, собираются нативные субмодули и создаются отдельные APK для каждой ABI, а также универсальный APK.
 
 Если Gradle не может найти Android NDK, настройте его через Android Studio, параметр `ndk.dir` в `local.properties` или переменную `ANDROID_NDK_HOME`.
-
-## Поддержка WSA
-
-```bash
-appops set org.asterisk.zcc.ang ACTIVATE_VPN allow
-```
 
 ## Лицензия
 
@@ -132,4 +105,4 @@ appops set org.asterisk.zcc.ang ACTIVATE_VPN allow
 - [@Chocolate4U/Iran-v2ray-rules](https://github.com/Chocolate4U/Iran-v2ray-rules)
 - [@runetfreedom/russia-v2ray-rules-dat](https://github.com/runetfreedom/russia-v2ray-rules-dat)
 - [@mayaxcn/china-ip-list](https://github.com/mayaxcn/china-ip-list)
-- [@xchacha20-poly1305/husi](https://github.com/xchacha20-poly1305/husi) — идея эвристического сканирования китайских приложений
+- [@xchacha20-poly1305/husi](https://github.com/xchacha20-poly1305/husi) — пример реализации функции «Сканировать китайские приложения» для настройки прокси по приложениям

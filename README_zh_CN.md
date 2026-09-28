@@ -8,48 +8,28 @@
 
 [Asterisk4Magisk](https://t.me/Asterisk4Magisk)
 
-## 功能
-
-- VPN Service、TPROXY(ROOT)、TUN2SOCKS(ROOT) 和 BPF2SOCKS(ROOT) 运行模式
-- VMess、VLESS、Trojan、Shadowsocks、SOCKS、HTTP、Hysteria2、WireGuard、策略组和链式代理
-- 支持 v2rayNG 和 Mihomo 订阅格式
-- 配置、代理、路由、日志和资源管理
-- MIUIX Compose UI
-
-## 预览
-
-<p align="center">
-  <img src="image/screenshot/1.jpg" width="24%" alt="截图 1" />
-  <img src="image/screenshot/2.jpg" width="24%" alt="截图 2" />
-  <img src="image/screenshot/3.jpg" width="24%" alt="截图 3" />
-  <img src="image/screenshot/4.jpg" width="24%" alt="截图 4" />
-</p>
-
 ## 运行模式
 
 ### VPN Service
 
 - 无需 root 权限。
 - 使用 Android `VpnService`。
-- 通过 AndroidLibXrayLite 在应用进程中运行 Xray。
 
 ### TPROXY(ROOT)
 
 - 通过 libsu 直接运行本地 Xray 可执行文件。
-- 使用 TPROXY 入站、iptables 和策略路由处理透明代理流量。
+- 使用 iptables 和策略路由处理透明代理流量。
 
 ### TUN2SOCKS(ROOT)
 
 - 通过 libsu 直接运行本地 Xray 可执行文件。
-- 使用 `hev-socks5-tunnel` 创建固定 TUN 设备 `asterisk0`。
-- 将隧道流量送入本地 Xray SOCKS5 入站。
+- 使用 `hev-socks5-tunnel` 创建 TUN 设备并将流量送入 Xray SOCKS5 入站
 
 ### BPF2SOCKS(ROOT)
 
-- 通过 libsu 直接运行本地 Xray 可执行文件和 native `bpf2socks` helper。
-- 使用 eBPF 接管 TCP、UDP 流量并送入本地 Xray SOCKS5 入站，不创建 TUN 设备。
-- 默认 bridge 端口为 `65532`，SOCKS5 入站端口为 `65534`。
-- 启动前要求 eBPF 能力探测通过。设备支持不足时，该模式无法启动。
+- 通过 libsu 直接运行本地 Xray 可执行文件。
+- 使用 `bpf2socks` 劫持流量并送入 Xray SOCKS5 入站。
+- 是否可用取决于设备内核 eBPF 支持情况。
 
 ### asteriskd
 
@@ -58,9 +38,8 @@
 
 ## 资源文件
 
-- 运行文件存储在应用私有的 `files/xray` 目录。
-- 内置 Xray 可执行文件可替换为可执行文件或包含 `xray` 的 zip 压缩包。
-- `geoip.dat`、`geosite.dat` 等资源可恢复、在本地替换，或通过内置及自定义来源更新。
+- ROOT 运行文件存储在应用私有的 `files/xray` 目录。
+- 自定义资源可在本地添加或替换，也可通过配置的 URL 更新。
 
 ## 广播控制
 
@@ -104,15 +83,9 @@ macOS 或 Linux：
 ./gradlew assembleDebug
 ```
 
-构建会准备 Xray，构建已配置的 native helper submodule，并打包支持的 ABI。
+构建会下载固定版本的 AndroidLibXrayLite AAR，构建 native submodule，并生成 ABI split APK 和 universal APK。
 
 如果 Gradle 找不到 Android NDK，请通过 Android Studio、`local.properties` 中的 `ndk.dir` 或 `ANDROID_NDK_HOME` 配置。
-
-## WSA
-
-```bash
-appops set org.asterisk.zcc.ang ACTIVATE_VPN allow
-```
 
 ## 许可
 

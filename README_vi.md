@@ -2,28 +2,11 @@
 
 # AsteriskNG
 
-Ứng dụng khách Xray cho Android.
+Ứng dụng khách Xray với giao diện đồ họa cho Android.
 
 ## Kênh Telegram
 
 [Asterisk4Magisk](https://t.me/Asterisk4Magisk)
-
-## Tính năng
-
-- Các chế độ hoạt động VPN Service, TPROXY(ROOT), TUN2SOCKS(ROOT) và BPF2SOCKS(ROOT)
-- VMess, VLESS, Trojan, Shadowsocks, SOCKS, HTTP, Hysteria2, WireGuard, nhóm chiến lược và chuỗi proxy
-- Hỗ trợ định dạng đăng ký v2rayNG và Mihomo
-- Quản lý cấu hình, proxy, định tuyến, nhật ký và tài nguyên
-- Giao diện MIUIX Compose
-
-## Ảnh chụp màn hình
-
-<p align="center">
-  <img src="image/screenshot/5.jpg" width="24%" alt="Ảnh chụp màn hình 1" />
-  <img src="image/screenshot/6.jpg" width="24%" alt="Ảnh chụp màn hình 2" />
-  <img src="image/screenshot/7.jpg" width="24%" alt="Ảnh chụp màn hình 3" />
-  <img src="image/screenshot/8.jpg" width="24%" alt="Ảnh chụp màn hình 4" />
-</p>
 
 ## Chế độ hoạt động
 
@@ -31,25 +14,22 @@
 
 - Hoạt động không cần quyền root.
 - Sử dụng `VpnService` của Android.
-- Chạy Xray trong tiến trình ứng dụng thông qua AndroidLibXrayLite.
 
 ### TPROXY(ROOT)
 
 - Chạy trực tiếp tệp thực thi Xray cục bộ bằng libsu.
-- Sử dụng inbound TPROXY kết hợp với iptables và định tuyến theo chính sách để chuyển tiếp lưu lượng qua proxy trong suốt.
+- Sử dụng iptables và định tuyến theo chính sách để xử lý lưu lượng proxy trong suốt.
 
 ### TUN2SOCKS(ROOT)
 
 - Chạy trực tiếp tệp thực thi Xray cục bộ bằng libsu.
-- Sử dụng `hev-socks5-tunnel` để tạo thiết bị TUN có tên cố định `asterisk0`.
-- Chuyển lưu lượng đường hầm đến inbound SOCKS5 của Xray cục bộ.
+- Sử dụng `hev-socks5-tunnel` để tạo thiết bị TUN và chuyển lưu lượng đến inbound SOCKS5 của Xray.
 
 ### BPF2SOCKS(ROOT)
 
-- Chạy trực tiếp tệp thực thi Xray cục bộ và chương trình hỗ trợ native `bpf2socks` bằng libsu.
-- Sử dụng eBPF mà không tạo thiết bị TUN, chuyển lưu lượng TCP và UDP thu được đến inbound SOCKS5 của Xray cục bộ.
-- Cổng cầu nối mặc định là `65532`, cổng inbound SOCKS5 mặc định là `65534`.
-- Phải vượt qua kiểm tra khả năng hỗ trợ eBPF trước khi khởi động. Thiết bị không đáp ứng yêu cầu sẽ không thể khởi động chế độ này.
+- Chạy trực tiếp tệp thực thi Xray cục bộ bằng libsu.
+- Sử dụng `bpf2socks` để chặn bắt lưu lượng và chuyển đến inbound SOCKS5 của Xray.
+- Khả năng sử dụng phụ thuộc vào hỗ trợ eBPF của nhân hệ điều hành trên thiết bị.
 
 ### asteriskd
 
@@ -58,9 +38,8 @@
 
 ## Tệp tài nguyên
 
-- Các tệp dùng khi chạy được lưu trong thư mục riêng của ứng dụng `files/xray`.
-- Có thể thay thế tệp thực thi Xray đi kèm bằng một tệp thực thi hoặc tệp nén zip chứa `xray`.
-- Có thể khôi phục, thay thế bằng tệp cục bộ hoặc cập nhật `geoip.dat`, `geosite.dat` và các tài nguyên khác từ nguồn tích hợp sẵn hoặc nguồn tùy chỉnh.
+- Các tệp dùng khi chạy ở chế độ ROOT được lưu trong thư mục riêng của ứng dụng `files/xray`.
+- Có thể thêm hoặc thay thế tài nguyên tùy chỉnh bằng tệp cục bộ, hoặc cập nhật từ các URL đã cấu hình.
 
 ## Điều khiển qua broadcast
 
@@ -104,15 +83,9 @@ Trên macOS hoặc Linux:
 ./gradlew assembleDebug
 ```
 
-Quá trình biên dịch chuẩn bị Xray, biên dịch các submodule hỗ trợ native đã cấu hình và đóng gói các ABI được hỗ trợ.
+Quá trình biên dịch tải xuống AAR AndroidLibXrayLite với phiên bản cố định, biên dịch các submodule native và tạo APK riêng cho từng ABI cùng với APK universal.
 
 Nếu Gradle không tìm thấy Android NDK, hãy cấu hình qua Android Studio, thuộc tính `ndk.dir` trong `local.properties`, hoặc biến môi trường `ANDROID_NDK_HOME`.
-
-## WSA
-
-```bash
-appops set org.asterisk.zcc.ang ACTIVATE_VPN allow
-```
 
 ## Giấy phép
 
@@ -132,4 +105,4 @@ appops set org.asterisk.zcc.ang ACTIVATE_VPN allow
 - [@Chocolate4U/Iran-v2ray-rules](https://github.com/Chocolate4U/Iran-v2ray-rules)
 - [@runetfreedom/russia-v2ray-rules-dat](https://github.com/runetfreedom/russia-v2ray-rules-dat)
 - [@mayaxcn/china-ip-list](https://github.com/mayaxcn/china-ip-list)
-- [@xchacha20-poly1305/husi](https://github.com/xchacha20-poly1305/husi) — ý tưởng heuristic cho tính năng quét ứng dụng Trung Quốc
+- [@xchacha20-poly1305/husi](https://github.com/xchacha20-poly1305/husi) — mã tham khảo cho tính năng “Quét ứng dụng Trung Quốc” trong phần proxy theo ứng dụng
