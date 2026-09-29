@@ -41,7 +41,11 @@ internal class AndroidResourceFileStore(
             geoIpOnlyCnPrivate = file(ResourceFileKind.GeoIpOnlyCnPrivate).toStatus(ResourceFileKind.GeoIpOnlyCnPrivate),
             directCidrIpv4 = file(ResourceFileKind.DirectCidrIpv4).toStatus(ResourceFileKind.DirectCidrIpv4),
             directCidrIpv6 = file(ResourceFileKind.DirectCidrIpv6).toStatus(ResourceFileKind.DirectCidrIpv6),
-            xrayCore = effectiveXrayCoreFile().toStatus(ResourceFileKind.XrayCore),
+            xrayCore = effectiveXrayCoreFile().let { target ->
+                target.toStatus(ResourceFileKind.XrayCore).copy(
+                    isBundledCore = target != file(ResourceFileKind.XrayCore),
+                )
+            },
             customResourceFiles = scanCustomResources(customResourceFiles).map { customFile ->
                 CustomResourceFileStatus(
                     file = customFile,
