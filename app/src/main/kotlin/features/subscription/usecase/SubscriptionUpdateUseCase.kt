@@ -5,6 +5,7 @@ package features.subscription.usecase
 
 import app.AppState
 import app.SubscriptionGroupState
+import engine.proxy.toLocalProxyOptions
 import features.logs.AndroidAppLogger
 import features.proxy.server.usecase.ProxyServerImportSource
 import features.proxy.server.usecase.ProxyServerListSubscriptionFailure
@@ -121,7 +122,8 @@ private val DefaultSubscriptionUpdateCoordinator = SubscriptionUpdateCoordinator
 
 internal fun AppState.toSubscriptionFetchOptions(group: SubscriptionGroupState): AndroidSubscriptionFetchOptions {
     return AndroidSubscriptionFetchOptions(
-        useRunningProxy = group.updateViaProxy && proxyRunning,
+        useRunningProxy = group.updateViaProxy,
+        fallbackProxy = toLocalProxyOptions(),
         hwid = group.hwid,
         ageSecretKey = group.ageSecretKey,
     )
