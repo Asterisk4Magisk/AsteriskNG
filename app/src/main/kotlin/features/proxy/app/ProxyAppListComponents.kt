@@ -34,6 +34,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.R
+import app.modes.ProxyAppListModeGlobal
 import system.ANDROID_APP_ICON_SIZE_DP
 import coil3.compose.AsyncImage
 import androidx.compose.ui.res.stringResource
@@ -55,6 +56,15 @@ import features.proxy.app.model.ProxyAppListUserSpaceTabUi
 import ui.text.formatTemplate
 import features.proxy.app.model.name
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import top.yukonga.miuix.kmp.basic.DropdownImpl
+import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.basic.ListPopupColumn
+import top.yukonga.miuix.kmp.basic.ListPopupDefaults
+import top.yukonga.miuix.kmp.basic.PopupPositionProvider
+import top.yukonga.miuix.kmp.window.WindowListPopup
 import ui.components.IconDropdownMenu
 import ui.components.IconDropdownMenuEntry
 
@@ -146,21 +156,56 @@ internal fun ProxyAppListMoreActionsMenu(
 internal fun ProxyAppListModeMenu(
     modes: List<String>,
     selectedIndex: Int,
+    requiresGlobalProxyAppMode: Boolean,
     onSelectedIndexChange: (Int) -> Unit,
 ) {
-    IconDropdownMenu(
-        imageVector = MiuixIcons.Tune,
-        contentDescription = stringResource(R.string.proxy_app_list_mode),
-        entries = modes.mapIndexed { index, mode ->
-            IconDropdownMenuEntry(
-                key = mode,
-                title = mode,
-                selected = selectedIndex == index,
-                action = index,
-            )
+    val showPopup = remember { mutableStateOf(false) }
+    val holdDown = remember { mutableStateOf(false) }
+    val hapticFeedback = LocalHapticFeedback.current
+    IconButton(
+        onClick = {
+            showPopup.value = true
+            holdDown.value = true
         },
-        onAction = onSelectedIndexChange,
-    )
+        holdDownState = holdDown.value,
+    ) {
+        Icon(
+            imageVector = MiuixIcons.Tune,
+            contentDescription = stringResource(R.string.proxy_app_list_mode),
+            tint = MiuixTheme.colorScheme.onBackground,
+        )
+    }
+    WindowListPopup(
+        show = showPopup.value,
+        popupPositionProvider = ListPopupDefaults.ContextMenuPositionProvider,
+        alignment = PopupPositionProvider.Align.TopEnd,
+        onDismissRequest = { showPopup.value = false },
+        onDismissFinished = { holdDown.value = false },
+    ) {
+        ListPopupColumn {
+            modes.forEachIndexed { index, mode ->
+                // Keep unavailable modes tappable so an attempt can show a brief tip.
+                Box(
+                    modifier = Modifier.graphicsLayer {
+                        alpha = if (requiresGlobalProxyAppMode && index != ProxyAppListModeGlobal) 0.38f else 1f
+                    },
+                    propagateMinConstraints = true,
+                ) {
+                    DropdownImpl(
+                        text = mode,
+                        optionSize = modes.size,
+                        isSelected = selectedIndex == index,
+                        index = index,
+                        onSelectedIndexChange = { selected ->
+                            showPopup.value = false
+                            hapticFeedback.performHapticFeedback(HapticFeedbackType.Confirm)
+                            onSelectedIndexChange(selected)
+                        },
+                    )
+                }
+            }
+        }
+    }
 }
 
 @Composable

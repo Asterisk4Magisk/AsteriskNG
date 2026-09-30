@@ -8,6 +8,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import features.resources.runtime.synchronizeResourceAssets
 import app.AppState
+import app.withCompatibleProxyAppListMode
 import features.logs.AndroidAppLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -48,7 +49,7 @@ class AndroidAppStateStore private constructor(
     fun update(transform: (AppState) -> AppState) {
         val pendingSave = synchronized(updateLock) {
             val previousState = mutableState.value
-            val nextState = transform(previousState)
+            val nextState = transform(previousState).withCompatibleProxyAppListMode()
             if (nextState == previousState) {
                 null
             } else {

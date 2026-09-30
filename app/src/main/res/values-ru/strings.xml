@@ -556,6 +556,7 @@
     <string name="proxy_app_list_mode">Режим проксирования</string>
     <string name="proxy_app_list_mode_blacklist">Черный список (Исключения)</string>
     <string name="proxy_app_list_mode_global">Глобальный режим (Все приложения)</string>
+    <string name="proxy_app_list_fake_dns_requires_global">FakeDNS в режиме ROOT требует режима для всех приложений</string>
     <string name="proxy_app_list_mode_whitelist">Белый список (Только выбранные)</string>
     <string name="proxy_app_list_more_actions">Другие действия</string>
     <string name="proxy_app_list_pull_to_refresh">Потяните вниз для обновления</string>

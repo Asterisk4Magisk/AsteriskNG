@@ -555,6 +555,7 @@
     <string name="proxy_app_list_mode">Chế độ proxy</string>
     <string name="proxy_app_list_mode_blacklist">Chế độ danh sách đen</string>
     <string name="proxy_app_list_mode_global">Chế độ toàn bộ ứng dụng</string>
+    <string name="proxy_app_list_fake_dns_requires_global">FakeDNS ở chế độ ROOT yêu cầu chế độ toàn bộ ứng dụng</string>
     <string name="proxy_app_list_mode_whitelist">Chế độ danh sách trắng</string>
     <string name="proxy_app_list_more_actions">Thêm thao tác</string>
     <string name="proxy_app_list_pull_to_refresh">Kéo xuống để làm mới</string>

@@ -555,6 +555,7 @@
     <string name="proxy_app_list_mode">App proxy mode</string>
     <string name="proxy_app_list_mode_blacklist">Blacklist mode</string>
     <string name="proxy_app_list_mode_global">All-app mode</string>
+    <string name="proxy_app_list_fake_dns_requires_global">FakeDNS in ROOT mode requires all-app mode</string>
     <string name="proxy_app_list_mode_whitelist">Whitelist mode</string>
     <string name="proxy_app_list_more_actions">More actions</string>
     <string name="proxy_app_list_pull_to_refresh">Pull down to refresh</string>
