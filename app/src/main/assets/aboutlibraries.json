@@ -210,7 +210,7 @@
         },
         {
             "uniqueId": "com.github.android-password-store:kage",
-            "artifactVersion": "0.7.0",
+            "artifactVersion": "0.8.0",
             "name": "kage",
             "description": "Kotlin implementation of the age file encryption library",
             "website": "https://github.com/Android-Password-Store/kage",
