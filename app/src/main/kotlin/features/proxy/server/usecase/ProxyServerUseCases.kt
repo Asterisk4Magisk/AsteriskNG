@@ -156,11 +156,21 @@ internal fun AppState.withUpdatedSubscriptionServers(
         return this
     }
     val updatedGroupIds = applicableUpdates.map { update -> update.groupId }.toSet()
-    var nextServerId = nextProxyServerId
+    val usedIds = proxyServers.mapTo(mutableSetOf()) { server -> server.id }
+    var nextServerId = nextProxyServerId.coerceAtLeast(1)
     val importedServers = applicableUpdates.flatMap { update ->
-        update.servers.map { server ->
+        val previousGroup = proxyServers.filter { server ->
+            server.groupId == update.groupId && !server.server.isCompositeProxyServer()
+        }
+        val reusableIds = matchImportedProxyServers(previousGroup, update.servers)
+        update.servers.mapIndexed { index, server ->
+            val id = reusableIds[index] ?: run {
+                while (nextServerId in usedIds) nextServerId++
+                nextServerId++
+            }
+            usedIds += id
             ProxyServerState(
-                id = nextServerId++,
+                id = id,
                 groupId = update.groupId,
                 server = server,
             )
