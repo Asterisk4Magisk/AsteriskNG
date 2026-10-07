@@ -68,6 +68,12 @@ jobs:
             exit 1
           fi
 
+          target_sdk_minor="$(sed -n 's/^[[:space:]]*const val TARGET_SDK_MINOR = \([0-9]\+\).*/\1/p' buildSrc/src/main/kotlin/BuildConfig.kt | head -n 1)"
+          if [ -z "$target_sdk_minor" ]; then
+            echo "::error::Unable to read ProjectConfig.TARGET_SDK_MINOR from buildSrc/src/main/kotlin/BuildConfig.kt."
+            exit 1
+          fi
+
           available_packages="$(sdkmanager --list | awk '{ print $1 }')"
           platform_package="platforms;android-${target_sdk}"
           if ! grep -Fxq "$platform_package" <<< "$available_packages"; then
@@ -91,7 +97,7 @@ jobs:
             exit 1
           fi
 
-          sdkmanager --install "$platform_package" "$build_tools_package" "$ndk_package"
+          sdkmanager --install "$platform_package" "platforms;android-${target_sdk}.${target_sdk_minor}" "$build_tools_package" "$ndk_package"
 
           ndk_version="${ndk_package#ndk;}"
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/$ndk_version" >> "$GITHUB_ENV"

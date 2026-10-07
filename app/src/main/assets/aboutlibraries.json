@@ -158,7 +158,7 @@
         },
         {
             "uniqueId": "io.grpc:grpc-okhttp",
-            "artifactVersion": "1.84.0",
+            "artifactVersion": "1.84.1",
             "name": "io.grpc:grpc-okhttp",
             "description": "gRPC: OkHttp",
             "website": "https://github.com/grpc/grpc-java",
@@ -171,7 +171,7 @@
         },
         {
             "uniqueId": "io.grpc:grpc-protobuf-lite",
-            "artifactVersion": "1.84.0",
+            "artifactVersion": "1.84.1",
             "name": "io.grpc:grpc-protobuf-lite",
             "description": "gRPC: Protobuf Lite",
             "website": "https://github.com/grpc/grpc-java",
@@ -184,7 +184,7 @@
         },
         {
             "uniqueId": "io.grpc:grpc-stub",
-            "artifactVersion": "1.84.0",
+            "artifactVersion": "1.84.1",
             "name": "io.grpc:grpc-stub",
             "description": "gRPC: Stub",
             "website": "https://github.com/grpc/grpc-java",
@@ -379,7 +379,7 @@
         },
         {
             "uniqueId": "org.snakeyaml:snakeyaml-engine",
-            "artifactVersion": "3.1.1",
+            "artifactVersion": "3.2",
             "name": "SnakeYAML Engine",
             "description": "Core YAML 1.2 parser and emitter for Java",
             "website": "https://codeberg.org/snakeyaml/snakeyaml-engine",
