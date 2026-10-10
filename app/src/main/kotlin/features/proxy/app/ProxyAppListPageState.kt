@@ -1,11 +1,8 @@
 // Copyright 2026, AsteriskNG contributors
 // SPDX-License-Identifier: GPL-3.0
 
-@file:OptIn(ExperimentalFoundationApi::class)
-
 package features.proxy.app
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect

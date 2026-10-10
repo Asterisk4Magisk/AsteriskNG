@@ -1,11 +1,10 @@
 // Copyright 2026, AsteriskNG contributors
 // SPDX-License-Identifier: GPL-3.0
 
-@file:OptIn(ExperimentalFoundationApi::class, ExperimentalScrollBarApi::class)
+@file:OptIn(ExperimentalScrollBarApi::class)
 
 package features.routing
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
