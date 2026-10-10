@@ -4,12 +4,13 @@
 package features.proxy.app
 
 import android.content.pm.PackageManager
-import android.os.Build
 import android.util.Log
 import com.android.tools.smali.dexlib2.dexbacked.DexBackedDexFile
+import features.proxy.app.AppScanner.CHINA_APP_PREFIX_LIST
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
-import kotlinx.coroutines.CancellationException
+import system.getPackageInfoCompat
 import java.io.BufferedInputStream
 import java.io.File
 import java.util.zip.ZipFile
@@ -121,14 +122,7 @@ internal object AppScanner {
                     PackageManager.GET_RECEIVERS or
                     PackageManager.GET_PROVIDERS
 
-            val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                packageManager.getPackageInfo(
-                    packageName,
-                    PackageManager.PackageInfoFlags.of(packageManagerFlags.toLong()),
-                )
-            } else {
-                packageManager.getPackageInfo(packageName, packageManagerFlags)
-            }
+            val packageInfo = packageManager.getPackageInfoCompat(packageName, packageManagerFlags)
 
             packageInfo.services?.forEach { service ->
                 if (service.name.matches(chinaAppRegex)) {

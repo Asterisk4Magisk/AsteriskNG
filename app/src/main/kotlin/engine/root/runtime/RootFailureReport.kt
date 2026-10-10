@@ -8,16 +8,19 @@ import android.os.Build
 import android.system.Os
 import android.system.OsConstants
 import android.util.Base64
+import androidx.core.content.pm.PackageInfoCompat
 import engine.root.publication.RootRuntimeLayout
+import engine.root.runtime.RootFailureReport.Companion.AppLogWindowMillis
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import system.RootShellGateway
 import system.ShellExecOptions
+import system.getPackageInfoCompat
 import utils.shellQuote
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Locale
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.ensureActive
 
 /**
  * Builds the diagnostic payload attached to a failure dialog: a device/system summary and the
@@ -74,7 +77,7 @@ internal data class RootFailureReport(
                 lines += "abi: ${Build.SUPPORTED_ABIS.joinToString(", ")}"
             }
             kernelVersion()?.let { lines += "kernel: $it" }
-            pageSizeKb()?.let { lines += "page size: ${it} KB" }
+            pageSizeKb()?.let { lines += "page size: $it KB" }
             selinuxMode(shell)?.let { lines += "selinux: $it" }
             rootSolution(shell)?.let { lines += "root: $it" }
 
@@ -82,13 +85,8 @@ internal data class RootFailureReport(
         }
 
         private fun appVersion(context: Context): String? = runCatching {
-            val info = context.packageManager.getPackageInfo(context.packageName, 0)
-            val code = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                info.longVersionCode
-            } else {
-                @Suppress("DEPRECATION")
-                info.versionCode.toLong()
-            }
+            val info = context.packageManager.getPackageInfoCompat(context.packageName)
+            val code = PackageInfoCompat.getLongVersionCode(info)
             "${info.versionName} ($code)"
         }.getOrNull()
 
@@ -158,12 +156,14 @@ internal data class RootFailureReport(
             }.filter { it.isNotBlank() }.joinToString("\n")
 
             val appLogBudget = (ServiceLogCharCap - attemptLogs.length).coerceAtLeast(0)
-            val appLog = readText(shell, "${layout.logDirectoryPath}/logcat.log", tailLines = LogcatTailLines)
-                ?.lineSequence()
+            val appLog = readText(
+                shell,
+                "${layout.logDirectoryPath}/logcat.log",
+                tailLines = LogcatTailLines
+            )?.lineSequence()
                 ?.filter { it.isNotBlank() }
                 ?.filter { line -> isWithinWindow(line, occurredAtEpochMillis) }
-                ?.map { decodeAppLogLine(it) }
-                ?.joinToString("\n")
+                ?.joinToString("\n") { decodeAppLogLine(it) }
                 ?.takeLast(appLogBudget)
                 ?.takeIf { it.isNotBlank() }
                 .orEmpty()
@@ -197,14 +197,6 @@ internal data class RootFailureReport(
                 String(Base64.decode(parts[2], Base64.DEFAULT), Charsets.UTF_8)
             }.getOrNull() ?: return line
             return "${parts[0]} ${parts[1]} $decoded"
-        }
-
-        private fun String.capLines(limit: Int): String {
-            val lines = lineSequence().filter { it.isNotBlank() }.toList()
-            if (lines.size <= limit) return lines.joinToString("\n")
-            val omitted = lines.size - limit
-            return (listOf("... $omitted earlier line(s) omitted") + lines.takeLast(limit))
-                .joinToString("\n")
         }
 
         // --- io ----------------------------------------------------------------------

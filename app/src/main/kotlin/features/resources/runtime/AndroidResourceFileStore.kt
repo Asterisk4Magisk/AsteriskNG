@@ -6,9 +6,7 @@ package features.resources.runtime
 import features.resources.runtime.writeResourceAtomically as writeAtomically
 
 import android.content.Context
-import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
 import app.AppState
 import app.CustomResourceFileState
 import app.CustomResourceFileStatus
@@ -21,6 +19,7 @@ import features.resources.ResourceFileSourceLoyalsoldierGithub
 import java.io.File
 import java.io.FileNotFoundException
 import java.util.zip.ZipInputStream
+import system.getPackageInfoCompat
 
 internal class AndroidResourceFileStore(
     context: Context,
@@ -375,14 +374,7 @@ private fun ResourceFileKind.bundledAssetPathOrNull(): String? {
 
 private fun Context.packageUpdatedAtMillis(): Long {
     return runCatching {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            packageManager
-                .getPackageInfo(packageName, PackageManager.PackageInfoFlags.of(0))
-                .lastUpdateTime
-        } else {
-            @Suppress("DEPRECATION")
-            packageManager.getPackageInfo(packageName, 0).lastUpdateTime
-        }
+        packageManager.getPackageInfoCompat(packageName).lastUpdateTime
     }.getOrDefault(0L)
 }
 

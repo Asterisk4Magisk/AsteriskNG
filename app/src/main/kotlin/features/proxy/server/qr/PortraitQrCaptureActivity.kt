@@ -3,70 +3,131 @@
 
 package features.proxy.server.qr
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
+import android.net.Uri
 import android.os.Build
+import android.os.Bundle
 import android.provider.MediaStore
 import android.view.Gravity
+import android.view.KeyEvent
 import android.widget.FrameLayout
 import android.widget.TextView
+import androidx.activity.ComponentActivity
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
 import app.R
-import features.logs.AndroidAppLogger
-import ui.feedback.AndroidToastTipNotifier
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.client.android.Intents
-import com.journeyapps.barcodescanner.CaptureActivity
+import com.journeyapps.barcodescanner.CaptureManager
 import com.journeyapps.barcodescanner.DecoratedBarcodeView
 import com.journeyapps.barcodescanner.Size
 import data.AppSettingsPreferences
+import features.logs.AndroidAppLogger
+import features.settings.locale.localizedAppContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import features.settings.locale.localizedAppContext
+import ui.feedback.AndroidToastTipNotifier
 import kotlin.math.min
 import kotlin.math.roundToInt
 
-class PortraitQrCaptureActivity : CaptureActivity() {
+class PortraitQrCaptureActivity : ComponentActivity() {
+    private lateinit var capture: CaptureManager
+    private lateinit var barcodeView: DecoratedBarcodeView
+    private var cameraPermissionRequested = false
+    private var cameraPermissionPending = false
+    private val cameraPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        cameraPermissionPending = false
+        cameraPermissionRequested = true
+        if (granted) {
+            if (lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) capture.onResume()
+        } else {
+            // Delegate ZXing's missing-permission result and dialog without a platform callback.
+            capture.onRequestPermissionsResult(
+                CaptureManager.getCameraPermissionReqCode(),
+                arrayOf(Manifest.permission.CAMERA),
+                intArrayOf(PackageManager.PERMISSION_DENIED),
+            )
+        }
+    }
+
     private val decodeScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val tipNotifier by lazy { AndroidToastTipNotifier(this) }
+
+    private val imagePicker = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == RESULT_OK) result.data?.data?.let(::decodeImage)
+    }
 
     override fun attachBaseContext(newBase: Context) {
         val languageMode = AppSettingsPreferences(newBase).load().languageMode
         super.attachBaseContext(newBase.localizedAppContext(languageMode))
     }
 
-    override fun initializeContent(): DecoratedBarcodeView {
-        val barcodeView = super.initializeContent()
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        cameraPermissionPending = savedInstanceState?.getBoolean(CameraPermissionPendingKey) ?: false
+        cameraPermissionRequested = cameraPermissionPending
+        barcodeView = initializeContent()
+        capture = CaptureManager(this, barcodeView)
+        capture.initializeFromIntent(intent, savedInstanceState)
+        capture.decode()
+    }
+
+    private fun initializeContent(): DecoratedBarcodeView {
+        setContentView(com.google.zxing.client.android.R.layout.zxing_capture)
+        val barcodeView = findViewById<DecoratedBarcodeView>(com.google.zxing.client.android.R.id.zxing_barcode_scanner)
         val metrics = resources.displayMetrics
         val frameSize = (min(metrics.widthPixels, metrics.heightPixels) * FrameSizeRatio).roundToInt()
-        barcodeView.barcodeView.setFramingRectSize(Size(frameSize, frameSize))
+        barcodeView.barcodeView.framingRectSize = Size(frameSize, frameSize)
         barcodeView.viewFinder.setLaserVisibility(false)
         addImagePickerButton(frameSize)
         return barcodeView
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            capture.onResume()
+        } else if (!cameraPermissionRequested) {
+            cameraPermissionRequested = true
+            cameraPermissionPending = true
+            cameraPermission.launch(Manifest.permission.CAMERA)
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        capture.onPause()
+    }
+
     override fun onDestroy() {
         decodeScope.cancel()
         super.onDestroy()
+        capture.onDestroy()
     }
 
-    @Deprecated("Deprecated in Android framework")
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode != ImagePickerRequestCode) {
-            super.onActivityResult(requestCode, resultCode, data)
-            return
-        }
-        val uri = data?.data
-        if (resultCode != RESULT_OK || uri == null) {
-            return
-        }
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        capture.onSaveInstanceState(outState)
+        // Only an outstanding result suppresses a new request after recreation.
+        outState.putBoolean(CameraPermissionPendingKey, cameraPermissionPending)
+    }
 
+    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
+        return barcodeView.onKeyDown(keyCode, event) || super.onKeyDown(keyCode, event)
+    }
+
+    private fun decodeImage(uri: Uri) {
         decodeScope.launch {
             val text = withContext(Dispatchers.Default) {
                 runCatching {
@@ -137,10 +198,7 @@ class PortraitQrCaptureActivity : CaptureActivity() {
             }
         }
         runCatching {
-            startActivityForResult(
-                Intent.createChooser(intent, getString(R.string.qr_scan_choose_image)),
-                ImagePickerRequestCode,
-            )
+            imagePicker.launch(Intent.createChooser(intent, getString(R.string.qr_scan_choose_image)))
         }.onFailure { error ->
             AndroidAppLogger.error(LogTag, "Failed to open image picker", error)
         }
@@ -159,8 +217,8 @@ class PortraitQrCaptureActivity : CaptureActivity() {
     }
 
     private companion object {
+        const val CameraPermissionPendingKey = "asterisk.cameraPermissionPending"
         const val FrameSizeRatio = 0.72f
-        const val ImagePickerRequestCode = 2001
         const val AlbumButtonSizeDp = 92
         const val AlbumButtonOffsetDp = 78
         const val LogTag = "PortraitQrCapture"

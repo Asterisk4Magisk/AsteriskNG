@@ -54,10 +54,8 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -104,7 +102,7 @@ internal fun StringListEditor(
     var editInput by remember(editorKey, title) { mutableStateOf("") }
     val editInputState = rememberTextFieldState()
     var showBulkEditor by remember(editorKey, title) { mutableStateOf(false) }
-    var bulkInput by remember(editorKey, title) { mutableStateOf("") }
+    val bulkInput = rememberTextFieldState()
     val tipNotifier = LocalAppServices.current.tipNotifier
     val scope = rememberCoroutineScope()
     LaunchedEffect(editorKey, title) {
@@ -114,7 +112,7 @@ internal fun StringListEditor(
         editInput = ""
         editInputState.clearText()
         showBulkEditor = false
-        bulkInput = ""
+        bulkInput.clearText()
     }
     val sanitizedValues = values.normalizedStringList(normalizeInput)
     LaunchedEffect(sanitizedValues.size, editingIndex) {
@@ -170,11 +168,11 @@ internal fun StringListEditor(
     }
     val showBulkEdit = {
         val draft = sanitizedValues.joinToString(separator = "\n")
-        bulkInput = draft
+        bulkInput.setTextAndPlaceCursorAtEnd(draft)
         showBulkEditor = true
     }
     val bulkParseResult = parseStringListDraft(
-        text = bulkInput,
+        text = bulkInput.text.toString(),
         validateInput = validateInput,
         normalizeInput = normalizeInput,
     )
@@ -311,8 +309,7 @@ internal fun StringListEditor(
     StringListBulkEditorDialog(
         show = showBulkEditor,
         title = title,
-        value = bulkInput,
-        onInputChange = { bulkInput = it },
+        state = bulkInput,
         onDismissRequest = {
             showBulkEditor = false
         },
@@ -470,8 +467,7 @@ private fun StringListItemActionButton(
 private fun StringListBulkEditorDialog(
     show: Boolean,
     title: String,
-    value: String,
-    onInputChange: (String) -> Unit,
+    state: TextFieldState,
     onDismissRequest: () -> Unit,
     onSave: () -> Unit,
 ) {
@@ -484,8 +480,7 @@ private fun StringListBulkEditorDialog(
             modifier = Modifier.fillMaxWidth(),
         ) {
             StringListBulkTextField(
-                value = value,
-                onValueChange = onInputChange,
+                state = state,
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(min = 180.dp)
@@ -513,17 +508,13 @@ private fun StringListBulkEditorDialog(
 
 @Composable
 private fun StringListBulkTextField(
-    value: String,
-    onValueChange: (String) -> Unit,
+    state: TextFieldState,
     modifier: Modifier = Modifier,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
     val horizontalScrollState = rememberScrollState()
     val density = LocalDensity.current
-    var fieldValue by remember {
-        mutableStateOf(TextFieldValue(text = value, selection = TextRange(value.length)))
-    }
     var textLayoutResult by remember {
         mutableStateOf<TextLayoutResult?>(null)
     }
@@ -548,25 +539,21 @@ private fun StringListBulkTextField(
         fontSize = 14.sp,
     )
 
-    LaunchedEffect(value) {
-        if (value != fieldValue.text) {
-            fieldValue = TextFieldValue(text = value, selection = TextRange(value.length))
-        }
-    }
-
     LaunchedEffect(
-        fieldValue.selection,
-        fieldValue.text,
+        state.selection,
+        state.text,
         textLayoutResult,
         textViewportWidth,
         horizontalScrollState.maxValue,
     ) {
         val layoutResult = textLayoutResult ?: return@LaunchedEffect
+        // TextFieldState can advance before the next text layout is measured.
+        if (layoutResult.layoutInput.text.text != state.text.toString()) return@LaunchedEffect
         if (textViewportWidth <= 0 || horizontalScrollState.maxValue <= 0) {
             return@LaunchedEffect
         }
 
-        val cursorOffset = fieldValue.selection.end.coerceIn(0, fieldValue.text.length)
+        val cursorOffset = state.selection.end.coerceIn(0, state.text.length)
         val cursorRect = layoutResult.getCursorRect(cursorOffset)
         val cursorPaddingPx = with(density) { StringListBulkTextFieldCursorScrollPadding.toPx() }
         val nextHorizontalScroll = scrollToVisible(
@@ -586,18 +573,16 @@ private fun StringListBulkTextField(
             .coerceAtLeast(0.dp)
 
         BasicTextField(
-            value = fieldValue,
-            onValueChange = { nextValue ->
-                fieldValue = nextValue
-                onValueChange(nextValue.text)
-            },
+            state = state,
             textStyle = resolvedTextStyle,
-            minLines = StringListBulkTextFieldMinLines,
-            maxLines = StringListBulkTextFieldMaxLines,
-            onTextLayout = { textLayoutResult = it },
+            lineLimits = TextFieldLineLimits.MultiLine(
+                minHeightInLines = StringListBulkTextFieldMinLines,
+                maxHeightInLines = StringListBulkTextFieldMaxLines,
+            ),
+            onTextLayout = { getResult -> textLayoutResult = getResult() },
             interactionSource = interactionSource,
             cursorBrush = SolidColor(MiuixTheme.colorScheme.primary),
-            decorationBox = { innerTextField ->
+            decorator = { innerTextField ->
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
