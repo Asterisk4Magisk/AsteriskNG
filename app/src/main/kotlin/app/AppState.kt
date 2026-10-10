@@ -31,6 +31,7 @@ data class AppState(
     val colorMode: Int = ColorModeSystem,
     val languageMode: Int = LanguageModeSystem,
     val seedIndex: Int = 0,
+    val hideRecentTasks: Boolean = false,
 
     val subscriptionGroups: List<SubscriptionGroupState> = DefaultSubscriptionGroups,
     val nextSubscriptionGroupId: Int = 4,

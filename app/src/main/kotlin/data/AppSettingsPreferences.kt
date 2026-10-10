@@ -63,6 +63,7 @@ internal class AppSettingsPreferences(
             },
             languageMode = preferences.getInt(KeyLanguageMode, defaults.languageMode),
             seedIndex = preferences.getInt(KeySeedIndex, defaults.seedIndex),
+            hideRecentTasks = preferences.getBoolean(KeyHideRecentTasks, defaults.hideRecentTasks),
             nextSubscriptionGroupId = preferences.getInt(
                 KeyNextSubscriptionGroupId,
                 defaults.nextSubscriptionGroupId,
@@ -236,6 +237,7 @@ internal class AppSettingsPreferences(
         return putInt(KeyColorMode, state.colorMode)
             .putInt(KeyLanguageMode, state.languageMode)
             .putInt(KeySeedIndex, state.seedIndex)
+            .putBoolean(KeyHideRecentTasks, state.hideRecentTasks)
             .putInt(KeyNextSubscriptionGroupId, state.nextSubscriptionGroupId)
             .putBoolean(KeyEnableAllProxyGroup, state.enableAllProxyGroup)
             .putBoolean(KeyEnableDeletionConfirmation, state.enableDeletionConfirmation)
@@ -444,6 +446,7 @@ private const val PreferencesName = "asteriskng_settings"
 private const val KeyColorMode = "color_mode"
 private const val KeyLanguageMode = "language_mode"
 private const val KeySeedIndex = "seed_index"
+private const val KeyHideRecentTasks = "hide_recent_tasks"
 private const val KeySubscriptionHwid = "subscription_hwid"
 private const val KeyNextSubscriptionGroupId = "next_subscription_group_id"
 private const val KeyEnableAllProxyGroup = "enable_all_proxy_group"

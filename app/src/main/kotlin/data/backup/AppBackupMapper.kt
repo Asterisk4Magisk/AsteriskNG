@@ -57,6 +57,7 @@ private fun AppState.toBackupSettings(): AppBackupSettings {
         colorMode = colorMode,
         languageMode = languageMode,
         seedIndex = seedIndex,
+        hideRecentTasks = hideRecentTasks,
         enableAllProxyGroup = enableAllProxyGroup,
         enableDeletionConfirmation = enableDeletionConfirmation,
         enableResolveProxyServerDomain = enableResolveProxyServerDomain,
@@ -255,6 +256,7 @@ private fun AppBackupData.toAppState(): AppState {
         colorMode = settings.colorMode,
         languageMode = settings.languageMode,
         seedIndex = settings.seedIndex,
+        hideRecentTasks = settings.hideRecentTasks,
         subscriptionGroups = restoredSubscriptionGroups,
         nextSubscriptionGroupId = nextId(
             defaultValue = defaults.nextSubscriptionGroupId,

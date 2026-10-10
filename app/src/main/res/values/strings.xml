@@ -684,6 +684,8 @@
     <!-- General preferences -->
     <string name="settings_deletion_confirmation">Deletion confirmation</string>
     <string name="settings_deletion_confirmation_summary">Require confirmation before deleting servers, routes, groups, or resources</string>
+    <string name="settings_hide_recent_tasks">Hide from recent tasks</string>
+    <string name="settings_hide_recent_tasks_summary">Hide the app from the recent tasks list</string>
 
     <!-- Logs -->
     <string name="access_logs_title">Access logs</string>

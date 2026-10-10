@@ -685,6 +685,8 @@
     <!-- General preferences -->
     <string name="settings_deletion_confirmation">Подтверждение удаления</string>
     <string name="settings_deletion_confirmation_summary">Запрашивать подтверждение перед удалением серверов, правил, групп или ресурсов</string>
+    <string name="settings_hide_recent_tasks">Скрывать из недавних задач</string>
+    <string name="settings_hide_recent_tasks_summary">Не показывать приложение в списке недавних задач</string>
 
     <!-- Logs -->
     <string name="access_logs_title">Логи доступа</string>

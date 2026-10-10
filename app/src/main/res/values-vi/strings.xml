@@ -684,6 +684,8 @@
     <!-- General preferences -->
     <string name="settings_deletion_confirmation">Xác nhận xóa</string>
     <string name="settings_deletion_confirmation_summary">Yêu cầu xác nhận lần hai khi xóa nút, tuyến đường, nhóm, tài nguyên</string>
+    <string name="settings_hide_recent_tasks">Ẩn khỏi tác vụ gần đây</string>
+    <string name="settings_hide_recent_tasks_summary">Không hiển thị ứng dụng trong danh sách tác vụ gần đây</string>
 
     <!-- Logs -->
     <string name="access_logs_title">Nhật ký truy cập</string>

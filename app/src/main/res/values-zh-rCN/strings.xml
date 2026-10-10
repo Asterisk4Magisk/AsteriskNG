@@ -684,6 +684,8 @@
     <!-- General preferences -->
     <string name="settings_deletion_confirmation">删除确认</string>
     <string name="settings_deletion_confirmation_summary">删除节点、路由、分组、资源时需二次确认</string>
+    <string name="settings_hide_recent_tasks">隐藏最近任务</string>
+    <string name="settings_hide_recent_tasks_summary">开启后应用不在最近任务列表中显示</string>
 
     <!-- Logs -->
     <string name="access_logs_title">访问日志</string>
