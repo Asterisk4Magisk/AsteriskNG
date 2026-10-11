@@ -171,7 +171,7 @@
         },
         {
             "uniqueId": "io.grpc:grpc-okhttp",
-            "artifactVersion": "1.84.1",
+            "artifactVersion": "1.84.2",
             "name": "io.grpc:grpc-okhttp",
             "description": "gRPC: OkHttp",
             "website": "https://github.com/grpc/grpc-java",
@@ -184,7 +184,7 @@
         },
         {
             "uniqueId": "io.grpc:grpc-protobuf-lite",
-            "artifactVersion": "1.84.1",
+            "artifactVersion": "1.84.2",
             "name": "io.grpc:grpc-protobuf-lite",
             "description": "gRPC: Protobuf Lite",
             "website": "https://github.com/grpc/grpc-java",
@@ -197,7 +197,7 @@
         },
         {
             "uniqueId": "io.grpc:grpc-stub",
-            "artifactVersion": "1.84.1",
+            "artifactVersion": "1.84.2",
             "name": "io.grpc:grpc-stub",
             "description": "gRPC: Stub",
             "website": "https://github.com/grpc/grpc-java",
@@ -236,7 +236,7 @@
         },
         {
             "uniqueId": "org.jetbrains.kotlin:kotlin-stdlib",
-            "artifactVersion": "2.4.20",
+            "artifactVersion": "2.4.21",
             "name": "Kotlin Stdlib",
             "description": "Kotlin Standard Library",
             "website": "https://kotlinlang.org/",
