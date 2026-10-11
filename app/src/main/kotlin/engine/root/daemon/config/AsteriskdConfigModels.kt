@@ -55,6 +55,7 @@ internal data class AsteriskdConfig(
     val matcher: AsteriskdMatcher?,
     val helper: AsteriskdHelper?,
     val serviceControl: AsteriskdServiceControlConfig,
+    val dnsEnhancement: AsteriskdDnsEnhancementConfig? = null,
 )
 
 internal data class AsteriskdServiceControlConfig(
@@ -179,3 +180,9 @@ internal data class AsteriskdBpf2SocksHelper(
     val maxUdpPendingBytes: Int = 64 * 1024 * 1024,
     val dnsTransactionTimeoutMilliseconds: Int = 60000,
 ) : AsteriskdHelper
+
+internal data class AsteriskdDnsEnhancementConfig(
+    val required: Boolean = true,
+    val consumerVersion: Int = 2,
+    val coreDnsGeneration: Long,
+)

@@ -265,6 +265,7 @@ private fun AppBackupData.toAppState(): AppState {
         enableAllProxyGroup = settings.enableAllProxyGroup,
         enableDeletionConfirmation = settings.enableDeletionConfirmation,
         runMode = RunModeVpnService,
+        enableAppListEnhancement = false,
         enableResolveProxyServerDomain = settings.enableResolveProxyServerDomain,
         enableVpnLocalDns = settings.enableVpnLocalDns,
         localProxyPort = settings.localProxyPort,

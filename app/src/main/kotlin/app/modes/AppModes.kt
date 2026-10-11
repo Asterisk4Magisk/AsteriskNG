@@ -16,6 +16,10 @@ fun Int.supportsRootEbpfMatcher(): Boolean {
     return this == RunModeTproxy || this == RunModeTun2Socks
 }
 
+fun Int.supportsAppListEnhancement(): Boolean =
+    this == RunModeTproxy || this == RunModeTun2Socks || this == RunModeBpf2Socks
+
+
 const val ProxyAppListModeBlacklist = 0
 const val ProxyAppListModeWhitelist = 1
 const val ProxyAppListModeGlobal = 2

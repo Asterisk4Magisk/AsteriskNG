@@ -3,6 +3,7 @@
 
 package engine.root.daemon.control
 
+import engine.root.dns.RootDnsEnhancementState
 import engine.root.daemon.config.AsteriskdCoreType
 import engine.root.daemon.config.AsteriskdMode
 import engine.root.daemon.config.AsteriskdOwner
@@ -80,6 +81,7 @@ internal data class AsteriskdSnapshot(
     val matcherActive: Boolean,
     val rules: AsteriskdRulesSnapshot,
     val network: AsteriskdNetworkSnapshot,
+    val dnsEnhancement: RootDnsEnhancementState,
     val error: AsteriskdControlError?,
 )
 

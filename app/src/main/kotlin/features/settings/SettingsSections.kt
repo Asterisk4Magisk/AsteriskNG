@@ -7,6 +7,8 @@ import android.os.Build
 import app.modes.RunModeBpf2Socks
 import app.modes.RunModeTun2Socks
 import app.modes.RunModeVpnService
+import features.enhancement.EnhancementModulePreference
+import app.modes.supportsAppListEnhancement
 import app.modes.isRootRunMode
 import app.modes.supportsRootEbpfMatcher
 import androidx.compose.animation.AnimatedVisibility
@@ -350,6 +352,9 @@ internal fun SettingsProxyModeSections(
                         checked = enableRootEbpfDirectCidrBypass,
                         onCheckedChange = onEnableRootEbpfDirectCidrBypassChange,
                     )
+                }
+                if (runMode.supportsAppListEnhancement()) {
+                    EnhancementModulePreference()
                 }
                 AnimatedVisibility(
                     visible = !enableIpv6,

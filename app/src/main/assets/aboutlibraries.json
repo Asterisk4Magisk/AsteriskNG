@@ -27,8 +27,21 @@
             ]
         },
         {
+            "uniqueId": "github:Asterisk4Magisk/AsteriskEnhance",
+            "artifactVersion": "v1.0.1",
+            "name": "Asterisk Enhance",
+            "description": "System DNS enhancement for Asterisk apps, powered by Zygisk Next.",
+            "website": "https://github.com/Asterisk4Magisk/AsteriskEnhance",
+            "scm": {
+                "url": "https://github.com/Asterisk4Magisk/AsteriskEnhance"
+            },
+            "licenses": [
+                "GPL-3.0"
+            ]
+        },
+        {
             "uniqueId": "github:Asterisk4Magisk/asteriskd",
-            "artifactVersion": "v2.0.36",
+            "artifactVersion": "v2.1.0",
             "name": "asteriskd",
             "description": "A root Android daemon that synchronizes local-address bypass rules and pinned eBPF maps.",
             "website": "https://github.com/Asterisk4Magisk/asteriskd",
@@ -41,7 +54,7 @@
         },
         {
             "uniqueId": "github:Asterisk4Magisk/bpf2socks",
-            "artifactVersion": "v1.0.15",
+            "artifactVersion": "v1.1.0",
             "name": "bpf2socks",
             "description": "A root Android/Linux traffic bridge that forwards TCP and UDP through a SOCKS5 upstream using eBPF.",
             "website": "https://github.com/Asterisk4Magisk/bpf2socks",

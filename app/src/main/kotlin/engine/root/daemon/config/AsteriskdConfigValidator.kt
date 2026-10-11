@@ -18,6 +18,11 @@ internal object AsteriskdConfigValidator {
         require(network.appPolicy.bypassUids == network.appPolicy.bypassUids.distinct().sorted())
         require((network.appPolicy.directCidrPathV4 == null) == (network.appPolicy.directCidrPathV6 == null))
         validateServiceControl(serviceControl)
+        dnsEnhancement?.let { enhancement ->
+            require(enhancement.required && enhancement.consumerVersion == 2 && enhancement.coreDnsGeneration > 0)
+            require(network.enableLocalDns)
+            require(mode == AsteriskdMode.Tproxy || mode == AsteriskdMode.Tun2Socks || mode == AsteriskdMode.Bpf2Socks)
+        }
         when (mode) {
             AsteriskdMode.Tproxy -> {
                 require(modeOptions.transparentPort != null && modeOptions.tunnelName == null)

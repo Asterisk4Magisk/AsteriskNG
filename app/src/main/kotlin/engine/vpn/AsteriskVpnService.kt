@@ -25,7 +25,7 @@ import engine.xray.logDirectoryPath
 import engine.xray.startCoreLogTailers
 import features.logs.AndroidAppLogger
 import features.logs.CoreLogFileTailer
-import features.logs.clearServiceLogsAsApp
+import features.logs.clearVpnServiceLogsAsApp
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -120,7 +120,7 @@ class AsteriskVpnService : VpnService() {
 
     private fun startVpn(config: VpnServiceStartConfig) {
         stopVpn()
-        clearServiceLogsAsApp(File(config.coreLogPaths.logDirectoryPath()), LogTag)
+        clearVpnServiceLogsAsApp(File(config.coreLogPaths.logDirectoryPath()), LogTag)
         logFileTailers = config.coreLogPaths.startCoreLogTailers(config.enableAccessLog)
         tunFileDescriptor = establishTun(config)
         val tunFd = tunFileDescriptor?.fd ?: error(getString(R.string.error_vpn_tun_fd_unavailable))

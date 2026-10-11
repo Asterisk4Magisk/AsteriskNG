@@ -105,6 +105,7 @@ private fun AppState.toRootStartConfig(
         directCidrIpv6Path = resourceFilePaths.directCidrIpv6Path,
         enableIpv6 = enableIpv6,
         enableRootIpv6Disabler = enableRootIpv6Disabler,
+        enableAppListEnhancement = enableAppListEnhancement,
         enableLocalDns = effectiveLocalDnsEnabled,
         enableFakeDns = effectiveFakeDnsEnabled,
         enableBoot = enableRootBootScript,

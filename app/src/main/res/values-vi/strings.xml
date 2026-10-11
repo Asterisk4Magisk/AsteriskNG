@@ -369,6 +369,8 @@
     <string name="error_tun2socks_root_required">Không có quyền ROOT, không thể khởi động chế độ TUN2SOCKS</string>
     <string name="error_tun2socks_start_failed">Khởi động chế độ TUN2SOCKS thất bại: %1$s</string>
     <string name="root_foreign_owner_conflict">Dịch vụ proxy ROOT đang được sử dụng bởi %1$s, vui lòng dừng dịch vụ trong %1$s trước rồi thử lại.</string>
+    <string name="settings_app_list_enhancement">Tăng cường danh sách ứng dụng</string>
+    <string name="settings_app_list_enhancement_summary">Định tuyến DNS hệ thống theo danh sách ứng dụng và cô lập bộ nhớ đệm</string>
     <string name="settings_root_boot_script">Tự khởi động cùng hệ thống</string>
     <string name="settings_root_boot_script_failed">Thiết lập tự khởi động thất bại</string>
     <string name="settings_root_boot_script_summary">Tạo script khởi động service.d</string>
@@ -379,6 +381,26 @@
     <string name="settings_root_ipv6_disabler">Tắt IPv6 hệ thống</string>
     <string name="settings_root_ipv6_disabler_summary">Ngăn WebRTC lộ địa chỉ IPv6</string>
     <string name="settings_root_required">Lấy quyền ROOT thất bại!</string>
+
+    <!-- Enhancement module -->
+    <string name="enhancement_module_acknowledge">Đã hiểu</string>
+    <string name="enhancement_module_apk_install_failed">Công cụ ROOT không thể cài trực tiếp APK này. Nếu không hỗ trợ APK, hãy xuất APK của ứng dụng, đổi đuôi .apk thành .zip, tự cài bằng trình quản lý ROOT rồi khởi động lại</string>
+    <string name="enhancement_module_failed">Thao tác mô-đun thất bại. Kiểm tra trình quản lý ROOT, bảo đảm Zygisk Next đã cài và bật, rồi thử lại</string>
+    <string name="enhancement_module_incompatible">Mô-đun tăng cường đang chạy không hỗ trợ môi trường hoạt động hiện tại</string>
+    <string name="enhancement_module_install_close">Đóng</string>
+    <string name="enhancement_module_install_output_waiting">Đang chờ đầu ra của trình cài đặt…</string>
+    <string name="enhancement_module_install_title">Cài đặt mô-đun nâng cao</string>
+    <string name="enhancement_module_installing">Đang cài đặt mô-đun…</string>
+    <string name="enhancement_module_invalid_module">Không thể đọc thông tin hợp lệ của mô-đun tăng cường đang chạy</string>
+    <string name="enhancement_module_invalid_package">Gói ứng dụng thiếu siêu dữ liệu hoặc thư viện mô-đun phù hợp với thiết bị</string>
+    <string name="enhancement_module_manager_unsupported">Không tìm thấy lệnh cài mô-đun Magisk, KernelSU hoặc APatch được hỗ trợ</string>
+    <string name="enhancement_module_missing">Không phát hiện mô-đun tăng cường khả dụng. Hãy cài đặt hoặc cài đặt lại rồi khởi động lại thiết bị</string>
+    <string name="enhancement_module_reboot">Mô-đun tăng cường đã được cài đặt hoặc cập nhật, cần khởi động lại thiết bị</string>
+    <string name="enhancement_module_root_denied">Quyền ROOT bị từ chối. Cấp quyền và thử lại</string>
+    <string name="enhancement_module_timeout">Thao tác mô-đun hết thời gian. Kiểm tra trình quản lý ROOT và thử lại</string>
+    <string name="enhancement_module_title">Mô-đun tăng cường</string>
+    <string name="enhancement_module_update">Cập nhật mô-đun tăng cường</string>
+    <string name="enhancement_module_update_available">Ứng dụng có bản cập nhật mô-đun. Hãy cập nhật và khởi động lại thiết bị trước khi sử dụng</string>
 
     <!-- TUN -->
     <string name="settings_tun">Cài đặt TUN</string>

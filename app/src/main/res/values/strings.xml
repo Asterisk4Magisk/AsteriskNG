@@ -369,6 +369,8 @@
     <string name="error_tun2socks_root_required">ROOT access is required for TUN2SOCKS mode</string>
     <string name="error_tun2socks_start_failed">Failed to start TUN2SOCKS mode: %1$s</string>
     <string name="root_foreign_owner_conflict">The ROOT proxy service is being used by %1$s. Stop it in %1$s and try again.</string>
+    <string name="settings_app_list_enhancement">Application list enhancement</string>
+    <string name="settings_app_list_enhancement_summary">Route system DNS by the application list and isolate caches</string>
     <string name="settings_root_boot_script">Start on boot</string>
     <string name="settings_root_boot_script_failed">Failed to update start on boot</string>
     <string name="settings_root_boot_script_summary">Generate service.d startup script</string>
@@ -379,6 +381,26 @@
     <string name="settings_root_ipv6_disabler">Disable system IPv6</string>
     <string name="settings_root_ipv6_disabler_summary">Prevent WebRTC IPv6 address leaks</string>
     <string name="settings_root_required">No ROOT access detected!</string>
+
+    <!-- Enhancement module -->
+    <string name="enhancement_module_acknowledge">OK</string>
+    <string name="enhancement_module_apk_install_failed">The ROOT tool could not install this APK directly. If APK files are unsupported, export this app APK, change .apk to .zip, install it with your ROOT manager, and reboot</string>
+    <string name="enhancement_module_failed">Module operation failed. Check your ROOT manager and ensure Zygisk Next is installed and enabled, then retry</string>
+    <string name="enhancement_module_incompatible">The running enhancement module does not support this runtime</string>
+    <string name="enhancement_module_install_close">Close</string>
+    <string name="enhancement_module_install_output_waiting">Waiting for installer output…</string>
+    <string name="enhancement_module_install_title">Install enhancement module</string>
+    <string name="enhancement_module_installing">Installing enhancement module…</string>
+    <string name="enhancement_module_invalid_module">Could not read valid enhancement module runtime information</string>
+    <string name="enhancement_module_invalid_package">This app package does not contain valid enhancement metadata and native libraries for this device</string>
+    <string name="enhancement_module_manager_unsupported">No supported Magisk, KernelSU, or APatch installation CLI was found</string>
+    <string name="enhancement_module_missing">No usable enhancement module was detected. Install or reinstall it, then reboot</string>
+    <string name="enhancement_module_reboot">Enhancement module installed or updated; restart the device</string>
+    <string name="enhancement_module_root_denied">ROOT permission was denied. Grant access and retry</string>
+    <string name="enhancement_module_timeout">Module operation timed out. Check your ROOT manager and retry</string>
+    <string name="enhancement_module_title">Enhancement module</string>
+    <string name="enhancement_module_update">Update enhancement module</string>
+    <string name="enhancement_module_update_available">A module update is available from this app. Update it and reboot before using application list enhancement</string>
 
     <!-- TUN -->
     <string name="settings_tun">TUN settings</string>

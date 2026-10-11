@@ -369,6 +369,8 @@
     <string name="error_tun2socks_root_required">ROOT 权限不可用，无法启动 TUN2SOCKS 模式</string>
     <string name="error_tun2socks_start_failed">TUN2SOCKS 模式启动失败：%1$s</string>
     <string name="root_foreign_owner_conflict">ROOT 代理服务正被 %1$s 占用，请先在 %1$s 中停止服务后重试。</string>
+    <string name="settings_app_list_enhancement">应用名单增强</string>
+    <string name="settings_app_list_enhancement_summary">按应用名单分流系统 DNS，并隔离缓存</string>
     <string name="settings_root_boot_script">开机自启</string>
     <string name="settings_root_boot_script_failed">开机自启设置失败</string>
     <string name="settings_root_boot_script_summary">生成 service.d 启动脚本</string>
@@ -379,6 +381,26 @@
     <string name="settings_root_ipv6_disabler">禁用系统 IPv6</string>
     <string name="settings_root_ipv6_disabler_summary">防止 WebRTC 泄露 IPv6 地址</string>
     <string name="settings_root_required">获取ROOT权限失败！</string>
+
+    <!-- Enhancement module -->
+    <string name="enhancement_module_acknowledge">知道了</string>
+    <string name="enhancement_module_apk_install_failed">ROOT 工具无法直接刷入本应用 APK。若不支持 APK，请导出本应用 APK，将 .apk 后缀改为 .zip，在 ROOT 管理器中自行刷入并重启</string>
+    <string name="enhancement_module_failed">模块操作失败。请检查 ROOT 管理器，确认 Zygisk Next 已安装且启用后重试</string>
+    <string name="enhancement_module_incompatible">当前运行的增强模块不支持此运行环境</string>
+    <string name="enhancement_module_install_close">关闭</string>
+    <string name="enhancement_module_install_output_waiting">等待刷入输出…</string>
+    <string name="enhancement_module_install_title">刷入增强模块</string>
+    <string name="enhancement_module_installing">正在安装增强模块…</string>
+    <string name="enhancement_module_invalid_module">无法读取有效的增强模块运行信息</string>
+    <string name="enhancement_module_invalid_package">当前应用安装包缺少有效的增强模块元数据或适合此设备的原生库</string>
+    <string name="enhancement_module_manager_unsupported">未找到可用的 Magisk、KernelSU 或 APatch 模块安装命令</string>
+    <string name="enhancement_module_missing">未检测到可用增强模块，可安装或重新安装后重启</string>
+    <string name="enhancement_module_reboot">增强模块已安装或更新，需重启设备</string>
+    <string name="enhancement_module_root_denied">ROOT 授权被拒绝。请授权后重试</string>
+    <string name="enhancement_module_timeout">模块操作超时。请检查 ROOT 管理器后重试</string>
+    <string name="enhancement_module_title">增强模块</string>
+    <string name="enhancement_module_update">更新增强模块</string>
+    <string name="enhancement_module_update_available">当前应用提供增强模块更新。请更新并重启设备后再使用应用名单增强</string>
 
     <!-- TUN -->
     <string name="settings_tun">TUN 设置</string>

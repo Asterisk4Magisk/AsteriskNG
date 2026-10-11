@@ -127,6 +127,7 @@ dependencies {
     //noinspection UseTomlInstead
     implementation("com.github.Asterisk4Magisk:libv2ray:${ProjectConfig.ANDROID_LIB_XRAY_LITE_VERSION}@aar")
     implementation(dependencies.project(":asteriskd"))
+    implementation(dependencies.project(":enhance"))
     implementation(dependencies.project(":bpfmatcher"))
     implementation(dependencies.project(":bpf2socks"))
     implementation(dependencies.project(":hevtun"))

@@ -3,6 +3,8 @@
 
 package engine.root.daemon.control
 
+import engine.root.dns.RootDnsEnhancementState
+import engine.root.dns.RootDnsEnhancementPhase
 import engine.root.daemon.config.AsteriskdCoreType
 import engine.root.daemon.config.AsteriskdMode
 import engine.root.daemon.config.AsteriskdOwner
@@ -74,7 +76,7 @@ internal object AsteriskdControlCodec {
         requireExactKeys(
             "phase", "owner", "coreType", "mode", "supervisorPid", "corePid",
             "helperType", "helperPid", "matcherConfigured", "matcherActive", "rules",
-            "network", "error",
+            "network", "dnsEnhancement", "error",
         )
         val rulesObject = requiredObject("rules")
         rulesObject.requireExactKeys("active", "generation", "categories")
@@ -109,6 +111,7 @@ internal object AsteriskdControlCodec {
             matcherActive = requiredBoolean("matcherActive"),
             rules = rules,
             network = network,
+            dnsEnhancement = requiredObject("dnsEnhancement").toDnsEnhancement(),
             error = getValue("error").toNullableObject()?.toControlError(),
         )
         snapshot.validate()
@@ -132,6 +135,19 @@ internal val AsteriskdResultCode.exitCode: Int
         -> 1
     }
 
+private fun JsonObject.toDnsEnhancement(): RootDnsEnhancementState {
+    requireExactKeys("required", "phase", "instanceId", "cycleId", "generation", "reason")
+    val phase = requiredString("phase")
+    return RootDnsEnhancementState(
+        required = requiredBoolean("required"),
+        phase = RootDnsEnhancementPhase.entries.single { it.wireValue == phase },
+        instanceId = requiredString("instanceId"),
+        cycleId = requiredString("cycleId"),
+        generation = requiredString("generation"),
+        reason = getValue("reason").toNullableString(),
+    )
+}
+
 private fun AsteriskdSnapshot.validate() {
     require(supervisorPid > 0 && (corePid == null || corePid > 0) && (helperPid == null || helperPid > 0))
     requireOwnerCore(owner, coreType)
@@ -145,6 +161,7 @@ private fun AsteriskdSnapshot.validate() {
     require(!matcherActive || matcherConfigured)
     if (mode == AsteriskdMode.Tun || mode == AsteriskdMode.Ebpf) {
         require(!matcherConfigured && !matcherActive)
+        require(!dnsEnhancement.required && dnsEnhancement.phase == RootDnsEnhancementPhase.Disabled)
         require(!rules.active && rules.generation == 0L && rules.categories.isEmpty())
     }
     if (phase == AsteriskdPhase.Running) {
@@ -255,5 +272,5 @@ private inline fun <reified T : Enum<T>> enumWire(value: String): T = enumValues
 } ?: throw IllegalArgumentException("Unknown protocol token")
 
 private val RequestIdRegex = Regex("[A-Za-z0-9._-]{1,64}")
-private const val ProtocolVersion = 1
+private const val ProtocolVersion = 2
 private const val NormalizedNonZeroExitCode = 1

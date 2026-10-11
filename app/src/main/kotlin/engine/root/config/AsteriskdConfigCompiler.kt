@@ -3,6 +3,7 @@
 
 package engine.root.config
 
+import engine.root.dns.rootDnsEnhancementConfig
 import app.modes.ProxyAppListModeBlacklist
 import app.modes.ProxyAppListModeGlobal
 import app.modes.ProxyAppListModeWhitelist
@@ -87,5 +88,6 @@ internal fun RootStartConfig.buildAsteriskdConfig(
         matcher = matcher,
         helper = helper,
         serviceControl = serviceControl.toAsteriskdServiceControlConfig(),
+        dnsEnhancement = rootDnsEnhancementConfig(enableAppListEnhancement, mode, enableLocalDns, xrayConfigJson.toByteArray(Charsets.UTF_8)),
     )
 }

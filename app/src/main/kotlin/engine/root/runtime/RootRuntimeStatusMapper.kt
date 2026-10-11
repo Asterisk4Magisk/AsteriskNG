@@ -39,6 +39,9 @@ internal fun AsteriskdSnapshot.rejectBound(owner: AsteriskdOwner): Nothing {
 internal fun AsteriskdSnapshot.requireRunning(owner: AsteriskdOwner, expectedMode: AsteriskdMode) {
     requireOwner(owner)
     check(phase == AsteriskdPhase.Running && mode == expectedMode)
+    check(!dnsEnhancement.required || dnsEnhancement.active) {
+        dnsEnhancement.reason ?: "Application list enhancement is not active"
+    }
 }
 
 internal enum class RootOrdinaryStartDisposition(

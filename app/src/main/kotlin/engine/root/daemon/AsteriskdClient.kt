@@ -3,6 +3,7 @@
 
 package engine.root.daemon
 
+import engine.root.dns.RootDnsEnhancementState
 import engine.root.daemon.control.AsteriskdControlCodec
 import engine.root.daemon.control.AsteriskdControlResponse
 import engine.root.daemon.control.AsteriskdEventType
@@ -29,6 +30,26 @@ internal class AsteriskdClient(
 
     suspend fun shutdown(executablePath: String): AsteriskdControlResponse =
         runControl(executablePath, "shutdown")
+
+    suspend fun suspendDns(executablePath: String, token: RootDnsEnhancementState): AsteriskdControlResponse =
+        runDnsControl(executablePath, "dns-suspend", token)
+
+    suspend fun resumeDns(executablePath: String, token: RootDnsEnhancementState): AsteriskdControlResponse =
+        runDnsControl(executablePath, "dns-resume", token)
+
+    suspend fun abortDns(executablePath: String, token: RootDnsEnhancementState): AsteriskdControlResponse =
+        runDnsControl(executablePath, "dns-abort", token)
+
+    private suspend fun runDnsControl(
+        executablePath: String,
+        method: String,
+        token: RootDnsEnhancementState,
+    ): AsteriskdControlResponse {
+        token.requireToken()
+        val arguments = "--instance-id ${token.instanceId} --cycle-id ${token.cycleId} --generation ${token.generation}"
+        val result = shell.exec("${executablePath.shellQuote()} $method $arguments", ShellExecOptions(logFailure = false))
+        return AsteriskdControlCodec.decodeShellResponse(method, result)
+    }
 
     fun observeStatus(executablePath: String): Flow<AsteriskdSnapshot> = channelFlow {
         var retryIndex = 0

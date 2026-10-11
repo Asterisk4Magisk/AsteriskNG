@@ -10,3 +10,6 @@
 [submodule "bpfmatcher/src/main/native"]
 	path = bpfmatcher/src/main/native
 	url = https://github.com/Asterisk4Magisk/bpfmatcher.git
+[submodule "enhance/src/main/module"]
+	path = enhance/src/main/module
+	url = https://github.com/Asterisk4Magisk/AsteriskEnhance.git

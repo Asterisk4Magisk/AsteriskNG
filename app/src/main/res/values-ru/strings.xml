@@ -370,6 +370,8 @@
     <string name="error_tun2socks_root_required">Для работы режима TUN2SOCKS требуются права ROOT</string>
     <string name="error_tun2socks_start_failed">Не удалось запустить режим TUN2SOCKS: %1$s</string>
     <string name="root_foreign_owner_conflict">ROOT-прокси уже используется приложением %1$s. Остановите сервис в %1$s и повторите попытку.</string>
+    <string name="settings_app_list_enhancement">Расширенная обработка списка приложений</string>
+    <string name="settings_app_list_enhancement_summary">Маршрутизация системного DNS по списку приложений с изоляцией кэша</string>
     <string name="settings_root_boot_script">Автозапуск при загрузке</string>
     <string name="settings_root_boot_script_failed">Не удалось обновить скрипт автозапуска</string>
     <string name="settings_root_boot_script_summary">Генерировать скрипт инициализации в service.d (Magisk/KernelSU)</string>
@@ -380,6 +382,26 @@
     <string name="settings_root_ipv6_disabler">Отключить системный IPv6</string>
     <string name="settings_root_ipv6_disabler_summary">Предотвращает утечки IPv6-адресов через протокол WebRTC</string>
     <string name="settings_root_required">Права ROOT не обнаружены!</string>
+
+    <!-- Enhancement module -->
+    <string name="enhancement_module_acknowledge">Понятно</string>
+    <string name="enhancement_module_apk_install_failed">Менеджер ROOT не смог установить этот APK напрямую. Если APK не поддерживается, экспортируйте APK приложения, измените .apk на .zip, установите его через менеджер ROOT и перезагрузите устройство</string>
+    <string name="enhancement_module_failed">Ошибка операции с модулем. Проверьте менеджер ROOT и убедитесь, что Zygisk Next установлен и включён</string>
+    <string name="enhancement_module_incompatible">Работающий модуль улучшения не поддерживает текущую среду выполнения</string>
+    <string name="enhancement_module_install_close">Закрыть</string>
+    <string name="enhancement_module_install_output_waiting">Ожидание вывода установщика…</string>
+    <string name="enhancement_module_install_title">Установка модуля улучшения</string>
+    <string name="enhancement_module_installing">Установка модуля…</string>
+    <string name="enhancement_module_invalid_module">Не удалось прочитать корректные сведения о работающем модуле улучшения</string>
+    <string name="enhancement_module_invalid_package">В пакете приложения нет корректных метаданных или библиотек модуля для этого устройства</string>
+    <string name="enhancement_module_manager_unsupported">Не найдена поддерживаемая команда установки модулей Magisk, KernelSU или APatch</string>
+    <string name="enhancement_module_missing">Работающий модуль улучшения не обнаружен. Установите или переустановите его и перезагрузите устройство</string>
+    <string name="enhancement_module_reboot">Модуль расширения установлен или обновлён, требуется перезагрузка устройства</string>
+    <string name="enhancement_module_root_denied">В доступе ROOT отказано. Предоставьте разрешение и повторите попытку</string>
+    <string name="enhancement_module_timeout">Время операции истекло. Проверьте менеджер ROOT и повторите попытку</string>
+    <string name="enhancement_module_title">Модуль расширения</string>
+    <string name="enhancement_module_update">Обновить модуль расширения</string>
+    <string name="enhancement_module_update_available">Доступно обновление модуля из приложения. Обновите модуль и перезагрузите устройство перед использованием</string>
 
     <!-- TUN -->
     <string name="settings_tun">Настройки TUN</string>
