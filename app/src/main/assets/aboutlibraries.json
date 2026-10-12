@@ -28,7 +28,7 @@
         },
         {
             "uniqueId": "github:Asterisk4Magisk/AsteriskEnhance",
-            "artifactVersion": "v1.0.3",
+            "artifactVersion": "v1.0.4",
             "name": "Asterisk Enhance",
             "description": "System DNS enhancement for Asterisk apps, powered by Zygisk Next.",
             "website": "https://github.com/Asterisk4Magisk/AsteriskEnhance",
