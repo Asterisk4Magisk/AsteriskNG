@@ -38,7 +38,7 @@ abstract class PrepareEnhanceModuleTask : DefaultTask() {
             into(outputDirectory)
         }
         // Keep installer text independent of Windows checkout line endings.
-        for (name in listOf("customize.sh", "module.prop", "zn_modules.txt", "sepolicy.rule")) {
+        for (name in listOf("customize.sh", "service.sh", "module.prop", "zn_modules.txt", "sepolicy.rule")) {
             val file = outputDirectory.file(name).get().asFile
             file.writeText(file.readText(Charsets.UTF_8).replace("\r\n", "\n").replace('\r', '\n'), Charsets.UTF_8)
         }
