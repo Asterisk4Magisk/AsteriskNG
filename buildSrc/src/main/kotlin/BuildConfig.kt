@@ -11,7 +11,7 @@ import org.gradle.api.tasks.TaskAction
 object ProjectConfig {
     const val JVM_VERSION = 26
     const val PROJECT_NAME = "AsteriskNG"
-    const val VERSION_NAME = "1.4.14-dev"
+    const val VERSION_NAME = "1.4.14"
     const val PACKAGE_NAME = "org.asterisk.zcc.ang"
     const val ASTERISKD_VERSION = "v2.1.3"
     const val BPF2SOCKS_VERSION = "v1.1.0"
