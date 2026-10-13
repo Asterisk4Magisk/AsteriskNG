@@ -139,6 +139,7 @@ class AndroidProxyEngine(
             requestedEngine as RootModeEngine
             requestedEngine.resumeIfRunning(request)?.let { status ->
                 activeEngine = requestedEngine
+                status.withTrafficStatsReconciled(request.appState)
                 return@withContext status.copy(appState = request.appState)
             }
             rootResumeChecked = true

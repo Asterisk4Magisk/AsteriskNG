@@ -20,11 +20,12 @@ import engine.xray.XrayStatsApiTag
 import features.logs.AndroidAppLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.milliseconds
 
 class ProxyTrafficStatsService : Service() {
@@ -41,7 +42,7 @@ class ProxyTrafficStatsService : Service() {
             )
         }
     }
-    private var pollingJob: Job? = null
+    private val monitor = TrafficStatsMonitor(serviceScope)
     private var activeRuntime: ProxyTrafficStatsRuntime? = null
     private var accumulator = XrayTrafficSessionAccumulator()
 
@@ -59,50 +60,49 @@ class ProxyTrafficStatsService : Service() {
     ): Int {
         if (intent?.action == ActionStop) {
             stopStats()
+            stopSelf(startId)
             return START_NOT_STICKY
         }
 
         val runtime = intent?.readRuntime() ?: ProxyTrafficStatsRuntimeStore.read(this)
         if (runtime == null) {
             stopStats()
+            stopSelf(startId)
             return START_NOT_STICKY
         }
 
-        if (runtime == activeRuntime && pollingJob?.isActive == true) {
+        if (runtime == activeRuntime && monitor.isActive) {
             return START_STICKY
         }
         if (runtime != activeRuntime) {
             accumulator = XrayTrafficSessionAccumulator()
         }
         activeRuntime = runtime
-        startStats(runtime)
-        return START_STICKY
+        return if (startStats(runtime, startId)) START_STICKY else START_NOT_STICKY
     }
 
     override fun onDestroy() {
-        pollingJob?.cancel()
-        pollingJob = null
-        activeRuntime = null
+        stopStats()
         serviceJob.cancel()
         super.onDestroy()
     }
 
-    private fun startStats(runtime: ProxyTrafficStatsRuntime) {
-        pollingJob?.cancel()
-        val initialNotification = buildNotification(
-            runtime = runtime,
-            sample = EmptyTrafficSample,
+    private fun startStats(runtime: ProxyTrafficStatsRuntime, startId: Int): Boolean {
+        monitor.cancel()
+        val foregroundStarted = tryStartTrafficStatsService(
+            start = {
+                startForegroundCompat(buildNotification(runtime, EmptyTrafficSample))
+            },
+            onFailure = { error ->
+                AndroidAppLogger.warn(LogTag, "Failed to start traffic stats foreground service", error)
+                stopStats()
+                stopSelf(startId)
+            },
         )
-        val foregroundStarted = runCatching {
-            startForegroundCompat(initialNotification)
-        }.onFailure { error ->
-            AndroidAppLogger.warn(LogTag, "Failed to start traffic stats foreground service", error)
-            stopStats()
-        }.isSuccess
-        if (!foregroundStarted) return
+        if (!foregroundStarted) return false
 
         val sessionAccumulator = accumulator
-        pollingJob = serviceScope.launch {
+        monitor.start {
             var lastPollAt = SystemClock.elapsedRealtime()
             var failures = 0
             XrayStatsClient(
@@ -110,45 +110,52 @@ class ProxyTrafficStatsService : Service() {
                 port = runtime.port,
                 apiTag = runtime.apiTag,
             ).use { client ->
-                while (isActive) {
+                while (currentCoroutineContext().isActive) {
                     delay(PollIntervalMillis.milliseconds)
                     val now = SystemClock.elapsedRealtime()
                     val elapsedMillis = now - lastPollAt
                     lastPollAt = now
-                    runCatching {
-                        client.queryInboundTraffic(reset = true)
-                    }.onSuccess { delta ->
+                    try {
+                        val delta = client.queryInboundTraffic(reset = true)
+                        currentCoroutineContext().ensureActive()
                         failures = 0
-                        notificationManager.notify(
-                            NotificationId,
-                            buildNotification(
-                                runtime = runtime,
-                                sample = sessionAccumulator.record(delta, elapsedMillis),
-                            ),
-                        )
-                    }.onFailure { error ->
+                        publish {
+                            notificationManager.notify(
+                                NotificationId,
+                                buildNotification(
+                                    runtime = runtime,
+                                    sample = sessionAccumulator.record(delta, elapsedMillis),
+                                ),
+                            )
+                        }
+                    } catch (error: Exception) {
+                        if (error is CancellationException) throw error
+                        currentCoroutineContext().ensureActive()
                         failures += 1
                         AndroidAppLogger.warn(LogTag, "Failed to query Xray traffic stats", error)
                         if (failures >= MaxConsecutiveFailures) {
                             AndroidAppLogger.warn(LogTag, "Stopping traffic stats notification after repeated failures")
-                            stopStats()
+                            publish {
+                                stopStats()
+                                stopSelf()
+                            }
+                            return@start
                         }
                     }
                 }
             }
         }
+        return true
     }
 
     private fun stopStats() {
-        pollingJob?.cancel()
-        pollingJob = null
+        monitor.cancel()
         activeRuntime = null
         accumulator = XrayTrafficSessionAccumulator()
         runCatching {
             stopForeground(STOP_FOREGROUND_REMOVE)
         }
         notificationManager.cancel(NotificationId)
-        stopSelf()
     }
 
     private fun buildNotification(
@@ -234,19 +241,22 @@ class ProxyTrafficStatsService : Service() {
         ) {
             val appContext = context.applicationContext
             ProxyTrafficStatsRuntimeStore.write(appContext, runtime)
-            runCatching {
-                ContextCompat.startForegroundService(
-                    appContext,
-                    Intent(appContext, ProxyTrafficStatsService::class.java)
-                        .setAction(ActionStart)
-                        .putExtra(ExtraListenAddress, runtime.listenAddress)
-                        .putExtra(ExtraPort, runtime.port)
-                        .putExtra(ExtraServerName, runtime.serverName)
-                        .putExtra(ExtraApiTag, runtime.apiTag),
-                )
-            }.onFailure { error ->
-                AndroidAppLogger.warn(LogTag, "Failed to request traffic stats foreground service start", error)
-            }
+            tryStartTrafficStatsService(
+                start = {
+                    ContextCompat.startForegroundService(
+                        appContext,
+                        Intent(appContext, ProxyTrafficStatsService::class.java)
+                            .setAction(ActionStart)
+                            .putExtra(ExtraListenAddress, runtime.listenAddress)
+                            .putExtra(ExtraPort, runtime.port)
+                            .putExtra(ExtraServerName, runtime.serverName)
+                            .putExtra(ExtraApiTag, runtime.apiTag),
+                    )
+                },
+                onFailure = { error ->
+                    AndroidAppLogger.warn(LogTag, "Failed to request traffic stats foreground service start", error)
+                },
+            )
         }
 
         internal fun stop(context: Context) {
