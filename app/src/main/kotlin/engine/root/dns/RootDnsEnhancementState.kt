@@ -3,7 +3,7 @@ package engine.root.dns
 
 internal enum class RootDnsEnhancementPhase(val wireValue: String) {
     Disabled("disabled"), Preparing("preparing"), Prepared("prepared"), Active("active"),
-    Inactive("inactive"), Draining("draining"), Unsupported("unsupported"), Failed("failed"),
+    Inactive("inactive"), Draining("draining"), Unsupported("unsupported"), Failed("failed"), WaitingNetwork("waiting-network"),
 }
 
 // Runtime evidence is never persisted as permission to activate a later cycle.
@@ -26,6 +26,8 @@ internal data class RootDnsEnhancementState(
     }
 
     val active: Boolean get() = phase == RootDnsEnhancementPhase.Active
+
+    val ready: Boolean get() = active || phase == RootDnsEnhancementPhase.WaitingNetwork
 
     fun requireToken() {
         require(required && instanceId != "0" && cycleId != "0" && generation != "0")

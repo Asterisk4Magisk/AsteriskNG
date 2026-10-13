@@ -28,7 +28,7 @@ internal object RootDnsMutation {
             val backend = backendFactory()
             val token = backend.status()
             if (!token.required) return@withLock mutation()
-            check(token.active) { token.reason ?: "Application list enhancement is not active" }
+            check(token.ready) { token.reason ?: "Application list enhancement is not active" }
             try {
                 val suspended = backend.suspendDns(token)
                 check(suspended.sameCycle(token) && suspended.generation == token.generation &&
@@ -37,7 +37,7 @@ internal object RootDnsMutation {
                 }
                 val result = mutation()
                 val resumed = backend.resumeDns(suspended)
-                check(resumed.sameCycle(token) && resumed.active &&
+                check(resumed.sameCycle(token) && resumed.ready &&
                     resumed.generation.toULong() > token.generation.toULong()) {
                     "DNS enhancement did not activate a fresh generation"
                 }

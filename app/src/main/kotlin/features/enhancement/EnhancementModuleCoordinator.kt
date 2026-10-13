@@ -131,7 +131,7 @@ private fun EnhancementModuleRuntime?.classify(expected: EnhancementModuleImage)
     val phase = when {
         this == null -> EnhancementModulePhase.Missing
         image.versionCode < expected.versionCode -> EnhancementModulePhase.UpdateAvailable
-        protocol != 5 || modes == 0 || flags and 7 != 6 -> return EnhancementModuleState(EnhancementModulePhase.Failed, EnhancementModuleFailure.IncompatibleRuntime)
+        protocol != 7 || modes == 0 || flags and 7 != 6 -> return EnhancementModuleState(EnhancementModulePhase.Failed, EnhancementModuleFailure.IncompatibleRuntime)
         else -> EnhancementModulePhase.Current
     }
     return EnhancementModuleState(phase)
