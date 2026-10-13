@@ -21,6 +21,11 @@ internal class EnhancementModuleRootBackend(
         val output = root.execute(enhancementInspectCommand(executable))
         return parseEnhancementModuleRuntime(output)
     }
+    override suspend fun reboot() {
+        root.requireRoot()
+        root.execute("/system/bin/toybox timeout -s TERM -k 2 10 /system/bin/reboot")
+    }
+
     override suspend fun install(onOutput: (String) -> Unit) {
         root.requireRoot()
         val manager = when (root.execute(EnhancementManagerProbeCommand).trim()) {

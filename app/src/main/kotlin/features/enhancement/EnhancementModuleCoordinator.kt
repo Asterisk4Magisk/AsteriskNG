@@ -32,6 +32,7 @@ internal interface EnhancementModuleBackend {
     suspend fun expectedImage(): EnhancementModuleImage
     suspend fun inspect(): EnhancementModuleRuntime?
     suspend fun install(onOutput: (String) -> Unit = {})
+    suspend fun reboot()
 }
 internal class EnhancementModuleCoordinator(private val backendFactory: () -> EnhancementModuleBackend) {
     private val mutableState = MutableStateFlow(EnhancementModuleState())
@@ -39,7 +40,31 @@ internal class EnhancementModuleCoordinator(private val backendFactory: () -> En
     private val mutableInstallProgress = MutableStateFlow<EnhancementModuleInstallProgress?>(null)
     val installProgress = mutableInstallProgress.asStateFlow()
 
+    private val mutableRebooting = MutableStateFlow(false)
+    val rebooting = mutableRebooting.asStateFlow()
+
+    suspend fun reboot(runMode: Int, isStillCurrent: () -> Boolean = { true }) {
+        val progress = mutableInstallProgress.value ?: return
+        if (!runMode.supportsAppListEnhancement() || progress.running ||
+            progress.result?.phase != EnhancementModulePhase.PendingReboot ||
+            !mutableRebooting.compareAndSet(expect = false, update = true)
+        ) return
+        try {
+            operationLock.withLock {
+                if (!isStillCurrent()) {
+                    mutableRebooting.value = false
+                    return
+                }
+                backendFactory().reboot()
+            }
+        } catch (error: Exception) {
+            mutableRebooting.value = false
+            throw error
+        }
+    }
+
     fun dismissInstallProgress() {
+        if (mutableRebooting.value) return
         mutableInstallProgress.update { if (it?.running == true) it else null }
     }
 

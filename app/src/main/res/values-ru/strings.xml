@@ -385,7 +385,7 @@
 
     <!-- Enhancement module -->
     <string name="enhancement_module_acknowledge">Понятно</string>
-    <string name="enhancement_module_apk_install_failed">Менеджер ROOT не смог установить этот APK напрямую. Если APK не поддерживается, экспортируйте APK приложения, измените .apk на .zip, установите его через менеджер ROOT и перезагрузите устройство</string>
+    <string name="enhancement_module_apk_install_failed">Не удалось установить модуль. Проверьте вывод ошибок. Попробуйте экспортировать это приложение, изменить расширение .apk на .zip и установить его через менеджер ROOT</string>
     <string name="enhancement_module_failed">Ошибка операции с модулем. Проверьте менеджер ROOT и убедитесь, что Zygisk Next установлен и включён</string>
     <string name="enhancement_module_incompatible">Работающий модуль улучшения не поддерживает текущую среду выполнения</string>
     <string name="enhancement_module_install_close">Закрыть</string>
@@ -397,6 +397,8 @@
     <string name="enhancement_module_manager_unsupported">Не найдена поддерживаемая команда установки модулей Magisk, KernelSU или APatch</string>
     <string name="enhancement_module_missing">Работающий модуль улучшения не обнаружен. Установите или переустановите его и перезагрузите устройство</string>
     <string name="enhancement_module_reboot">Модуль расширения установлен или обновлён, требуется перезагрузка устройства</string>
+    <string name="enhancement_module_reboot_action">Перезагрузить</string>
+    <string name="enhancement_module_reboot_failed">Не удалось перезагрузить устройство. Перезагрузите его вручную.</string>
     <string name="enhancement_module_root_denied">В доступе ROOT отказано. Предоставьте разрешение и повторите попытку</string>
     <string name="enhancement_module_timeout">Время операции истекло. Проверьте менеджер ROOT и повторите попытку</string>
     <string name="enhancement_module_title">Модуль расширения</string>

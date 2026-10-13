@@ -384,7 +384,7 @@
 
     <!-- Enhancement module -->
     <string name="enhancement_module_acknowledge">知道了</string>
-    <string name="enhancement_module_apk_install_failed">ROOT 工具无法直接刷入本应用 APK。若不支持 APK，请导出本应用 APK，将 .apk 后缀改为 .zip，在 ROOT 管理器中自行刷入并重启</string>
+    <string name="enhancement_module_apk_install_failed">刷入失败，请检查错误输出。可尝试导出本应用，将 .apk 后缀改为 .zip，在 ROOT 管理器中刷入</string>
     <string name="enhancement_module_failed">模块操作失败。请检查 ROOT 管理器，确认 Zygisk Next 已安装且启用后重试</string>
     <string name="enhancement_module_incompatible">当前运行的增强模块不支持此运行环境</string>
     <string name="enhancement_module_install_close">关闭</string>
@@ -396,6 +396,8 @@
     <string name="enhancement_module_manager_unsupported">未找到可用的 Magisk、KernelSU 或 APatch 模块安装命令</string>
     <string name="enhancement_module_missing">未检测到可用增强模块，可安装或重新安装后重启</string>
     <string name="enhancement_module_reboot">增强模块已安装或更新，需重启设备</string>
+    <string name="enhancement_module_reboot_action">重启</string>
+    <string name="enhancement_module_reboot_failed">无法重启设备，请手动重启。</string>
     <string name="enhancement_module_root_denied">ROOT 授权被拒绝。请授权后重试</string>
     <string name="enhancement_module_timeout">模块操作超时。请检查 ROOT 管理器后重试</string>
     <string name="enhancement_module_title">增强模块</string>

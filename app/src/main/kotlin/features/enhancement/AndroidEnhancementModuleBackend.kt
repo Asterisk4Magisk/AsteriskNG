@@ -32,6 +32,7 @@ internal class AndroidEnhancementModuleBackend(
 
     override suspend fun expectedImage(): EnhancementModuleImage = delegate.expectedImage()
     override suspend fun inspect(): EnhancementModuleRuntime? = delegate.inspect()
+    override suspend fun reboot() = delegate.reboot()
     override suspend fun install(onOutput: (String) -> Unit) = delegate.install(onOutput)
 }
 

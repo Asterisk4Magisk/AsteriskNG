@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: GPL-3.0
 package features.enhancement
 
+import kotlin.coroutines.cancellation.CancellationException
+
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -148,16 +150,34 @@ internal fun EnhancementModulePrompt() {
     val coordinator = services.enhancementModuleCoordinator
     val moduleState by coordinator.state.collectAsState()
     val progress by coordinator.installProgress.collectAsState()
+    val rebooting by coordinator.rebooting.collectAsState()
+    val rebootFailed = stringResource(R.string.enhancement_module_reboot_failed)
     val message = enhancementModuleMessages()
     var dismissed by remember { mutableStateOf<EnhancementModulePhase?>(null) }
     LaunchedEffect(moduleState.phase) {
         if (moduleState.phase != EnhancementModulePhase.UpdateAvailable && moduleState.phase != EnhancementModulePhase.PendingReboot) dismissed = null
     }
     progress?.let { install ->
-        EnhancementModuleInstallDialog(install) {
-            if (install.result?.phase == EnhancementModulePhase.PendingReboot) dismissed = EnhancementModulePhase.PendingReboot
-            coordinator.dismissInstallProgress()
-        }
+        EnhancementModuleInstallDialog(
+            progress = install,
+            rebooting = rebooting,
+            onReboot = {
+                services.appScope.launch(Dispatchers.Main.immediate) {
+                    val mode = store.state.value.runMode
+                    try {
+                        coordinator.reboot(mode) { store.state.value.runMode == mode }
+                    } catch (error: CancellationException) {
+                        throw error
+                    } catch (_: Exception) {
+                        services.tipNotifier.show(rebootFailed)
+                    }
+                }
+            },
+            onDismiss = {
+                if (install.result?.phase == EnhancementModulePhase.PendingReboot) dismissed = EnhancementModulePhase.PendingReboot
+                coordinator.dismissInstallProgress()
+            },
+        )
     }
     val update = moduleState.phase == EnhancementModulePhase.UpdateAvailable
     val reboot = moduleState.phase == EnhancementModulePhase.PendingReboot

@@ -384,7 +384,7 @@
 
     <!-- Enhancement module -->
     <string name="enhancement_module_acknowledge">OK</string>
-    <string name="enhancement_module_apk_install_failed">The ROOT tool could not install this APK directly. If APK files are unsupported, export this app APK, change .apk to .zip, install it with your ROOT manager, and reboot</string>
+    <string name="enhancement_module_apk_install_failed">Installation failed. Check the error output. You can try exporting this app, changing the .apk extension to .zip, and installing it with your ROOT manager</string>
     <string name="enhancement_module_failed">Module operation failed. Check your ROOT manager and ensure Zygisk Next is installed and enabled, then retry</string>
     <string name="enhancement_module_incompatible">The running enhancement module does not support this runtime</string>
     <string name="enhancement_module_install_close">Close</string>
@@ -396,6 +396,8 @@
     <string name="enhancement_module_manager_unsupported">No supported Magisk, KernelSU, or APatch installation CLI was found</string>
     <string name="enhancement_module_missing">No usable enhancement module was detected. Install or reinstall it, then reboot</string>
     <string name="enhancement_module_reboot">Enhancement module installed or updated; restart the device</string>
+    <string name="enhancement_module_reboot_action">Reboot</string>
+    <string name="enhancement_module_reboot_failed">Unable to reboot the device. Please reboot manually.</string>
     <string name="enhancement_module_root_denied">ROOT permission was denied. Grant access and retry</string>
     <string name="enhancement_module_timeout">Module operation timed out. Check your ROOT manager and retry</string>
     <string name="enhancement_module_title">Enhancement module</string>

@@ -384,7 +384,7 @@
 
     <!-- Enhancement module -->
     <string name="enhancement_module_acknowledge">Đã hiểu</string>
-    <string name="enhancement_module_apk_install_failed">Công cụ ROOT không thể cài trực tiếp APK này. Nếu không hỗ trợ APK, hãy xuất APK của ứng dụng, đổi đuôi .apk thành .zip, tự cài bằng trình quản lý ROOT rồi khởi động lại</string>
+    <string name="enhancement_module_apk_install_failed">Cài đặt thất bại. Hãy kiểm tra thông báo lỗi. Bạn có thể thử xuất ứng dụng này, đổi phần mở rộng .apk thành .zip rồi cài đặt bằng trình quản lý ROOT</string>
     <string name="enhancement_module_failed">Thao tác mô-đun thất bại. Kiểm tra trình quản lý ROOT, bảo đảm Zygisk Next đã cài và bật, rồi thử lại</string>
     <string name="enhancement_module_incompatible">Mô-đun tăng cường đang chạy không hỗ trợ môi trường hoạt động hiện tại</string>
     <string name="enhancement_module_install_close">Đóng</string>
@@ -396,6 +396,8 @@
     <string name="enhancement_module_manager_unsupported">Không tìm thấy lệnh cài mô-đun Magisk, KernelSU hoặc APatch được hỗ trợ</string>
     <string name="enhancement_module_missing">Không phát hiện mô-đun tăng cường khả dụng. Hãy cài đặt hoặc cài đặt lại rồi khởi động lại thiết bị</string>
     <string name="enhancement_module_reboot">Mô-đun tăng cường đã được cài đặt hoặc cập nhật, cần khởi động lại thiết bị</string>
+    <string name="enhancement_module_reboot_action">Khởi động lại</string>
+    <string name="enhancement_module_reboot_failed">Không thể khởi động lại thiết bị. Vui lòng khởi động lại thủ công.</string>
     <string name="enhancement_module_root_denied">Quyền ROOT bị từ chối. Cấp quyền và thử lại</string>
     <string name="enhancement_module_timeout">Thao tác mô-đun hết thời gian. Kiểm tra trình quản lý ROOT và thử lại</string>
     <string name="enhancement_module_title">Mô-đun tăng cường</string>
