@@ -242,8 +242,8 @@
     <string name="subscription_group_list_count">Групп: {count}</string>
     <string name="subscription_group_list_title">Группы подписок</string>
     <string name="subscription_group_name">Имя группы</string>
-    <string name="subscription_group_name_placeholder">Имя группы (оставьте пустым — будет задано при первой синхронизации)</string>
     <string name="subscription_group_name_duplicate">{name}({ordinal})</string>
+    <string name="subscription_group_name_placeholder">Имя группы (оставьте пустым — будет задано при первой синхронизации)</string>
     <string name="subscription_http_warning_confirm">Все равно сохранить</string>
     <string name="subscription_http_warning_message">Данный URL использует незащищенную передачу данных по HTTP cleartext. Содержимое конфигураций может быть перехвачено или изменено злоумышленниками в процессе транспортировки. Сохраняйте подписку только в том случае, если полностью доверяете этому источнику.</string>
     <string name="subscription_http_warning_title">Предупреждение: незащищенный протокол HTTP</string>

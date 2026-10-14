@@ -241,8 +241,8 @@
     <string name="subscription_group_list_count">{count} 个分组</string>
     <string name="subscription_group_list_title">订阅分组</string>
     <string name="subscription_group_name">分组名称</string>
-    <string name="subscription_group_name_placeholder">分组名称（留空则首次同步后自动命名）</string>
     <string name="subscription_group_name_duplicate">{name}({ordinal})</string>
+    <string name="subscription_group_name_placeholder">分组名称（留空则首次同步后自动命名）</string>
     <string name="subscription_http_warning_confirm">仍然保存</string>
     <string name="subscription_http_warning_message">当前订阅 URL 使用 HTTP 明文传输，配置内容可能在传输过程中被读取或篡改。仅在你信任该来源时继续保存。</string>
     <string name="subscription_http_warning_title">HTTP 订阅警告</string>

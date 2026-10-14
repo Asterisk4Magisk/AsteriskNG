@@ -241,8 +241,8 @@
     <string name="subscription_group_list_count">{count} groups</string>
     <string name="subscription_group_list_title">Subscription groups</string>
     <string name="subscription_group_name">Group name</string>
-    <string name="subscription_group_name_placeholder">Group name (leave blank to auto-assign on first sync)</string>
     <string name="subscription_group_name_duplicate">{name}({ordinal})</string>
+    <string name="subscription_group_name_placeholder">Group name (leave blank to auto-assign on first sync)</string>
     <string name="subscription_http_warning_confirm">Save anyway</string>
     <string name="subscription_http_warning_message">This subscription URL uses HTTP cleartext transport. The configuration content may be read or modified in transit. Save only if you trust this source.</string>
     <string name="subscription_http_warning_title">HTTP subscription warning</string>
