@@ -4,6 +4,7 @@
 package features.automation
 
 import app.AsteriskApplication
+import app.R
 import features.logs.AndroidAppLogger
 import features.proxy.server.usecase.withUpdatedSubscriptionServers
 import features.subscription.usecase.toSubscriptionFetchOptions
@@ -26,7 +27,13 @@ internal suspend fun AsteriskApplication.updateBroadcastSubscriptions(progress: 
         )
         currentCoroutineContext().ensureActive()
         if (result.updates.isNotEmpty()) {
-            stateStore.update { it.withUpdatedSubscriptionServers(result.updates, result.updatedAtMillis) }
+            stateStore.update {
+                it.withUpdatedSubscriptionServers(
+                    updates = result.updates,
+                    updatedAtMillis = result.updatedAtMillis,
+                    duplicateNameTemplate = getString(R.string.subscription_group_name_duplicate),
+                )
+            }
         }
         stateStore.awaitPersistence()
         progress.record(id.toString(), result.failures.isEmpty())

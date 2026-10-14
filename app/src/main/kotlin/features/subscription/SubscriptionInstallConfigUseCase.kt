@@ -17,6 +17,7 @@ import features.subscription.usecase.updateSubscriptions
 import io.ktor.http.Url
 import ui.text.formatTemplate
 import utils.decodeUrlComponentPreservingPlus
+import utils.nameFromSubscriptionUrl
 
 internal data class SubscriptionInstallConfig(
     val name: String,
@@ -32,6 +33,7 @@ internal data class SubscriptionInstallResult(
 internal class SubscriptionInstallConfigUseCase(
     private val stateStore: AndroidAppStateStore,
     private val subscriptionFetcher: AndroidSubscriptionFetcher,
+    private val duplicateNameTemplate: String,
 ) {
     suspend fun install(config: SubscriptionInstallConfig): SubscriptionInstallResult {
         val preparedGroup = stateStore.prepareSubscriptionInstallGroup(config)
@@ -45,6 +47,7 @@ internal class SubscriptionInstallConfigUseCase(
                 state.withUpdatedSubscriptionServers(
                     updates = result.updates,
                     updatedAtMillis = result.updatedAtMillis,
+                    duplicateNameTemplate = duplicateNameTemplate,
                 )
             }
         }
@@ -131,7 +134,7 @@ private fun AndroidAppStateStore.prepareSubscriptionInstallGroup(
         if (existingGroup != null) {
             preparedGroup = PreparedSubscriptionInstallGroup(
                 group = existingGroup,
-                existingGroupName = existingGroup.name,
+                existingGroupName = existingGroup.name.ifBlank { nameFromSubscriptionUrl(existingGroup.url).orEmpty() },
             )
             return@update state
         }

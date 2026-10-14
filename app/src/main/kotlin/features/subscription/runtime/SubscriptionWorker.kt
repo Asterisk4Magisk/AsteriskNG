@@ -5,6 +5,7 @@ package features.subscription.runtime
 
 import android.content.Context
 import androidx.work.CoroutineWorker
+import app.R
 import androidx.work.WorkerParameters
 import app.AsteriskApplication
 import features.proxy.server.usecase.ProxyServerListSubscriptionUpdateResult
@@ -52,6 +53,7 @@ internal class SubscriptionWorker(
                 state.withUpdatedSubscriptionServers(
                     updates = result.updates,
                     updatedAtMillis = result.updatedAtMillis,
+                    duplicateNameTemplate = getString(R.string.subscription_group_name_duplicate),
                 )
             }
         }

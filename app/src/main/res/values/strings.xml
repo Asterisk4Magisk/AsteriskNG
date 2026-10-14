@@ -241,6 +241,8 @@
     <string name="subscription_group_list_count">{count} groups</string>
     <string name="subscription_group_list_title">Subscription groups</string>
     <string name="subscription_group_name">Group name</string>
+    <string name="subscription_group_name_placeholder">Group name (leave blank to auto-assign on first sync)</string>
+    <string name="subscription_group_name_duplicate">{name}({ordinal})</string>
     <string name="subscription_http_warning_confirm">Save anyway</string>
     <string name="subscription_http_warning_message">This subscription URL uses HTTP cleartext transport. The configuration content may be read or modified in transit. Save only if you trust this source.</string>
     <string name="subscription_http_warning_title">HTTP subscription warning</string>
@@ -250,7 +252,6 @@
     <string name="subscription_install_existing_url">A matching subscription URL already exists in {name}; updating that group</string>
     <string name="subscription_invalid_url">Invalid subscription URL</string>
     <string name="subscription_manual_group">Manual proxy server group</string>
-    <string name="subscription_new_group">New subscription group</string>
     <string name="subscription_unnamed_group">Unnamed group</string>
     <string name="subscription_update_group">Update subscription group</string>
     <string name="subscription_update_interval">Update every {interval} hours</string>

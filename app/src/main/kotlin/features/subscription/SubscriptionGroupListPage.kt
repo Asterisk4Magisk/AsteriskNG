@@ -80,6 +80,7 @@ fun SubscriptionGroupListPage(
     val subscriptionUpdateResultTemplate = stringResource(R.string.proxy_server_list_subscription_update_result)
     val subscriptionUpdateResultWithFailedTemplate =
         stringResource(R.string.proxy_server_list_subscription_update_result_with_failed)
+    val duplicateNameTemplate = stringResource(R.string.subscription_group_name_duplicate)
     val invalidSubscriptionUrlMessage = stringResource(R.string.subscription_invalid_url)
     var editingGroupId by remember { mutableStateOf<Int?>(null) }
     var showGroupEditor by remember { mutableStateOf(false) }
@@ -230,6 +231,7 @@ fun SubscriptionGroupListPage(
                                         updateAppState = updateAppState,
                                         successTemplate = subscriptionUpdateResultTemplate,
                                         failedTemplate = subscriptionUpdateResultWithFailedTemplate,
+                                        duplicateNameTemplate = duplicateNameTemplate,
                                     )
                                 }
                             } else {
@@ -287,6 +289,7 @@ private fun updateSubscriptionGroup(
     updateAppState: ((AppState) -> AppState) -> Unit,
     successTemplate: String,
     failedTemplate: String,
+    duplicateNameTemplate: String,
 ) {
     if (group.url.isBlank()) return
     services.appScope.launch {
@@ -300,6 +303,7 @@ private fun updateSubscriptionGroup(
                 state.withUpdatedSubscriptionServers(
                     updates = result.updates,
                     updatedAtMillis = result.updatedAtMillis,
+                    duplicateNameTemplate = duplicateNameTemplate,
                 )
             }
         }

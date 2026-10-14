@@ -14,6 +14,7 @@ import features.proxy.server.usecase.ProxyServerListSubscriptionUpdateResult
 import features.proxy.server.usecase.importProxyServersFromText
 import features.proxy.server.usecase.subscriptionFetchIdentity
 import features.subscription.runtime.AndroidSubscriptionFetchOptions
+import features.subscription.runtime.AndroidSubscriptionResponse
 import features.subscription.runtime.AndroidSubscriptionFetcher
 import java.net.URI
 import java.util.concurrent.ConcurrentHashMap
@@ -34,15 +35,15 @@ internal suspend fun updateSubscriptions(
 ): ProxyServerListSubscriptionUpdateResult = updateSubscriptions(
     groups = groups,
     fetchOptions = fetchOptions,
-    fetchText = { url, userAgent, options ->
-        subscriptionFetcher.fetch(url, userAgent, options)
+    fetchResponse = { url, userAgent, options ->
+        subscriptionFetcher.fetchSubscription(url, userAgent, options)
     },
 )
 
 internal suspend fun updateSubscriptions(
     groups: List<SubscriptionGroupState>,
     fetchOptions: (SubscriptionGroupState) -> AndroidSubscriptionFetchOptions,
-    fetchText: suspend (String, String, AndroidSubscriptionFetchOptions) -> String,
+    fetchResponse: suspend (String, String, AndroidSubscriptionFetchOptions) -> AndroidSubscriptionResponse,
     coordinator: SubscriptionUpdateCoordinator = DefaultSubscriptionUpdateCoordinator,
 ): ProxyServerListSubscriptionUpdateResult = supervisorScope {
     val results = groups.map { group ->
@@ -50,7 +51,7 @@ internal suspend fun updateSubscriptions(
             group to coordinator.withGroup(group.id) {
                 updateSubscriptionGroup(
                     group = group,
-                    fetchText = fetchText,
+                    fetchResponse = fetchResponse,
                     fetchOptions = fetchOptions(group),
                 )
             }
@@ -72,16 +73,17 @@ internal suspend fun updateSubscriptions(
 
 private suspend fun updateSubscriptionGroup(
     group: SubscriptionGroupState,
-    fetchText: suspend (String, String, AndroidSubscriptionFetchOptions) -> String,
+    fetchResponse: suspend (String, String, AndroidSubscriptionFetchOptions) -> AndroidSubscriptionResponse,
     fetchOptions: AndroidSubscriptionFetchOptions,
 ): Result<ProxyServerListSubscriptionUpdate> {
     return runCatching {
-        val text = fetchText(group.url, group.userAgent, fetchOptions)
+        val response = fetchResponse(group.url, group.userAgent, fetchOptions)
+        val text = response.text
         val importResult = importProxyServersFromText(
             text = text,
             source = ProxyServerImportSource.SubscriptionUrl,
             providerUrlFetcher = { providerUrl ->
-                fetchText(providerUrl, group.userAgent, fetchOptions)
+                fetchResponse(providerUrl, group.userAgent, fetchOptions).text
             },
         )
         ProxyServerListSubscriptionUpdate(
@@ -89,6 +91,7 @@ private suspend fun updateSubscriptionGroup(
             sourceIdentity = group.subscriptionFetchIdentity(),
             urlCount = importResult.urlCount,
             servers = importResult.servers,
+            remoteName = response.remoteName,
         ).also { update ->
             if (update.servers.isEmpty()) {
                 AndroidAppLogger.warn(

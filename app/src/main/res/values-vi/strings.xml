@@ -241,6 +241,8 @@
     <string name="subscription_group_list_count">{count} nhóm</string>
     <string name="subscription_group_list_title">Nhóm đăng ký</string>
     <string name="subscription_group_name">Tên nhóm</string>
+    <string name="subscription_group_name_placeholder">Tên nhóm (để trống để tự đặt khi đồng bộ lần đầu)</string>
+    <string name="subscription_group_name_duplicate">{name}({ordinal})</string>
     <string name="subscription_http_warning_confirm">Vẫn lưu</string>
     <string name="subscription_http_warning_message">URL đăng ký hiện tại sử dụng truyền tải HTTP dạng văn bản thuần, nội dung cấu hình có thể bị đọc hoặc giả mạo trong quá trình truyền tải. Chỉ tiếp tục lưu nếu bạn tin tưởng nguồn này.</string>
     <string name="subscription_http_warning_title">Cảnh báo đăng ký HTTP</string>
@@ -250,7 +252,6 @@
     <string name="subscription_install_existing_url">Địa chỉ đăng ký đã tồn tại trong "{name}", đang cập nhật nhóm này</string>
     <string name="subscription_invalid_url">URL đăng ký không hợp lệ</string>
     <string name="subscription_manual_group">Nhóm nút thủ công</string>
-    <string name="subscription_new_group">Nhóm đăng ký mới</string>
     <string name="subscription_unnamed_group">Nhóm chưa đặt tên</string>
     <string name="subscription_update_group">Cập nhật nhóm đăng ký</string>
     <string name="subscription_update_interval">Cập nhật mỗi {interval} giờ</string>
