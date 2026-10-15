@@ -160,6 +160,7 @@ fun ProxyServerListPage(
             noTestableServersMessage = messages.noTestableServers,
             latencyResultTemplate = messages.latencyResultTemplate,
             latencyFailedMessage = messages.latencyFailed,
+            latencyUnsupportedMessage = messages.latencyHandshakeUnsupported,
         )
     }
 

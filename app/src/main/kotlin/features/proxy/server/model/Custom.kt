@@ -11,6 +11,7 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.intOrNull
 import utils.toTrimmedNonEmptyDistinctList
 
 @Serializable
@@ -85,6 +86,17 @@ internal fun formatCustomXrayConfigJson(element: JsonElement): String {
 internal data class CustomProxyOutboundEndpoint(
     val host: String,
     val port: Int,
+    val handshake: ProxyTransportHandshake = ProxyTransportHandshake.Tcp,
+    val serverName: String? = null,
+    val udpMasked: Boolean = false,
+    val wireGuardKeys: WireGuardHandshakeKeys? = null,
+)
+
+/** Keys a WireGuard handshake initiation needs; keys are base64 as in Xray configs. */
+internal data class WireGuardHandshakeKeys(
+    val secretKey: String,
+    val publicKey: String,
+    val reserved: List<Int> = emptyList(),
 )
 
 internal fun customXrayConfigProxyOutboundEndpoint(value: String): CustomProxyOutboundEndpoint? {
@@ -113,14 +125,14 @@ private fun customXrayConfigSummary(value: String): String {
 }
 
 private fun JsonArray.customProxyOutboundEndpoint(): CustomProxyOutboundEndpoint? {
-    val outbounds = mapNotNull { element -> element as? JsonObject }
+    val outbounds = filterIsInstance<JsonObject>()
     return outbounds.firstEndpoint { outbound -> outbound.stringValue("tag") == CustomProxyOutboundTag }
         ?: outbounds.firstEndpoint { outbound -> outbound.stringValue("tag") !in CustomFixedOutboundTags }
         ?: outbounds.firstOrNull()?.toProxyOutboundEndpoint()
 }
 
 private fun JsonArray.customProxyServerHosts(): List<String> {
-    return mapNotNull { element -> element as? JsonObject }
+    return filterIsInstance<JsonObject>()
         .filter { outbound -> outbound.stringValue("tag") !in CustomInfrastructureOutboundTags }
         .flatMap { outbound -> outbound.proxyServerHosts() }
         .map { host -> host.normalizedHostAddress() }
@@ -138,10 +150,42 @@ private fun List<JsonObject>.firstEndpoint(predicate: (JsonObject) -> Boolean): 
 
 private fun JsonObject.toProxyOutboundEndpoint(): CustomProxyOutboundEndpoint? {
     val settings = objectValue("settings") ?: return null
-    return settings.addressPortEndpoint()
+    val endpoint = settings.addressPortEndpoint()
         ?: settings.arrayValue("vnext")?.firstEndpoint()
         ?: settings.arrayValue("servers")?.firstEndpoint()
         ?: settings.arrayValue("peers")?.firstObject()?.stringValue("endpoint")?.toProxyOutboundEndpoint()
+        ?: return null
+    val streamSettings = objectValue("streamSettings")
+    return endpoint.copy(
+        handshake = transportHandshake(),
+        serverName = streamSettings?.objectValue("tlsSettings")?.stringValue("serverName"),
+        udpMasked = !streamSettings?.objectValue("finalmask")?.arrayValue("udp").isNullOrEmpty(),
+        wireGuardKeys = settings.wireGuardKeys(),
+    )
+}
+
+private fun JsonObject.wireGuardKeys(): WireGuardHandshakeKeys? {
+    val secretKey = stringValue("secretKey") ?: return null
+    val publicKey = arrayValue("peers")?.firstObject()?.stringValue("publicKey") ?: return null
+    val reserved = arrayValue("reserved")
+        ?.mapNotNull { element -> (element as? JsonPrimitive)?.intOrNull }
+        .orEmpty()
+    return WireGuardHandshakeKeys(secretKey, publicKey, reserved)
+}
+
+private fun JsonObject.transportHandshake(): ProxyTransportHandshake {
+    when (stringValue("protocol")?.lowercase()) {
+        CustomWireGuardProtocol -> return ProxyTransportHandshake.WireGuard
+        in CustomHysteriaProtocols -> return ProxyTransportHandshake.Quic
+    }
+    val streamSettings = objectValue("streamSettings") ?: return ProxyTransportHandshake.Tcp
+    val network = streamSettings.stringValue("network")
+    if (network?.lowercase() == CustomHysteriaNetwork) return ProxyTransportHandshake.Quic
+    val alpn = streamSettings.objectValue("tlsSettings")
+        ?.arrayValue("alpn")
+        ?.mapNotNull { element -> (element as? JsonPrimitive)?.contentOrNull }
+        .orEmpty()
+    return v2RayTransportHandshake(network, alpn)
 }
 
 private fun JsonObject.proxyServerHosts(): List<String> {
@@ -265,3 +309,6 @@ private val CustomFixedOutboundTags = setOf(
     "fragment",
 )
 private val CustomInfrastructureOutboundTags = CustomFixedOutboundTags - CustomProxyOutboundTag
+private const val CustomWireGuardProtocol = "wireguard"
+private val CustomHysteriaProtocols = setOf("hysteria", "hysteria2")
+private const val CustomHysteriaNetwork = "hysteria"

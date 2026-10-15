@@ -72,10 +72,11 @@
     <string name="proxy_server_list_import_result">Успешно импортировано серверов: {serverCount}</string>
     <string name="proxy_server_list_invalid_deleted">Удалено нерабочих конфигураций: {count}</string>
     <string name="proxy_server_list_joined">Сервер {name} добавлен в список</string>
-    <string name="proxy_server_list_latency_done">Тест пинга завершен для {count} серверов</string>
+    <string name="proxy_server_list_latency_done">Тест задержки рукопожатия завершен для {count} серверов</string>
     <string name="proxy_server_list_latency_failed">Тайм-аут</string>
     <string name="proxy_server_list_latency_result">{name} пинг: {latency}</string>
-    <string name="proxy_server_list_latency_test">Тест задержки (Ping)</string>
+    <string name="proxy_server_list_latency_test">Тест задержки рукопожатия</string>
+    <string name="proxy_server_list_latency_handshake_unsupported">Н/Д</string>
     <string name="proxy_server_list_manual_input">Ручной ввод</string>
     <string name="proxy_server_list_more">Другие действия</string>
     <string name="proxy_server_list_no_duplicates">Дубликаты прокси-серверов не найдены</string>

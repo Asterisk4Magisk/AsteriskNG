@@ -43,8 +43,7 @@ internal fun String?.toCanonicalV2RayTransportType(defaultType: String = V2RayTr
 }
 
 internal fun String.toV2RayTransportUrlType(): String {
-    val canonicalType = toCanonicalV2RayTransportType()
-    return when (canonicalType) {
+    return when (val canonicalType = toCanonicalV2RayTransportType()) {
         V2RayTransportMkcp -> "kcp"
         V2RayTransportWebSocket -> "ws"
         else -> canonicalType
@@ -55,4 +54,27 @@ internal fun v2RayTransportOptionIndex(type: String?): Int {
     val canonicalType = type.toCanonicalV2RayTransportType()
     val index = V2RayTransportOptions.indexOfFirst { option -> option.value == canonicalType }
     return if (index >= 0) index else 0
+}
+
+/** The handshake a client performs with the server before relaying traffic. */
+internal enum class ProxyTransportHandshake {
+    Tcp,
+    Quic,
+    WireGuard,
+
+    /** mKCP is connectionless: no exchange happens until traffic is sent. */
+    Connectionless,
+}
+
+// XHTTP pinned to the "h3" ALPN runs over QUIC; mKCP runs over UDP without a handshake.
+internal fun v2RayTransportHandshake(type: String?, alpn: List<String>): ProxyTransportHandshake {
+    return when (type.toCanonicalV2RayTransportType()) {
+        V2RayTransportMkcp -> ProxyTransportHandshake.Connectionless
+        V2RayTransportXhttp -> if (alpn.map { value -> value.trim().lowercase() } == listOf("h3")) {
+            ProxyTransportHandshake.Quic
+        } else {
+            ProxyTransportHandshake.Tcp
+        }
+        else -> ProxyTransportHandshake.Tcp
+    }
 }

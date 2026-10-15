@@ -71,10 +71,11 @@
     <string name="proxy_server_list_import_result">Đã nhập thành công {serverCount} nút proxy</string>
     <string name="proxy_server_list_invalid_deleted">Đã xóa {count} nút proxy không hợp lệ</string>
     <string name="proxy_server_list_joined">{name} đã được thêm vào danh sách nút</string>
-    <string name="proxy_server_list_latency_done">Đã hoàn tất kiểm tra độ trễ cho {count} nút</string>
+    <string name="proxy_server_list_latency_done">Đã hoàn tất kiểm tra độ trễ bắt tay cho {count} nút</string>
     <string name="proxy_server_list_latency_failed">Thất bại</string>
     <string name="proxy_server_list_latency_result">{name} độ trễ {latency}</string>
-    <string name="proxy_server_list_latency_test">Kiểm tra độ trễ</string>
+    <string name="proxy_server_list_latency_test">Kiểm tra độ trễ bắt tay</string>
+    <string name="proxy_server_list_latency_handshake_unsupported">N/A</string>
     <string name="proxy_server_list_manual_input">Nhập thủ công</string>
     <string name="proxy_server_list_more">Thêm chức năng</string>
     <string name="proxy_server_list_no_duplicates">Không phát hiện nút proxy trùng lặp</string>

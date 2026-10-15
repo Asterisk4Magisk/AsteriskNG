@@ -25,7 +25,7 @@ import ui.feedback.AndroidToastTipNotifier
 import ui.text.formatTemplate
 import kotlin.coroutines.cancellation.CancellationException
 
-private const val TcpLatencyTestConcurrency = 16
+private const val HandshakeLatencyTestConcurrency = 16
 private const val RealConnectionLatencyTestConcurrency = 8
 
 internal fun restartProxyServiceAfterSelection(
@@ -99,6 +99,7 @@ internal fun runProxyServerLatencyTest(
     noTestableServersMessage: String,
     latencyResultTemplate: String,
     latencyFailedMessage: String,
+    latencyUnsupportedMessage: String,
 ) {
     if (targetServers.isEmpty()) {
         scope.launch {
@@ -119,7 +120,7 @@ internal fun runProxyServerLatencyTest(
         }
 
         val concurrency = when (mode) {
-            ProxyServerLatencyTestMode.TcpConnect -> TcpLatencyTestConcurrency
+            ProxyServerLatencyTestMode.Handshake -> HandshakeLatencyTestConcurrency
             ProxyServerLatencyTestMode.RealConnection -> RealConnectionLatencyTestConcurrency
         }
         val semaphore = Semaphore(concurrency)
@@ -136,7 +137,7 @@ internal fun runProxyServerLatencyTest(
                             )
                         }.getOrElse {
                             ProxyServerLatencyTestResult.Failed
-                        }.toLatencyText(latencyFailedMessage)
+                        }.toLatencyText(latencyFailedMessage, latencyUnsupportedMessage)
                     }
                     updateAppState { state ->
                         state.copy(
@@ -163,6 +164,13 @@ internal fun runProxyServerLatencyTest(
     }
 }
 
-private fun ProxyServerLatencyTestResult.toLatencyText(failedMessage: String): String {
-    return if (elapsedMillis >= 0) "$elapsedMillis ms" else failedMessage
+private fun ProxyServerLatencyTestResult.toLatencyText(
+    failedMessage: String,
+    unsupportedMessage: String,
+): String {
+    return when (this) {
+        is ProxyServerLatencyTestResult.Success -> "$elapsedMillis ms"
+        ProxyServerLatencyTestResult.Failed -> failedMessage
+        ProxyServerLatencyTestResult.Unsupported -> unsupportedMessage
+    }
 }

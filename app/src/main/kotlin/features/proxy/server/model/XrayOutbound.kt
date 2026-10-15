@@ -189,38 +189,42 @@ private fun JsonObjectBuilder.putKcpSettings(params: V2RayParameters) {
     }
 }
 
+// Xray removed the per-kind mKCP masks; "mkcp-legacy" selects the header by name and
+// switches between the original obfuscation and AES-128-GCM by whether a seed is set.
 private fun JsonObjectBuilder.putKcpFinalMask(params: V2RayParameters) {
     putJsonObject("finalmask") {
         putJsonArray("udp") {
-            val headerType = params.headerType.orEmpty()
+            val headerType = params.headerType.orEmpty().trim().lowercase()
             if (headerType.isNotBlank() && headerType != "none") {
-                add(buildJsonObject {
-                    put("type", headerType.toKcpHeaderMaskType())
-                    if (headerType == "dns" && !params.host.isNullOrBlank()) {
-                        putJsonObject("settings") {
-                            put("domain", params.host)
-                        }
-                    }
-                })
+                add(
+                    buildKcpLegacyMask(
+                        header = headerType.toKcpLegacyHeader(),
+                        value = params.host.takeIf { headerType == "dns" },
+                    ),
+                )
             }
-            add(buildJsonObject {
-                val seed = params.seed.orEmpty()
-                if (seed.isBlank()) {
-                    put("type", "mkcp-original")
-                } else {
-                    put("type", "mkcp-aes128gcm")
-                    putJsonObject("settings") {
-                        put("password", seed)
-                    }
-                }
-            })
+            add(buildKcpLegacyMask(header = null, value = params.seed))
         }
     }
 }
 
-private fun String.toKcpHeaderMaskType(): String {
-    return if (this == "wechat-video") "header-wechat" else "header-$this"
+private fun buildKcpLegacyMask(header: String?, value: String?): JsonObject {
+    return buildJsonObject {
+        put("type", KcpLegacyMaskType)
+        if (!header.isNullOrBlank() || !value.isNullOrBlank()) {
+            putJsonObject("settings") {
+                putIfNotBlank("header", header)
+                putIfNotBlank("value", value)
+            }
+        }
+    }
 }
+
+private fun String.toKcpLegacyHeader(): String {
+    return if (this == "wechat-video") "wechat" else this
+}
+
+private const val KcpLegacyMaskType = "mkcp-legacy"
 
 internal fun String?.toXrayJsonObjectOrNull(fieldName: String): JsonObject? {
     val value = this?.trim().orEmpty()

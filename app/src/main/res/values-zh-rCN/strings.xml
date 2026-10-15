@@ -71,10 +71,11 @@
     <string name="proxy_server_list_import_result">导入成功{serverCount}个代理节点</string>
     <string name="proxy_server_list_invalid_deleted">已删除 {count} 个无效代理节点</string>
     <string name="proxy_server_list_joined">{name} 已加入节点列表</string>
-    <string name="proxy_server_list_latency_done">已完成 {count} 个节点的延迟测试</string>
+    <string name="proxy_server_list_latency_done">已完成 {count} 个节点的握手延迟测试</string>
     <string name="proxy_server_list_latency_failed">失败</string>
     <string name="proxy_server_list_latency_result">{name} 延迟 {latency}</string>
-    <string name="proxy_server_list_latency_test">延迟测试</string>
+    <string name="proxy_server_list_latency_test">握手延迟测试</string>
+    <string name="proxy_server_list_latency_handshake_unsupported">不支持</string>
     <string name="proxy_server_list_manual_input">手动输入</string>
     <string name="proxy_server_list_more">更多功能</string>
     <string name="proxy_server_list_no_duplicates">未发现重复代理节点</string>

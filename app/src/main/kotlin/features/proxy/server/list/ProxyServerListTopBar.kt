@@ -436,7 +436,7 @@ private fun handleProxyServerListToolAction(
         ProxyServerListToolAction.TestLatency -> {
             onTestProxyServerLatency(
                 groupState.currentFilteredServers,
-                ProxyServerLatencyTestMode.TcpConnect,
+                ProxyServerLatencyTestMode.Handshake,
                 messages.latencyDoneTemplate,
                 false,
             )

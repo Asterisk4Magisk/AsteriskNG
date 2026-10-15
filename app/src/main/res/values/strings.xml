@@ -71,10 +71,11 @@
     <string name="proxy_server_list_import_result">Imported {serverCount} proxy servers</string>
     <string name="proxy_server_list_invalid_deleted">Deleted {count} invalid proxy servers</string>
     <string name="proxy_server_list_joined">{name} added to server list</string>
-    <string name="proxy_server_list_latency_done">Completed latency test for {count} servers</string>
+    <string name="proxy_server_list_latency_done">Completed handshake latency test for {count} servers</string>
     <string name="proxy_server_list_latency_failed">Failed</string>
     <string name="proxy_server_list_latency_result">{name} latency {latency}</string>
-    <string name="proxy_server_list_latency_test">Latency test</string>
+    <string name="proxy_server_list_latency_test">Handshake latency test</string>
+    <string name="proxy_server_list_latency_handshake_unsupported">N/A</string>
     <string name="proxy_server_list_manual_input">Manual input</string>
     <string name="proxy_server_list_more">More actions</string>
     <string name="proxy_server_list_no_duplicates">No duplicate proxy servers found</string>

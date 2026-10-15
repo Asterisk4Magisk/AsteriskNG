@@ -14,24 +14,13 @@ import engine.xray.initializeAndroidXrayCoreEnvironment
 import engine.xray.prepareXrayCoreLogPaths
 import features.resources.runtime.prepareXrayResourceFilePaths
 import engine.network.NetworkDefaults
-import engine.network.toPortOrNull
-import features.proxy.server.model.Custom
-import features.proxy.server.model.HTTP
-import features.proxy.server.model.Hysteria2
-import features.proxy.server.model.ProxyServer
-import features.proxy.server.model.Shadowsocks
-import features.proxy.server.model.Socks
-import features.proxy.server.model.Trojan
-import features.proxy.server.model.VLESS
-import features.proxy.server.model.VMess
-import features.proxy.server.model.Wireguard
-import features.proxy.server.model.customXrayConfigProxyOutboundEndpoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import libv2ray.Libv2ray
 import java.io.IOException
+import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.Socket
 import java.net.UnknownHostException
@@ -46,15 +35,35 @@ internal class AndroidProxyLatencyTester(
         server: ProxyServerState,
         mode: ProxyServerLatencyTestMode,
     ): ProxyServerLatencyTestResult = withContext(Dispatchers.IO) {
-        val elapsedMillis = when (mode) {
-            ProxyServerLatencyTestMode.TcpConnect -> tcpConnectLatency(server)
-            ProxyServerLatencyTestMode.RealConnection -> realConnectionLatency(appState, server)
+        when (mode) {
+            ProxyServerLatencyTestMode.Handshake -> handshakeLatency(server)
+            ProxyServerLatencyTestMode.RealConnection -> realConnectionLatency(appState, server).toLatencyTestResult()
         }
-        ProxyServerLatencyTestResult(elapsedMillis)
     }
 
-    private suspend fun tcpConnectLatency(server: ProxyServerState): Long {
-        val endpoint = server.server.endpoint() ?: return FailedDelayMillis
+    private suspend fun handshakeLatency(server: ProxyServerState): ProxyServerLatencyTestResult {
+        return when (val target = server.server.handshakeLatencyTarget()) {
+            is HandshakeLatencyTarget.TcpEndpoint -> tcpConnectLatency(server, target)
+            is HandshakeLatencyTarget.QuicEndpoint -> quicHandshakeLatency(server, target)
+            is HandshakeLatencyTarget.WireGuardEndpoint -> wireGuardHandshakeLatency(server, target)
+            HandshakeLatencyTarget.UdpMasked,
+            HandshakeLatencyTarget.Connectionless,
+            HandshakeLatencyTarget.NoSingleEndpoint,
+            -> {
+                AndroidAppLogger.debug(LogTag, "Handshake latency test unsupported serverId=${server.id} target=$target")
+                ProxyServerLatencyTestResult.Unsupported
+            }
+            HandshakeLatencyTarget.InvalidEndpoint -> {
+                AndroidAppLogger.debug(LogTag, "Handshake latency test has no valid endpoint serverId=${server.id}")
+                ProxyServerLatencyTestResult.Failed
+            }
+        }
+    }
+
+    private suspend fun tcpConnectLatency(
+        server: ProxyServerState,
+        endpoint: HandshakeLatencyTarget.TcpEndpoint,
+    ): ProxyServerLatencyTestResult {
         var bestMillis = FailedDelayMillis
         repeat(TcpConnectAttempts) {
             currentCoroutineContext().ensureActive()
@@ -64,7 +73,49 @@ internal class AndroidProxyLatencyTester(
             }
         }
         AndroidAppLogger.debug(LogTag, "TCP latency test serverId=${server.id} result=${bestMillis}ms")
-        return bestMillis
+        return bestMillis.toLatencyTestResult()
+    }
+
+    // Resolves first so that, like the TCP connect, DNS lookup is not part of the measurement.
+    private suspend fun quicHandshakeLatency(
+        server: ProxyServerState,
+        target: HandshakeLatencyTarget.QuicEndpoint,
+    ): ProxyServerLatencyTestResult {
+        val address = runCatching { InetAddress.getByName(target.host).hostAddress }.getOrNull()
+        if (address == null) {
+            AndroidAppLogger.debug(LogTag, "Unknown host for QUIC latency test: ${target.host}")
+            return ProxyServerLatencyTestResult.Failed
+        }
+        val request = quicHandshakeRequestJson(address, target.port, target.serverName, HandshakeTimeoutMillis)
+        var bestMillis = FailedDelayMillis
+        repeat(HandshakeAttempts) {
+            currentCoroutineContext().ensureActive()
+            val startedAt = System.nanoTime()
+            val error = runCatching { quicHandshakeError(Libv2ray.fetchQuicCertSha256(request)) }
+                .getOrElse { error -> error.logSummary() }
+            val millis = (System.nanoTime() - startedAt) / NanosPerMilli
+            if (error != null) {
+                AndroidAppLogger.debug(LogTag, "QUIC latency test failure: ${target.host}:${target.port} $error")
+            } else if (bestMillis !in 0..millis) {
+                bestMillis = millis
+            }
+        }
+        AndroidAppLogger.debug(LogTag, "QUIC latency test serverId=${server.id} result=${bestMillis}ms")
+        return bestMillis.toLatencyTestResult()
+    }
+
+    private fun wireGuardHandshakeLatency(
+        server: ProxyServerState,
+        target: HandshakeLatencyTarget.WireGuardEndpoint,
+    ): ProxyServerLatencyTestResult {
+        val request = wireGuardHandshakeRequestJson(target.host, target.port, target.keys, HandshakeTimeoutMillis)
+        val (millis, error) = runCatching { wireGuardHandshakeResult(Libv2ray.measureWireGuardHandshake(request)) }
+            .getOrElse { error -> FailedDelayMillis to error.logSummary() }
+        if (error.isNotBlank()) {
+            AndroidAppLogger.debug(LogTag, "WireGuard latency test failure: ${target.host}:${target.port} $error")
+        }
+        AndroidAppLogger.debug(LogTag, "WireGuard latency test serverId=${server.id} result=${millis}ms")
+        return millis.toLatencyTestResult()
     }
 
     private fun realConnectionLatency(appState: AppState, server: ProxyServerState): Long {
@@ -117,44 +168,24 @@ private fun Throwable.logSummary(): String {
 }
 
 enum class ProxyServerLatencyTestMode {
-    TcpConnect,
+    /** Times the transport handshake with the server: TCP connect, QUIC or WireGuard handshake. */
+    Handshake,
+
+    /** Times an HTTP request relayed through the proxy. */
     RealConnection,
 }
 
-data class ProxyServerLatencyTestResult(
-    val elapsedMillis: Long,
-) {
-    companion object {
-        val Failed = ProxyServerLatencyTestResult(elapsedMillis = -1L)
-    }
+sealed interface ProxyServerLatencyTestResult {
+    data class Success(val elapsedMillis: Long) : ProxyServerLatencyTestResult
+
+    data object Failed : ProxyServerLatencyTestResult
+
+    /** The selected test mode cannot measure this server, e.g. a handshake test on mKCP. */
+    data object Unsupported : ProxyServerLatencyTestResult
 }
 
-private data class ProxyServerEndpoint(
-    val host: String,
-    val port: Int,
-)
-
-private fun ProxyServer<*>.endpoint(): ProxyServerEndpoint? {
-    return when (this) {
-        is HTTP -> endpoint(server, port)
-        is Hysteria2 -> endpoint(server, port)
-        is Shadowsocks -> endpoint(server, port)
-        is Socks -> endpoint(server, port)
-        is Trojan -> endpoint(server, port)
-        is VLESS -> endpoint(server, port)
-        is VMess -> endpoint(server, port)
-        is Wireguard -> endpoint(server, port)
-        is Custom -> customXrayConfigProxyOutboundEndpoint(configJson)
-            ?.let { endpoint -> ProxyServerEndpoint(endpoint.host, endpoint.port) }
-        else -> null
-    }
-}
-
-private fun endpoint(host: String, port: String): ProxyServerEndpoint? {
-    val parsedPort = port.toPortOrNull() ?: return null
-    return host.trim()
-        .takeIf(String::isNotEmpty)
-        ?.let { ProxyServerEndpoint(it, parsedPort) }
+private fun Long.toLatencyTestResult(): ProxyServerLatencyTestResult {
+    return if (this >= 0) ProxyServerLatencyTestResult.Success(this) else ProxyServerLatencyTestResult.Failed
 }
 
 private const val LogTag = "ProxyLatencyTest"
@@ -162,4 +193,7 @@ private const val DelayTestUrl = NetworkDefaults.CONNECTIVITY_CHECK_URL
 private const val FailedDelayMillis = -1L
 private const val TcpConnectAttempts = 2
 private const val TcpConnectTimeoutMillis = 3_000
+private const val HandshakeAttempts = 2
+private const val HandshakeTimeoutMillis = 3_000L
+private const val NanosPerMilli = 1_000_000L
 private val WhitespaceRegex = Regex("\\s+")

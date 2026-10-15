@@ -788,8 +788,9 @@ internal fun ProxyServerListEmptyState(
 private fun proxyServerLatencyColor(text: String): Color {
     val latency = proxyServerLatencyNumberRegex.find(text)?.value?.toLongOrNull()
     val darkTheme = isInDarkTheme()
+    val handshakeUnsupportedText = stringResource(R.string.proxy_server_list_latency_handshake_unsupported)
     return when {
-        text.isBlank() -> MiuixTheme.colorScheme.onSurfaceVariantSummary
+        text.isBlank() || text == handshakeUnsupportedText -> MiuixTheme.colorScheme.onSurfaceVariantSummary
         latency == null -> if (darkTheme) Color(0xFFF12522) else Color(0xFFE94634)
         latency < 100 -> if (darkTheme) Color(0xFF6BD58A) else Color(0xFF128A3C)
         latency < 200 -> if (darkTheme) Color(0xFFFFC857) else Color(0xFFD18A00)
