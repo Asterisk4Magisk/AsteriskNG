@@ -106,7 +106,7 @@
         },
         {
             "uniqueId": "org.jetbrains.compose.foundation:foundation",
-            "artifactVersion": "1.12.1",
+            "artifactVersion": "1.12.2",
             "name": "Compose Foundation",
             "description": "Higher level abstractions of the Compose UI primitives. This library is design system agnostic, providing the high-level building blocks for both application and design-system developers",
             "website": "https://github.com/JetBrains/compose-multiplatform",
@@ -119,7 +119,7 @@
         },
         {
             "uniqueId": "org.jetbrains.compose.ui:ui",
-            "artifactVersion": "1.12.1",
+            "artifactVersion": "1.12.2",
             "name": "Compose UI",
             "description": "Compose UI primitives. This library contains the primitives that form the Compose UI Toolkit, such as drawing, measurement and layout.",
             "website": "https://github.com/JetBrains/compose-multiplatform",
@@ -171,7 +171,7 @@
         },
         {
             "uniqueId": "io.grpc:grpc-okhttp",
-            "artifactVersion": "1.84.2",
+            "artifactVersion": "1.85.0",
             "name": "io.grpc:grpc-okhttp",
             "description": "gRPC: OkHttp",
             "website": "https://github.com/grpc/grpc-java",
@@ -184,7 +184,7 @@
         },
         {
             "uniqueId": "io.grpc:grpc-protobuf-lite",
-            "artifactVersion": "1.84.2",
+            "artifactVersion": "1.85.0",
             "name": "io.grpc:grpc-protobuf-lite",
             "description": "gRPC: Protobuf Lite",
             "website": "https://github.com/grpc/grpc-java",
@@ -197,7 +197,7 @@
         },
         {
             "uniqueId": "io.grpc:grpc-stub",
-            "artifactVersion": "1.84.2",
+            "artifactVersion": "1.85.0",
             "name": "io.grpc:grpc-stub",
             "description": "gRPC: Stub",
             "website": "https://github.com/grpc/grpc-java",
