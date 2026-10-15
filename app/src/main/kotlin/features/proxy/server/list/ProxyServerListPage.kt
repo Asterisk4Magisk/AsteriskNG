@@ -122,6 +122,7 @@ fun ProxyServerListPage(
             serviceRestartMutex = serviceRestartMutex,
             stateStore = stateStore,
             proxyEngine = proxyEngine,
+            requestVpnPermission = services.requestVpnPermission,
             updateAppState = updateAppState,
         )
     }

@@ -45,6 +45,8 @@ class ProxyTrafficStatsService : Service() {
     private val monitor = TrafficStatsMonitor(serviceScope)
     private var activeRuntime: ProxyTrafficStatsRuntime? = null
     private var accumulator = XrayTrafficSessionAccumulator()
+    private var foregroundStarted = false
+    private var latestStartId = 0
 
     override fun onCreate() {
         super.onCreate()
@@ -58,13 +60,25 @@ class ProxyTrafficStatsService : Service() {
         flags: Int,
         startId: Int,
     ): Int {
+        latestStartId = startId
         if (intent?.action == ActionStop) {
             stopStats()
             stopSelf(startId)
             return START_NOT_STICKY
         }
 
-        val runtime = intent?.readRuntime() ?: ProxyTrafficStatsRuntimeStore.read(this)
+        val runtime = if (intent?.action == ActionStart) {
+            // Every startForegroundService() request must reach startForeground() before the
+            // service may stop, including requests superseded by a later stop request.
+            val serverName = intent.readRuntime()?.serverName.orEmpty()
+            if (!foregroundStarted && !startForegroundNotification(serverName, startId)) {
+                requests.consumeStart()
+                return START_NOT_STICKY
+            }
+            requests.consumeStart()
+        } else {
+            intent?.readRuntime() ?: ProxyTrafficStatsRuntimeStore.read(this)
+        }
         if (runtime == null) {
             stopStats()
             stopSelf(startId)
@@ -89,17 +103,7 @@ class ProxyTrafficStatsService : Service() {
 
     private fun startStats(runtime: ProxyTrafficStatsRuntime, startId: Int): Boolean {
         monitor.cancel()
-        val foregroundStarted = tryStartTrafficStatsService(
-            start = {
-                startForegroundCompat(buildNotification(runtime, EmptyTrafficSample))
-            },
-            onFailure = { error ->
-                AndroidAppLogger.warn(LogTag, "Failed to start traffic stats foreground service", error)
-                stopStats()
-                stopSelf(startId)
-            },
-        )
-        if (!foregroundStarted) return false
+        if (!startForegroundNotification(runtime.serverName, startId)) return false
 
         val sessionAccumulator = accumulator
         monitor.start {
@@ -123,7 +127,7 @@ class ProxyTrafficStatsService : Service() {
                             notificationManager.notify(
                                 NotificationId,
                                 buildNotification(
-                                    runtime = runtime,
+                                    serverName = runtime.serverName,
                                     sample = sessionAccumulator.record(delta, elapsedMillis),
                                 ),
                             )
@@ -137,7 +141,9 @@ class ProxyTrafficStatsService : Service() {
                             AndroidAppLogger.warn(LogTag, "Stopping traffic stats notification after repeated failures")
                             publish {
                                 stopStats()
-                                stopSelf()
+                                // A newer start request keeps the service alive and is still
+                                // required to reach startForeground().
+                                stopSelf(latestStartId)
                             }
                             return@start
                         }
@@ -155,11 +161,26 @@ class ProxyTrafficStatsService : Service() {
         runCatching {
             stopForeground(STOP_FOREGROUND_REMOVE)
         }
+        foregroundStarted = false
         notificationManager.cancel(NotificationId)
     }
 
+    private fun startForegroundNotification(serverName: String, startId: Int): Boolean {
+        return tryStartTrafficStatsService(
+            start = {
+                startForegroundCompat(buildNotification(serverName, EmptyTrafficSample))
+                foregroundStarted = true
+            },
+            onFailure = { error ->
+                AndroidAppLogger.warn(LogTag, "Failed to start traffic stats foreground service", error)
+                stopStats()
+                stopSelf(startId)
+            },
+        )
+    }
+
     private fun buildNotification(
-        runtime: ProxyTrafficStatsRuntime,
+        serverName: String,
         sample: XrayTrafficSessionSample,
     ): Notification {
         val speedText = getString(
@@ -174,7 +195,7 @@ class ProxyTrafficStatsService : Service() {
         )
         return notificationBuilder()
             .setSmallIcon(R.drawable.ic_qs_proxy)
-            .setContentTitle(runtime.serverName.ifBlank { getString(R.string.app_name) })
+            .setContentTitle(serverName.ifBlank { getString(R.string.app_name) })
             .setContentText(speedText)
             .setStyle(Notification.BigTextStyle().bigText("$speedText\n$totalText"))
             .setContentIntent(contentIntent)
@@ -227,6 +248,8 @@ class ProxyTrafficStatsService : Service() {
     }
 
     companion object {
+        private val requests = TrafficStatsServiceRequests<ProxyTrafficStatsRuntime>()
+
         internal fun reconcile(context: Context, runtime: ProxyTrafficStatsRuntime?) {
             if (runtime == null) {
                 stop(context)
@@ -241,27 +264,31 @@ class ProxyTrafficStatsService : Service() {
         ) {
             val appContext = context.applicationContext
             ProxyTrafficStatsRuntimeStore.write(appContext, runtime)
-            tryStartTrafficStatsService(
-                start = {
-                    ContextCompat.startForegroundService(
-                        appContext,
-                        Intent(appContext, ProxyTrafficStatsService::class.java)
-                            .setAction(ActionStart)
-                            .putExtra(ExtraListenAddress, runtime.listenAddress)
-                            .putExtra(ExtraPort, runtime.port)
-                            .putExtra(ExtraServerName, runtime.serverName)
-                            .putExtra(ExtraApiTag, runtime.apiTag),
-                    )
-                },
-                onFailure = { error ->
-                    AndroidAppLogger.warn(LogTag, "Failed to request traffic stats foreground service start", error)
-                },
-            )
+            requests.start(runtime) {
+                tryStartTrafficStatsService(
+                    start = {
+                        ContextCompat.startForegroundService(
+                            appContext,
+                            Intent(appContext, ProxyTrafficStatsService::class.java)
+                                .setAction(ActionStart)
+                                .putExtra(ExtraListenAddress, runtime.listenAddress)
+                                .putExtra(ExtraPort, runtime.port)
+                                .putExtra(ExtraServerName, runtime.serverName)
+                                .putExtra(ExtraApiTag, runtime.apiTag),
+                        )
+                    },
+                    onFailure = { error ->
+                        AndroidAppLogger.warn(LogTag, "Failed to request traffic stats foreground service start", error)
+                    },
+                )
+            }
         }
 
         internal fun stop(context: Context) {
             val appContext = context.applicationContext
-            appContext.stopService(Intent(appContext, ProxyTrafficStatsService::class.java))
+            requests.stop {
+                appContext.stopService(Intent(appContext, ProxyTrafficStatsService::class.java))
+            }
         }
     }
 }

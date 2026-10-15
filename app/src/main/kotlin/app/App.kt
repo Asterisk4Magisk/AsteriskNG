@@ -3,7 +3,6 @@
 
 package app
 
-import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
@@ -25,7 +24,7 @@ import features.logs.AndroidAsteriskdLogRepository
 import features.logs.AndroidCoreLogRepository
 import features.logs.AndroidLogcatRepository
 import data.backup.AppBackupUseCase
-import engine.proxy.AndroidProxyEngine
+import engine.proxy.VpnPermissionRequester
 import engine.proxy.latency.AndroidProxyLatencyTester
 import features.proxy.server.usecase.ProxyServerImportFileUseCase
 import features.proxy.server.usecase.ProxyServiceUseCase
@@ -49,7 +48,7 @@ fun App(
     qrCodeScanner: suspend () -> String?,
     resourceFilePicker: suspend () -> Uri?,
     logFileCreator: suspend (String) -> Uri?,
-    requestVpnPermission: suspend (Intent) -> Boolean,
+    requestVpnPermission: VpnPermissionRequester,
 ) {
     val appContext = LocalContext.current.applicationContext
     val systemUiSnapshot = appContext.currentSystemUiSnapshot()
@@ -100,13 +99,7 @@ fun App(
     val proxyLatencyTester = remember(appContext) {
         AndroidProxyLatencyTester(appContext)
     }
-    val proxyEngine = remember(appContext, rootAccess) {
-        AndroidProxyEngine(
-            context = appContext,
-            rootAccess = rootAccess,
-            requestVpnPermission = requestVpnPermission,
-        )
-    }
+    val proxyEngine = remember(application) { application.proxyEngine }
     val enhancementModuleCoordinator = remember(appContext) {
         EnhancementModuleCoordinator { AndroidEnhancementModuleBackend(appContext) }
     }
@@ -130,8 +123,8 @@ fun App(
             rootBootScriptUseCase = rootBootScriptUseCase,
         )
     }
-    val proxyServiceUseCase = remember(proxyEngine) {
-        ProxyServiceUseCase(proxyEngine)
+    val proxyServiceUseCase = remember(proxyEngine, requestVpnPermission) {
+        ProxyServiceUseCase(proxyEngine, requestVpnPermission)
     }
     val applyServiceControlUseCase = remember(proxyEngine) {
         ApplyServiceControlUseCase(proxyEngine)
@@ -140,6 +133,7 @@ fun App(
     val services = remember(
         appScope,
         proxyEngine,
+        requestVpnPermission,
         rootAccess,
         userSpaces,
         packageCatalog,
@@ -163,6 +157,7 @@ fun App(
         AppServices(
             appScope = appScope,
             proxyEngine = proxyEngine,
+            requestVpnPermission = requestVpnPermission,
             rootAccess = rootAccess,
             userSpaces = userSpaces,
             packageCatalog = packageCatalog,

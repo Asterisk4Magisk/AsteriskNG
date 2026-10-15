@@ -4,7 +4,6 @@
 package engine.proxy
 
 import android.content.Context
-import android.content.Intent
 import app.AppState
 import app.ProxyServerState
 import app.R
@@ -33,13 +32,21 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import system.AndroidRootShellGateway
 
+/**
+ * Process-wide proxy engine shared by the UI, quick settings tile and broadcast control so
+ * that every lifecycle operation is serialized by one mutex. VPN permission handling is
+ * caller specific and is therefore supplied per start or restart request.
+ */
 class AndroidProxyEngine(
     context: Context,
     rootAccess: AndroidRootShellGateway,
-    requestVpnPermission: suspend (Intent) -> Boolean,
 ) {
     private val appContext = context.applicationContext
-    private val vpnXrayEngine = VpnXrayEngine(appContext, requestVpnPermission)
+    private var requestVpnPermission: VpnPermissionRequester = DenyVpnPermission
+    private val vpnXrayEngine = VpnXrayEngine(
+        context = appContext,
+        requestVpnPermission = { intent -> requestVpnPermission(intent) },
+    )
     private val rootEngines = RootModeEngine.createAll(appContext, rootAccess)
     private val rootEnginesByRunMode = rootEngines.associateBy(RootModeEngine::runMode)
     private val operationMutex = Mutex()
@@ -48,8 +55,13 @@ class AndroidProxyEngine(
     internal val rootStatusWatchGeneration: StateFlow<Long> =
         mutableRootStatusWatchGeneration.asStateFlow()
 
-    suspend fun start(request: ProxyEngineStartRequest): ProxyEngineStatus = operationMutex.withLock {
-        startUnlocked(request)
+    suspend fun start(
+        request: ProxyEngineStartRequest,
+        requestVpnPermission: VpnPermissionRequester = DenyVpnPermission,
+    ): ProxyEngineStatus = operationMutex.withLock {
+        withVpnPermissionRequester(requestVpnPermission) {
+            startUnlocked(request)
+        }
     }
 
     suspend fun stop(preferredRunMode: Int? = null): ProxyEngineStatus = operationMutex.withLock {
@@ -77,12 +89,29 @@ class AndroidProxyEngine(
         action()
     }
 
-    suspend fun restart(request: ProxyEngineStartRequest): ProxyEngineStatus {
+    suspend fun restart(
+        request: ProxyEngineStartRequest,
+        requestVpnPermission: VpnPermissionRequester = DenyVpnPermission,
+    ): ProxyEngineStatus {
         val status = operationMutex.withLock {
-            startUnlocked(request, explicitRestart = true)
+            withVpnPermissionRequester(requestVpnPermission) {
+                startUnlocked(request, explicitRestart = true)
+            }
         }
         mutableRootStatusWatchGeneration.update { generation -> generation + 1L }
         return status
+    }
+
+    private suspend fun <T> withVpnPermissionRequester(
+        requester: VpnPermissionRequester,
+        block: suspend () -> T,
+    ): T {
+        requestVpnPermission = requester
+        return try {
+            block()
+        } finally {
+            requestVpnPermission = DenyVpnPermission
+        }
     }
 
     suspend fun reconfigureServiceControl(nextState: AppState): AppState {
@@ -114,11 +143,18 @@ class AndroidProxyEngine(
         return appliedState
     }
 
+    /**
+     * Reads the live proxy status. A stopped proxy or disabled statistics always stop the
+     * traffic stats service; only callers that confirm the running state for the visible UI
+     * pass [restoreTrafficStats] to bring the notification back after the app process was
+     * recreated while a ROOT runtime kept running.
+     */
     suspend fun status(
         preferredRunMode: Int? = null,
         appState: AppState? = null,
+        restoreTrafficStats: Boolean = false,
     ): ProxyEngineStatus = operationMutex.withLock {
-        statusUnlocked(preferredRunMode, appState)
+        statusUnlocked(preferredRunMode, appState, restoreTrafficStats)
     }
 
     internal fun observeRootStatus(runMode: Int): Flow<ProxyEngineStatus> {
@@ -132,18 +168,29 @@ class AndroidProxyEngine(
         request: ProxyEngineStartRequest,
         explicitRestart: Boolean = false,
     ): ProxyEngineStatus = withContext(Dispatchers.Default) {
-        ProxyTrafficStatsService.reconcile(appContext, null)
         val requestedEngine = request.appState.runMode.engine()
+        val hasOtherActiveEngine = activeEngine.let { active -> active != null && active !== requestedEngine }
         var rootResumeChecked = false
-        if (shouldResumeRootBeforeResolvingPorts(explicitRestart, activeEngine != null, requestedEngine is RootModeEngine)) {
+        // A start that reaches an already running engine does not relaunch the core, so the
+        // ports it is running with must be kept instead of being resolved again.
+        if (!explicitRestart && requestedEngine is VpnXrayEngine && activeEngine === requestedEngine) {
+            val status = requestedEngine.status()
+            if (status.running) {
+                status.withTrafficStatsReconciled(request.appState, restore = true)
+                return@withContext status.copy(appState = request.appState)
+            }
+        }
+        if (shouldResumeRootBeforeResolvingPorts(explicitRestart, hasOtherActiveEngine, requestedEngine is RootModeEngine)) {
             requestedEngine as RootModeEngine
             requestedEngine.resumeIfRunning(request)?.let { status ->
                 activeEngine = requestedEngine
-                status.withTrafficStatsReconciled(request.appState)
+                // The resumed runtime keeps its stats API, so the running notification is kept.
+                status.withTrafficStatsReconciled(request.appState, restore = true)
                 return@withContext status.copy(appState = request.appState)
             }
             rootResumeChecked = true
         }
+        ProxyTrafficStatsService.reconcile(appContext, null)
         val resolvedBaseRequest = request.copy(appState = request.appState.withResolvedDynamicLocalProxyPort())
         val (resolvedRequest, trafficStatsRuntime) = resolvedBaseRequest.withTrafficStatsConfig()
         val nextEngine = resolvedRequest.appState.runMode.engine()
@@ -222,6 +269,7 @@ class AndroidProxyEngine(
     private suspend fun statusUnlocked(
         preferredRunMode: Int? = null,
         appState: AppState? = null,
+        restoreTrafficStats: Boolean = false,
     ): ProxyEngineStatus = withContext(Dispatchers.Default) {
         var rootStatus: ProxyEngineStatus? = null
 
@@ -232,7 +280,7 @@ class AndroidProxyEngine(
 
         fun accept(status: ProxyEngineStatus, source: AndroidModeProxyEngine): ProxyEngineStatus {
             activeEngine = status.runMode?.let(rootEnginesByRunMode::get) ?: source
-            return status.withTrafficStatsReconciled(appState)
+            return status.withTrafficStatsReconciled(appState, restoreTrafficStats)
         }
 
         val active = activeEngine
@@ -278,7 +326,7 @@ class AndroidProxyEngine(
 
         activeEngine = null
         (fallbackStatus ?: ProxyEngineStatus(running = false, runMode = preferredRunMode))
-            .withTrafficStatsReconciled(appState)
+            .withTrafficStatsReconciled(appState, restoreTrafficStats)
     }
 
     private fun rootRunMode(mode: RootRuntimeMode): Int? = rootEngines
@@ -315,7 +363,10 @@ class AndroidProxyEngine(
         return request to runtime
     }
 
-    private fun ProxyEngineStatus.withTrafficStatsReconciled(appState: AppState?): ProxyEngineStatus {
+    private fun ProxyEngineStatus.withTrafficStatsReconciled(
+        appState: AppState?,
+        restore: Boolean,
+    ): ProxyEngineStatus {
         if (!running) {
             ProxyTrafficStatsService.reconcile(appContext, null)
             return this
@@ -327,10 +378,20 @@ class AndroidProxyEngine(
             ProxyTrafficStatsService.reconcile(appContext, null)
             return this
         }
+        // Status reads from background entry points must not start the foreground service;
+        // starting it right before a stop request only causes start/stop churn.
+        if (restore) {
+            restoreTrafficStats(appState)
+        }
+        return this
+    }
+
+    /** Restores the traffic stats notification for a runtime the caller observed running. */
+    internal fun restoreTrafficStats(appState: AppState) {
+        if (!appState.enableTrafficStatsNotification) return
         ProxyTrafficStatsRuntimeStore.read(appContext)?.let { runtime ->
             ProxyTrafficStatsService.reconcile(appContext, runtime)
         }
-        return this
     }
 }
 
@@ -354,9 +415,9 @@ internal suspend fun <T> withRootRuntimeProbe(
 
 internal fun shouldResumeRootBeforeResolvingPorts(
     explicitRestart: Boolean,
-    hasActiveEngine: Boolean,
+    hasOtherActiveEngine: Boolean,
     requestedIsRoot: Boolean,
-): Boolean = !explicitRestart && !hasActiveEngine && requestedIsRoot
+): Boolean = !explicitRestart && !hasOtherActiveEngine && requestedIsRoot
 
 internal fun shouldUsePreResolvedRootStart(
     explicitRestart: Boolean,

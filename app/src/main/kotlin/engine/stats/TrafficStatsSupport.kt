@@ -67,6 +67,43 @@ internal fun tryStartTrafficStatsService(
     }
 }
 
+/**
+ * Serializes start and stop requests for a traffic stats foreground service.
+ *
+ * After startForegroundService(), the service must call startForeground() before it is
+ * stopped; a stopService() issued earlier makes the system crash the app with
+ * ForegroundServiceDidNotStartInTimeException. While a start request is undelivered,
+ * stop requests are therefore deferred to the service, which enters the foreground,
+ * consumes the request and stops itself when no runtime is requested anymore.
+ */
+internal class TrafficStatsServiceRequests<T : Any> {
+    private val lock = Any()
+    private var pendingStarts = 0
+    private var requestedRuntime: T? = null
+
+    fun start(runtime: T, requestStart: () -> Boolean) {
+        synchronized(lock) {
+            requestedRuntime = runtime
+            if (requestStart()) pendingStarts += 1
+        }
+    }
+
+    fun stop(stopService: () -> Unit) {
+        synchronized(lock) {
+            requestedRuntime = null
+            if (pendingStarts == 0) stopService()
+        }
+    }
+
+    /** Called by the service for each delivered start request, after startForeground(). */
+    fun consumeStart(): T? {
+        synchronized(lock) {
+            if (pendingStarts > 0) pendingStarts -= 1
+            return requestedRuntime
+        }
+    }
+}
+
 internal data class ProxyTrafficStatsRuntime(
     val listenAddress: String,
     val port: Int,

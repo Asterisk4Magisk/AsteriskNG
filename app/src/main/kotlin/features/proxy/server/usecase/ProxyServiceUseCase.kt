@@ -6,7 +6,9 @@ package features.proxy.server.usecase
 import app.AppState
 import app.ProxyServerState
 import engine.proxy.AndroidProxyEngine
+import engine.proxy.DenyVpnPermission
 import engine.proxy.ProxyEngineStartRequest
+import engine.proxy.VpnPermissionRequester
 import engine.root.runtime.RootFailureKind
 import engine.root.runtime.RootOperationBlockedException
 import engine.root.runtime.RootOperationLogRecord
@@ -24,6 +26,7 @@ import kotlin.coroutines.cancellation.CancellationException
 
 internal class ProxyServiceUseCase(
     private val proxyEngine: AndroidProxyEngine,
+    private val requestVpnPermission: VpnPermissionRequester = DenyVpnPermission,
 ) {
     suspend fun toggle(
         state: AppState,
@@ -56,7 +59,7 @@ internal class ProxyServiceUseCase(
             live,
         )?.let { conflict -> return conflict.toProxyServiceFailure(RootRequestedAction.RestartSameOwner) }
         return runCatching {
-            proxyEngine.restart(ProxyEngineStartRequest(state, server))
+            proxyEngine.restart(ProxyEngineStartRequest(state, server), requestVpnPermission)
         }.fold(
             onSuccess = { status -> ProxyServiceResult.Success(proxyRunning = status.running, appState = status.appState) },
             onFailure = { error -> error.toProxyServiceFailure(RootRequestedAction.RestartSameOwner) },
@@ -69,7 +72,7 @@ internal class ProxyServiceUseCase(
     ): ProxyServiceResult {
         val server = selectedServer ?: return ProxyServiceResult.MissingServer
         return runCatching {
-            proxyEngine.start(ProxyEngineStartRequest(state, server))
+            proxyEngine.start(ProxyEngineStartRequest(state, server), requestVpnPermission)
         }.fold(
             onSuccess = { status -> ProxyServiceResult.Success(proxyRunning = status.running, appState = status.appState) },
             onFailure = { error -> error.toProxyServiceFailure(RootRequestedAction.OrdinaryStart) },

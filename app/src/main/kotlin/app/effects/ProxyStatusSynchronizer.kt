@@ -56,7 +56,9 @@ internal fun ProxyStatusSynchronizer(
         observeProxyStatus(
             states = stateStore.state,
             readStatus = { snapshot ->
-                runCatching { proxyEngine.status(snapshot.runMode, snapshot) }.getOrNull()
+                runCatching {
+                    proxyEngine.status(snapshot.runMode, snapshot, restoreTrafficStats = true)
+                }.getOrNull()
             },
             updateAppState = updateAppState,
         )
@@ -84,6 +86,9 @@ internal fun ProxyStatusSynchronizer(
                                         proxyEngine.rootStatusWatchGeneration.value,
                                 )
                             }
+                            if (status.running) {
+                                proxyEngine.restoreTrafficStats(stateStore.state.value)
+                            }
                         }
                     } catch (error: CancellationException) {
                         throw error
@@ -97,7 +102,9 @@ internal fun ProxyStatusSynchronizer(
                     synchronizeProxyStatus(
                         currentState = { stateStore.state.value },
                         readStatus = { snapshot ->
-                            runCatching { proxyEngine.status(snapshot.runMode, snapshot) }.getOrNull()
+                            runCatching {
+                                proxyEngine.status(snapshot.runMode, snapshot, restoreTrafficStats = true)
+                            }.getOrNull()
                         },
                         updateAppState = updateAppState,
                     )

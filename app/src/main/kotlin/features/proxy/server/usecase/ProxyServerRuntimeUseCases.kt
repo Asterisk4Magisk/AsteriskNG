@@ -19,6 +19,7 @@ import engine.proxy.latency.ProxyServerLatencyTestMode
 import engine.proxy.latency.ProxyServerLatencyTestResult
 import engine.proxy.AndroidProxyEngine
 import engine.proxy.ProxyEngineStartRequest
+import engine.proxy.VpnPermissionRequester
 import data.AndroidAppStateStore
 import ui.feedback.AndroidToastTipNotifier
 import ui.text.formatTemplate
@@ -33,6 +34,7 @@ internal fun restartProxyServiceAfterSelection(
     serviceRestartMutex: Mutex,
     stateStore: AndroidAppStateStore,
     proxyEngine: AndroidProxyEngine,
+    requestVpnPermission: VpnPermissionRequester,
     updateAppState: ((AppState) -> AppState) -> Unit,
 ) {
     scope.launch {
@@ -57,6 +59,7 @@ internal fun restartProxyServiceAfterSelection(
                         appState = stateSnapshot,
                         selectedServer = server,
                     ),
+                    requestVpnPermission,
                 )
                 updateAppState { state ->
                     if (state.selectedProxyServerId == serverId) {

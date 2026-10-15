@@ -8,7 +8,6 @@ import android.content.Context
 import android.content.Intent
 import app.AsteriskApplication
 import data.AndroidAppStateStore
-import engine.proxy.AndroidProxyEngine
 import features.logs.AndroidAppLogger
 import features.proxy.server.usecase.ProxyServiceResult
 import features.proxy.server.usecase.ProxyServiceUseCase
@@ -18,7 +17,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import system.AndroidRootShellGateway
 import kotlin.coroutines.cancellation.CancellationException
 
 class BroadcastControlReceiver : BroadcastReceiver() {
@@ -54,18 +52,16 @@ private class BroadcastControlHandler(
 ) {
     private val appContext = context.applicationContext
     private val stateStore by lazy { AndroidAppStateStore.get(appContext) }
-    private val rootAccess by lazy { AndroidRootShellGateway() }
-    private val proxyEngine by lazy {
-        AndroidProxyEngine(
-            context = appContext,
-            rootAccess = rootAccess,
+    private val proxyEngine by lazy { (appContext as AsteriskApplication).proxyEngine }
+    private val proxyServiceUseCase by lazy {
+        ProxyServiceUseCase(
+            proxyEngine = proxyEngine,
             requestVpnPermission = {
                 AndroidAppLogger.warn(LogTag, "Broadcast control cannot request VPN permission in the background")
                 false
             },
         )
     }
-    private val proxyServiceUseCase by lazy { ProxyServiceUseCase(proxyEngine) }
 
     suspend fun handle(command: BroadcastControlCommand) {
         val configuredState = stateStore.state.value

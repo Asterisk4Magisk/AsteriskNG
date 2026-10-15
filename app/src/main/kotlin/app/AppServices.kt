@@ -7,6 +7,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import android.net.Uri
 import data.backup.AppBackupUseCase
 import engine.proxy.AndroidProxyEngine
+import engine.proxy.VpnPermissionRequester
 import engine.proxy.latency.AndroidProxyLatencyTester
 import features.logs.CoreLogRepository
 import features.proxy.server.usecase.ProxyServerImportFileUseCase
@@ -29,6 +30,7 @@ import ui.feedback.AndroidToastTipNotifier
 internal data class AppServices(
     val appScope: CoroutineScope,
     val proxyEngine: AndroidProxyEngine,
+    val requestVpnPermission: VpnPermissionRequester,
     val rootAccess: AndroidRootShellGateway,
     val userSpaces: AndroidUserSpaceProvider,
     val packageCatalog: AndroidPackageProvider,

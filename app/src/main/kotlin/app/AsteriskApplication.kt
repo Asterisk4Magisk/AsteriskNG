@@ -20,6 +20,8 @@ import coil3.PlatformContext
 import coil3.SingletonImageLoader
 import data.AppSettingsPreferences
 import data.AndroidAppStateStore
+import engine.proxy.AndroidProxyEngine
+import system.AndroidRootShellGateway
 import features.subscription.runtime.AndroidSubscriptionFetcher
 import features.subscription.runtime.AndroidSubscriptionScheduleGateway
 import features.subscription.runtime.SubscriptionScheduler
@@ -34,6 +36,13 @@ class AsteriskApplication : Application(), SingletonImageLoader.Factory {
     val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     internal val stateStore: AndroidAppStateStore by lazy {
         AndroidAppStateStore.get(applicationContext)
+    }
+    /** Shared by every entry point so proxy and traffic stats operations are serialized. */
+    internal val proxyEngine: AndroidProxyEngine by lazy {
+        AndroidProxyEngine(
+            context = applicationContext,
+            rootAccess = AndroidRootShellGateway(),
+        )
     }
     internal val subscriptionFetcher: AndroidSubscriptionFetcher by lazy {
         AndroidSubscriptionFetcher(applicationContext)
