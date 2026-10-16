@@ -15,7 +15,7 @@ import app.MainActivity
  * app from the launcher without breaking deep links, shortcuts or the
  * quick settings tile.
  *
- * Recover by dialling `*#*#260517#*#*` in any dialer.
+ * Dialling `*#*#260517#*#*` in any dialer opens the app while the icon is hidden.
  */
 internal object AndroidLauncherIcon {
 
@@ -24,7 +24,7 @@ internal object AndroidLauncherIcon {
     /**
      * AsteriskNG initial commit date (2026-05-17). Encoded into the dial
      * code that the SecretCodeReceiver listens for, so the user can
-     * recover the launcher icon after hiding it.
+     * still open the app after hiding the launcher icon.
      */
     const val SECRET_CODE = "260517"
 

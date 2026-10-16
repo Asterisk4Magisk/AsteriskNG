@@ -120,7 +120,7 @@
             tools:ignore="ExportedReceiver" />
 
         <!--
-            Restores the launcher icon when the user dials *#*#260517#*#*
+            Opens the main screen when the user dials *#*#260517#*#*
             from the system dialer. The broadcast is dispatched system-wide
             by the dialer, so it works even when the launcher entry is
             hidden. See system.SecretCodeReceiver.

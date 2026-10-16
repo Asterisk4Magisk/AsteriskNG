@@ -721,9 +721,8 @@
 
     <!-- Hide launcher icon -->
     <string name="settings_hide_launcher_icon">隐藏桌面图标</string>
-    <string name="settings_hide_launcher_icon_summary">在拨号界面输入 %1$s 可恢复图标</string>
-    <string name="settings_hide_launcher_icon_confirm">应用将从桌面消失。在电话应用的拨号界面输入 %1$s 即可重新显示。继续前请记下此代码。</string>
-    <string name="settings_launcher_icon_restored">桌面图标已恢复</string>
+    <string name="settings_hide_launcher_icon_summary">在拨号界面输入 %1$s 可打开应用</string>
+    <string name="settings_hide_launcher_icon_confirm">应用将从桌面消失。在电话应用的拨号界面输入 %1$s 可打开应用，关闭此开关即可重新显示图标。继续前请记下此代码。</string>
 
     <!-- Logs -->
     <string name="access_logs_title">访问日志</string>

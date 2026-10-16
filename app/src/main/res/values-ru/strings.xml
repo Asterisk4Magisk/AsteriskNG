@@ -722,9 +722,8 @@
 
     <!-- Hide launcher icon -->
     <string name="settings_hide_launcher_icon">Скрыть значок приложения</string>
-    <string name="settings_hide_launcher_icon_summary">Наберите %1$s в приложении «Телефон», чтобы вернуть значок</string>
-    <string name="settings_hide_launcher_icon_confirm">Приложение исчезнет с рабочего стола. Наберите %1$s в приложении «Телефон», чтобы снова показать его. Запишите этот код перед продолжением.</string>
-    <string name="settings_launcher_icon_restored">Значок приложения восстановлен</string>
+    <string name="settings_hide_launcher_icon_summary">Наберите %1$s в приложении «Телефон», чтобы открыть приложение</string>
+    <string name="settings_hide_launcher_icon_confirm">Приложение исчезнет с рабочего стола. Наберите %1$s в приложении «Телефон», чтобы открыть его; выключите этот параметр, чтобы снова показать значок. Запишите этот код перед продолжением.</string>
 
     <!-- Logs -->
     <string name="access_logs_title">Логи доступа</string>

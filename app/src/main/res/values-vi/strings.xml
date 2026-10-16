@@ -721,9 +721,8 @@
 
     <!-- Hide launcher icon -->
     <string name="settings_hide_launcher_icon">Ẩn biểu tượng ứng dụng</string>
-    <string name="settings_hide_launcher_icon_summary">Quay số %1$s trong ứng dụng Điện thoại để hiện lại biểu tượng</string>
-    <string name="settings_hide_launcher_icon_confirm">Ứng dụng sẽ biến mất khỏi màn hình chính. Quay số %1$s trong ứng dụng Điện thoại để hiện lại. Hãy ghi lại mã này trước khi tiếp tục.</string>
-    <string name="settings_launcher_icon_restored">Đã khôi phục biểu tượng ứng dụng</string>
+    <string name="settings_hide_launcher_icon_summary">Quay số %1$s trong ứng dụng Điện thoại để mở ứng dụng</string>
+    <string name="settings_hide_launcher_icon_confirm">Ứng dụng sẽ biến mất khỏi màn hình chính. Quay số %1$s trong ứng dụng Điện thoại để mở ứng dụng; tắt cài đặt này để hiện lại biểu tượng. Hãy ghi lại mã này trước khi tiếp tục.</string>
 
     <!-- Logs -->
     <string name="access_logs_title">Nhật ký truy cập</string>
