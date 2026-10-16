@@ -12,7 +12,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import app.effects.ProxyStatusSynchronizer
-import app.effects.LauncherIconSynchronizer
 import app.effects.ResourceFileSynchronizer
 import app.effects.EnhancementModuleUpgradeChecker
 import features.enhancement.AndroidEnhancementModuleBackend
@@ -195,10 +194,6 @@ fun App(
     )
     ResourceFileSynchronizer(
         resourceFileUseCase = resourceFileUseCase,
-        stateStore = stateStore,
-    )
-    LauncherIconSynchronizer(
-        context = appContext,
         stateStore = stateStore,
     )
     RootBootScriptSynchronizer(

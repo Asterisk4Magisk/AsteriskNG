@@ -14,22 +14,19 @@ import android.content.pm.PackageManager
 import android.graphics.drawable.Icon
 import android.os.Build
 import app.R
+import system.AndroidLauncherIcon
 
 internal class AndroidResourceFileDownloadNotifier(
     context: Context,
 ) {
     private val appContext = context.applicationContext
     private val notificationManager = appContext.getSystemService(NotificationManager::class.java)
-    private val contentIntent = appContext.packageManager
-        .getLaunchIntentForPackage(appContext.packageName)
-        ?.let { intent ->
-            PendingIntent.getActivity(
-                appContext,
-                0,
-                intent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-            )
-        }
+    private val contentIntent = PendingIntent.getActivity(
+        appContext,
+        0,
+        AndroidLauncherIcon.launchIntent(appContext),
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+    )
     private val cancelIntent = PendingIntent.getBroadcast(
         appContext,
         0,

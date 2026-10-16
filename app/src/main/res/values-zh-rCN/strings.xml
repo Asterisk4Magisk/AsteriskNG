@@ -18,6 +18,7 @@
     <string name="common_import_from_clipboard">从剪贴板导入</string>
     <string name="common_merge_import">合并导入</string>
     <string name="common_more">更多</string>
+    <string name="common_ok">确定</string>
     <string name="common_replace">替换</string>
     <string name="common_replace_existing">替换现有</string>
     <string name="common_restore">恢复</string>
@@ -695,6 +696,7 @@
     <string name="option_vietnamese">Tiếng Việt</string>
     <string name="settings_color_mode">主题</string>
     <string name="settings_language">语言</string>
+    <string name="settings_privacy">隐私</string>
     <string name="settings_theme">主题</string>
     <string name="settings_theme_color">强调色</string>
     <string name="theme_color_blue">默认蓝</string>
@@ -712,6 +714,16 @@
     <string name="settings_deletion_confirmation_summary">删除节点、路由、分组、资源时需二次确认</string>
     <string name="settings_hide_recent_tasks">隐藏最近任务</string>
     <string name="settings_hide_recent_tasks_summary">开启后应用不在最近任务列表中显示</string>
+
+    <!-- Privacy mode -->
+    <string name="settings_allow_screenshots">允许截屏</string>
+    <string name="settings_allow_screenshots_summary">关闭后系统将阻止该窗口的截屏与录屏</string>
+
+    <!-- Hide launcher icon -->
+    <string name="settings_hide_launcher_icon">隐藏桌面图标</string>
+    <string name="settings_hide_launcher_icon_summary">在拨号界面输入 %1$s 可恢复图标</string>
+    <string name="settings_hide_launcher_icon_confirm">应用将从桌面消失。在电话应用的拨号界面输入 %1$s 即可重新显示。继续前请记下此代码。</string>
+    <string name="settings_launcher_icon_restored">桌面图标已恢复</string>
 
     <!-- Logs -->
     <string name="access_logs_title">访问日志</string>

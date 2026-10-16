@@ -24,11 +24,8 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
-import app.LocalAppChromeState
 import app.R
 import app.ProjectInfo
-import app.modes.ColorModeThemeDark
-import app.modes.ColorModeThemeSystem
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import top.yukonga.miuix.kmp.basic.BasicComponent
@@ -94,18 +91,9 @@ private fun AboutAppIcon(
 
 @Composable
 private fun aboutIconStyle(): AboutIconStyle {
-    val chromeState = LocalAppChromeState.current
-    val isMonetMode = chromeState.colorMode in ColorModeThemeSystem..ColorModeThemeDark
-    if (!isMonetMode) {
-        return AboutIconStyle(
-            foregroundResId = R.mipmap.ic_launcher_foreground,
-            foregroundTint = null,
-        )
-    }
-
     return AboutIconStyle(
-        foregroundResId = R.mipmap.ic_launcher_monet_monochrome,
-        foregroundTint = MiuixTheme.colorScheme.primary,
+        foregroundResId = R.mipmap.ic_launcher_foreground,
+        foregroundTint = null,
     )
 }
 

@@ -16,6 +16,7 @@ import data.backup.AppBackupRestorePreview
 import data.backup.AppBackupWarning
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import system.AndroidLauncherIcon
 import ui.components.WarningConfirmDialog
 import ui.text.formatTemplate
 import java.text.DateFormat
@@ -42,12 +43,23 @@ internal fun SettingsRestoreConfirmDialog(
         val warningColor = MiuixTheme.colorScheme.error
         RestoreInfoText(backupVersionText(preview))
         RestoreInfoText(backupCreatedAtText(preview))
-        RestoreInfoText(backupCountsText(preview), bottomPadding = if (preview.warnings.isEmpty()) 0.dp else 12.dp)
+        val showLauncherIconWarning = preview.restoredState.hideLauncherIcon && AndroidLauncherIcon.isSupported
+        RestoreInfoText(
+            backupCountsText(preview),
+            bottomPadding = if (preview.warnings.isEmpty() && !showLauncherIconWarning) 0.dp else 12.dp,
+        )
         preview.warnings.forEachIndexed { index, warning ->
             RestoreInfoText(
                 text = warningText(warning),
                 color = warningColor,
-                bottomPadding = if (index == preview.warnings.lastIndex) 0.dp else 10.dp,
+                bottomPadding = if (index == preview.warnings.lastIndex && !showLauncherIconWarning) 0.dp else 10.dp,
+            )
+        }
+        if (showLauncherIconWarning) {
+            RestoreInfoText(
+                text = stringResource(R.string.settings_hide_launcher_icon_confirm, AndroidLauncherIcon.DIAL_CODE),
+                color = warningColor,
+                bottomPadding = 0.dp,
             )
         }
     }

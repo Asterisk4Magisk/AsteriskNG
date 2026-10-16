@@ -39,6 +39,8 @@ import features.subscription.toSubscriptionInstallConfigOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import system.AndroidLauncherIcon
+import system.applyScreenshotProtection
 import system.setRecentTasksHidden
 import ui.feedback.AndroidToastTipNotifier
 
@@ -127,6 +129,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         observeRecentTasksVisibility()
+        observeScreenshotProtection()
+        observeLauncherIconVisibility()
         vpnPermissionRequester.registerLauncher { intent ->
             vpnPermissionLauncher.launch(intent)
         }
@@ -157,6 +161,30 @@ class MainActivity : ComponentActivity() {
                 state.map { it.hideRecentTasks }
                     .distinctUntilChanged()
                     .collect { setRecentTasksHidden(it) }
+            }
+        }
+    }
+
+    private fun observeScreenshotProtection() {
+        val state = (application as AsteriskApplication).stateStore.state
+        applyScreenshotProtection(state.value.allowScreenshots)
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                state.map { it.allowScreenshots }
+                    .distinctUntilChanged()
+                    .collect { applyScreenshotProtection(it) }
+            }
+        }
+    }
+
+    private fun observeLauncherIconVisibility() {
+        val state = (application as AsteriskApplication).stateStore.state
+        AndroidLauncherIcon.setHidden(applicationContext, state.value.hideLauncherIcon)
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                state.map { it.hideLauncherIcon }
+                    .distinctUntilChanged()
+                    .collect { AndroidLauncherIcon.setHidden(applicationContext, it) }
             }
         }
     }

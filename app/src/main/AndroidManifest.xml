@@ -69,27 +69,16 @@
             </intent-filter>
         </activity>
 
+        <!--
+            The launcher entry lives on an alias so it can be disabled to
+            hide the app from the launcher without breaking deep links,
+            shortcuts or the quick settings tile. See system.AndroidLauncherIcon
+            and the "Hide launcher icon" privacy setting.
+        -->
         <activity-alias
-            android:name=".DefaultLauncherActivity"
-            android:enabled="true"
+            android:name="app.ui.LauncherActivityAlias"
             android:exported="true"
-            android:icon="@mipmap/ic_launcher"
             android:label="@string/app_name"
-            android:roundIcon="@mipmap/ic_launcher_round"
-            android:targetActivity=".MainActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity-alias>
-
-        <activity-alias
-            android:name=".MonetLauncherActivity"
-            android:enabled="false"
-            android:exported="true"
-            android:icon="@mipmap/ic_launcher_monet"
-            android:label="@string/app_name"
-            android:roundIcon="@mipmap/ic_launcher_monet_round"
             android:targetActivity=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -129,6 +118,24 @@
             android:name="features.automation.BroadcastControlReceiver"
             android:exported="true"
             tools:ignore="ExportedReceiver" />
+
+        <!--
+            Restores the launcher icon when the user dials *#*#260517#*#*
+            from the system dialer. The broadcast is dispatched system-wide
+            by the dialer, so it works even when the launcher entry is
+            hidden. See system.SecretCodeReceiver.
+        -->
+        <receiver
+            android:name="system.SecretCodeReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.provider.Telephony.SECRET_CODE" />
+                <action android:name="android.telephony.action.SECRET_CODE" />
+                <data
+                    android:host="260517"
+                    android:scheme="android_secret_code" />
+            </intent-filter>
+        </receiver>
 
         <service
             android:name="engine.stats.ProxyTrafficStatsService"

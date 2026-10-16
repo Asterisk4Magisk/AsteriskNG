@@ -18,6 +18,7 @@
     <string name="common_import_from_clipboard">Import from clipboard</string>
     <string name="common_merge_import">Merge import</string>
     <string name="common_more">More</string>
+    <string name="common_ok">OK</string>
     <string name="common_replace">Replace</string>
     <string name="common_replace_existing">Replace existing</string>
     <string name="common_restore">Restore</string>
@@ -695,6 +696,7 @@
     <string name="option_vietnamese">Tiếng Việt</string>
     <string name="settings_color_mode">Theme</string>
     <string name="settings_language">Language</string>
+    <string name="settings_privacy">Privacy</string>
     <string name="settings_theme">Theme</string>
     <string name="settings_theme_color">Accent color</string>
     <string name="theme_color_blue">Default blue</string>
@@ -712,6 +714,16 @@
     <string name="settings_deletion_confirmation_summary">Require confirmation before deleting servers, routes, groups, or resources</string>
     <string name="settings_hide_recent_tasks">Hide from recent tasks</string>
     <string name="settings_hide_recent_tasks_summary">Hide the app from the recent tasks list</string>
+
+    <!-- Privacy mode -->
+    <string name="settings_allow_screenshots">Allow screenshots</string>
+    <string name="settings_allow_screenshots_summary">When off, the system blocks screenshots and screen recording for this window</string>
+
+    <!-- Hide launcher icon -->
+    <string name="settings_hide_launcher_icon">Hide launcher icon</string>
+    <string name="settings_hide_launcher_icon_summary">Dial %1$s in the phone app to bring the icon back</string>
+    <string name="settings_hide_launcher_icon_confirm">The app will disappear from the launcher. Dial %1$s in the phone app to show it again. Write the code down before continuing.</string>
+    <string name="settings_launcher_icon_restored">Launcher icon restored</string>
 
     <!-- Logs -->
     <string name="access_logs_title">Access logs</string>

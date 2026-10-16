@@ -22,6 +22,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import app.AsteriskApplication
 import app.R
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.client.android.Intents
@@ -35,8 +38,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import system.applyScreenshotProtection
 import ui.feedback.AndroidToastTipNotifier
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -75,12 +81,25 @@ class PortraitQrCaptureActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        observeScreenshotProtection()
         cameraPermissionPending = savedInstanceState?.getBoolean(CameraPermissionPendingKey) ?: false
         cameraPermissionRequested = cameraPermissionPending
         barcodeView = initializeContent()
         capture = CaptureManager(this, barcodeView)
         capture.initializeFromIntent(intent, savedInstanceState)
         capture.decode()
+    }
+
+    private fun observeScreenshotProtection() {
+        val state = (application as AsteriskApplication).stateStore.state
+        applyScreenshotProtection(state.value.allowScreenshots)
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                state.map { it.allowScreenshots }
+                    .distinctUntilChanged()
+                    .collect { applyScreenshotProtection(it) }
+            }
+        }
     }
 
     private fun initializeContent(): DecoratedBarcodeView {

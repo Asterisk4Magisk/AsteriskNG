@@ -19,6 +19,7 @@
     <string name="common_import_from_clipboard">Импортировать из буфера обмена</string>
     <string name="common_merge_import">Объединить при импорте</string>
     <string name="common_more">Еще</string>
+    <string name="common_ok">OK</string>
     <string name="common_replace">Заменить</string>
     <string name="common_replace_existing">Заменить существующие</string>
     <string name="common_restore">Восстановить</string>
@@ -696,6 +697,7 @@
     <string name="option_vietnamese">Tiếng Việt</string>
     <string name="settings_color_mode">Цветовой режим</string>
     <string name="settings_language">Язык</string>
+    <string name="settings_privacy">Конфиденциальность</string>
     <string name="settings_theme">Тема оформления</string>
     <string name="settings_theme_color">Цветовой акцент</string>
     <string name="theme_color_blue">Классический синий</string>
@@ -713,6 +715,16 @@
     <string name="settings_deletion_confirmation_summary">Запрашивать подтверждение перед удалением серверов, правил, групп или ресурсов</string>
     <string name="settings_hide_recent_tasks">Скрывать из недавних задач</string>
     <string name="settings_hide_recent_tasks_summary">Не показывать приложение в списке недавних задач</string>
+
+    <!-- Privacy mode -->
+    <string name="settings_allow_screenshots">Разрешить снимки экрана</string>
+    <string name="settings_allow_screenshots_summary">Если выключено, система блокирует снимки и запись экрана для этого окна</string>
+
+    <!-- Hide launcher icon -->
+    <string name="settings_hide_launcher_icon">Скрыть значок приложения</string>
+    <string name="settings_hide_launcher_icon_summary">Наберите %1$s в приложении «Телефон», чтобы вернуть значок</string>
+    <string name="settings_hide_launcher_icon_confirm">Приложение исчезнет с рабочего стола. Наберите %1$s в приложении «Телефон», чтобы снова показать его. Запишите этот код перед продолжением.</string>
+    <string name="settings_launcher_icon_restored">Значок приложения восстановлен</string>
 
     <!-- Logs -->
     <string name="access_logs_title">Логи доступа</string>

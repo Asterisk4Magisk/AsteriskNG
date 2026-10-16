@@ -19,10 +19,16 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.dp
 import app.R
 import androidx.compose.ui.res.stringResource
+import system.AndroidLauncherIcon
 import top.yukonga.miuix.kmp.basic.SmallTitle
+import ui.components.WarningConfirmDialog
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import top.yukonga.miuix.kmp.preference.SwitchPreference
@@ -71,8 +77,6 @@ internal fun SettingsThemeSection(
 
 @Composable
 internal fun SettingsSubscriptionsSection(
-    hideRecentTasks: Boolean,
-    onHideRecentTasksChange: (Boolean) -> Unit,
     enableAllProxyGroup: Boolean,
     enableDeletionConfirmation: Boolean,
     onOpenGroupManagement: () -> Unit,
@@ -93,12 +97,6 @@ internal fun SettingsSubscriptionsSection(
             onClick = onOpenResourceManagement,
         )
         SwitchPreference(
-            title = stringResource(R.string.settings_hide_recent_tasks),
-            summary = stringResource(R.string.settings_hide_recent_tasks_summary),
-            checked = hideRecentTasks,
-            onCheckedChange = onHideRecentTasksChange,
-        )
-        SwitchPreference(
             title = stringResource(R.string.settings_enable_all_proxy_group),
             summary = stringResource(R.string.settings_enable_all_proxy_group_summary),
             checked = enableAllProxyGroup,
@@ -111,6 +109,71 @@ internal fun SettingsSubscriptionsSection(
             onCheckedChange = onEnableDeletionConfirmationChange,
         )
     }
+}
+
+@Composable
+internal fun SettingsPrivacySection(
+    hideRecentTasks: Boolean,
+    onHideRecentTasksChange: (Boolean) -> Unit,
+    allowScreenshots: Boolean,
+    onAllowScreenshotsChange: (Boolean) -> Unit,
+    hideLauncherIcon: Boolean,
+    onHideLauncherIconChange: (Boolean) -> Unit,
+) {
+    SmallTitle(text = stringResource(R.string.settings_privacy))
+    SettingsSectionCard {
+        SwitchPreference(
+            title = stringResource(R.string.settings_hide_recent_tasks),
+            summary = stringResource(R.string.settings_hide_recent_tasks_summary),
+            checked = hideRecentTasks,
+            onCheckedChange = onHideRecentTasksChange,
+        )
+        SwitchPreference(
+            title = stringResource(R.string.settings_allow_screenshots),
+            summary = stringResource(R.string.settings_allow_screenshots_summary),
+            checked = allowScreenshots,
+            onCheckedChange = onAllowScreenshotsChange,
+        )
+        if (AndroidLauncherIcon.isSupported) {
+            HideLauncherIconPreference(
+                hideLauncherIcon = hideLauncherIcon,
+                onHideLauncherIconChange = onHideLauncherIconChange,
+            )
+        }
+    }
+}
+
+@Composable
+private fun HideLauncherIconPreference(
+    hideLauncherIcon: Boolean,
+    onHideLauncherIconChange: (Boolean) -> Unit,
+) {
+    var showConfirm by remember { mutableStateOf(false) }
+    val dialCode = AndroidLauncherIcon.DIAL_CODE
+    SwitchPreference(
+        title = stringResource(R.string.settings_hide_launcher_icon),
+        summary = stringResource(R.string.settings_hide_launcher_icon_summary, dialCode),
+        checked = hideLauncherIcon,
+        onCheckedChange = { hide ->
+            if (hide) {
+                showConfirm = true
+            } else {
+                onHideLauncherIconChange(false)
+            }
+        },
+    )
+    WarningConfirmDialog(
+        show = showConfirm,
+        title = stringResource(R.string.settings_hide_launcher_icon),
+        summary = stringResource(R.string.settings_hide_launcher_icon_confirm, dialCode),
+        dismissText = stringResource(R.string.common_cancel),
+        confirmText = stringResource(R.string.common_ok),
+        onDismissRequest = { showConfirm = false },
+        onConfirm = {
+            showConfirm = false
+            onHideLauncherIconChange(true)
+        },
+    )
 }
 
 @Composable
