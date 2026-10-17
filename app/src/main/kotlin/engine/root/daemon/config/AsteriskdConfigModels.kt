@@ -171,7 +171,7 @@ internal data class AsteriskdBpf2SocksHelper(
     // 0 leaves bridge TCP socket buffers to kernel autotuning.
     val tcpBufferSize: Int = 0,
     val maxTcpSessions: Int = 4096,
-    val tcpConnectTimeoutMilliseconds: Int = 10000,
+    val connectTimeoutMilliseconds: Int = 10000,
     val tcpIdleTimeoutMilliseconds: Int = 300000,
     val udpSocketBufferSize: Int = 524288,
     val udpBatchSize: Int = 32,

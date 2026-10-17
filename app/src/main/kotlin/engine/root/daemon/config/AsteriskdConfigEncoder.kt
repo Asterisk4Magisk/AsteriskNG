@@ -138,7 +138,7 @@ private fun AsteriskdHelper.toJsonObject(): JsonObject = when (this) {
         put("workerCount", workerCount)
         put("tcpBufferSize", tcpBufferSize)
         put("maxTcpSessions", maxTcpSessions)
-        put("tcpConnectTimeoutMilliseconds", tcpConnectTimeoutMilliseconds)
+        put("connectTimeoutMilliseconds", connectTimeoutMilliseconds)
         put("tcpIdleTimeoutMilliseconds", tcpIdleTimeoutMilliseconds)
         put("udpSocketBufferSize", udpSocketBufferSize)
         put("udpBatchSize", udpBatchSize)
