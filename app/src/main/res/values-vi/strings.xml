@@ -717,7 +717,7 @@
 
     <!-- Privacy mode -->
     <string name="settings_allow_screenshots">Cho phép chụp màn hình</string>
-    <string name="settings_allow_screenshots_summary">Khi tắt, hệ thống sẽ chặn chụp và quay màn hình cho cửa sổ này</string>
+    <string name="settings_allow_screenshots_summary">Khi bật, hệ thống sẽ cho phép chụp và quay màn hình cho ứng dụng này</string>
 
     <!-- Hide launcher icon -->
     <string name="settings_hide_launcher_icon">Ẩn biểu tượng ứng dụng</string>

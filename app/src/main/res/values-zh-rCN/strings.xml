@@ -717,7 +717,7 @@
 
     <!-- Privacy mode -->
     <string name="settings_allow_screenshots">允许截屏</string>
-    <string name="settings_allow_screenshots_summary">关闭后系统将阻止该窗口的截屏与录屏</string>
+    <string name="settings_allow_screenshots_summary">打开后系统将允许该应用的截屏与录屏</string>
 
     <!-- Hide launcher icon -->
     <string name="settings_hide_launcher_icon">隐藏桌面图标</string>

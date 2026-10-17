@@ -717,7 +717,7 @@
 
     <!-- Privacy mode -->
     <string name="settings_allow_screenshots">Allow screenshots</string>
-    <string name="settings_allow_screenshots_summary">When off, the system blocks screenshots and screen recording for this window</string>
+    <string name="settings_allow_screenshots_summary">When enabled, the system allows screenshots and screen recording for this app</string>
 
     <!-- Hide launcher icon -->
     <string name="settings_hide_launcher_icon">Hide launcher icon</string>

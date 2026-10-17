@@ -718,7 +718,7 @@
 
     <!-- Privacy mode -->
     <string name="settings_allow_screenshots">Разрешить снимки экрана</string>
-    <string name="settings_allow_screenshots_summary">Если выключено, система блокирует снимки и запись экрана для этого окна</string>
+    <string name="settings_allow_screenshots_summary">При включении система разрешает снимки и запись экрана для этого приложения</string>
 
     <!-- Hide launcher icon -->
     <string name="settings_hide_launcher_icon">Скрыть значок приложения</string>
