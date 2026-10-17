@@ -721,8 +721,8 @@
 
     <!-- Hide launcher icon -->
     <string name="settings_hide_launcher_icon">Hide launcher icon</string>
-    <string name="settings_hide_launcher_icon_summary">Dial %1$s in the phone app to open the app</string>
-    <string name="settings_hide_launcher_icon_confirm">The app will disappear from the launcher. Dial %1$s in the phone app to open it; turn this setting off to show the icon again. Write the code down before continuing.</string>
+    <string name="settings_hide_launcher_icon_summary">Dial %1$s or long-press the Quick Settings tile to open the app</string>
+    <string name="settings_hide_launcher_icon_confirm">The app will disappear from the launcher. Dial %1$s in the phone app to open it. Some OEM systems require the auto-start/background activity permission.</string>
 
     <!-- Logs -->
     <string name="access_logs_title">Access logs</string>
