@@ -36,9 +36,13 @@
 - Отслеживает локальные адреса IPv4/IPv6 и интерфейсы раздачи сети, затем обновляет соответствующие правила iptables или карты BPF.
 - При остановке удаляет сетевые правила, принадлежащие активному ROOT-режиму.
 
+## Модуль расширения
+
+[AsteriskEnhance](enhance/src/main/module/README.md) — необязательный модуль для маршрутизации системного DNS по списку приложений и изоляции кешей резолвера. Требует ROOT и Zygisk Next, поддерживает TPROXY, TUN2SOCKS и BPF2SOCKS. Включите **Application list enhancement** в настройках и следуйте подсказкам установки; после установки или обновления перезагрузите устройство.
+
 ## Файлы ресурсов
 
-- Файлы для работы в режиме ROOT хранятся в приватной директории приложения `files/xray`.
+- Файлы ресурсов хранятся в приватной директории приложения `files/xray`.
 - Пользовательские ресурсы можно добавлять или заменять локально, а также обновлять по заданным URL.
 
 ## Управление через broadcast
@@ -105,4 +109,4 @@ git submodule update --init --recursive
 - [@Chocolate4U/Iran-v2ray-rules](https://github.com/Chocolate4U/Iran-v2ray-rules)
 - [@runetfreedom/russia-v2ray-rules-dat](https://github.com/runetfreedom/russia-v2ray-rules-dat)
 - [@mayaxcn/china-ip-list](https://github.com/mayaxcn/china-ip-list)
-- [@xchacha20-poly1305/husi](https://github.com/xchacha20-poly1305/husi) — пример реализации функции «Сканировать китайские приложения» для настройки прокси по приложениям
+- [@xchacha20-poly1305/husi](https://github.com/xchacha20-poly1305/husi)

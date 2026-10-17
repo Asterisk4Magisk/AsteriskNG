@@ -2,7 +2,7 @@
 
 # AsteriskNG
 
-一个 Android Xray GUI 客户端。
+Android Xray GUI 客户端。
 
 ## Telegram Channel
 
@@ -36,9 +36,13 @@
 - 监听本地 IPv4/IPv6 地址和热点接口变化，并刷新相应的 iptables 规则或 BPF map。
 - 服务停止时清理当前 ROOT 模式负责的网络规则。
 
+## 增强模块
+
+[AsteriskEnhance](enhance/src/main/module/README.md) 是可选的增强模块，可让系统 DNS 按应用名单分流并隔离解析缓存。需要 ROOT 和 Zygisk Next，支持 TPROXY、TUN2SOCKS 和 BPF2SOCKS。可在设置中开启 **应用名单增强** 并按提示安装，安装或更新后需重启设备。
+
 ## 资源文件
 
-- ROOT 运行文件存储在应用私有的 `files/xray` 目录。
+- 资源文件存储在应用私有的 `files/xray` 目录。
 - 自定义资源可在本地添加或替换，也可通过配置的 URL 更新。
 
 ## 广播控制
@@ -105,4 +109,4 @@ macOS 或 Linux：
 - [@Chocolate4U/Iran-v2ray-rules](https://github.com/Chocolate4U/Iran-v2ray-rules)
 - [@runetfreedom/russia-v2ray-rules-dat](https://github.com/runetfreedom/russia-v2ray-rules-dat)
 - [@mayaxcn/china-ip-list](https://github.com/mayaxcn/china-ip-list)
-- [@xchacha20-poly1305/husi](https://github.com/xchacha20-poly1305/husi) — 分应用代理“扫描中国应用”功能参考实现
+- [@xchacha20-poly1305/husi](https://github.com/xchacha20-poly1305/husi)

@@ -36,9 +36,13 @@
 - Theo dõi địa chỉ IPv4/IPv6 cục bộ và các giao diện chia sẻ kết nối, sau đó cập nhật các quy tắc iptables hoặc bản đồ BPF tương ứng.
 - Dọn dẹp các quy tắc mạng thuộc chế độ ROOT đang hoạt động khi dịch vụ dừng.
 
+## Mô-đun tăng cường
+
+[AsteriskEnhance](enhance/src/main/module/README.md) là mô-đun tùy chọn giúp định tuyến DNS hệ thống theo danh sách ứng dụng và tách biệt bộ nhớ đệm của trình phân giải. Mô-đun yêu cầu ROOT và Zygisk Next, hỗ trợ TPROXY, TUN2SOCKS và BPF2SOCKS. Bật **Application list enhancement** trong cài đặt và làm theo hướng dẫn cài đặt; khởi động lại thiết bị sau khi cài đặt hoặc cập nhật.
+
 ## Tệp tài nguyên
 
-- Các tệp dùng khi chạy ở chế độ ROOT được lưu trong thư mục riêng của ứng dụng `files/xray`.
+- Các tệp tài nguyên được lưu trong thư mục riêng của ứng dụng `files/xray`.
 - Có thể thêm hoặc thay thế tài nguyên tùy chỉnh bằng tệp cục bộ, hoặc cập nhật từ các URL đã cấu hình.
 
 ## Điều khiển qua broadcast
@@ -105,4 +109,4 @@ Nếu Gradle không tìm thấy Android NDK, hãy cấu hình qua Android Studio
 - [@Chocolate4U/Iran-v2ray-rules](https://github.com/Chocolate4U/Iran-v2ray-rules)
 - [@runetfreedom/russia-v2ray-rules-dat](https://github.com/runetfreedom/russia-v2ray-rules-dat)
 - [@mayaxcn/china-ip-list](https://github.com/mayaxcn/china-ip-list)
-- [@xchacha20-poly1305/husi](https://github.com/xchacha20-poly1305/husi) — mã tham khảo cho tính năng “Quét ứng dụng Trung Quốc” trong phần proxy theo ứng dụng
+- [@xchacha20-poly1305/husi](https://github.com/xchacha20-poly1305/husi)

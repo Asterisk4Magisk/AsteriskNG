@@ -36,6 +36,7 @@ VPN Service is an independent non-ROOT execution path. Even on a rooted device, 
 - `app/`: Android application, Compose UI, data layer, VPN/ROOT orchestration, and core adapters.
 - `asteriskd/`: the ROOT supervisor native submodule shared by all three apps.
 - `bpfmatcher/`, `bpf2socks/`, and `hevtun/`: native helper modules.
+- `enhance/`: optional AsteriskEnhance packaging; native Git submodule at `enhance/src/main/module`.
 - `buildSrc/`: versions, package name, SDK levels, dependency versions, and build conventions.
 
 Do not edit `.gradle/`, `build/`, module-level `build/` directories, or other generated output. Do not commit build artifacts as source files.
@@ -55,6 +56,19 @@ The following rules apply only to ROOT/asteriskd changes. They do not justify ex
 - With service control enabled, `stop` in a resident `monitor` supervisor ends only the active service cycle; only `shutdown` exits the supervisor. Related changes must cover this regression.
 - When changing the `asteriskd` protocol, configuration schema, resource names, or native source, also check the AsteriskBOX and AsteriskMETA submodule versions, sources, and downstream Kotlin adapters so all three contracts remain aligned.
 
+## Enhancement Module Constraints
+
+These rules apply to AsteriskEnhance integration. See `enhance/src/main/module/README.md` for current dependencies, supported modes, installation, packaging, and boot recovery, and `enhance/src/main/module/docs/control-protocol.md` for the runtime contract. Changes to those designs must update the affected implementations, documentation, and checks together; current version numbers and compatibility matrices are not permanent restrictions.
+
+- Keep shared module identity, application integration, supervisor adapters, and packaging contracts consistent across all three apps. Coordinate compatibility changes across the affected components; do not silently introduce app-specific variants of shared contracts.
+- Preserve VPN/ROOT separation. Check feature eligibility before creating or invoking a ROOT backend, and keep module inspection, installation, and policy control out of the VPN lifecycle. Enforce the current mode and DNS prerequisites at the appropriate boundaries.
+- Preserve the requesting application's full Android UID and resolver-cache isolation across networks and policy generations. Require runtime capability and resolver-readiness checks before activation; never report unsafe or failed preparation as active enhancement.
+- Use read-only runtime information to determine the loaded module's availability and version. Disk files may support installation diagnostics but do not prove runtime activation. Keep application/native compatibility checks aligned and distinguish frame protocol versions from capability revisions. Update ordering uses `versionCode`, not version text or build identifiers; a newer version still needs compatibility checks.
+- Restrict policy control to the authenticated supervisor owning the current `@asteriskd.control` listener. Preserve explicit withdrawal, disconnect cleanup, and cache invalidation when resolver configuration changes. Under the current connection-scoped contract, do not add periodic renewal or restore prior active policies from disk. Ordinary UI persistence must never authorize or reconstruct runtime policy.
+- Require user confirmation for installation and updates, expose installation failures, and distinguish pending reboot from a running module. Never reboot automatically or treat a saved UI status as evidence that the module is active.
+- Keep SELinux enforcing and permissions narrowly scoped. Preserve the documented packaging and system-ABI selection contract. Missed-injection recovery belongs to the module's documented boot lifecycle, not application startup or VPN; hook or resolver failures alone must not trigger netd recovery. Changes to DNS ingress, dependency bundling, or recovery timing require a corresponding design and compatibility update.
+- Scale verification to the affected behavior: documentation changes need diff checks; UI/coordinator changes need relevant state, cancellation, and ROOT-guard checks; packaging changes need builds and payload inspection. Protocol, resolver, or native-hook changes require relevant device scenarios for routing, cache isolation, failure handling, and cleanup. Host checks alone cannot establish device hook compatibility; record any unverified scenarios.
+
 ## Implementation and Change Discipline
 
 - Read the existing implementation and tests first, then make the smallest change that satisfies the requirement. Do not rewrite unrelated code opportunistically.
@@ -73,9 +87,11 @@ Use the repository's Gradle wrapper on Windows/PowerShell. When native submodule
   -x :asteriskd:syncAsteriskdVersion `
   -x :bpfmatcher:syncBpfMatcherVersion `
   -x :bpf2socks:syncBpf2SocksVersion `
-  -x :hevtun:syncHevSocks5TunnelVersion
+  -x :hevtun:syncHevSocks5TunnelVersion `
+  -x :enhance:syncEnhanceVersion
 ```
 
+- Enhancement packaging changes must build `:enhance:assembleDebug` and `:app:assembleDebug`; inspect APK installer entries and all four ABI asset payloads. Use `-PenhanceSourceDir=<path>` for an alternate source checkout. Exclude `:enhance:syncEnhanceVersion` when preserving local submodule changes.
 - When changing another module, add that module's `test`, `lintDebug`, and `assembleDebug` tasks. ROOT/native changes must at least build `:asteriskd:assembleDebug` and `:app:assembleDebug`.
 - Keep lint clean. Do not hide new findings with a baseline, broad suppressions, or disabled rules.
 - Documentation-only changes require at least `git diff --check`; do not trigger a full Android build without a technical reason.

@@ -2,7 +2,7 @@ English | [简体中文](README_zh_CN.md) | [Русский](README_ru.md) | [Ti
 
 # AsteriskNG
 
-An Android Xray GUI client.
+Android Xray GUI client.
 
 ## Telegram Channel
 
@@ -36,9 +36,13 @@ An Android Xray GUI client.
 - Watches local IPv4/IPv6 addresses and tethering interfaces, then refreshes the relevant iptables rules or BPF maps.
 - Cleans up networking rules owned by the active ROOT mode when the service stops.
 
+## Enhancement Module
+
+[AsteriskEnhance](enhance/src/main/module/README.md) is an optional module that routes system DNS according to the application list and isolates resolver caches. It requires ROOT and Zygisk Next and supports TPROXY, TUN2SOCKS, and BPF2SOCKS. Enable **Application list enhancement** in settings and follow the installation prompts; reboot after installation or updates.
+
 ## Resource Files
 
-- ROOT runtime files are stored in the app-private `files/xray` directory.
+- Resource files are stored in the app-private `files/xray` directory.
 - Custom resources can be added or replaced locally and updated from configured URLs.
 
 ## Broadcast Control
@@ -105,4 +109,4 @@ If Gradle cannot find the Android NDK, configure it through Android Studio, `ndk
 - [@Chocolate4U/Iran-v2ray-rules](https://github.com/Chocolate4U/Iran-v2ray-rules)
 - [@runetfreedom/russia-v2ray-rules-dat](https://github.com/runetfreedom/russia-v2ray-rules-dat)
 - [@mayaxcn/china-ip-list](https://github.com/mayaxcn/china-ip-list)
-- [@xchacha20-poly1305/husi](https://github.com/xchacha20-poly1305/husi) — reference implementation for the per-app proxy "Scan Chinese apps" feature
+- [@xchacha20-poly1305/husi](https://github.com/xchacha20-poly1305/husi)
