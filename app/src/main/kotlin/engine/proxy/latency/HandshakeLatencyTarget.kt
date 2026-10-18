@@ -7,6 +7,7 @@ import engine.network.toPortOrNull
 import features.proxy.server.model.Custom
 import features.proxy.server.model.HTTP
 import features.proxy.server.model.Hysteria2
+import features.proxy.server.model.Masque
 import features.proxy.server.model.ProxyServer
 import features.proxy.server.model.ProxyTransportHandshake
 import features.proxy.server.model.Shadowsocks
@@ -18,6 +19,7 @@ import features.proxy.server.model.VMess
 import features.proxy.server.model.Wireguard
 import features.proxy.server.model.WireGuardHandshakeKeys
 import features.proxy.server.model.customXrayConfigProxyOutboundEndpoint
+import features.proxy.server.model.toXrayJsonObjectOrNull
 import features.proxy.server.model.v2RayTransportHandshake
 import utils.toCsvValues
 
@@ -51,6 +53,7 @@ internal fun ProxyServer<*>.handshakeLatencyTarget(): HandshakeLatencyTarget {
     return when (this) {
         is Hysteria2 -> hysteria2Target()
         is Wireguard -> wireGuardTarget()
+        is Masque -> masqueTarget()
         is HTTP -> tcpEndpointTarget(server, port)
         is Socks -> tcpEndpointTarget(server, port)
         is Shadowsocks -> v2RayTarget(server, port, parms)
@@ -76,6 +79,17 @@ private fun Wireguard.wireGuardTarget(): HandshakeLatencyTarget {
         endpoint.port,
         WireGuardHandshakeKeys(secretKey = secretKey, publicKey = publicKey, reserved = reserved),
     )
+}
+
+// MASQUE runs over HTTP/3 unless the ALPN pins HTTP/2 (Extended CONNECT over TLS/TCP).
+private fun Masque.masqueTarget(): HandshakeLatencyTarget {
+    if (usesHttp2()) return tcpEndpointTarget(server, port)
+    // quicParams alone leaves the handshake probe-able; UDP masks (or an unreadable finalmask) do not.
+    val udpMasks = runCatching { finalMask.toXrayJsonObjectOrNull("FinalMask") }
+        .getOrElse { return HandshakeLatencyTarget.UdpMasked }
+        ?.get("udp")
+    if (udpMasks != null) return HandshakeLatencyTarget.UdpMasked
+    return quicEndpointTarget(server, port, sni)
 }
 
 private fun v2RayTarget(host: String, port: String, params: V2RayParameters): HandshakeLatencyTarget {

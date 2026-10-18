@@ -83,6 +83,9 @@ internal fun rememberProxyServerValidationMessageResolver(): (ProxyServerValidat
         shadowsocks2022KeyLengthInvalid =
             stringResource(R.string.proxy_validation_shadowsocks_2022_key_length_invalid),
         vlessVisionFlowUnsupported = stringResource(R.string.proxy_validation_vless_vision_flow_unsupported),
+        masqueRemoteDnsInvalid = stringResource(R.string.proxy_validation_masque_remote_dns_invalid),
+        masqueWarpCredentialsConflict = stringResource(R.string.proxy_validation_masque_warp_credentials_conflict),
+        masqueWarpAddressFamilyDuplicate = stringResource(R.string.proxy_validation_masque_warp_address_family_duplicate),
     )
     return remember(messages) {
         { issue -> messages.messageOf(issue) }
@@ -135,6 +138,9 @@ private data class ProxyServerValidationMessages(
     val shadowsocks2022KeyBase64Invalid: String,
     val shadowsocks2022KeyLengthInvalid: String,
     val vlessVisionFlowUnsupported: String,
+    val masqueRemoteDnsInvalid: String,
+    val masqueWarpCredentialsConflict: String,
+    val masqueWarpAddressFamilyDuplicate: String,
 ) {
     fun messageOf(issue: ProxyServerValidationIssue): String {
         val values = issue.values
@@ -186,6 +192,9 @@ private data class ProxyServerValidationMessages(
             ProxyServerValidationError.Shadowsocks2022KeyLengthInvalid ->
                 shadowsocks2022KeyLengthInvalid.formatTemplate("lengths" to values.valueAt(0))
             ProxyServerValidationError.VlessVisionFlowUnsupported -> vlessVisionFlowUnsupported
+            ProxyServerValidationError.MasqueRemoteDnsInvalid -> masqueRemoteDnsInvalid
+            ProxyServerValidationError.MasqueWarpCredentialsConflict -> masqueWarpCredentialsConflict
+            ProxyServerValidationError.MasqueWarpAddressFamilyDuplicate -> masqueWarpAddressFamilyDuplicate
         }
     }
 

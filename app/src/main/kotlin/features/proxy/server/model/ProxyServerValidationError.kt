@@ -53,6 +53,9 @@ enum class ProxyServerValidationError {
     Shadowsocks2022KeyBase64Invalid,
     Shadowsocks2022KeyLengthInvalid,
     VlessVisionFlowUnsupported,
+    MasqueRemoteDnsInvalid,
+    MasqueWarpCredentialsConflict,
+    MasqueWarpAddressFamilyDuplicate,
 }
 
 internal fun proxyValidationIssue(

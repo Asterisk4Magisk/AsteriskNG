@@ -57,6 +57,7 @@
     <string name="proxy_server_list_add_vless">Thêm VLESS</string>
     <string name="proxy_server_list_add_vmess">Thêm VMess</string>
     <string name="proxy_server_list_add_wireguard">Thêm Wireguard</string>
+    <string name="proxy_server_list_add_masque">Thêm MASQUE</string>
     <string name="proxy_server_list_all">Tất cả</string>
     <string name="proxy_server_list_all_deleted">Đã xóa {count} nút proxy</string>
     <string name="proxy_server_list_chain_proxy_summary">{count} chặng</string>
@@ -139,6 +140,11 @@
     <string name="proxy_editor_grpc_mode">Chế độ truyền tải gRPC</string>
     <string name="proxy_editor_header_type">Loại ngụy trang</string>
     <string name="proxy_editor_local_address_optional">Địa chỉ cục bộ (tùy chọn IPv4/IPv6, cách nhau bằng dấu phẩy)</string>
+    <string name="proxy_editor_masque_host_optional">Host (tùy chọn)</string>
+    <string name="proxy_editor_masque_path_optional">Đường dẫn (tùy chọn, mặc định /.well-known/masque/ip/{target}/{ipproto}/)</string>
+    <string name="proxy_editor_masque_remote_dns_optional">DNS từ xa (tùy chọn, IPv4/IPv6 cách nhau bằng dấu phẩy; mặc định Cloudflare)</string>
+    <string name="proxy_editor_masque_warp_address">Địa chỉ thiết bị WARP (IPv4/IPv6 CIDR, cách nhau bằng dấu phẩy)</string>
+    <string name="proxy_editor_masque_warp_settings">Cài đặt WARP (tùy chọn)</string>
     <string name="proxy_editor_method">Phương thức mã hóa</string>
     <string name="proxy_editor_mkcp_mtu">MTU mKCP (tùy chọn, mặc định 1350)</string>
     <string name="proxy_editor_mkcp_tti">TTI mKCP (tùy chọn, mặc định 50)</string>
@@ -221,6 +227,9 @@
     <string name="proxy_validation_vless_padding_format_invalid" tools:ignore="TypographyDashes">Padding hoặc delay VLESS phải theo định dạng probability-min-max</string>
     <string name="proxy_validation_vless_padding_range_invalid">Phạm vi padding hoặc delay VLESS không hợp lệ</string>
     <string name="proxy_validation_vless_vision_flow_unsupported">Flow VLESS Vision chỉ hỗ trợ RAW + TLS/REALITY</string>
+    <string name="proxy_validation_masque_remote_dns_invalid">DNS từ xa phải là các địa chỉ IPv4/IPv6 cách nhau bằng dấu phẩy</string>
+    <string name="proxy_validation_masque_warp_address_family_duplicate">Địa chỉ thiết bị WARP chỉ có tối đa một địa chỉ IPv4 và một địa chỉ IPv6</string>
+    <string name="proxy_validation_masque_warp_credentials_conflict">Không thể dùng tên người dùng và mật khẩu cùng với WARP</string>
     <string name="proxy_validation_wireguard_key_invalid">Khóa WireGuard phải là khóa base64 hợp lệ</string>
     <string name="proxy_validation_wireguard_remote_dns_invalid">DNS từ xa phải chứa địa chỉ IPv4/IPv6 cách nhau bằng dấu phẩy hoặc chỉ local</string>
     <string name="proxy_validation_wireguard_reserved_count_invalid">Reserved phải chứa ba số cách nhau bằng dấu phẩy</string>

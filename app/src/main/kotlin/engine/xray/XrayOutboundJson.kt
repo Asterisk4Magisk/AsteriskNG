@@ -123,7 +123,8 @@ private fun buildProxyOutbound(appState: AppState, outboundServer: XrayProxyOutb
             outbound.withDialerProxyTag(dialerProxyTag)
         }
     }
-    if (appState.enableMux) {
+    // A MASQUE outbound relays flows through its own CONNECT-IP tunnel; Mux.Cool cannot ride on it.
+    if (appState.enableMux && outbound.stringValue("protocol") != ProxyServerConstants.PROTOCOL_MASQUE) {
         outbound = outbound.updated {
             put("mux", buildMuxConfig(appState))
         }

@@ -181,13 +181,14 @@ data class Wireguard(
     }
 }
 
-private fun List<String>.isValidRemoteDns(): Boolean = this == listOf("local") || all { address ->
-    when {
-        ':' !in address -> address.isStrictDnsIpv4()
-        '.' !in address -> isIpv6Address(address)
-        else -> address.substringAfterLast(':').isStrictDnsIpv4() &&
-            isIpv6Address(address.substringBeforeLast(':') + ":0:0")
-    }
+private fun List<String>.isValidRemoteDns(): Boolean = this == listOf("local") || all(::isStrictRemoteDnsAddress)
+
+/** An IP literal Go's netip.ParseAddr accepts, as Xray parses remote DNS servers with it. */
+internal fun isStrictRemoteDnsAddress(address: String): Boolean = when {
+    ':' !in address -> address.isStrictDnsIpv4()
+    '.' !in address -> isIpv6Address(address)
+    else -> address.substringAfterLast(':').isStrictDnsIpv4() &&
+        isIpv6Address(address.substringBeforeLast(':') + ":0:0")
 }
 
 private fun String.isStrictDnsIpv4(): Boolean = isIpv4Address(this) && split('.').all { octet ->

@@ -26,6 +26,7 @@ object ProxyServerConstants {
     const val PROTOCOL_HYSTERIA2 = "hysteria2"
     const val PROTOCOL_HY2 = "hy2"
     const val PROTOCOL_WIREGUARD = "wireguard"
+    const val PROTOCOL_MASQUE = "masque"
     const val PROTOCOL_STRATEGY_GROUP = "strategy-group"
     const val PROTOCOL_CHAIN_PROXY = "chain-proxy"
     const val PROTOCOL_CUSTOM = "custom"

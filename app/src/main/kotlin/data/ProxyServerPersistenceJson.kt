@@ -7,6 +7,7 @@ import features.proxy.server.model.ChainProxy
 import features.proxy.server.model.Custom
 import features.proxy.server.model.HTTP
 import features.proxy.server.model.Hysteria2
+import features.proxy.server.model.Masque
 import features.proxy.server.model.ProxyServer
 import features.proxy.server.model.ProxyServerConstants
 import features.proxy.server.model.Shadowsocks
@@ -41,6 +42,7 @@ internal fun ProxyServer<*>.toPersistedProxyServer(): PersistedProxyServer {
         is Trojan -> persisted(ProxyServerConstants.PROTOCOL_TROJAN, this)
         is Hysteria2 -> persisted(ProxyServerConstants.PROTOCOL_HYSTERIA2, this)
         is Wireguard -> persisted(ProxyServerConstants.PROTOCOL_WIREGUARD, this)
+        is Masque -> persisted(ProxyServerConstants.PROTOCOL_MASQUE, this)
         is StrategyGroup -> persisted(ProxyServerConstants.PROTOCOL_STRATEGY_GROUP, this)
         is ChainProxy -> persisted(ProxyServerConstants.PROTOCOL_CHAIN_PROXY, this)
         is Custom -> persisted(ProxyServerConstants.PROTOCOL_CUSTOM, this)
@@ -78,6 +80,9 @@ internal fun PersistedProxyServer.decodeProxyServer(): ProxyServer<*> {
 
         ProxyServerConstants.PROTOCOL_WIREGUARD ->
             ProxyServer.json.decodeFromJsonElement<Wireguard>(payload)
+
+        ProxyServerConstants.PROTOCOL_MASQUE ->
+            ProxyServer.json.decodeFromJsonElement<Masque>(payload)
 
         ProxyServerConstants.PROTOCOL_STRATEGY_GROUP ->
             ProxyServer.json.decodeFromJsonElement<StrategyGroup>(payload)

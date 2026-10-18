@@ -179,12 +179,17 @@ private fun JsonObject.transportHandshake(): ProxyTransportHandshake {
         in CustomHysteriaProtocols -> return ProxyTransportHandshake.Quic
     }
     val streamSettings = objectValue("streamSettings") ?: return ProxyTransportHandshake.Tcp
-    val network = streamSettings.stringValue("network")
+    // Xray accepts "method" as an alias of "network" and lets it win.
+    val network = streamSettings.stringValue("method") ?: streamSettings.stringValue("network")
     if (network?.lowercase() == CustomHysteriaNetwork) return ProxyTransportHandshake.Quic
     val alpn = streamSettings.objectValue("tlsSettings")
         ?.arrayValue("alpn")
         ?.mapNotNull { element -> (element as? JsonPrimitive)?.contentOrNull }
         .orEmpty()
+    if (network?.lowercase() == CustomMasqueNetwork) {
+        val values = alpn.map { value -> value.trim().lowercase() }
+        return if ("h2" in values && "h3" !in values) ProxyTransportHandshake.Tcp else ProxyTransportHandshake.Quic
+    }
     return v2RayTransportHandshake(network, alpn)
 }
 
@@ -312,3 +317,4 @@ private val CustomInfrastructureOutboundTags = CustomFixedOutboundTags - CustomP
 private const val CustomWireGuardProtocol = "wireguard"
 private val CustomHysteriaProtocols = setOf("hysteria", "hysteria2")
 private const val CustomHysteriaNetwork = "hysteria"
+private const val CustomMasqueNetwork = "masque"

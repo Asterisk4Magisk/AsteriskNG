@@ -418,7 +418,7 @@ private fun MutableList<ProxyServerValidationIssue>.validateOptionalIntRange(
     }
 }
 
-private fun MutableList<ProxyServerValidationIssue>.validateOptionalPath(value: String?, fieldName: String) {
+internal fun MutableList<ProxyServerValidationIssue>.validateOptionalPath(value: String?, fieldName: String) {
     val path = value.orEmpty()
     if (path.isNotBlank() && !path.startsWith("/")) {
         addIssue(ProxyServerValidationError.PathMustStartWithSlash)
@@ -439,7 +439,7 @@ private fun decodeRawUrlSafeBase64(value: String): ByteArray? {
     return value.decodeUrlSafeBase64NoPaddingOrNull()
 }
 
-private fun MutableList<ProxyServerValidationIssue>.validateOptionalFingerprint(value: String?) {
+internal fun MutableList<ProxyServerValidationIssue>.validateOptionalFingerprint(value: String?) {
     if (value.isNullOrBlank()) return
     validateAllowed(
         value,

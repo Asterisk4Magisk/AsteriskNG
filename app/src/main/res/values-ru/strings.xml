@@ -58,6 +58,7 @@
     <string name="proxy_server_list_add_vless">Добавить VLESS</string>
     <string name="proxy_server_list_add_vmess">Добавить VMess</string>
     <string name="proxy_server_list_add_wireguard">Добавить Wireguard</string>
+    <string name="proxy_server_list_add_masque">Добавить MASQUE</string>
     <string name="proxy_server_list_all">Все</string>
     <string name="proxy_server_list_all_deleted">Удалено прокси-серверов: {count}</string>
     <string name="proxy_server_list_chain_proxy_summary">Узлов в цепочке: {count}</string>
@@ -140,6 +141,11 @@
     <string name="proxy_editor_grpc_mode">Режим транспорта gRPC</string>
     <string name="proxy_editor_header_type">Тип заголовка (Header type)</string>
     <string name="proxy_editor_local_address_optional">Локальный адрес (опционально IPv4/IPv6, через запятую)</string>
+    <string name="proxy_editor_masque_host_optional">Host (необязательно)</string>
+    <string name="proxy_editor_masque_path_optional">Путь (необязательно, по умолчанию /.well-known/masque/ip/{target}/{ipproto}/)</string>
+    <string name="proxy_editor_masque_remote_dns_optional">Удалённый DNS (необязательно, IPv4/IPv6 через запятую; по умолчанию Cloudflare)</string>
+    <string name="proxy_editor_masque_warp_address">Адрес устройства WARP (IPv4/IPv6 CIDR через запятую)</string>
+    <string name="proxy_editor_masque_warp_settings">Настройки WARP (необязательно)</string>
     <string name="proxy_editor_method">Метод шифрования</string>
     <string name="proxy_editor_mkcp_mtu">mKCP MTU (опционально, по умолчанию 1350)</string>
     <string name="proxy_editor_mkcp_tti">mKCP TTI (опционально, по умолчанию 50)</string>
@@ -222,6 +228,9 @@
     <string name="proxy_validation_vless_padding_format_invalid" tools:ignore="TypographyDashes">Паддинг или задержка VLESS должны задаваться в формате: probability-min-max</string>
     <string name="proxy_validation_vless_padding_range_invalid">Недопустимый диапазон паддинга или задержки VLESS</string>
     <string name="proxy_validation_vless_vision_flow_unsupported">Поток VLESS Vision поддерживает работу только в связке RAW + TLS/REALITY</string>
+    <string name="proxy_validation_masque_remote_dns_invalid">Удалённый DNS должен содержать адреса IPv4/IPv6 через запятую</string>
+    <string name="proxy_validation_masque_warp_address_family_duplicate">Адрес устройства WARP может содержать не более одного адреса IPv4 и одного IPv6</string>
+    <string name="proxy_validation_masque_warp_credentials_conflict">Имя пользователя и пароль нельзя использовать вместе с WARP</string>
     <string name="proxy_validation_wireguard_key_invalid">Ключ WireGuard должен быть валидным base64 ключом</string>
     <string name="proxy_validation_wireguard_remote_dns_invalid">Удалённый DNS должен содержать IPv4/IPv6 через запятую или только local</string>
     <string name="proxy_validation_wireguard_reserved_count_invalid">Поле Reserved должно содержать три числа, разделенные запятыми</string>

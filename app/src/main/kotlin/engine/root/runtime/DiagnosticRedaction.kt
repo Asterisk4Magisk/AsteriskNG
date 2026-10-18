@@ -30,7 +30,7 @@ internal object DiagnosticRedaction {
     private val privatePath = Regex("""(?:/data|/storage|/sdcard|/mnt)(?:/[^\s"',;)\]}>]*)+""")
     private val url = Regex("""(?i)\b(?:https?|ss|ssr|vmess|vless|trojan|hysteria2?|tuic|wireguard|socks5?)://[^\s"'<>]+""")
     private val secret = Regex(
-        """(?i)(["']?(?:password|passwd|token|secret|private[-_]?key|uuid|authorization|age[-_]?secret[-_]?key)["']?\s*[:=]\s*)(?:"[^"]*"|'[^']*'|[^\s,;}]+)""",
+        """(?i)(["']?(?:password|passwd|pass|token|secret|private[-_]?key|uuid|authorization|age[-_]?secret[-_]?key)["']?\s*[:=]\s*)(?:"[^"]*"|'[^']*'|[^\s,;}]+)""",
     )
     private val ageKey = Regex("""AGE-SECRET-KEY-[A-Z0-9]+""")
 
