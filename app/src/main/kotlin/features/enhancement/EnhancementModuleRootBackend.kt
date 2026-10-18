@@ -69,7 +69,7 @@ internal fun parseEnhancementModuleRuntime(output: String): EnhancementModuleRun
         val netd = values[4].toULong().also { check(it != 0uL) }
         val api = values[5].toInt().also { check(it >= 26) }
         val modes = values[6].toInt().also { check(it in 0..7) }
-        val flags = values[7].toInt().also { check(it in 0..7) }
+        val flags = values[7].toInt().also { check(it in 0..15) }
         return EnhancementModuleRuntime(image, netd, api, modes, flags, values[8].toInt())
     } catch (_: Exception) {
         throw EnhancementModuleException(EnhancementModuleFailure.InvalidModule)
