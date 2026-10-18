@@ -594,6 +594,8 @@
     <string name="proxy_app_list_fake_dns_requires_global">FakeDNS in ROOT mode requires all-app mode</string>
     <string name="proxy_app_list_mode_whitelist">Whitelist mode</string>
     <string name="proxy_app_list_more_actions">More actions</string>
+    <string name="proxy_app_list_pick_installed_apps">Choose from installed apps</string>
+    <string name="proxy_app_list_picker_title">Select apps</string>
     <string name="proxy_app_list_pull_to_refresh">Pull down to refresh</string>
     <string name="proxy_app_list_refreshed">Refresh complete</string>
     <string name="proxy_app_list_refreshing">Refreshing…</string>

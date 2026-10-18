@@ -38,6 +38,7 @@ import engine.network.isIpOrCidrAddress
 import engine.network.isPortList
 import engine.xray.isValidXrayExternalDomainRule
 import engine.xray.isXrayExternalDomainRuleCandidate
+import features.proxy.app.AppPackagePickerAction
 import features.routing.model.RouteRule
 import top.yukonga.miuix.kmp.anim.folmeSpring
 import top.yukonga.miuix.kmp.basic.Card
@@ -399,6 +400,12 @@ private fun RouteRuleEditorContent(
             emptyText = emptyMessage,
             validateInput = { routeProcessInputError(it, processInvalidMessage) },
             modifier = Modifier.padding(bottom = 12.dp),
+            headerActions = {
+                AppPackagePickerAction(
+                    values = process,
+                    onValuesChange = onProcessChange,
+                )
+            },
         )
         TextField(
             state = rememberTextFieldState(initialText = ports),

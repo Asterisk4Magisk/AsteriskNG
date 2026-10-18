@@ -595,6 +595,8 @@
     <string name="proxy_app_list_fake_dns_requires_global">FakeDNS в режиме ROOT требует режима для всех приложений</string>
     <string name="proxy_app_list_mode_whitelist">Белый список (Только выбранные)</string>
     <string name="proxy_app_list_more_actions">Другие действия</string>
+    <string name="proxy_app_list_pick_installed_apps">Выбрать из установленных приложений</string>
+    <string name="proxy_app_list_picker_title">Выбор приложений</string>
     <string name="proxy_app_list_pull_to_refresh">Потяните вниз для обновления</string>
     <string name="proxy_app_list_refreshed">Обновление завершено</string>
     <string name="proxy_app_list_refreshing">Обновление списка…</string>

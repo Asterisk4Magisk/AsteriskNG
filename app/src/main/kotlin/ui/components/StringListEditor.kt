@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -95,6 +96,7 @@ internal fun StringListEditor(
     validateInput: (String) -> String? = { null },
     normalizeInput: (String) -> String = String::trim,
     onPendingChange: ((Boolean) -> Unit)? = null,
+    headerActions: @Composable RowScope.() -> Unit = {},
 ) {
     var input by remember(editorKey, title) { mutableStateOf("") }
     val inputState = rememberTextFieldState()
@@ -212,6 +214,10 @@ internal fun StringListEditor(
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f),
                 )
+                StringListCountChip(count = sanitizedValues.size)
+                // Icon buttons carry 9dp of inner padding; this keeps every header gap at 18dp.
+                Spacer(Modifier.width(9.dp))
+                headerActions()
                 IconButton(
                     modifier = Modifier.size(StringListBulkEditButtonSize),
                     onClick = showBulkEdit,
@@ -315,6 +321,23 @@ internal fun StringListEditor(
         },
         onSave = saveBulkEdit,
     )
+}
+
+@Composable
+private fun StringListCountChip(count: Int) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(8.dp))
+            .background(MiuixTheme.colorScheme.primary.copy(alpha = 0.14f))
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+    ) {
+        Text(
+            text = count.toString(),
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium,
+            color = MiuixTheme.colorScheme.primary,
+        )
+    }
 }
 
 @Composable

@@ -594,6 +594,8 @@
     <string name="proxy_app_list_fake_dns_requires_global">FakeDNS ở chế độ ROOT yêu cầu chế độ toàn bộ ứng dụng</string>
     <string name="proxy_app_list_mode_whitelist">Chế độ danh sách trắng</string>
     <string name="proxy_app_list_more_actions">Thêm thao tác</string>
+    <string name="proxy_app_list_pick_installed_apps">Chọn từ ứng dụng đã cài đặt</string>
+    <string name="proxy_app_list_picker_title">Chọn ứng dụng</string>
     <string name="proxy_app_list_pull_to_refresh">Kéo xuống để làm mới</string>
     <string name="proxy_app_list_refreshed">Làm mới xong</string>
     <string name="proxy_app_list_refreshing">Đang làm mới…</string>
