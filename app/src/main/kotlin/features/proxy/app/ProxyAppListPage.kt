@@ -16,6 +16,8 @@ import kotlinx.coroutines.Dispatchers
 
 import android.os.SystemClock
 import androidx.compose.foundation.background
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,6 +27,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -70,10 +73,12 @@ import top.yukonga.miuix.kmp.basic.PullToRefresh
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.ScrollBehavior
 import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.basic.VerticalScrollBar
 import top.yukonga.miuix.kmp.basic.rememberScrollBarAdapter
 import top.yukonga.miuix.kmp.interfaces.ExperimentalScrollBarApi
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.window.WindowDialog
 import ui.clipboard.ClipboardImportException
 import ui.clipboard.ClipboardImportFailure
 import ui.clipboard.ClipboardImportMode
@@ -117,6 +122,7 @@ fun ProxyAppListPage(
     val invalidUserIdMessage = stringResource(R.string.proxy_app_list_import_invalid_user)
     val unsupportedModeMessage = stringResource(R.string.proxy_app_list_import_unsupported_mode)
     var pendingAppListImport by remember { mutableStateOf<ProxyAppListClipboardData?>(null) }
+    var showHelpDialog by remember { mutableStateOf(false) }
 
     val scanSkippedGlobalMessage = stringResource(R.string.proxy_app_list_scan_china_skipped_global)
     val scanDoneTemplate = stringResource(R.string.proxy_app_list_scan_china_done)
@@ -213,6 +219,8 @@ fun ProxyAppListPage(
                 onSearchValueChange = { value -> pageState.searchValue = value },
                 onMoreAction = { action ->
                     when (action) {
+                        ProxyAppListMoreAction.Help -> showHelpDialog = true
+
                         ProxyAppListMoreAction.ToggleSystemApps -> {
                             pageState.showSystemApps = !pageState.showSystemApps
                         }
@@ -441,6 +449,32 @@ fun ProxyAppListPage(
             pageState.scanProgress = null
         },
     )
+    WindowDialog(
+        show = showHelpDialog,
+        title = stringResource(R.string.proxy_app_list_help_title),
+        onDismissRequest = { showHelpDialog = false },
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Text(
+                text = listOf(
+                    stringResource(R.string.proxy_app_list_help_blacklist),
+                    stringResource(R.string.proxy_app_list_help_global),
+                    stringResource(R.string.proxy_app_list_help_whitelist),
+                ).joinToString("\n\n"),
+                modifier = Modifier.heightIn(max = 360.dp).verticalScroll(rememberScrollState()),
+                style = MiuixTheme.textStyles.body2,
+                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+            )
+            TextButton(
+                text = stringResource(R.string.common_close),
+                onClick = { showHelpDialog = false },
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+    }
 }
 
 @Composable

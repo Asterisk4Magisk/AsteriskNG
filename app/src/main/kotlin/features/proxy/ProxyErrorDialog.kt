@@ -152,11 +152,13 @@ private fun ProxyErrorDialog(
 
                 if (suggestions.isNotEmpty()) {
                     SectionLabel(diagnosticsLabel)
-                    suggestions.forEach { suggestion ->
-                        Text(
-                            text = "• $suggestion",
-                            style = MiuixTheme.textStyles.body2,
-                        )
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        suggestions.forEach { suggestion ->
+                            Text(
+                                text = "• $suggestion",
+                                style = MiuixTheme.textStyles.body2,
+                            )
+                        }
                     }
                 }
             }

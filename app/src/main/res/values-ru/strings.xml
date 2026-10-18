@@ -9,6 +9,7 @@
     <string name="common_cancel">Отмена</string>
     <string name="common_clipboard_empty">Буфер обмена пуст</string>
     <string name="common_clipboard_unsupported_format">Неподдерживаемый формат в буфере обмена</string>
+    <string name="common_close">Закрыть</string>
     <string name="common_copied">Скопировано</string>
     <string name="common_delete">Удалить</string>
     <string name="common_edit">Редактировать</string>
@@ -578,6 +579,11 @@
     <string name="proxy_app_list_clear_done">Выбор очищен</string>
     <string name="proxy_app_list_clear_selection">Очистить выбор</string>
     <string name="proxy_app_list_entry_summary">{package}</string>
+    <string name="proxy_app_list_help">Справка</string>
+    <string name="proxy_app_list_help_blacklist">Черный список: приложения из списка обходят прокси, остальные используют его.</string>
+    <string name="proxy_app_list_help_global">Глобальный режим: все приложения используют прокси.</string>
+    <string name="proxy_app_list_help_title">Режимы прокси для приложений</string>
+    <string name="proxy_app_list_help_whitelist">Белый список: только приложения из списка используют прокси, остальные обходят его.</string>
     <string name="proxy_app_list_import_clipboard_message">Обнаружено приложений: {count}. Выберите вариант импорта.</string>
     <string name="proxy_app_list_import_clipboard_title">Импорт списка приложений</string>
     <string name="proxy_app_list_import_invalid_entry">Некорректная запись в списке приложений</string>

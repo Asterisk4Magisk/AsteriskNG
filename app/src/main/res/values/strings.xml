@@ -8,6 +8,7 @@
     <string name="common_cancel">Cancel</string>
     <string name="common_clipboard_empty">Clipboard is empty</string>
     <string name="common_clipboard_unsupported_format">Unsupported clipboard format</string>
+    <string name="common_close">Close</string>
     <string name="common_copied">Copied</string>
     <string name="common_delete">Delete</string>
     <string name="common_edit">Edit</string>
@@ -577,6 +578,11 @@
     <string name="proxy_app_list_clear_done">Selection cleared</string>
     <string name="proxy_app_list_clear_selection">Clear selection</string>
     <string name="proxy_app_list_entry_summary">{package}</string>
+    <string name="proxy_app_list_help">Help</string>
+    <string name="proxy_app_list_help_blacklist">Blacklist mode: apps on the blacklist bypass the proxy; everything else uses it.</string>
+    <string name="proxy_app_list_help_global">All-app mode: every app uses the proxy.</string>
+    <string name="proxy_app_list_help_title">App proxy modes</string>
+    <string name="proxy_app_list_help_whitelist">Whitelist mode: only apps on the whitelist use the proxy; everything else bypasses it.</string>
     <string name="proxy_app_list_import_clipboard_message">Detected {count} apps. Choose how to import.</string>
     <string name="proxy_app_list_import_clipboard_title">Import app list</string>
     <string name="proxy_app_list_import_invalid_entry">Invalid app list entry</string>

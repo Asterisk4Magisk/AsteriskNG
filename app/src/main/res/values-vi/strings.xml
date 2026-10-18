@@ -8,6 +8,7 @@
     <string name="common_cancel">Hủy</string>
     <string name="common_clipboard_empty">Khay nhớ tạm trống</string>
     <string name="common_clipboard_unsupported_format">Định dạng khay nhớ tạm không được hỗ trợ</string>
+    <string name="common_close">Đóng</string>
     <string name="common_copied">Đã sao chép</string>
     <string name="common_delete">Xóa</string>
     <string name="common_edit">Sửa</string>
@@ -577,6 +578,11 @@
     <string name="proxy_app_list_clear_done">Đã xóa lựa chọn</string>
     <string name="proxy_app_list_clear_selection">Xóa lựa chọn</string>
     <string name="proxy_app_list_entry_summary">{package}</string>
+    <string name="proxy_app_list_help">Trợ giúp</string>
+    <string name="proxy_app_list_help_blacklist">Chế độ danh sách đen: các ứng dụng trong danh sách không sử dụng proxy; các ứng dụng còn lại sử dụng proxy.</string>
+    <string name="proxy_app_list_help_global">Chế độ toàn bộ ứng dụng: tất cả ứng dụng đều sử dụng proxy.</string>
+    <string name="proxy_app_list_help_title">Chế độ proxy theo ứng dụng</string>
+    <string name="proxy_app_list_help_whitelist">Chế độ danh sách trắng: chỉ các ứng dụng trong danh sách sử dụng proxy; các ứng dụng còn lại không sử dụng proxy.</string>
     <string name="proxy_app_list_import_clipboard_message">Đã phát hiện {count} ứng dụng, vui lòng chọn cách nhập</string>
     <string name="proxy_app_list_import_clipboard_title">Nhập danh sách ứng dụng</string>
     <string name="proxy_app_list_import_invalid_entry">Mục danh sách ứng dụng không hợp lệ</string>
