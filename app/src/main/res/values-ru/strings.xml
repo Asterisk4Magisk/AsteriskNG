@@ -384,14 +384,14 @@
     <string name="error_tun2socks_start_failed">Не удалось запустить режим TUN2SOCKS: %1$s</string>
     <string name="root_foreign_owner_conflict">ROOT-прокси уже используется приложением %1$s. Остановите сервис в %1$s и повторите попытку.</string>
     <string name="settings_app_list_enhancement">Расширенная обработка списка приложений</string>
-    <string name="settings_app_list_enhancement_summary">Маршрутизация системного DNS по списку приложений с изоляцией кэша</string>
+    <string name="settings_app_list_enhancement_summary">Системный DNS по списку приложений, изоляция кэша</string>
     <string name="settings_root_boot_script">Автозапуск при загрузке</string>
     <string name="settings_root_boot_script_failed">Не удалось обновить скрипт автозапуска</string>
     <string name="settings_root_boot_script_summary">Генерировать скрипт инициализации в service.d (Magisk/KernelSU)</string>
     <string name="settings_root_ebpf_bypass_direct_cidrs">Обходить прямые адреса</string>
-    <string name="settings_root_ebpf_bypass_direct_cidrs_summary">По умолчанию используются списки подсетей Китая; настроить их можно в Управлении ресурсами</string>
+    <string name="settings_root_ebpf_bypass_direct_cidrs_summary">По умолчанию списки Китая; см. Управление ресурсами</string>
     <string name="settings_root_ebpf_matcher">Использовать eBPF-файрвол</string>
-    <string name="settings_root_ebpf_matcher_summary">Повышает производительность при больших списках приложений и активирует фильтрацию адресов</string>
+    <string name="settings_root_ebpf_matcher_summary">Быстрее с большими списками; фильтрация адресов</string>
     <string name="settings_root_ipv6_disabler">Отключить системный IPv6</string>
     <string name="settings_root_ipv6_disabler_summary">Предотвращает утечки IPv6-адресов через протокол WebRTC</string>
     <string name="settings_root_required">Права ROOT не обнаружены!</string>
@@ -549,7 +549,7 @@
     <string name="settings_service_control_ssids_empty">Пустой список соответствует любому SSID</string>
     <string name="settings_service_control_start_cron">Время запуска сервиса</string>
     <string name="settings_service_control_stop_cron">Время остановки сервиса</string>
-    <string name="settings_service_control_summary">Автоматически запускать или останавливать прокси-сервис при выполнении условий</string>
+    <string name="settings_service_control_summary">Автозапуск и остановка прокси по условиям</string>
     <string name="settings_service_control_unlock_start">Запускать при разблокировке</string>
     <string name="settings_service_control_unlock_stop">Останавливать при разблокировке</string>
     <string name="settings_service_control_wifi">Управление по Wi-Fi</string>
@@ -735,11 +735,11 @@
 
     <!-- Privacy mode -->
     <string name="settings_allow_screenshots">Разрешить снимки экрана</string>
-    <string name="settings_allow_screenshots_summary">При включении система разрешает снимки и запись экрана для этого приложения</string>
+    <string name="settings_allow_screenshots_summary">Разрешить снимки и запись экрана</string>
 
     <!-- Hide launcher icon -->
     <string name="settings_hide_launcher_icon">Скрыть значок приложения</string>
-    <string name="settings_hide_launcher_icon_summary">Наберите %1$s или нажмите и удерживайте плитку в быстрых настройках, чтобы открыть приложение</string>
+    <string name="settings_hide_launcher_icon_summary">Наберите %1$s или удерживайте плитку быстрых настроек</string>
     <string name="settings_hide_launcher_icon_confirm">Приложение исчезнет с рабочего стола. Наберите %1$s в приложении «Телефон», чтобы открыть его. На некоторых OEM-системах требуется разрешение на автозапуск/работу в фоне.</string>
 
     <!-- Logs -->

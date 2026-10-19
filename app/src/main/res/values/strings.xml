@@ -383,14 +383,14 @@
     <string name="error_tun2socks_start_failed">Failed to start TUN2SOCKS mode: %1$s</string>
     <string name="root_foreign_owner_conflict">The ROOT proxy service is being used by %1$s. Stop it in %1$s and try again.</string>
     <string name="settings_app_list_enhancement">Application list enhancement</string>
-    <string name="settings_app_list_enhancement_summary">Route system DNS by the application list and isolate caches</string>
+    <string name="settings_app_list_enhancement_summary">Route system DNS by app list; isolate caches</string>
     <string name="settings_root_boot_script">Start on boot</string>
     <string name="settings_root_boot_script_failed">Failed to update start on boot</string>
     <string name="settings_root_boot_script_summary">Generate service.d startup script</string>
     <string name="settings_root_ebpf_bypass_direct_cidrs">Bypass direct addresses</string>
-    <string name="settings_root_ebpf_bypass_direct_cidrs_summary">Uses China address lists by default; adjust them in Resource Management</string>
+    <string name="settings_root_ebpf_bypass_direct_cidrs_summary">China lists by default; edit in Resource Management</string>
     <string name="settings_root_ebpf_matcher">Use eBPF matcher</string>
-    <string name="settings_root_ebpf_matcher_summary">Improve performance for large app lists and support address filtering</string>
+    <string name="settings_root_ebpf_matcher_summary">Faster large app lists and address filtering</string>
     <string name="settings_root_ipv6_disabler">Disable system IPv6</string>
     <string name="settings_root_ipv6_disabler_summary">Prevent WebRTC IPv6 address leaks</string>
     <string name="settings_root_required">No ROOT access detected!</string>
@@ -548,7 +548,7 @@
     <string name="settings_service_control_ssids_empty">Empty matches any SSID</string>
     <string name="settings_service_control_start_cron">Service start time</string>
     <string name="settings_service_control_stop_cron">Service stop time</string>
-    <string name="settings_service_control_summary">Automatically start or stop the proxy service when conditions match</string>
+    <string name="settings_service_control_summary">Auto start or stop the proxy by conditions</string>
     <string name="settings_service_control_unlock_start">Start on unlock</string>
     <string name="settings_service_control_unlock_stop">Stop on unlock</string>
     <string name="settings_service_control_wifi">Wi-Fi control</string>
@@ -734,11 +734,11 @@
 
     <!-- Privacy mode -->
     <string name="settings_allow_screenshots">Allow screenshots</string>
-    <string name="settings_allow_screenshots_summary">When enabled, the system allows screenshots and screen recording for this app</string>
+    <string name="settings_allow_screenshots_summary">Permit screenshots and screen recording</string>
 
     <!-- Hide launcher icon -->
     <string name="settings_hide_launcher_icon">Hide launcher icon</string>
-    <string name="settings_hide_launcher_icon_summary">Dial %1$s or long-press the Quick Settings tile to open the app</string>
+    <string name="settings_hide_launcher_icon_summary">Open by dialing %1$s or long-pressing the QS tile</string>
     <string name="settings_hide_launcher_icon_confirm">The app will disappear from the launcher. Dial %1$s in the phone app to open it. Some OEM systems require the auto-start/background activity permission.</string>
 
     <!-- Logs -->

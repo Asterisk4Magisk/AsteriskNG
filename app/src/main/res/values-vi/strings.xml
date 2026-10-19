@@ -383,14 +383,14 @@
     <string name="error_tun2socks_start_failed">Khởi động chế độ TUN2SOCKS thất bại: %1$s</string>
     <string name="root_foreign_owner_conflict">Dịch vụ proxy ROOT đang được sử dụng bởi %1$s, vui lòng dừng dịch vụ trong %1$s trước rồi thử lại.</string>
     <string name="settings_app_list_enhancement">Tăng cường danh sách ứng dụng</string>
-    <string name="settings_app_list_enhancement_summary">Định tuyến DNS hệ thống theo danh sách ứng dụng và cô lập bộ nhớ đệm</string>
+    <string name="settings_app_list_enhancement_summary">DNS hệ thống theo danh sách ứng dụng, cách ly bộ đệm</string>
     <string name="settings_root_boot_script">Tự khởi động cùng hệ thống</string>
     <string name="settings_root_boot_script_failed">Thiết lập tự khởi động thất bại</string>
     <string name="settings_root_boot_script_summary">Tạo script khởi động service.d</string>
     <string name="settings_root_ebpf_bypass_direct_cidrs">Bỏ qua địa chỉ kết nối trực tiếp</string>
-    <string name="settings_root_ebpf_bypass_direct_cidrs_summary">Mặc định là danh sách địa chỉ Trung Quốc, có thể điều chỉnh trong quản lý tài nguyên</string>
+    <string name="settings_root_ebpf_bypass_direct_cidrs_summary">Mặc định danh sách Trung Quốc, sửa ở quản lý tài nguyên</string>
     <string name="settings_root_ebpf_matcher">Sử dụng bộ khớp eBPF</string>
-    <string name="settings_root_ebpf_matcher_summary">Cải thiện hiệu năng với danh sách ứng dụng lớn, hỗ trợ lọc địa chỉ</string>
+    <string name="settings_root_ebpf_matcher_summary">Tăng tốc danh sách ứng dụng lớn, hỗ trợ lọc địa chỉ</string>
     <string name="settings_root_ipv6_disabler">Tắt IPv6 hệ thống</string>
     <string name="settings_root_ipv6_disabler_summary">Ngăn WebRTC lộ địa chỉ IPv6</string>
     <string name="settings_root_required">Lấy quyền ROOT thất bại!</string>
@@ -548,7 +548,7 @@
     <string name="settings_service_control_ssids_empty">Để trống nghĩa là mọi SSID</string>
     <string name="settings_service_control_start_cron">Thời gian khởi động dịch vụ</string>
     <string name="settings_service_control_stop_cron">Thời gian dừng dịch vụ</string>
-    <string name="settings_service_control_summary">Tự động khởi động/dừng dịch vụ proxy theo điều kiện</string>
+    <string name="settings_service_control_summary">Tự động bật/tắt proxy theo điều kiện</string>
     <string name="settings_service_control_unlock_start">Khởi động khi mở khóa màn hình</string>
     <string name="settings_service_control_unlock_stop">Dừng khi mở khóa màn hình</string>
     <string name="settings_service_control_wifi">Điều khiển WiFi</string>
@@ -734,11 +734,11 @@
 
     <!-- Privacy mode -->
     <string name="settings_allow_screenshots">Cho phép chụp màn hình</string>
-    <string name="settings_allow_screenshots_summary">Khi bật, hệ thống sẽ cho phép chụp và quay màn hình cho ứng dụng này</string>
+    <string name="settings_allow_screenshots_summary">Cho phép chụp và quay màn hình</string>
 
     <!-- Hide launcher icon -->
     <string name="settings_hide_launcher_icon">Ẩn biểu tượng ứng dụng</string>
-    <string name="settings_hide_launcher_icon_summary">Quay số %1$s hoặc nhấn giữ ô Cài đặt nhanh để mở ứng dụng</string>
+    <string name="settings_hide_launcher_icon_summary">Quay số %1$s hoặc nhấn giữ ô Cài đặt nhanh để mở</string>
     <string name="settings_hide_launcher_icon_confirm">Ứng dụng sẽ biến mất khỏi màn hình chính. Quay số %1$s trong ứng dụng Điện thoại để mở ứng dụng. Một số hệ thống OEM yêu cầu quyền tự khởi động/chạy nền.</string>
 
     <!-- Logs -->
