@@ -86,12 +86,7 @@ private fun JsonObject.rewriteCustomDnsOutbounds(
             ),
         )
         if (enableLocalDns) {
-            add(
-                buildSimpleOutbound(
-                    tag = XrayTags.DNS_OUT,
-                    protocol = XrayProtocols.DNS,
-                ),
-            )
+            add(buildDnsOutbound(appState))
         }
     }
     return CustomOutboundsRewrite(

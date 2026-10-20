@@ -4,6 +4,7 @@
 package engine.xray
 
 import app.AppState
+import app.effectiveFakeDnsEnabled
 import app.effectiveLocalDnsEnabled
 import engine.network.NetworkDefaults
 import features.proxy.server.model.Hysteria2
@@ -17,6 +18,7 @@ import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
+import kotlinx.serialization.json.putJsonObject
 import utils.toIntCoercedInOrDefault
 
 internal fun buildXrayOutbounds(
@@ -34,7 +36,7 @@ internal fun buildXrayOutbounds(
         add(buildFreedomOutbound(XrayTags.DIRECT, appState.xrayDirectOutboundDomainStrategy()))
         add(buildSimpleOutbound(XrayTags.BLOCK, XrayProtocols.BLACKHOLE))
         if (appState.effectiveLocalDnsEnabled) {
-            add(buildSimpleOutbound(XrayTags.DNS_OUT, XrayProtocols.DNS))
+            add(buildDnsOutbound(appState))
         }
         if (appState.enableFragment) {
             add(buildFragmentOutbound(appState))
@@ -159,6 +161,23 @@ internal fun buildSimpleOutbound(tag: String, protocol: String): JsonObject {
     return buildJsonObject {
         put("tag", tag)
         put("protocol", protocol)
+    }
+}
+
+internal fun buildDnsOutbound(appState: AppState): JsonObject = buildJsonObject {
+    put("tag", XrayTags.DNS_OUT)
+    put("protocol", XrayProtocols.DNS)
+    if (appState.effectiveFakeDnsEnabled) {
+        // Empty client AAAA replies without restricting the core's own IPv6 lookups.
+        putJsonObject("settings") {
+            putJsonArray("rules") {
+                add(buildJsonObject {
+                    put("action", "return")
+                    put("qType", 28)
+                    put("rCode", 0)
+                })
+            }
+        }
     }
 }
 
