@@ -145,7 +145,7 @@
         },
         {
             "uniqueId": "io.github.rosemoe:editor",
-            "artifactVersion": "0.24.6",
+            "artifactVersion": "0.24.7",
             "name": "editor",
             "description": "An awesome code editor library on Android",
             "website": "https://github.com/Rosemoe/sora-editor",
@@ -171,7 +171,7 @@
         },
         {
             "uniqueId": "io.grpc:grpc-okhttp",
-            "artifactVersion": "1.85.0",
+            "artifactVersion": "1.85.1",
             "name": "io.grpc:grpc-okhttp",
             "description": "gRPC: OkHttp",
             "website": "https://github.com/grpc/grpc-java",
@@ -184,7 +184,7 @@
         },
         {
             "uniqueId": "io.grpc:grpc-protobuf-lite",
-            "artifactVersion": "1.85.0",
+            "artifactVersion": "1.85.1",
             "name": "io.grpc:grpc-protobuf-lite",
             "description": "gRPC: Protobuf Lite",
             "website": "https://github.com/grpc/grpc-java",
@@ -197,7 +197,7 @@
         },
         {
             "uniqueId": "io.grpc:grpc-stub",
-            "artifactVersion": "1.85.0",
+            "artifactVersion": "1.85.1",
             "name": "io.grpc:grpc-stub",
             "description": "gRPC: Stub",
             "website": "https://github.com/grpc/grpc-java",
@@ -249,7 +249,7 @@
         },
         {
             "uniqueId": "org.jetbrains.kotlinx:kotlinx-serialization-json",
-            "artifactVersion": "1.11.0",
+            "artifactVersion": "1.12.0",
             "name": "kotlinx-serialization-json",
             "description": "Kotlin multiplatform serialization runtime library",
             "website": "https://github.com/Kotlin/kotlinx.serialization",
