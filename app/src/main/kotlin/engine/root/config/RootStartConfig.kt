@@ -32,6 +32,7 @@ internal data class RootStartConfig(
     val enableLocalDns: Boolean,
     val enableAppListEnhancement: Boolean = false,
     val enableFakeDns: Boolean,
+    val fakeDnsIpv4Pool: String,
     val enableBoot: Boolean,
     val serviceControl: ServiceControlSettings,
 )

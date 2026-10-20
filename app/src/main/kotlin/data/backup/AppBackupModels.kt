@@ -86,6 +86,7 @@ internal data class AppBackupSettings(
     val enableIpv6: Boolean = BackupDefaults.enableIpv6,
     val enableIpv6Prefer: Boolean = BackupDefaults.enableIpv6Prefer,
     val enableFakeDns: Boolean = BackupDefaults.enableFakeDns,
+    val fakeDnsIpv4Pool: String = BackupDefaults.fakeDnsIpv4Pool,
     val proxyDns: List<String> = BackupDefaults.proxyDns,
     val directDns: List<String> = BackupDefaults.directDns,
     val directDnsDomains: List<String> = BackupDefaults.directDnsDomains,

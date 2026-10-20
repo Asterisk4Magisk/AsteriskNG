@@ -5,6 +5,7 @@ package engine.xray
 
 import app.AppState
 import app.effectiveFakeDnsEnabled
+import engine.network.normalizedFakeIpIpv4Pool
 import engine.network.isIpAddress
 import engine.network.isIpv4Address
 import engine.vpn.VpnDefaults
@@ -48,7 +49,10 @@ private fun AppState.buildXrayDnsPlan(
     dnsHosts: List<String>,
     startupProxyServerDomains: List<String>,
 ): XrayDnsPlan {
-    val effectiveDirectDnsDomains = xrayDirectDnsDomains(directDnsDomains, startupProxyServerDomains)
+    val effectiveDirectDnsDomains = xrayDirectDnsDomains(
+        directDnsDomains,
+        startupProxyServerDomains
+    )
     return XrayDnsPlan(
         servers = xrayDnsServers(
             proxyDnsServers = proxyDnsServers,
@@ -80,10 +84,14 @@ internal fun buildXrayDnsConfig(plan: XrayDnsPlan): JsonObject {
     }
 }
 
-private fun buildXrayFakeDnsConfig(): JsonElement {
+private fun AppState.buildXrayFakeDnsConfig(): JsonElement {
+    val pool = fakeDnsIpv4Pool.normalizedFakeIpIpv4Pool()
+    val prefixLength = pool.substringAfter('/').toInt()
+    // Xray requires the LRU capacity to be strictly smaller than the subnet.
+    val poolSize = minOf(XrayFakeDnsIpv4OnlyPoolSize.toLong(), (1L shl (32 - prefixLength)) - 1)
     return buildJsonObject {
-        put("ipPool", XrayFakeDnsIpv4Pool)
-        put("poolSize", XrayFakeDnsIpv4OnlyPoolSize)
+        put("ipPool", pool)
+        put("poolSize", poolSize)
     }
 }
 
@@ -114,11 +122,11 @@ internal fun AppState.xrayProxyDnsServers(
     }
 }
 
-internal fun AppState.xrayDirectDnsServers(directDnsServers: List<String>): List<String> {
+internal fun xrayDirectDnsServers(directDnsServers: List<String>): List<String> {
     return directDnsServers.toTrimmedNonEmptyDistinctList()
 }
 
-internal fun AppState.xrayDirectDnsDomains(
+internal fun xrayDirectDnsDomains(
     directDnsDomains: List<String>,
     startupProxyServerDomains: List<String> = emptyList(),
 ): List<String> {

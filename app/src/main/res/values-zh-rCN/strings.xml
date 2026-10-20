@@ -292,7 +292,9 @@
     <string name="settings_dns_hosts_invalid">无效 DNS hosts 条目</string>
     <string name="settings_dns_server_invalid">无效 Xray DNS 服务器</string>
     <string name="settings_dns_summary">FakeDNS、直连 DNS、代理 DNS、DNS hosts</string>
+    <string name="settings_fake_dns_ipv4_pool">FakeDNS IPv4 地址池</string>
     <string name="settings_fake_dns_summary">启用 FakeDNS</string>
+    <string name="settings_fake_ip_pool_invalid">请输入前缀长度为 /1 至 /30 的 IPv4 CIDR</string>
     <string name="settings_proxy_dns">代理 DNS</string>
     <string name="settings_proxy_dns_empty">还没有添加代理 DNS</string>
     <string name="settings_resolve_proxy_server_domain">解析节点域名</string>

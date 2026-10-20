@@ -56,12 +56,16 @@ internal fun SettingsBottomSheetsHost(
             appState.runMode == RunModeTun2Socks ||
             appState.runMode == RunModeBpf2Socks) &&
             appState.proxyRunning,
-        inboundProxyPort = if (appState.runMode == RunModeTun2Socks) {
-            sheetState.localProxySettingsDraft.socks5ProxyPort
-        } else if (appState.runMode == RunModeBpf2Socks) {
-            sheetState.localProxySettingsDraft.socks5ProxyPort
-        } else {
-            sheetState.localProxySettingsDraft.transparentProxyPort
+        inboundProxyPort = when (appState.runMode) {
+            RunModeTun2Socks -> {
+                sheetState.localProxySettingsDraft.socks5ProxyPort
+            }
+            RunModeBpf2Socks -> {
+                sheetState.localProxySettingsDraft.socks5ProxyPort
+            }
+            else -> {
+                sheetState.localProxySettingsDraft.transparentProxyPort
+            }
         },
         bpf2SocksBridgePort = sheetState.localProxySettingsDraft.bpf2SocksBridgePort,
         port = sheetState.localProxySettingsDraft.port,
@@ -70,12 +74,16 @@ internal fun SettingsBottomSheetsHost(
         username = sheetState.localProxySettingsDraft.username,
         password = sheetState.localProxySettingsDraft.password,
         onInboundProxyPortChange = {
-            sheetState.localProxySettingsDraft = if (appState.runMode == RunModeTun2Socks) {
-                sheetState.localProxySettingsDraft.copy(socks5ProxyPort = it)
-            } else if (appState.runMode == RunModeBpf2Socks) {
-                sheetState.localProxySettingsDraft.copy(socks5ProxyPort = it)
-            } else {
-                sheetState.localProxySettingsDraft.copy(transparentProxyPort = it)
+            sheetState.localProxySettingsDraft = when (appState.runMode) {
+                RunModeTun2Socks -> {
+                    sheetState.localProxySettingsDraft.copy(socks5ProxyPort = it)
+                }
+                RunModeBpf2Socks -> {
+                    sheetState.localProxySettingsDraft.copy(socks5ProxyPort = it)
+                }
+                else -> {
+                    sheetState.localProxySettingsDraft.copy(transparentProxyPort = it)
+                }
             }
         },
         onBpf2SocksBridgePortChange = {
@@ -161,6 +169,7 @@ internal fun SettingsBottomSheetsHost(
         show = sheetState.showDnsSettings,
         enableVpnLocalDns = sheetState.dnsSettingsDraft.enableVpnLocalDns,
         enableFakeDns = sheetState.dnsSettingsDraft.enableFakeDns,
+        fakeDnsIpv4Pool = sheetState.dnsSettingsDraft.fakeDnsIpv4Pool,
         enableResolveProxyServerDomain = sheetState.dnsSettingsDraft.enableResolveProxyServerDomain,
         proxyDns = sheetState.dnsSettingsDraft.proxyDns,
         directDns = sheetState.dnsSettingsDraft.directDns,
@@ -170,11 +179,14 @@ internal fun SettingsBottomSheetsHost(
         onEnableVpnLocalDnsChange = { enabled ->
             sheetState.dnsSettingsDraft = sheetState.dnsSettingsDraft.copy(
                 enableVpnLocalDns = enabled,
-                enableFakeDns = if (enabled) sheetState.dnsSettingsDraft.enableFakeDns else false,
+                enableFakeDns = enabled && sheetState.dnsSettingsDraft.enableFakeDns,
             )
         },
         onEnableFakeDnsChange = {
             sheetState.dnsSettingsDraft = sheetState.dnsSettingsDraft.copy(enableFakeDns = it)
+        },
+        onFakeDnsIpv4PoolChange = {
+            sheetState.dnsSettingsDraft = sheetState.dnsSettingsDraft.copy(fakeDnsIpv4Pool = it)
         },
         onEnableResolveProxyServerDomainChange = {
             sheetState.dnsSettingsDraft = sheetState.dnsSettingsDraft.copy(enableResolveProxyServerDomain = it)
@@ -191,11 +203,12 @@ internal fun SettingsBottomSheetsHost(
         },
         onDnsHostsChange = { sheetState.dnsSettingsDraft = sheetState.dnsSettingsDraft.copy(dnsHosts = it) },
         onDismissRequest = { sheetState.showDnsSettings = false },
-        onSave = { enableVpnLocalDns, enableFakeDns, enableResolveProxyServerDomain, proxyDns, directDns, directDnsDomains, enableDirectDnsForProxyServerDomains, dnsHosts ->
+        onSave = { enableVpnLocalDns, enableFakeDns, fakeDnsIpv4Pool, enableResolveProxyServerDomain, proxyDns, directDns, directDnsDomains, enableDirectDnsForProxyServerDomains, dnsHosts ->
             updateAppState { state ->
                 state.copy(
                     enableVpnLocalDns = enableVpnLocalDns,
                     enableFakeDns = enableFakeDns,
+                    fakeDnsIpv4Pool = fakeDnsIpv4Pool,
                     enableResolveProxyServerDomain = enableResolveProxyServerDomain,
                     proxyDns = proxyDns,
                     directDns = directDns,
@@ -293,12 +306,11 @@ internal fun SettingsBottomSheetsHost(
         },
         onSave = { draft ->
             if (!serviceControlSaving) {
-                val baseState = appState
                 serviceControlSaving = true
                 serviceControlError = null
                 scope.launch {
                     try {
-                        val applied = applyServiceControl.apply(baseState, draft)
+                        val applied = applyServiceControl.apply(appState, draft)
                         updateAppState { current ->
                             current.copy(
                                 serviceControl = applied.serviceControl,

@@ -3,6 +3,8 @@
 
 package app
 
+import engine.network.DefaultFakeIpIpv4Pool
+import engine.network.withoutIpv6FakeIpPool
 import app.modes.ColorModeSystem
 import app.modes.LanguageModeSystem
 import app.modes.ProxyAppListModeGlobal
@@ -99,6 +101,7 @@ data class AppState(
     val enableIpv6: Boolean = false,
     val enableIpv6Prefer: Boolean = false,
     val enableFakeDns: Boolean = false,
+    val fakeDnsIpv4Pool: String = DefaultFakeIpIpv4Pool,
     val proxyDns: List<String> = VpnDefaults.PROXY_DNS_SERVERS,
     val directDns: List<String> = VpnDefaults.DIRECT_DNS_SERVERS,
     val directDnsDomains: List<String> = DefaultDirectDnsDomains,
@@ -137,9 +140,12 @@ val AppState.requiresGlobalProxyAppMode: Boolean
     get() = runMode.isRootRunMode() && effectiveFakeDnsEnabled &&
         !(enableAppListEnhancement && runMode.supportsAppListEnhancement())
 
-internal fun AppState.withCompatibleProxyAppListMode(): AppState =
-    if (requiresGlobalProxyAppMode && proxyAppListMode != ProxyAppListModeGlobal) {
-        copy(proxyAppListMode = ProxyAppListModeGlobal)
+internal fun AppState.withCompatibleProxyAppListMode(): AppState {
+    val pool = fakeDnsIpv4Pool.withoutIpv6FakeIpPool()
+    val mode = if (requiresGlobalProxyAppMode) ProxyAppListModeGlobal else proxyAppListMode
+    return if (pool != fakeDnsIpv4Pool || mode != proxyAppListMode) {
+        copy(fakeDnsIpv4Pool = pool, proxyAppListMode = mode)
     } else {
         this
     }
+}

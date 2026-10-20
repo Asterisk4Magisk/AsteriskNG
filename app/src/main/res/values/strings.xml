@@ -292,7 +292,9 @@
     <string name="settings_dns_hosts_invalid">Invalid DNS hosts entry</string>
     <string name="settings_dns_server_invalid">Invalid Xray DNS server</string>
     <string name="settings_dns_summary">FakeDNS, direct DNS, proxy DNS, DNS hosts</string>
+    <string name="settings_fake_dns_ipv4_pool">FakeDNS IPv4 pool</string>
     <string name="settings_fake_dns_summary">Enable FakeDNS</string>
+    <string name="settings_fake_ip_pool_invalid">Enter an IPv4 CIDR with a prefix from /1 to /30</string>
     <string name="settings_proxy_dns">Proxy DNS</string>
     <string name="settings_proxy_dns_empty">No proxy DNS added</string>
     <string name="settings_resolve_proxy_server_domain">Resolve proxy server domains</string>

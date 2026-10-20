@@ -3,6 +3,7 @@
 
 package data.backup
 
+import app.withCompatibleProxyAppListMode
 import app.AppState
 import app.ServiceControlSchedule
 import app.ServiceControlKeyguard
@@ -106,6 +107,7 @@ private fun AppState.toBackupSettings(): AppBackupSettings {
         enableIpv6 = enableIpv6,
         enableIpv6Prefer = enableIpv6Prefer,
         enableFakeDns = enableFakeDns,
+        fakeDnsIpv4Pool = fakeDnsIpv4Pool,
         proxyDns = proxyDns,
         directDns = directDns,
         directDnsDomains = directDnsDomains,
@@ -329,6 +331,7 @@ private fun AppBackupData.toAppState(): AppState {
         enableIpv6 = settings.enableIpv6,
         enableIpv6Prefer = settings.enableIpv6Prefer,
         enableFakeDns = settings.enableFakeDns,
+        fakeDnsIpv4Pool = settings.fakeDnsIpv4Pool,
         proxyDns = settings.proxyDns,
         directDns = settings.directDns,
         directDnsDomains = settings.directDnsDomains,
@@ -347,7 +350,7 @@ private fun AppBackupData.toAppState(): AppState {
         privateAddressCidrs = settings.privateAddressCidrs,
         proxyAppListMode = settings.proxyAppListMode,
         proxyAppListSelectedApps = proxyAppListSelectedApps,
-    )
+    ).withCompatibleProxyAppListMode()
 }
 
 private fun AppBackupSubscriptionGroup.toState(): SubscriptionGroupState {

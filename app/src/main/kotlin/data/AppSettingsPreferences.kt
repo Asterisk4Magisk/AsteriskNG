@@ -187,6 +187,8 @@ internal class AppSettingsPreferences(
             enableIpv6 = preferences.getBoolean(KeyEnableIpv6, defaults.enableIpv6),
             enableIpv6Prefer = preferences.getBoolean(KeyEnableIpv6Prefer, defaults.enableIpv6Prefer),
             enableFakeDns = preferences.getBoolean(KeyEnableFakeDns, defaults.enableFakeDns),
+            fakeDnsIpv4Pool = preferences.getString(KeyFakeDnsIpv4Pool, defaults.fakeDnsIpv4Pool)
+                ?: defaults.fakeDnsIpv4Pool,
             proxyDns = preferences.getStringList(KeyProxyDns, defaults.proxyDns),
             directDns = preferences.getStringList(KeyDirectDns, defaults.directDns),
             directDnsDomains = preferences.getStringList(KeyDirectDnsDomains, defaults.directDnsDomains),
@@ -294,6 +296,7 @@ internal class AppSettingsPreferences(
             .putBoolean(KeyEnableIpv6, state.enableIpv6)
             .putBoolean(KeyEnableIpv6Prefer, state.enableIpv6Prefer)
             .putBoolean(KeyEnableFakeDns, state.enableFakeDns)
+            .putString(KeyFakeDnsIpv4Pool, state.fakeDnsIpv4Pool)
             .putStringList(KeyProxyDns, state.proxyDns)
             .putStringList(KeyDirectDns, state.directDns)
             .putStringList(KeyDirectDnsDomains, state.directDnsDomains)
@@ -507,6 +510,7 @@ private const val KeyEnableBroadcastControl = "enable_broadcast_control"
 private const val KeyEnableIpv6 = "enable_ipv6"
 private const val KeyEnableIpv6Prefer = "enable_ipv6_prefer"
 private const val KeyEnableFakeDns = "enable_fake_dns"
+private const val KeyFakeDnsIpv4Pool = "fake_dns_ipv4_pool"
 private const val KeyProxyDns = "proxy_dns"
 private const val KeyDirectDns = "direct_dns"
 private const val KeyDirectDnsDomains = "direct_dns_domains"

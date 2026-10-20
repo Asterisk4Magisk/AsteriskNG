@@ -6,6 +6,7 @@ package engine.root.config
 import android.content.Context
 import app.AppState
 import app.ProxyServerState
+import engine.network.normalizedFakeIpIpv4Pool
 import app.effectiveFakeDnsEnabled
 import app.effectiveLocalDnsEnabled
 import engine.network.toPortOrNull
@@ -108,6 +109,7 @@ private fun AppState.toRootStartConfig(
         enableAppListEnhancement = enableAppListEnhancement,
         enableLocalDns = effectiveLocalDnsEnabled,
         enableFakeDns = effectiveFakeDnsEnabled,
+        fakeDnsIpv4Pool = fakeDnsIpv4Pool.normalizedFakeIpIpv4Pool(),
         enableBoot = enableRootBootScript,
         serviceControl = serviceControl,
     )

@@ -57,7 +57,7 @@ internal fun RootStartConfig.buildAsteriskdConfig(
             disableSystemIpv6 = disableSystemIpv6,
             enableLocalDns = enableLocalDns,
             enableFakeDns = enableFakeDns,
-            fakeDnsIpv4Pool = "198.18.0.0/15".takeIf { enableFakeDns },
+            fakeDnsIpv4Pool = fakeDnsIpv4Pool.takeIf { enableFakeDns },
             ignoredInterfaces = iptablesConfig.ignoredInterfaces.distinct(),
             virtualInterfaces = virtualInterfaces.distinct(),
             hotspotInterfacePrefixes = iptablesConfig.externalInterfacePrefixes.distinct(),

@@ -8,6 +8,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -16,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import app.R
+import engine.network.isValidFakeIpIpv4Pool
 import engine.network.isIpAddress
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.window.WindowBottomSheet
@@ -41,6 +43,7 @@ internal fun DnsSettingsBottomSheet(
     show: Boolean,
     enableVpnLocalDns: Boolean,
     enableFakeDns: Boolean,
+    fakeDnsIpv4Pool: String,
     enableResolveProxyServerDomain: Boolean,
     onEnableVpnLocalDnsChange: (Boolean) -> Unit,
     proxyDns: List<String>,
@@ -49,6 +52,7 @@ internal fun DnsSettingsBottomSheet(
     enableDirectDnsForProxyServerDomains: Boolean,
     dnsHosts: List<String>,
     onEnableFakeDnsChange: (Boolean) -> Unit,
+    onFakeDnsIpv4PoolChange: (String) -> Unit,
     onEnableResolveProxyServerDomainChange: (Boolean) -> Unit,
     onProxyDnsChange: (List<String>) -> Unit,
     onDirectDnsChange: (List<String>) -> Unit,
@@ -56,7 +60,7 @@ internal fun DnsSettingsBottomSheet(
     onEnableDirectDnsForProxyServerDomainsChange: (Boolean) -> Unit,
     onDnsHostsChange: (List<String>) -> Unit,
     onDismissRequest: () -> Unit,
-    onSave: (Boolean, Boolean, Boolean, List<String>, List<String>, List<String>, Boolean, List<String>) -> Unit,
+    onSave: (Boolean, Boolean, String, Boolean, List<String>, List<String>, List<String>, Boolean, List<String>) -> Unit,
 ) {
     val proxyDnsEntries = proxyDns.toTrimmedNonEmptyDistinctList()
     val directDnsEntries = directDns.toTrimmedNonEmptyDistinctList()
@@ -65,8 +69,9 @@ internal fun DnsSettingsBottomSheet(
     val dnsHostEntries = dnsHosts.toTrimmedNonEmptyDistinctList()
     val dnsServerInvalidMessage = stringResource(R.string.settings_dns_server_invalid)
     val dnsDomainInvalidMessage = stringResource(R.string.settings_dns_domain_invalid)
-    val effectiveLocalDnsEnabled = enableVpnLocalDns
-    val effectiveFakeDnsEnabled = effectiveLocalDnsEnabled && enableFakeDns
+    val effectiveFakeDnsEnabled = enableVpnLocalDns && enableFakeDns
+    val fakeDnsPoolError = stringResource(R.string.settings_fake_ip_pool_invalid)
+        .takeIf { effectiveFakeDnsEnabled && !isValidFakeIpIpv4Pool(fakeDnsIpv4Pool) }
     WindowBottomSheet(
         show = show,
         title = stringResource(R.string.settings_dns),
@@ -79,10 +84,12 @@ internal fun DnsSettingsBottomSheet(
         endAction = {
             TextButton(
                 text = stringResource(R.string.common_save),
+                enabled = fakeDnsPoolError == null,
                 onClick = {
                     onSave(
                         enableVpnLocalDns,
                         effectiveFakeDnsEnabled,
+                        fakeDnsIpv4Pool.trim(),
                         enableResolveProxyServerDomain,
                         proxyDnsEntries,
                         directDnsEntries,
@@ -99,11 +106,11 @@ internal fun DnsSettingsBottomSheet(
             SwitchPreference(
                 title = stringResource(R.string.settings_vpn_local_dns),
                 summary = stringResource(R.string.settings_vpn_local_dns_summary),
-                checked = effectiveLocalDnsEnabled,
+                checked = enableVpnLocalDns,
                 onCheckedChange = onEnableVpnLocalDnsChange,
             )
             AnimatedVisibility(
-                visible = effectiveLocalDnsEnabled,
+                visible = enableVpnLocalDns,
                 enter = fadeIn() + expandVertically(),
                 exit = shrinkVertically() + fadeOut(),
             ) {
@@ -113,6 +120,20 @@ internal fun DnsSettingsBottomSheet(
                     checked = effectiveFakeDnsEnabled,
                     onCheckedChange = onEnableFakeDnsChange,
                 )
+            }
+            AnimatedVisibility(
+                visible = effectiveFakeDnsEnabled,
+                enter = fadeIn() + expandVertically(),
+                exit = shrinkVertically() + fadeOut(),
+            ) {
+                Column {
+                    SettingsTextField(
+                        value = fakeDnsIpv4Pool,
+                        onValueChange = onFakeDnsIpv4PoolChange,
+                        label = stringResource(R.string.settings_fake_dns_ipv4_pool),
+                        errorText = fakeDnsPoolError,
+                    )
+                }
             }
             SwitchPreference(
                 title = stringResource(R.string.settings_resolve_proxy_server_domain),

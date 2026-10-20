@@ -293,7 +293,9 @@
     <string name="settings_dns_hosts_invalid">Некорректная запись DNS hosts</string>
     <string name="settings_dns_server_invalid">Недопустимый сервер DNS Xray</string>
     <string name="settings_dns_summary">FakeDNS, прямой DNS, DNS для прокси, DNS hosts</string>
+    <string name="settings_fake_dns_ipv4_pool">Пул IPv4 FakeDNS</string>
     <string name="settings_fake_dns_summary">Включить подмену адресов FakeDNS</string>
+    <string name="settings_fake_ip_pool_invalid">Введите IPv4 CIDR с длиной префикса от /1 до /30</string>
     <string name="settings_proxy_dns">DNS для прокси-серверов</string>
     <string name="settings_proxy_dns_empty">DNS для прокси не добавлен</string>
     <string name="settings_resolve_proxy_server_domain">Разрешать домены прокси-серверов</string>
