@@ -292,7 +292,7 @@
     <string name="settings_dns_hosts_invalid">Mục DNS hosts không hợp lệ</string>
     <string name="settings_dns_server_invalid">Máy chủ DNS Xray không hợp lệ</string>
     <string name="settings_dns_summary">FakeDNS, DNS kết nối trực tiếp, DNS proxy, DNS hosts</string>
-    <string name="settings_fake_dns_ipv4_pool">Dải IPv4 FakeDNS</string>
+    <string name="settings_fake_dns_pool">Dải địa chỉ FakeDNS</string>
     <string name="settings_fake_dns_summary">Bật FakeDNS</string>
     <string name="settings_fake_ip_pool_invalid">Nhập CIDR IPv4 có độ dài tiền tố từ /1 đến /30</string>
     <string name="settings_proxy_dns">DNS proxy</string>
