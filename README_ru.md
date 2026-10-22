@@ -38,7 +38,7 @@
 
 ## Модуль расширения
 
-[AsteriskEnhance](enhance/src/main/module/README.md) — необязательный модуль для маршрутизации системного DNS по списку приложений и изоляции кешей резолвера. Требует ROOT и Zygisk Next, поддерживает TPROXY, TUN2SOCKS и BPF2SOCKS. Включите **Application list enhancement** в настройках и следуйте подсказкам установки; после установки или обновления перезагрузите устройство.
+[AsteriskEnhance](https://github.com/Asterisk4Magisk/AsteriskEnhance) — необязательный модуль для маршрутизации системного DNS по списку приложений и изоляции кешей резолвера. Требует ROOT и Zygisk Next, поддерживает TPROXY, TUN2SOCKS и BPF2SOCKS. Включите **Application list enhancement** в настройках и следуйте подсказкам установки; после установки или обновления перезагрузите устройство.
 
 ## Файлы ресурсов
 

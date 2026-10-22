@@ -38,7 +38,7 @@ Android Xray GUI 客户端。
 
 ## 增强模块
 
-[AsteriskEnhance](enhance/src/main/module/README.md) 是可选的增强模块，可让系统 DNS 按应用名单分流并隔离解析缓存。需要 ROOT 和 Zygisk Next，支持 TPROXY、TUN2SOCKS 和 BPF2SOCKS。可在设置中开启 **应用名单增强** 并按提示安装，安装或更新后需重启设备。
+[AsteriskEnhance](https://github.com/Asterisk4Magisk/AsteriskEnhance) 是可选的增强模块，可让系统 DNS 按应用名单分流并隔离解析缓存。需要 ROOT 和 Zygisk Next，支持 TPROXY、TUN2SOCKS 和 BPF2SOCKS。可在设置中开启 **应用名单增强** 并按提示安装，安装或更新后需重启设备。
 
 ## 资源文件
 

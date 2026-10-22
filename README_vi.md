@@ -38,7 +38,7 @@
 
 ## Mô-đun tăng cường
 
-[AsteriskEnhance](enhance/src/main/module/README.md) là mô-đun tùy chọn giúp định tuyến DNS hệ thống theo danh sách ứng dụng và tách biệt bộ nhớ đệm của trình phân giải. Mô-đun yêu cầu ROOT và Zygisk Next, hỗ trợ TPROXY, TUN2SOCKS và BPF2SOCKS. Bật **Application list enhancement** trong cài đặt và làm theo hướng dẫn cài đặt; khởi động lại thiết bị sau khi cài đặt hoặc cập nhật.
+[AsteriskEnhance](https://github.com/Asterisk4Magisk/AsteriskEnhance) là mô-đun tùy chọn giúp định tuyến DNS hệ thống theo danh sách ứng dụng và tách biệt bộ nhớ đệm của trình phân giải. Mô-đun yêu cầu ROOT và Zygisk Next, hỗ trợ TPROXY, TUN2SOCKS và BPF2SOCKS. Bật **Application list enhancement** trong cài đặt và làm theo hướng dẫn cài đặt; khởi động lại thiết bị sau khi cài đặt hoặc cập nhật.
 
 ## Tệp tài nguyên
 

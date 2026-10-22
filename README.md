@@ -38,7 +38,7 @@ Android Xray GUI client.
 
 ## Enhancement Module
 
-[AsteriskEnhance](enhance/src/main/module/README.md) is an optional module that routes system DNS according to the application list and isolates resolver caches. It requires ROOT and Zygisk Next and supports TPROXY, TUN2SOCKS, and BPF2SOCKS. Enable **Application list enhancement** in settings and follow the installation prompts; reboot after installation or updates.
+[AsteriskEnhance](https://github.com/Asterisk4Magisk/AsteriskEnhance) is an optional module that routes system DNS according to the application list and isolates resolver caches. It requires ROOT and Zygisk Next and supports TPROXY, TUN2SOCKS, and BPF2SOCKS. Enable **Application list enhancement** in settings and follow the installation prompts; reboot after installation or updates.
 
 ## Resource Files
 
