@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
@@ -89,27 +88,6 @@ fun pageContentPaddingWithCutout(
         extraStart = cutoutPadding.calculateStartPadding(LayoutDirection.Ltr),
         extraEnd = cutoutPadding.calculateEndPadding(LayoutDirection.Ltr),
     )
-}
-
-@Composable
-fun pageContentPaddingWithIme(
-    contentPadding: PaddingValues,
-): PaddingValues {
-    val layoutDirection = LocalLayoutDirection.current
-    val topPadding = contentPadding.calculateTopPadding()
-    val startPadding = contentPadding.calculateStartPadding(layoutDirection)
-    val endPadding = contentPadding.calculateEndPadding(layoutDirection)
-    val bottomPadding = contentPadding.calculateBottomPadding() +
-        WindowInsets.ime.asPaddingValues().calculateBottomPadding()
-
-    return remember(topPadding, startPadding, endPadding, bottomPadding) {
-        PaddingValues(
-            top = topPadding,
-            start = startPadding,
-            end = endPadding,
-            bottom = bottomPadding,
-        )
-    }
 }
 
 @Composable

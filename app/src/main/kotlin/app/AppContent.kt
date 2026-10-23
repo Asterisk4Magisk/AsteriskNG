@@ -151,6 +151,10 @@ fun AppContent(
 
         NavDisplay(
             backStack = backStack,
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MiuixTheme.colorScheme.surface)
+                .imePadding(),
             onBack = { navigator.pop() },
             effects = effects,
         ) {
@@ -287,9 +291,7 @@ private fun CompactScreenLayout(
     mainPagerState: MainPagerState,
 ) {
     Scaffold(
-        modifier = Modifier
-            .fillMaxSize()
-            .imePadding(),
+        modifier = Modifier.fillMaxSize(),
         bottomBar = {
             NavigationBar(
                 navigationItems = navigationItems,

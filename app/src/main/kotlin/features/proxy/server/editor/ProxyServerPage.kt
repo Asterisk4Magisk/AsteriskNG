@@ -68,7 +68,6 @@ import ui.components.NavigationIcon
 import ui.components.WarningConfirmDialog
 import ui.layout.AdaptiveTopAppBar
 import ui.layout.pageContentPaddingWithCutout
-import ui.layout.pageContentPaddingWithIme
 import ui.layout.pageScrollModifiers
 
 @Composable
@@ -232,7 +231,6 @@ fun ProxyServerPage(
             outerPadding = padding,
             isWideScreen = isWideScreen,
         )
-        val editorContentPadding = pageContentPaddingWithIme(contentPadding)
         if (psEdit is Custom) {
             CustomProxyServerEditor(
                 customEdit = psEdit,
@@ -246,14 +244,14 @@ fun ProxyServerPage(
                 modifier = Modifier.pageScrollModifiers(
                     topAppBarScrollBehavior,
                 ),
-                contentPadding = editorContentPadding,
+                contentPadding = contentPadding,
             ) {
                 proxyServerEditorContent(psEdit, editorOptions)
             }
             VerticalScrollBar(
                 adapter = rememberScrollBarAdapter(lazyListState),
                 modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
-                trackPadding = editorContentPadding,
+                trackPadding = contentPadding,
             )
         }
     }
