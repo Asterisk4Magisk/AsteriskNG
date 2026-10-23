@@ -287,7 +287,9 @@ private fun CompactScreenLayout(
     mainPagerState: MainPagerState,
 ) {
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .imePadding(),
         bottomBar = {
             NavigationBar(
                 navigationItems = navigationItems,
