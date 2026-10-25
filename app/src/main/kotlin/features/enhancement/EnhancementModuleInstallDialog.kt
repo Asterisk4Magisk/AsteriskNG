@@ -6,6 +6,7 @@ package features.enhancement
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
@@ -67,35 +69,37 @@ internal fun EnhancementModuleInstallDialog(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text(
-                text = stringResource(R.string.enhancement_module_install_title),
-                style = MiuixTheme.textStyles.title4,
-                textAlign = TextAlign.Start,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
-            )
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = enhancementModuleSummary(
-                        progress.result ?: EnhancementModuleState(EnhancementModulePhase.Installing),
-                    ),
-                    modifier = Modifier.weight(1f).heightIn(max = 72.dp)
-                        .verticalScroll(rememberScrollState()),
+                    text = stringResource(R.string.enhancement_module_install_title),
+                    style = MiuixTheme.textStyles.title4,
                     textAlign = TextAlign.Start,
-                    style = MiuixTheme.textStyles.body2,
-                    color = if (progress.result?.phase == EnhancementModulePhase.Failed) {
-                        MiuixTheme.colorScheme.error
-                    } else {
-                        MiuixTheme.colorScheme.onSurfaceVariantSummary
-                    },
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
                 )
-                if (progress.running) InfiniteProgressIndicator(size = 24.dp)
+                Box(modifier = Modifier.size(24.dp)) {
+                    if (progress.running) InfiniteProgressIndicator(size = 24.dp)
+                }
             }
+            Text(
+                text = enhancementModuleSummary(
+                    progress.result ?: EnhancementModuleState(EnhancementModulePhase.Installing),
+                ),
+                modifier = Modifier.fillMaxWidth().heightIn(max = 72.dp)
+                    .verticalScroll(rememberScrollState()),
+                textAlign = TextAlign.Start,
+                style = MiuixTheme.textStyles.body2,
+                color = if (progress.result?.phase == EnhancementModulePhase.Failed) {
+                    MiuixTheme.colorScheme.error
+                } else {
+                    MiuixTheme.colorScheme.onSurfaceVariantSummary
+                },
+            )
             SelectionContainer(
                 modifier = Modifier
                     .fillMaxWidth()
