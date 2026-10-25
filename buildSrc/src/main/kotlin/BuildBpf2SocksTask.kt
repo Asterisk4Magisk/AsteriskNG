@@ -46,14 +46,16 @@ abstract class BuildBpf2SocksTask : DefaultTask() {
     @TaskAction
     fun build() {
         val sourceDir = sourceDirectory.get().asFile
-        val userSpaceSources = sourceDir.listFiles()
-            ?.filter { file ->
+        // The root and its module directories; kern/*.bpf.c is compiled separately.
+        val userSpaceSources = sourceDir.walkTopDown()
+            .onEnter { directory -> directory == sourceDir || (!directory.name.startsWith(".") && directory.name != "build") }
+            .filter { file ->
                 file.isFile &&
                     file.extension == "c" &&
                     !file.name.endsWith(".bpf.c")
             }
-            ?.sortedBy { file -> file.name }
-            .orEmpty()
+            .sortedBy { file -> file.relativeTo(sourceDir).invariantSeparatorsPath }
+            .toList()
         if (userSpaceSources.isEmpty()) {
             throw GradleException("No bpf2socks C sources found under ${sourceDir.absolutePath}")
         }
@@ -77,6 +79,7 @@ abstract class BuildBpf2SocksTask : DefaultTask() {
                         "-Werror",
                         "-fPIE",
                         "-pie",
+                        "-I${sourceDir.absolutePath}",
                     ) + sources.map(File::getAbsolutePath) + listOf(
                         "-o",
                         output.absolutePath,
@@ -90,7 +93,7 @@ abstract class BuildBpf2SocksTask : DefaultTask() {
     }
 
     private fun buildEmbeddedBpfSource(ndkDir: File, sourceDir: File): File {
-        val bpfSource = sourceDir.resolve("tc_redirect.bpf.c")
+        val bpfSource = sourceDir.resolve("kern/tc_redirect.bpf.c")
         if (!bpfSource.isFile) {
             throw GradleException("Missing bpf2socks TC source: ${bpfSource.absolutePath}")
         }

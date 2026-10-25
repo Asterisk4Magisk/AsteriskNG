@@ -46,10 +46,12 @@ abstract class BuildAsteriskdTask : DefaultTask() {
     @TaskAction
     fun build() {
         val sourceDir = sourceDirectory.get().asFile
-        val sources = sourceDir.listFiles()
-            ?.filter { file -> file.isFile && file.extension == "c" }
-            ?.sortedBy(File::getName)
-            .orEmpty()
+        // The root and its module directories.
+        val sources = sourceDir.walkTopDown()
+            .onEnter { directory -> directory == sourceDir || (!directory.name.startsWith(".") && directory.name != "build") }
+            .filter { file -> file.isFile && file.extension == "c" }
+            .sortedBy { file -> file.relativeTo(sourceDir).invariantSeparatorsPath }
+            .toList()
         if (sources.isEmpty()) {
             throw GradleException("No asteriskd C sources found in ${sourceDir.absolutePath}")
         }
@@ -69,6 +71,7 @@ abstract class BuildAsteriskdTask : DefaultTask() {
                     "-std=c17",
                     "-fPIE",
                     "-pie",
+                    "-I${sourceDir.absolutePath}",
                     "-ldl",
                     "-lz",
                     *sources.map(File::getAbsolutePath).toTypedArray(),
