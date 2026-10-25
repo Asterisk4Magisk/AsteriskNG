@@ -29,6 +29,7 @@ import com.journeyapps.barcodescanner.ScanContract
 import data.AndroidAppStateStore
 import data.AppSettingsPreferences
 import engine.vpn.AndroidVpnPermissionRequester
+import features.boot.BootAutoConnect
 import features.logs.AndroidLogFileCreator
 import features.proxy.server.qr.AndroidQrCodeScanRequester
 import features.resources.runtime.AndroidResourceFilePicker
@@ -47,6 +48,8 @@ import system.setRecentTasksHidden
 import ui.feedback.AndroidToastTipNotifier
 
 class MainActivity : ComponentActivity() {
+    private var pendingAutoConnect = false
+
     private val vpnPermissionRequester = AndroidVpnPermissionRequester {
         appString(R.string.error_vpn_permission_launcher_missing)
     }
@@ -151,8 +154,38 @@ class MainActivity : ComponentActivity() {
         showAppContent()
         requestStartupPermissions()
         if (savedInstanceState == null) {
+            readAutoConnectRequest(intent)
             handleExternalIntent(intent)
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (!pendingAutoConnect) return
+        pendingAutoConnect = false
+        lifecycleScope.launch {
+            val notifier = AndroidToastTipNotifier(application)
+            BootAutoConnect.connectAfterConsent(applicationContext, vpnPermissionRequester::request)
+                .onSuccess { running ->
+                    if (running) notifier.show(appString(R.string.proxy_server_list_service_started))
+                }
+                .onFailure { error ->
+                    notifier.showError(error, appString(R.string.proxy_error_dialog_title))
+                }
+        }
+    }
+
+    /**
+     * The auto connect notification lands here when the VPN consent is missing: the activity is
+     * the only place that may show the system consent dialog, so the request is completed after
+     * the user answers it. A launch from recents or a restored activity replays the original
+     * intent, so only a fresh delivery counts as a request.
+     */
+    private fun readAutoConnectRequest(intent: Intent?) {
+        if (intent?.action != BootAutoConnect.ActionConnectAfterConsent) return
+        if (intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY != 0) return
+        intent.action = null
+        pendingAutoConnect = true
     }
 
     private fun observeRecentTasksVisibility() {
@@ -195,6 +228,7 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         handleExternalIntent(intent)
+        readAutoConnectRequest(intent)
     }
 
     override fun onDestroy() {

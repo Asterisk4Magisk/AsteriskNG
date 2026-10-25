@@ -54,6 +54,12 @@ data class AppState(
     val localProxyPassword: String = "",
     val enableVpnAppendHttpProxy: Boolean = false,
     val enableVpnHevTun: Boolean = false,
+
+    /**
+     * Starts the VPN Service by itself after boot, and restores it after an app update. VPN
+     * Service mode only: ROOT modes bring their own boot entry ([enableRootBootScript]).
+     */
+    val enableAutoConnect: Boolean = false,
     val tunMtu: String = VpnDefaults.MTU.toString(),
     val tunVpnDns: String = VpnDefaults.IPV4_DNS,
     val tunIpv4Cidr: String = VpnDefaults.IPV4_CIDR,

@@ -370,6 +370,8 @@
     <string name="settings_vpn_append_http_proxy_summary">Cho phép ứng dụng được hỗ trợ sử dụng trực tiếp proxy HTTP</string>
     <string name="settings_vpn_hev_tun">Sử dụng Hev TUN</string>
     <string name="settings_vpn_hev_tun_summary">Sử dụng hev-socks5-tunnel để tạo thiết bị TUN</string>
+    <string name="settings_auto_connect_summary">Khởi động VPN Service khi bật máy và khôi phục sau khi cập nhật</string>
+    <string name="auto_connect_permission_text">Nhấn để cấp quyền và khởi động VPN Service</string>
     <string name="settings_vpn_local_dns">Bật chuyển hướng DNS</string>
     <string name="settings_vpn_local_dns_summary">Sử dụng lõi để xử lý yêu cầu DNS</string>
 
@@ -383,7 +385,7 @@
     <string name="root_foreign_owner_conflict">Dịch vụ proxy ROOT đang được sử dụng bởi %1$s, vui lòng dừng dịch vụ trong %1$s trước rồi thử lại.</string>
     <string name="settings_app_list_enhancement">Tăng cường danh sách ứng dụng</string>
     <string name="settings_app_list_enhancement_summary">DNS hệ thống theo danh sách ứng dụng, cách ly bộ đệm</string>
-    <string name="settings_root_boot_script">Tự khởi động cùng hệ thống</string>
+    <string name="settings_start_on_boot">Tự khởi động cùng hệ thống</string>
     <string name="settings_root_boot_script_failed">Thiết lập tự khởi động thất bại</string>
     <string name="settings_root_boot_script_summary">Tạo script khởi động service.d</string>
     <string name="settings_root_ebpf_bypass_direct_cidrs">Bỏ qua địa chỉ kết nối trực tiếp</string>

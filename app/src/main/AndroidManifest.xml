@@ -9,12 +9,14 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission
         android:name="android.permission.FOREGROUND_SERVICE"
         tools:ignore="ForegroundServicesPolicy" />
     <uses-permission
         android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"
         tools:ignore="ForegroundServicesPolicy" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SYSTEM_EXEMPTED" />
 
     <!-- Required to resolve labels and icons for the per-app proxy package list. -->
     <uses-permission
@@ -119,6 +121,19 @@
             android:exported="true"
             tools:ignore="ExportedReceiver" />
 
+        <!-- Starts the VPN Service after boot, or restores it after an app update, while auto
+             connect is on. Disabled by default and enabled from BootAutoConnect.setComponentEnabled,
+             so a user who never opts in pays no boot wake-up. -->
+        <receiver
+            android:name="features.boot.AutoConnectBootReceiver"
+            android:enabled="false"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
         <!--
             Opens the main screen when the user dials *#*#260517#*#*
             from the system dialer. The broadcast is dispatched system-wide
@@ -160,14 +175,23 @@
                 android:value="true" />
         </service>
 
+        <!-- systemExempted is the documented type for a VPN app configured in the system VPN
+             settings. Lint's ForegroundServicePermission check only models the exact-alarm
+             criterion, so the documented VPN criterion is suppressed here instead of adding an
+             alarm permission this app never uses. -->
         <service
             android:name="engine.vpn.AsteriskVpnService"
             android:exported="false"
+            android:foregroundServiceType="systemExempted"
             android:permission="android.permission.BIND_VPN_SERVICE"
-            tools:ignore="VpnServicePolicy">
+            tools:ignore="ForegroundServicePermission,VpnServicePolicy">
             <intent-filter>
                 <action android:name="android.net.VpnService" />
             </intent-filter>
+            <!-- Lets the system start this service at boot and after an app update. -->
+            <meta-data
+                android:name="android.net.VpnService.SUPPORTS_ALWAYS_ON"
+                android:value="true" />
         </service>
         <service
             android:name="androidx.work.impl.foreground.SystemForegroundService"

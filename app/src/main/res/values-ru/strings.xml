@@ -371,6 +371,8 @@
     <string name="settings_vpn_append_http_proxy_summary">Поддерживаемые приложения будут использовать HTTP-прокси напрямую</string>
     <string name="settings_vpn_hev_tun">Использовать Hev TUN</string>
     <string name="settings_vpn_hev_tun_summary">Использовать стек hev-socks5-tunnel для создания интерфейса TUN</string>
+    <string name="settings_auto_connect_summary">Запускать VPN Service при загрузке и восстанавливать после обновления</string>
+    <string name="auto_connect_permission_text">Нажмите, чтобы выдать разрешение и запустить VPN Service</string>
     <string name="settings_vpn_local_dns">Включить перехват DNS</string>
     <string name="settings_vpn_local_dns_summary">Использовать встроенное ядро для обработки DNS-запросов</string>
 
@@ -384,7 +386,7 @@
     <string name="root_foreign_owner_conflict">ROOT-прокси уже используется приложением %1$s. Остановите сервис в %1$s и повторите попытку.</string>
     <string name="settings_app_list_enhancement">Расширенная обработка списка приложений</string>
     <string name="settings_app_list_enhancement_summary">Системный DNS по списку приложений, изоляция кэша</string>
-    <string name="settings_root_boot_script">Автозапуск при загрузке</string>
+    <string name="settings_start_on_boot">Автозапуск при загрузке</string>
     <string name="settings_root_boot_script_failed">Не удалось обновить скрипт автозапуска</string>
     <string name="settings_root_boot_script_summary">Генерировать скрипт инициализации в service.d (Magisk/KernelSU)</string>
     <string name="settings_root_ebpf_bypass_direct_cidrs">Обходить прямые адреса</string>

@@ -295,6 +295,7 @@ internal fun SettingsProxyModeSections(
     enableTrafficStatsNotification: Boolean,
     enableVpnAppendHttpProxy: Boolean,
     enableVpnHevTun: Boolean,
+    enableAutoConnect: Boolean,
     tunSettingsSummary: String,
     enableIpv6: Boolean,
     enableRootBootScript: Boolean,
@@ -308,6 +309,7 @@ internal fun SettingsProxyModeSections(
     onEnableTrafficStatsNotificationChange: (Boolean) -> Unit,
     onEnableVpnAppendHttpProxyChange: (Boolean) -> Unit,
     onEnableVpnHevTunChange: (Boolean) -> Unit,
+    onEnableAutoConnectChange: (Boolean) -> Unit,
     onOpenTunSettings: () -> Unit,
     onEnableRootBootScriptChange: (Boolean) -> Unit,
     onEnableRootEbpfRulesChange: (Boolean) -> Unit,
@@ -326,6 +328,12 @@ internal fun SettingsProxyModeSections(
         Column {
             SmallTitle(text = stringResource(R.string.settings_proxy_vpn_service))
             SettingsSectionCard {
+                SwitchPreference(
+                    title = stringResource(R.string.settings_start_on_boot),
+                    summary = stringResource(R.string.settings_auto_connect_summary),
+                    checked = enableAutoConnect,
+                    onCheckedChange = onEnableAutoConnectChange,
+                )
                 ArrowPreference(
                     title = stringResource(R.string.settings_local_proxy),
                     summary = localProxySettingsSummary,
@@ -381,7 +389,7 @@ internal fun SettingsProxyModeSections(
                     exit = shrinkVertically() + fadeOut(),
                 ) {
                     SwitchPreference(
-                        title = stringResource(R.string.settings_root_boot_script),
+                        title = stringResource(R.string.settings_start_on_boot),
                         summary = stringResource(R.string.settings_root_boot_script_summary),
                         checked = enableRootBootScript,
                         onCheckedChange = onEnableRootBootScriptChange,

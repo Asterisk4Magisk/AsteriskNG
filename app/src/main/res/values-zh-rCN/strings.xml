@@ -370,6 +370,8 @@
     <string name="settings_vpn_append_http_proxy_summary">让受支持的应用直接使用 HTTP 代理</string>
     <string name="settings_vpn_hev_tun">使用 Hev TUN</string>
     <string name="settings_vpn_hev_tun_summary">使用 hev-socks5-tunnel 创建 TUN 设备</string>
+    <string name="settings_auto_connect_summary">开机启动 VPN Service，更新后自动恢复</string>
+    <string name="auto_connect_permission_text">点击授权并启动 VPN Service</string>
     <string name="settings_vpn_local_dns">启用 DNS 劫持</string>
     <string name="settings_vpn_local_dns_summary">使用核心处理 DNS 请求</string>
 
@@ -383,7 +385,7 @@
     <string name="root_foreign_owner_conflict">ROOT 代理服务正被 %1$s 占用，请先在 %1$s 中停止服务后重试。</string>
     <string name="settings_app_list_enhancement">应用名单增强</string>
     <string name="settings_app_list_enhancement_summary">按应用名单分流系统 DNS，并隔离缓存</string>
-    <string name="settings_root_boot_script">开机自启</string>
+    <string name="settings_start_on_boot">开机自启</string>
     <string name="settings_root_boot_script_failed">开机自启设置失败</string>
     <string name="settings_root_boot_script_summary">生成 service.d 启动脚本</string>
     <string name="settings_root_ebpf_bypass_direct_cidrs">绕过直连地址</string>

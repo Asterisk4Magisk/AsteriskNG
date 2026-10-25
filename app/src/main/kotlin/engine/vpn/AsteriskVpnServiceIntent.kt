@@ -18,6 +18,19 @@ internal object AsteriskVpnServiceIntents {
     const val ACTION_START = "app.action.START_VPN"
     const val ACTION_STOP = "app.action.STOP_VPN"
 
+    /**
+     * Starts the service without an embedded configuration. Used by the boot receiver and by
+     * the system's always-on VPN start; both carry no configuration because it is compiled
+     * from the persisted app state inside the service.
+     */
+    const val ACTION_RESUME = "app.action.RESUME_VPN"
+
+    fun resumeIntent(context: Context): Intent {
+        return Intent(context, AsteriskVpnService::class.java).apply {
+            action = ACTION_RESUME
+        }
+    }
+
     fun startIntent(context: Context, config: VpnServiceStartConfig): Intent {
         return Intent(context, AsteriskVpnService::class.java).apply {
             action = ACTION_START
