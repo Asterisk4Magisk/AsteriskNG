@@ -49,7 +49,8 @@ internal fun RootStartConfig.buildAsteriskdConfig(
         mode = mode,
         core = AsteriskdCoreConfig(
             workingDirectory = runtimePaths.workingDirectory,
-            readinessTimeoutMilliseconds = 5000,
+            // Cold boot can take the core several seconds just to begin loading its config.
+            readinessTimeoutMilliseconds = 15000,
             ageSecretKey = null,
         ),
         network = AsteriskdNetworkConfig(

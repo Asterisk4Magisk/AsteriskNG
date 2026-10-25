@@ -138,7 +138,7 @@ internal class AsteriskdClient(
         const val LogTag = "AsteriskdClient"
         const val InitialWatchRetryDelayMilliseconds = 10L
         const val MaxWatchRetryDelayMilliseconds = 250L
-        const val WatchProcessTimeoutSeconds = 16L
+        const val WatchProcessTimeoutSeconds = 31L
         val DefaultWatchRetryDelaysMilliseconds = listOf(25L, 50L, 100L, 200L, 400L, 800L)
     }
 

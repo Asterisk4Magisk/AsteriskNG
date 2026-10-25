@@ -375,4 +375,5 @@ internal fun sanitizeLauncherStderr(stderr: String): String {
     return retained.joinToString("\n").trim().ifBlank { stderrWithoutCleanupWarnings }
 }
 
-private const val StartTimeoutMilliseconds = 15_000L
+// Must exceed asteriskd's core readiness timeout plus the rule and helper stages around it.
+private const val StartTimeoutMilliseconds = 30_000L
