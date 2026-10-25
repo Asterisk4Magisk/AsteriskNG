@@ -567,7 +567,7 @@
     <string name="proxy_traffic_stats_notification_speed">Скорость: ^ %1$s / v %2$s</string>
     <string name="proxy_traffic_stats_notification_total">Трафик: ^ %1$s / v %2$s</string>
     <string name="settings_traffic_stats_notification">Показывать статистику трафика</string>
-    <string name="settings_traffic_stats_notification_summary">Выводить текущую скорость и общий объем трафика в шторке уведомлений</string>
+    <string name="settings_traffic_stats_notification_summary">Показывать текущую скорость и общий трафик в уведомлениях и строке состояния</string>
 
     <!-- Quick settings tile -->
     <string name="quick_settings_tile_label">AsteriskNG</string>

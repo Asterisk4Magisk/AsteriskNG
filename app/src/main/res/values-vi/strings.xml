@@ -566,7 +566,7 @@
     <string name="proxy_traffic_stats_notification_speed">Tốc độ: ↑ %1$s / ↓ %2$s</string>
     <string name="proxy_traffic_stats_notification_total">Lưu lượng: ↑ %1$s / ↓ %2$s</string>
     <string name="settings_traffic_stats_notification">Hiển thị dữ liệu thống kê</string>
-    <string name="settings_traffic_stats_notification_summary">Hiển thị tốc độ hiện tại và tổng lưu lượng trong thông báo</string>
+    <string name="settings_traffic_stats_notification_summary">Hiển thị tốc độ hiện tại và tổng lưu lượng trong thông báo và trên thanh trạng thái</string>
 
     <!-- Quick settings tile -->
     <string name="quick_settings_tile_label">AsteriskNG</string>

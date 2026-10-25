@@ -566,7 +566,7 @@
     <string name="proxy_traffic_stats_notification_speed">速度：↑ %1$s / ↓ %2$s</string>
     <string name="proxy_traffic_stats_notification_total">流量：↑ %1$s / ↓ %2$s</string>
     <string name="settings_traffic_stats_notification">显示统计数据</string>
-    <string name="settings_traffic_stats_notification_summary">在通知中显示当前速度和累计流量</string>
+    <string name="settings_traffic_stats_notification_summary">在通知和状态栏中显示当前速度和累计流量</string>
 
     <!-- Quick settings tile -->
     <string name="quick_settings_tile_label">AsteriskNG</string>

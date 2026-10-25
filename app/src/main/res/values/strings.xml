@@ -566,7 +566,7 @@
     <string name="proxy_traffic_stats_notification_speed">Speed: ↑ %1$s / ↓ %2$s</string>
     <string name="proxy_traffic_stats_notification_total">Traffic: ↑ %1$s / ↓ %2$s</string>
     <string name="settings_traffic_stats_notification">Show traffic statistics</string>
-    <string name="settings_traffic_stats_notification_summary">Show current speed and total traffic in notifications</string>
+    <string name="settings_traffic_stats_notification_summary">Show current speed and total traffic in notifications and the status bar</string>
 
     <!-- Quick settings tile -->
     <string name="quick_settings_tile_label">AsteriskNG</string>
