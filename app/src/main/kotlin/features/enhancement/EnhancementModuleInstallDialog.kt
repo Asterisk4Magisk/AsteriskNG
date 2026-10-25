@@ -128,7 +128,7 @@ internal fun EnhancementModuleInstallDialog(
                     )
                 }
                 TextButton(
-                    text = stringResource(R.string.enhancement_module_install_close),
+                    text = stringResource(R.string.common_close),
                     onClick = onDismiss,
                     enabled = !progress.running && !rebooting,
                     modifier = Modifier.weight(1f),

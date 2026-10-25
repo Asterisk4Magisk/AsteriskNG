@@ -37,7 +37,6 @@
     <string name="nav_apps">应用</string>
     <string name="nav_proxy">代理</string>
     <string name="nav_routing">路由</string>
-    <string name="nav_settings">设置</string>
 
     <!-- Proxy management -->
     <string name="deletion_confirmation_delete_proxy_server">删除代理节点</string>
@@ -69,7 +68,6 @@
     <string name="proxy_server_list_delete_proxy_servers">删除代理节点</string>
     <string name="proxy_server_list_deleted">{name} 已删除</string>
     <string name="proxy_server_list_duplicates_deleted">已删除 {count} 个重复代理节点</string>
-    <string name="proxy_server_list_import_clipboard">从剪贴板导入</string>
     <string name="proxy_server_list_import_file">从文件导入</string>
     <string name="proxy_server_list_import_result">导入成功{serverCount}个代理节点</string>
     <string name="proxy_server_list_invalid_deleted">已删除 {count} 个无效代理节点</string>
@@ -343,7 +341,6 @@
     <!-- Run mode and proxy service -->
     <string name="error_android_lib_xray_lite_data_dir_missing">AndroidLibXrayLite 数据目录缺失</string>
     <string name="error_android_lib_xray_lite_start_failed">AndroidLibXrayLite 启动失败：%1$s</string>
-    <string name="proxy_error_dialog_close">关闭</string>
     <string name="proxy_error_dialog_copied">已复制到剪贴板</string>
     <string name="proxy_error_dialog_copy">复制日志</string>
     <string name="proxy_error_dialog_details">错误详情</string>
@@ -402,7 +399,6 @@
     <string name="enhancement_module_apk_install_failed">刷入失败，请检查错误输出。可尝试导出本应用，将 .apk 后缀改为 .zip，在 ROOT 管理器中刷入</string>
     <string name="enhancement_module_failed">模块操作失败。请检查 ROOT 管理器，确认 Zygisk Next 已安装且启用后重试</string>
     <string name="enhancement_module_incompatible">当前运行的增强模块不支持此运行环境</string>
-    <string name="enhancement_module_install_close">关闭</string>
     <string name="enhancement_module_install_output_waiting">等待刷入输出…</string>
     <string name="enhancement_module_install_title">刷入增强模块</string>
     <string name="enhancement_module_installing">正在安装增强模块…</string>
@@ -416,7 +412,6 @@
     <string name="enhancement_module_root_denied">ROOT 授权被拒绝。请授权后重试</string>
     <string name="enhancement_module_timeout">模块操作超时。请检查 ROOT 管理器后重试</string>
     <string name="enhancement_module_title">增强模块</string>
-    <string name="enhancement_module_update">更新增强模块</string>
     <string name="enhancement_module_update_available">当前应用提供增强模块更新。请更新并重启设备后再使用应用名单增强</string>
 
     <!-- TUN -->
@@ -620,7 +615,6 @@
     <!-- Resource management -->
     <string name="deletion_confirmation_delete_resource_file">删除资源文件</string>
     <string name="error_resource_file_picker_missing">资源文件选择器未注册</string>
-    <string name="resource_file_download_notification_cancel">取消</string>
     <string name="resource_file_download_notification_cancelled">资源文件更新已取消</string>
     <string name="resource_file_download_notification_channel">资源文件更新</string>
     <string name="resource_file_download_notification_complete">资源文件更新完成</string>
@@ -763,7 +757,6 @@
     <string name="logs_release_to_refresh">松开刷新</string>
     <string name="logs_resume">恢复日志更新</string>
     <string name="settings_access_logs">访问日志</string>
-    <string name="settings_core_logs">核心日志</string>
     <string name="settings_log_level">日志等级</string>
     <string name="settings_logcat">Logcat</string>
     <string name="settings_logs">日志</string>
@@ -776,7 +769,6 @@
     <string name="about_title">关于</string>
     <string name="about_view_source">在 GitHub 查看源码</string>
     <string name="license_title">第三方开源许可</string>
-    <string name="settings_about">关于</string>
     <string name="settings_about_project">关于项目</string>
     <string name="settings_open_source_licenses">开源许可</string>
 </resources>

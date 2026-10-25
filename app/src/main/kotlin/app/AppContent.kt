@@ -101,7 +101,7 @@ private object MainNavigation {
         val proxy = stringResource(R.string.nav_proxy)
         val routing = stringResource(R.string.nav_routing)
         val apps = stringResource(R.string.nav_apps)
-        val settings = stringResource(R.string.nav_settings)
+        val settings = stringResource(R.string.settings_title)
 
         return remember(languageMode, proxy, routing, apps, settings) {
             listOf(

@@ -37,7 +37,6 @@
     <string name="nav_apps">Apps</string>
     <string name="nav_proxy">Proxy</string>
     <string name="nav_routing">Routing</string>
-    <string name="nav_settings">Settings</string>
 
     <!-- Proxy management -->
     <string name="deletion_confirmation_delete_proxy_server">Delete proxy server</string>
@@ -69,7 +68,6 @@
     <string name="proxy_server_list_delete_proxy_servers">Delete proxy servers</string>
     <string name="proxy_server_list_deleted">{name} deleted</string>
     <string name="proxy_server_list_duplicates_deleted">Deleted {count} duplicate proxy servers</string>
-    <string name="proxy_server_list_import_clipboard">Import from clipboard</string>
     <string name="proxy_server_list_import_file">Import from file</string>
     <string name="proxy_server_list_import_result">Imported {serverCount} proxy servers</string>
     <string name="proxy_server_list_invalid_deleted">Deleted {count} invalid proxy servers</string>
@@ -343,7 +341,6 @@
     <!-- Run mode and proxy service -->
     <string name="error_android_lib_xray_lite_data_dir_missing">AndroidLibXrayLite data directory is missing</string>
     <string name="error_android_lib_xray_lite_start_failed">Failed to start AndroidLibXrayLite: %1$s</string>
-    <string name="proxy_error_dialog_close">Close</string>
     <string name="proxy_error_dialog_copied">Copied to clipboard</string>
     <string name="proxy_error_dialog_copy">Copy log</string>
     <string name="proxy_error_dialog_details">Error details</string>
@@ -402,7 +399,6 @@
     <string name="enhancement_module_apk_install_failed">Installation failed. Check the error output. You can try exporting this app, changing the .apk extension to .zip, and installing it with your ROOT manager</string>
     <string name="enhancement_module_failed">Module operation failed. Check your ROOT manager and ensure Zygisk Next is installed and enabled, then retry</string>
     <string name="enhancement_module_incompatible">The running enhancement module does not support this runtime</string>
-    <string name="enhancement_module_install_close">Close</string>
     <string name="enhancement_module_install_output_waiting">Waiting for installer output…</string>
     <string name="enhancement_module_install_title">Install enhancement module</string>
     <string name="enhancement_module_installing">Installing enhancement module…</string>
@@ -416,7 +412,6 @@
     <string name="enhancement_module_root_denied">ROOT permission was denied. Grant access and retry</string>
     <string name="enhancement_module_timeout">Module operation timed out. Check your ROOT manager and retry</string>
     <string name="enhancement_module_title">Enhancement module</string>
-    <string name="enhancement_module_update">Update enhancement module</string>
     <string name="enhancement_module_update_available">A module update is available from this app. Update it and reboot before using application list enhancement</string>
 
     <!-- TUN -->
@@ -620,7 +615,6 @@
     <!-- Resource management -->
     <string name="deletion_confirmation_delete_resource_file">Delete resource file</string>
     <string name="error_resource_file_picker_missing">Resource file picker is not registered</string>
-    <string name="resource_file_download_notification_cancel">Cancel</string>
     <string name="resource_file_download_notification_cancelled">Resource file update cancelled</string>
     <string name="resource_file_download_notification_channel">Resource file updates</string>
     <string name="resource_file_download_notification_complete">Resource files updated</string>
@@ -763,7 +757,6 @@
     <string name="logs_release_to_refresh">Release to refresh</string>
     <string name="logs_resume">Resume log updates</string>
     <string name="settings_access_logs">Access logs</string>
-    <string name="settings_core_logs">Core logs</string>
     <string name="settings_log_level">Log level</string>
     <string name="settings_logcat">Logcat</string>
     <string name="settings_logs">Logs</string>
@@ -776,7 +769,6 @@
     <string name="about_title">About</string>
     <string name="about_view_source">View source on GitHub</string>
     <string name="license_title">Third Party Licenses</string>
-    <string name="settings_about">About</string>
     <string name="settings_about_project">About project</string>
     <string name="settings_open_source_licenses">Open source licenses</string>
 </resources>

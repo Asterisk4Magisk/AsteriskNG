@@ -38,7 +38,6 @@
     <string name="nav_apps">Приложения</string>
     <string name="nav_proxy">Прокси</string>
     <string name="nav_routing">Правила</string>
-    <string name="nav_settings">Настройки</string>
 
     <!-- Proxy management -->
     <string name="deletion_confirmation_delete_proxy_server">Удалить прокси-сервер</string>
@@ -70,7 +69,6 @@
     <string name="proxy_server_list_delete_proxy_servers">Удалить прокси-серверы</string>
     <string name="proxy_server_list_deleted">Сервер {name} удален</string>
     <string name="proxy_server_list_duplicates_deleted">Удалено дубликатов серверов: {count}</string>
-    <string name="proxy_server_list_import_clipboard">Импортировать из буфера</string>
     <string name="proxy_server_list_import_file">Импортировать из файла</string>
     <string name="proxy_server_list_import_result">Успешно импортировано серверов: {serverCount}</string>
     <string name="proxy_server_list_invalid_deleted">Удалено нерабочих конфигураций: {count}</string>
@@ -344,7 +342,6 @@
     <!-- Run mode and proxy service -->
     <string name="error_android_lib_xray_lite_data_dir_missing">Отсутствует директория данных AndroidLibXrayLite</string>
     <string name="error_android_lib_xray_lite_start_failed">Не удалось запустить AndroidLibXrayLite: %1$s</string>
-    <string name="proxy_error_dialog_close">Закрыть</string>
     <string name="proxy_error_dialog_copied">Скопировано в буфер обмена</string>
     <string name="proxy_error_dialog_copy">Копировать журнал</string>
     <string name="proxy_error_dialog_details">Сведения об ошибке</string>
@@ -403,7 +400,6 @@
     <string name="enhancement_module_apk_install_failed">Не удалось установить модуль. Проверьте вывод ошибок. Попробуйте экспортировать это приложение, изменить расширение .apk на .zip и установить его через менеджер ROOT</string>
     <string name="enhancement_module_failed">Ошибка операции с модулем. Проверьте менеджер ROOT и убедитесь, что Zygisk Next установлен и включён</string>
     <string name="enhancement_module_incompatible">Работающий модуль улучшения не поддерживает текущую среду выполнения</string>
-    <string name="enhancement_module_install_close">Закрыть</string>
     <string name="enhancement_module_install_output_waiting">Ожидание вывода установщика…</string>
     <string name="enhancement_module_install_title">Установка модуля улучшения</string>
     <string name="enhancement_module_installing">Установка модуля…</string>
@@ -417,7 +413,6 @@
     <string name="enhancement_module_root_denied">В доступе ROOT отказано. Предоставьте разрешение и повторите попытку</string>
     <string name="enhancement_module_timeout">Время операции истекло. Проверьте менеджер ROOT и повторите попытку</string>
     <string name="enhancement_module_title">Модуль расширения</string>
-    <string name="enhancement_module_update">Обновить модуль расширения</string>
     <string name="enhancement_module_update_available">Доступно обновление модуля из приложения. Обновите модуль и перезагрузите устройство перед использованием</string>
 
     <!-- TUN -->
@@ -621,7 +616,6 @@
     <!-- Resource management -->
     <string name="deletion_confirmation_delete_resource_file">Удалить файл ресурсов</string>
     <string name="error_resource_file_picker_missing">Компонент выбора файлов ресурсов не зарегистрирован</string>
-    <string name="resource_file_download_notification_cancel">Отмена</string>
     <string name="resource_file_download_notification_cancelled">Обновление файлов ресурсов отменено</string>
     <string name="resource_file_download_notification_channel">Обновление файлов ресурсов</string>
     <string name="resource_file_download_notification_complete">Файлы ресурсов успешно обновлены</string>
@@ -764,7 +758,6 @@
     <string name="logs_release_to_refresh">Отпустите для обновления</string>
     <string name="logs_resume">Возобновить обновление журнала</string>
     <string name="settings_access_logs">Логи доступа</string>
-    <string name="settings_core_logs">Логи ядра</string>
     <string name="settings_log_level">Уровень логирования</string>
     <string name="settings_logcat">Лог Android (Logcat)</string>
     <string name="settings_logs">Журналы событий (Логи)</string>
@@ -777,7 +770,6 @@
     <string name="about_title">О программе</string>
     <string name="about_view_source">Исходный код на GitHub</string>
     <string name="license_title">Сторонние лицензии</string>
-    <string name="settings_about">О программе</string>
     <string name="settings_about_project">О проекте</string>
     <string name="settings_open_source_licenses">Лицензии ПО с открытым исходным кодом</string>
 </resources>

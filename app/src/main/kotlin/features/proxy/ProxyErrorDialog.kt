@@ -168,7 +168,7 @@ private fun ProxyErrorDialog(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 TextButton(
-                    text = stringResource(R.string.proxy_error_dialog_close),
+                    text = stringResource(R.string.common_close),
                     onClick = onDismiss,
                     modifier = Modifier.weight(1f),
                 )

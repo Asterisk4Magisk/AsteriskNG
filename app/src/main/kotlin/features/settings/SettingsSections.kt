@@ -485,7 +485,7 @@ internal fun SettingsLogsSection(
     SmallTitle(text = stringResource(R.string.settings_logs))
     SettingsSectionCard {
         ArrowPreference(
-            title = stringResource(R.string.settings_core_logs),
+            title = stringResource(R.string.core_logs_title),
             onClick = onOpenCoreLogs,
         )
         AnimatedVisibility(
@@ -530,7 +530,7 @@ internal fun SettingsAboutSection(
     onOpenAbout: () -> Unit,
     onOpenLicenses: () -> Unit,
 ) {
-    SmallTitle(text = stringResource(R.string.settings_about))
+    SmallTitle(text = stringResource(R.string.about_title))
     SettingsSectionCard(bottomPadding = 0.dp) {
         ArrowPreference(
             title = stringResource(R.string.settings_about_project),

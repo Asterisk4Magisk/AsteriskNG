@@ -836,7 +836,7 @@ private fun ProtocolChip(
 @Composable
 private fun proxyServerListAddMenuEntries() = listOf(
     proxyServerListAddMenuEntry(stringResource(R.string.proxy_server_list_scan_qr_code), ProxyServerListAddAction.ScanQrCode),
-    proxyServerListAddMenuEntry(stringResource(R.string.proxy_server_list_import_clipboard), ProxyServerListAddAction.Clipboard),
+    proxyServerListAddMenuEntry(stringResource(R.string.common_import_from_clipboard), ProxyServerListAddAction.Clipboard),
     proxyServerListAddMenuEntry(stringResource(R.string.proxy_server_list_import_file), ProxyServerListAddAction.File),
     IconDropdownMenuEntry(
         key = "manual_input",

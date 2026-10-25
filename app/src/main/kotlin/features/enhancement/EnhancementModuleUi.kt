@@ -93,7 +93,7 @@ internal fun EnhancementModulePreference() {
             dismissText = stringResource(R.string.common_cancel),
             confirmText = stringResource(
                 if (request.state.phase == EnhancementModulePhase.UpdateAvailable) {
-                    R.string.enhancement_module_update
+                    R.string.common_update
                 } else {
                     R.string.enhancement_module_install_title
                 },

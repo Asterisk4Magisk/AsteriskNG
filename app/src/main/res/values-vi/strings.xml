@@ -37,7 +37,6 @@
     <string name="nav_apps">Ứng dụng</string>
     <string name="nav_proxy">Proxy</string>
     <string name="nav_routing">Định tuyến</string>
-    <string name="nav_settings">Cài đặt</string>
 
     <!-- Proxy management -->
     <string name="deletion_confirmation_delete_proxy_server">Xóa nút proxy</string>
@@ -69,7 +68,6 @@
     <string name="proxy_server_list_delete_proxy_servers">Xóa nút proxy</string>
     <string name="proxy_server_list_deleted">{name} đã được xóa</string>
     <string name="proxy_server_list_duplicates_deleted">Đã xóa {count} nút proxy trùng lặp</string>
-    <string name="proxy_server_list_import_clipboard">Nhập từ khay nhớ tạm</string>
     <string name="proxy_server_list_import_file">Nhập từ tệp</string>
     <string name="proxy_server_list_import_result">Đã nhập thành công {serverCount} nút proxy</string>
     <string name="proxy_server_list_invalid_deleted">Đã xóa {count} nút proxy không hợp lệ</string>
@@ -343,7 +341,6 @@
     <!-- Run mode and proxy service -->
     <string name="error_android_lib_xray_lite_data_dir_missing">Thiếu thư mục dữ liệu AndroidLibXrayLite</string>
     <string name="error_android_lib_xray_lite_start_failed">Khởi động AndroidLibXrayLite thất bại: %1$s</string>
-    <string name="proxy_error_dialog_close">Đóng</string>
     <string name="proxy_error_dialog_copied">Đã sao chép vào bộ nhớ tạm</string>
     <string name="proxy_error_dialog_copy">Sao chép nhật ký</string>
     <string name="proxy_error_dialog_details">Chi tiết lỗi</string>
@@ -402,7 +399,6 @@
     <string name="enhancement_module_apk_install_failed">Cài đặt thất bại. Hãy kiểm tra thông báo lỗi. Bạn có thể thử xuất ứng dụng này, đổi phần mở rộng .apk thành .zip rồi cài đặt bằng trình quản lý ROOT</string>
     <string name="enhancement_module_failed">Thao tác mô-đun thất bại. Kiểm tra trình quản lý ROOT, bảo đảm Zygisk Next đã cài và bật, rồi thử lại</string>
     <string name="enhancement_module_incompatible">Mô-đun tăng cường đang chạy không hỗ trợ môi trường hoạt động hiện tại</string>
-    <string name="enhancement_module_install_close">Đóng</string>
     <string name="enhancement_module_install_output_waiting">Đang chờ đầu ra của trình cài đặt…</string>
     <string name="enhancement_module_install_title">Cài đặt mô-đun nâng cao</string>
     <string name="enhancement_module_installing">Đang cài đặt mô-đun…</string>
@@ -416,7 +412,6 @@
     <string name="enhancement_module_root_denied">Quyền ROOT bị từ chối. Cấp quyền và thử lại</string>
     <string name="enhancement_module_timeout">Thao tác mô-đun hết thời gian. Kiểm tra trình quản lý ROOT và thử lại</string>
     <string name="enhancement_module_title">Mô-đun tăng cường</string>
-    <string name="enhancement_module_update">Cập nhật mô-đun tăng cường</string>
     <string name="enhancement_module_update_available">Ứng dụng có bản cập nhật mô-đun. Hãy cập nhật và khởi động lại thiết bị trước khi sử dụng</string>
 
     <!-- TUN -->
@@ -620,7 +615,6 @@
     <!-- Resource management -->
     <string name="deletion_confirmation_delete_resource_file">Xóa tệp tài nguyên</string>
     <string name="error_resource_file_picker_missing">Trình chọn tệp tài nguyên chưa được đăng ký</string>
-    <string name="resource_file_download_notification_cancel">Hủy</string>
     <string name="resource_file_download_notification_cancelled">Đã hủy cập nhật tệp tài nguyên</string>
     <string name="resource_file_download_notification_channel">Cập nhật tệp tài nguyên</string>
     <string name="resource_file_download_notification_complete">Cập nhật tệp tài nguyên hoàn tất</string>
@@ -763,7 +757,6 @@
     <string name="logs_release_to_refresh">Thả ra để làm mới</string>
     <string name="logs_resume">Tiếp tục cập nhật nhật ký</string>
     <string name="settings_access_logs">Nhật ký truy cập</string>
-    <string name="settings_core_logs">Nhật ký lõi</string>
     <string name="settings_log_level">Cấp độ nhật ký</string>
     <string name="settings_logcat">Logcat</string>
     <string name="settings_logs">Nhật ký</string>
@@ -776,7 +769,6 @@
     <string name="about_title">Giới thiệu</string>
     <string name="about_view_source">Xem mã nguồn trên GitHub</string>
     <string name="license_title">Giấy phép mã nguồn mở bên thứ ba</string>
-    <string name="settings_about">Giới thiệu</string>
     <string name="settings_about_project">Về dự án</string>
     <string name="settings_open_source_licenses">Giấy phép mã nguồn mở</string>
 </resources>

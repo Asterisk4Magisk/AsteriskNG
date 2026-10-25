@@ -68,7 +68,7 @@ internal class AndroidResourceFileDownloadNotifier(
                 .addAction(
                     Notification.Action.Builder(
                         Icon.createWithResource(appContext, android.R.drawable.ic_menu_close_clear_cancel),
-                        appContext.getString(R.string.resource_file_download_notification_cancel),
+                        appContext.getString(R.string.common_cancel),
                         cancelIntent,
                     ).build(),
                 )
