@@ -370,7 +370,7 @@
     <string name="settings_vpn_append_http_proxy_summary">让受支持的应用直接使用 HTTP 代理</string>
     <string name="settings_vpn_hev_tun">使用 Hev TUN</string>
     <string name="settings_vpn_hev_tun_summary">使用 hev-socks5-tunnel 创建 TUN 设备</string>
-    <string name="settings_auto_connect_summary">开机启动 VPN Service，更新后自动恢复</string>
+    <string name="settings_auto_connect_summary">开机启动 VPN 服务，应用更新后恢复服务状态</string>
     <string name="auto_connect_permission_text">点击授权并启动 VPN Service</string>
     <string name="settings_vpn_local_dns">启用 DNS 劫持</string>
     <string name="settings_vpn_local_dns_summary">使用核心处理 DNS 请求</string>
