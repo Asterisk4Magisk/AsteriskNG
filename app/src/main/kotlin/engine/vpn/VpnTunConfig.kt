@@ -8,7 +8,7 @@ import app.effectiveFakeDnsEnabled
 import app.effectiveLocalDnsEnabled
 import engine.xray.XrayProtocols
 import engine.xray.XrayTags
-import engine.xray.toJsonStringArray
+import utils.toJsonStringArray
 import engine.xray.xraySniffingDestOverrides
 import engine.network.NetworkCidrAddress
 import engine.network.isIpv4Address

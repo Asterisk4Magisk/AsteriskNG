@@ -3,14 +3,13 @@
 
 package features.proxy.server.usecase.importer
 
+import utils.toJsonStringArray
 import engine.network.toPortOrNull
 import features.proxy.server.model.VLESS
-import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonObjectBuilder
 import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonObject
@@ -271,12 +270,6 @@ private fun Any?.integerJsonElement(fieldName: String): JsonElement? {
 
         null -> null
         else -> unsupported("$fieldName must be integer")
-    }
-}
-
-private fun List<String>.toJsonStringArray(): JsonArray {
-    return buildJsonArray {
-        forEach { value -> add(JsonPrimitive(value)) }
     }
 }
 

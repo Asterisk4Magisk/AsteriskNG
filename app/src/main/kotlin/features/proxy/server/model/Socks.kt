@@ -3,6 +3,7 @@
 
 package features.proxy.server.model
 
+import utils.putIfNotBlank
 import io.ktor.http.URLBuilder
 import io.ktor.http.URLProtocol
 import io.ktor.http.Url

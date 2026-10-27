@@ -3,6 +3,9 @@
 
 package features.proxy.server.model
 
+import utils.arrayValue
+import utils.objectValue
+import utils.stringValue
 import engine.network.toPortOrNull
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -263,18 +266,6 @@ private fun endpoint(host: String, port: String): CustomProxyOutboundEndpoint? {
     val normalizedHost = host.normalizedHostAddress().takeIf(String::isNotEmpty) ?: return null
     val parsedPort = port.toPortOrNull() ?: return null
     return CustomProxyOutboundEndpoint(normalizedHost, parsedPort)
-}
-
-private fun JsonObject.stringValue(name: String): String? {
-    return (this[name] as? JsonPrimitive)?.contentOrNull?.takeIf(String::isNotBlank)
-}
-
-private fun JsonObject.objectValue(name: String): JsonObject? {
-    return this[name] as? JsonObject
-}
-
-private fun JsonObject.arrayValue(name: String): JsonArray? {
-    return this[name] as? JsonArray
 }
 
 private fun JsonArray.firstObject(): JsonObject? {

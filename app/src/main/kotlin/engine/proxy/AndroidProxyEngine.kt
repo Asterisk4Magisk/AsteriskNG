@@ -5,19 +5,19 @@ package engine.proxy
 
 import android.content.Context
 import app.AppState
-import app.ProxyServerState
 import app.R
+import app.displayTitle
 import app.modes.RunModeVpnService
+import engine.proxy.mode.AndroidModeProxyEngine
+import engine.root.RootModeEngine
+import engine.root.runtime.model.RootRuntimeMode
+import engine.root.runtime.model.RootRuntimeOwner
 import engine.stats.ProxyTrafficStatsRuntime
 import engine.stats.ProxyTrafficStatsRuntimeStore
 import engine.stats.ProxyTrafficStatsService
 import engine.stats.XrayStatsApiListenAddress
 import engine.stats.resolveXrayStatsApiPort
 import engine.stats.xrayStatsApiExcludedPorts
-import engine.proxy.mode.AndroidModeProxyEngine
-import engine.root.RootModeEngine
-import engine.root.runtime.model.RootRuntimeMode
-import engine.root.runtime.model.RootRuntimeOwner
 import engine.vpn.VpnXrayEngine
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -357,7 +357,7 @@ class AndroidProxyEngine(
         val runtime = ProxyTrafficStatsRuntime(
             listenAddress = statsApiConfig.listenAddress,
             port = statsApiConfig.port,
-            serverName = selectedServer.trafficStatsServerName(),
+            serverName = selectedServer.displayTitle(),
             apiTag = statsApiConfig.apiTag,
         )
         return request to runtime
@@ -424,8 +424,3 @@ internal fun shouldUsePreResolvedRootStart(
     resumeChecked: Boolean,
     nextEngineIsRoot: Boolean,
 ): Boolean = !explicitRestart && resumeChecked && nextEngineIsRoot
-
-private fun ProxyServerState.trafficStatsServerName(): String {
-    val info = server.getInfo()
-    return info.remarks.ifBlank { info.protocol }
-}

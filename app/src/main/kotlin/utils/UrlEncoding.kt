@@ -3,6 +3,7 @@
 
 package utils
 
+import java.net.URI
 import io.ktor.http.Url
 import io.ktor.http.decodeURLQueryComponent
 
@@ -27,4 +28,11 @@ internal fun Url.proxyUrlRemarks(): String {
 
 internal fun String.toProxyUrlRemarks(): String {
     return decodeUrlComponentPreservingPlus().ifBlank { "none" }
+}
+
+internal fun String.toLogHost(): String {
+    return runCatching { URI(this).host }
+        .getOrNull()
+        ?.takeIf(String::isNotBlank)
+        ?: "<unknown>"
 }

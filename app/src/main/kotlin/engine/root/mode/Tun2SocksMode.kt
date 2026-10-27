@@ -19,7 +19,7 @@ import engine.root.daemon.config.AsteriskdModeOptions
 import engine.vpn.toTunOptions
 import engine.xray.XrayProtocols
 import engine.xray.XrayTags
-import engine.xray.toJsonStringArray
+import utils.toJsonStringArray
 import engine.xray.xraySniffingDestOverrides
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject

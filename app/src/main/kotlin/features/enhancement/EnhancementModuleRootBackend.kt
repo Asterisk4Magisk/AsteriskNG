@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: GPL-3.0
 package features.enhancement
 
+import utils.shellQuote
+
 internal interface EnhancementModuleRootAccess {
     suspend fun requireRoot()
     suspend fun execute(command: String): String
@@ -54,7 +56,7 @@ internal const val EnhancementManagerProbeCommand = "/system/bin/toybox timeout 
 
 internal fun enhancementInspectCommand(executable: String): String {
     require(executable.startsWith('/') && '\u0000' !in executable)
-    return "/system/bin/toybox timeout -s TERM -k 2 5 ${executable.enhancementShellQuote()} enhancement-info"
+    return "/system/bin/toybox timeout -s TERM -k 2 5 ${executable.shellQuote()} enhancement-info"
 }
 
 internal fun parseEnhancementModuleRuntime(output: String): EnhancementModuleRuntime? {

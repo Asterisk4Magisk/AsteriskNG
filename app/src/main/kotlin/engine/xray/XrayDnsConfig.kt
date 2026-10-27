@@ -3,6 +3,7 @@
 
 package engine.xray
 
+import utils.toJsonStringArray
 import app.AppState
 import app.effectiveFakeDnsEnabled
 import engine.network.normalizedFakeIpIpv4Pool

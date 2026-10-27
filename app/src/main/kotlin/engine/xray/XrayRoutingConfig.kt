@@ -3,6 +3,8 @@
 
 package engine.xray
 
+import utils.putTrimmedIfNotBlank
+import utils.toJsonStringArray
 import app.AppState
 import app.effectiveLocalDnsEnabled
 import features.routing.model.RouteRule
@@ -129,10 +131,10 @@ private fun RouteRule.toXrayRule(routeTargets: Map<String, XrayRouteTarget>): Js
         putJsonStringArrayIfNotEmpty("domain", domain.toTrimmedNonEmptyDistinctList())
         putJsonStringArrayIfNotEmpty("ip", ip.toTrimmedNonEmptyDistinctList())
         putJsonStringArrayIfNotEmpty("process", process.toTrimmedNonEmptyDistinctList())
-        putIfNotBlank("port", port)
-        putIfNotBlank("network", network)
+        putTrimmedIfNotBlank("port", port)
+        putTrimmedIfNotBlank("network", network)
         putJsonStringArrayIfNotEmpty("protocol", protocol.toDistinctCsvValues())
-        putIfNotBlank("ruleTag", remarks)
+        putTrimmedIfNotBlank("ruleTag", remarks)
     }
     return if (rule.size > 1) rule else null
 }

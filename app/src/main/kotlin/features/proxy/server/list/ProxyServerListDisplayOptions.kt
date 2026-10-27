@@ -3,6 +3,7 @@
 
 package features.proxy.server.list
 
+import app.displayTitle
 import app.ProxyServerState
 import app.modes.ProxyServerListLayoutDouble
 import app.modes.ProxyServerListLayoutMultiple
@@ -22,19 +23,14 @@ internal fun List<ProxyServerState>.sortedForProxyServerList(
 ): List<ProxyServerState> {
     return when (sort) {
         ProxyServerListSortName -> sortedWith(
-            compareBy(String.CASE_INSENSITIVE_ORDER) { server -> server.displaySortTitle() },
+            compareBy(String.CASE_INSENSITIVE_ORDER) { server -> server.displayTitle() },
         )
         ProxyServerListSortLatency -> sortedWith(
             compareBy<ProxyServerState> { server -> server.latency.proxyServerListLatencySortKey() }
-                .thenBy(String.CASE_INSENSITIVE_ORDER) { server -> server.displaySortTitle() },
+                .thenBy(String.CASE_INSENSITIVE_ORDER) { server -> server.displayTitle() },
         )
         else -> this
     }
-}
-
-private fun ProxyServerState.displaySortTitle(): String {
-    val info = server.getInfo()
-    return info.remarks.ifBlank { info.protocol }
 }
 
 private fun String.proxyServerListLatencySortKey(): Int {

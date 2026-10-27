@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: GPL-3.0
 package features.enhancement
 
+import utils.shellQuote
+
 internal enum class EnhancementRootManager { Magisk, KernelSU, APatch }
 internal fun enhancementInstallCommand(manager: EnhancementRootManager, apkPath: String): String {
     require(apkPath.startsWith('/') && '\u0000' !in apkPath)
@@ -10,7 +12,5 @@ internal fun enhancementInstallCommand(manager: EnhancementRootManager, apkPath:
         EnhancementRootManager.KernelSU -> "'/data/adb/ksud' module install"
         EnhancementRootManager.APatch -> "'/data/adb/apd' module install"
     }
-    return "/system/bin/toybox timeout -s TERM -k 5 120 $command ${apkPath.enhancementShellQuote()} 2>&1"
+    return "/system/bin/toybox timeout -s TERM -k 5 120 $command ${apkPath.shellQuote()} 2>&1"
 }
-
-internal fun String.enhancementShellQuote(): String = "'" + replace("'", "'\\''") + "'"

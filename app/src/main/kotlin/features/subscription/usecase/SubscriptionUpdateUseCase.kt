@@ -3,6 +3,7 @@
 
 package features.subscription.usecase
 
+import utils.toLogHost
 import app.AppState
 import app.SubscriptionGroupState
 import engine.proxy.toLocalProxyOptions
@@ -16,7 +17,6 @@ import features.proxy.server.usecase.subscriptionFetchIdentity
 import features.subscription.runtime.AndroidSubscriptionFetchOptions
 import features.subscription.runtime.AndroidSubscriptionResponse
 import features.subscription.runtime.AndroidSubscriptionFetcher
-import java.net.URI
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -148,11 +148,4 @@ internal fun subscriptionUpdateMessage(
 private fun SubscriptionGroupState.logIdentity(): String {
     return "groupId=$id groupName=${name.ifBlank { "<blank>" }} " +
         "urlHost=${url.toLogHost()} userAgent=${userAgent.ifBlank { "<blank>" }}"
-}
-
-private fun String.toLogHost(): String {
-    return runCatching { URI(this).host }
-        .getOrNull()
-        ?.takeIf(String::isNotBlank)
-        ?: "<unknown>"
 }

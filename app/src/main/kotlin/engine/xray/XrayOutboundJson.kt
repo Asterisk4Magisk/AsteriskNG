@@ -3,6 +3,9 @@
 
 package engine.xray
 
+import utils.toJsonStringArray
+import utils.objectValue
+import utils.stringValue
 import app.AppState
 import app.effectiveFakeDnsEnabled
 import app.effectiveLocalDnsEnabled

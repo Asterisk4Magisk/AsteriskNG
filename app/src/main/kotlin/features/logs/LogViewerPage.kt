@@ -256,7 +256,7 @@ private fun LogViewerPage(
                                         showMetadata = showLogMetadata,
                                         onClick = {
                                             scope.launch {
-                                                clipboard.setPlainText(entry.copyText(showLogMetadata))
+                                                clipboard.setPlainText(entry.displayText(showLogMetadata))
                                                 tipNotifier.show(copiedMessage)
                                             }
                                         },
@@ -281,11 +281,6 @@ private fun LogViewerPage(
     }
 }
 
-private fun CoreLogEntry.copyText(showMetadata: Boolean): String {
-    if (!showMetadata) return message
-    return "$time  ${level.uppercase()}  $message"
-}
-
 private suspend fun Context.exportLogEntries(
     uri: Uri,
     entries: List<CoreLogEntry>,
@@ -296,7 +291,7 @@ private suspend fun Context.exportLogEntries(
         outputStream.writer(Charsets.UTF_8).use { writer ->
             entries.forEachIndexed { index, entry ->
                 if (index > 0) writer.write("\n")
-                writer.write(entry.copyText(showMetadata))
+                writer.write(entry.displayText(showMetadata))
             }
         }
     }

@@ -50,6 +50,11 @@ data class ProxyServerState(
     val latency: String = "",
 )
 
+internal fun ProxyServerState.displayTitle(): String {
+    val info = server.getInfo()
+    return info.remarks.ifBlank { info.protocol }
+}
+
 fun ProxyServerState.proxyServerOutboundTag(): String {
     return id.toString()
 }

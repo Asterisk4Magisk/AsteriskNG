@@ -3,6 +3,7 @@
 
 package features.proxy.server.usecase.importer
 
+import utils.toLogHost
 import features.logs.AndroidAppLogger
 import features.proxy.server.model.ProxyServer
 import features.proxy.server.usecase.EmptyProxyServerImportResult
@@ -245,13 +246,6 @@ private fun String?.normalizedProviderUrlOrNull(): String? {
     if (scheme != "http" && scheme != "https") return null
     if (uri.host.isNullOrBlank()) return null
     return uri.toString()
-}
-
-private fun String.toLogHost(): String {
-    return runCatching { URI(this).host }
-        .getOrNull()
-        ?.takeIf(String::isNotBlank)
-        ?: "<unknown>"
 }
 
 private fun skippedMessage(

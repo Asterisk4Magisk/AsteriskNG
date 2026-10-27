@@ -3,6 +3,7 @@
 
 package features.proxy.server.model
 
+import utils.putIfNotBlank
 import engine.network.toPortOrNull
 import engine.network.NetworkLimits
 import kotlinx.serialization.json.Json
@@ -39,12 +40,6 @@ data class OutboundObject(
 internal fun String.toXrayPort(): Int {
     return toPortOrNull()
         ?: throw IllegalArgumentException("Port must be ${NetworkLimits.PORT_MIN}-${NetworkLimits.PORT_MAX}")
-}
-
-internal fun JsonObjectBuilder.putIfNotBlank(name: String, value: String?) {
-    if (!value.isNullOrBlank()) {
-        put(name, value)
-    }
 }
 
 internal fun JsonObjectBuilder.putJsonArrayIfNotBlank(name: String, value: String?) {

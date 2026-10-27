@@ -279,7 +279,7 @@ private fun AppPackageEntry.selectionKeys(
     return selectionInfo.keysByUid[currentUid] ?: listOf(selectionKey())
 }
 
-private fun AppPackageEntry.selectionKey(): String = "${userId ?: 0}:$packageName"
+internal fun AppPackageEntry.selectionKey(): String = "${userId ?: 0}:$packageName"
 
 private fun AppPackageEntry.groupSortName(
     selectionInfo: AppSelectionInfo,

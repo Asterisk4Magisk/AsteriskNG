@@ -3,6 +3,9 @@
 
 package features.subscription.runtime
 
+import engine.network.withProxyAuthenticator
+import engine.network.ProxyCredentials
+import engine.network.toSocksProxy
 import android.content.Context
 import data.AppSettingsPreferences
 import features.subscription.DefaultSubscriptionUserAgent
@@ -18,12 +21,9 @@ import kotlinx.coroutines.withContext
 import utils.decodeContentDispositionFilename
 import utils.runCancellableHttpRequest
 import utils.encodeBase64
-import java.net.Authenticator
 import java.net.HttpURLConnection
 import java.net.IDN
 import java.net.InetSocketAddress
-import java.net.PasswordAuthentication
-import java.net.Proxy
 import java.net.URI
 import java.net.URL
 
@@ -53,7 +53,7 @@ internal class AndroidSubscriptionFetcher(
                 installationHwid = installationHwid,
                 ageCrypto = ageCrypto,
             )
-            proxy.withAuthenticator {
+            proxy.withProxyAuthenticator {
                 fetchWithRedirects(
                     track = track,
                     url = url.toIdnUrl(),
@@ -97,14 +97,13 @@ private data class SubscriptionRequestCredentials(
 )
 
 internal data class AndroidSubscriptionProxy(
-    val host: String,
-    val port: Int,
-    val username: String,
-    val password: String,
-)
+    override val host: String,
+    override val port: Int,
+    override val username: String,
+    override val password: String,
+) : ProxyCredentials
 
 private const val MaxRedirects = 3
-private val ProxyAuthenticatorLock = Any()
 
 internal suspend fun AndroidSubscriptionFetchOptions.toProxy(): AndroidSubscriptionProxy? {
     if (!useRunningProxy) return null
@@ -250,38 +249,13 @@ private fun String.toConnection(proxy: AndroidSubscriptionProxy?): HttpURLConnec
     val connection = if (proxy == null) {
         URI(this).toURL().openConnection()
     } else {
-        URI(this).toURL().openConnection(proxy.toJavaProxy())
+        URI(this).toURL().openConnection(proxy.toSocksProxy())
     }
     return (connection as HttpURLConnection).apply {
         connectTimeout = 15_000
         readTimeout = 60_000
         instanceFollowRedirects = false
         requestMethod = "GET"
-    }
-}
-
-private fun AndroidSubscriptionProxy.toJavaProxy(): Proxy {
-    return Proxy(Proxy.Type.SOCKS, InetSocketAddress(host, port))
-}
-
-private inline fun <T> AndroidSubscriptionProxy?.withAuthenticator(block: () -> T): T {
-    if (this == null || username.isBlank()) return block()
-    synchronized(ProxyAuthenticatorLock) {
-        Authenticator.setDefault(toAuthenticator())
-        return try {
-            block()
-        } finally {
-            Authenticator.setDefault(null)
-        }
-    }
-}
-
-private fun AndroidSubscriptionProxy.toAuthenticator(): Authenticator {
-    return object : Authenticator() {
-        override fun getPasswordAuthentication(): PasswordAuthentication? {
-            if (requestingHost != host || requestingPort != port) return null
-            return PasswordAuthentication(username, password.toCharArray())
-        }
     }
 }
 

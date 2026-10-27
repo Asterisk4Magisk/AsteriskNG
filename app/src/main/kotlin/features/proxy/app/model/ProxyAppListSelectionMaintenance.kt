@@ -49,10 +49,6 @@ private data class ProxyAppSelectionKey(
         get() = userId?.let { id -> "$id:$packageName" } ?: packageName
 }
 
-private fun AppPackageEntry.selectionKey(): String {
-    return "${userId ?: 0}:$packageName"
-}
-
 private fun String.toProxyAppSelectionKey(): ProxyAppSelectionKey? {
     val normalized = trim().takeIf(String::isNotEmpty) ?: return null
     val separatorIndex = normalized.indexOf(':')

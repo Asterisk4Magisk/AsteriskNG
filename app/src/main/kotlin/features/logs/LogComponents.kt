@@ -59,8 +59,3 @@ internal fun LogEntryCard(
         )
     }
 }
-
-private fun CoreLogEntry.displayText(showMetadata: Boolean): String {
-    if (!showMetadata) return message
-    return "$time  ${level.uppercase()}  $message"
-}

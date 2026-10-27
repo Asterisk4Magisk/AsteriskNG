@@ -3,6 +3,7 @@
 
 package features.proxy.server.model
 
+import utils.putIfNotBlank
 import engine.network.isIpv4Address
 import engine.network.isIpv6Address
 import kotlinx.serialization.Serializable

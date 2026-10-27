@@ -16,6 +16,11 @@ data class CoreLogEntry(
     val message: String,
 )
 
+internal fun CoreLogEntry.displayText(showMetadata: Boolean): String {
+    if (!showMetadata) return message
+    return "$time  ${level.uppercase()}  $message"
+}
+
 interface CoreLogRepository {
     val entries: StateFlow<List<CoreLogEntry>>
 

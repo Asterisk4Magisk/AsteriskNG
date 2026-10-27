@@ -3,6 +3,10 @@
 
 package engine.xray
 
+import utils.toJsonStringArray
+import utils.arrayValue
+import utils.objectValue
+import utils.stringValue
 import app.AppState
 import app.effectiveLocalDnsEnabled
 import features.proxy.server.model.Custom
@@ -101,7 +105,7 @@ private data class CustomProxyOutbounds(
 )
 
 private fun JsonArray.withProxyOutboundTag(): CustomProxyOutbounds {
-    val outbounds = mapNotNull { element -> element as? JsonObject }.toMutableList()
+    val outbounds = filterIsInstance<JsonObject>().toMutableList()
     var firstProxyCandidateIndex: Int? = null
     outbounds.forEachIndexed { index, outbound ->
         val tag = outbound.stringValue("tag")

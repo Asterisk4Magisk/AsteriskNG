@@ -15,7 +15,7 @@ import engine.network.toPortOrNull
 import engine.root.RootModeEngine
 import engine.vpn.VpnDefaults
 import engine.xray.XrayProtocols
-import engine.xray.toJsonStringArray
+import utils.toJsonStringArray
 import engine.xray.xraySniffingDestOverrides
 import java.util.concurrent.atomic.AtomicReference
 import kotlinx.serialization.json.JsonObject

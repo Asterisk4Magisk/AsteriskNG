@@ -3,6 +3,7 @@
 
 package features.proxy.server.usecase.importer
 
+import utils.stringValue
 import features.logs.AndroidAppLogger
 import features.proxy.server.model.Custom
 import features.proxy.server.model.ProxyServer
@@ -13,8 +14,6 @@ import features.proxy.server.usecase.ProxyServerImportResult
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.contentOrNull
 
 private const val LogTag = "ProxyServerJsonImport"
 
@@ -75,13 +74,9 @@ internal suspend fun parseProxyServersFromJsonConfig(
 }
 
 private fun JsonObject.customRemarks(index: Int): String {
-    return string("remarks")
-        ?: string("remark")
-        ?: string("name")
-        ?: string("tag")
+    return stringValue("remarks")
+        ?: stringValue("remark")
+        ?: stringValue("name")
+        ?: stringValue("tag")
         ?: "Custom ${index + 1}"
-}
-
-private fun JsonObject.string(name: String): String? {
-    return (this[name] as? JsonPrimitive)?.contentOrNull?.takeIf(String::isNotBlank)
 }
