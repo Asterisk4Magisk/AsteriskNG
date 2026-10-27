@@ -16,18 +16,29 @@ internal suspend fun parseProxyServersFromUrls(
 ): ProxyServerImportResult {
     val source = context.source
     val seenUrls = linkedSetOf<String>()
-    val servers = mutableListOf<ProxyServer<*>>()
+    val candidates = mutableListOf<ProxyUrlImportCandidate>()
     var urlCount = 0
 
-    fun importCandidate(url: String): ProxyServer<*>? {
-        if (!seenUrls.add(url)) return null
+    fun importCandidate(url: String): Boolean {
+        if (!seenUrls.add(url)) return false
+        if (url.startsWith(V2rayNSharePrefix, ignoreCase = true)) {
+            val candidate = runCatching { parseV2rayNImportCandidate(url, urlCount) }.getOrElse {
+                // Decoder exceptions can contain the private JSON payload.
+                AndroidAppLogger.warn(ProxyServerImportLogTag, "Failed to import v2rayN share index=$urlCount source=${source.logName}")
+                null
+            }
+            urlCount += 1
+            candidate?.let(candidates::add)
+            return candidate != null
+        }
         val server = parseProxyServerUrlOrNull(
-            url = url,
+            url = url.withMihomoProviderUrlOverrides(context.mihomoProviderOptions),
             index = urlCount,
             source = source,
         )
         urlCount += 1
-        return server
+        server?.let { candidates += ProxyUrlImportCandidate(it) }
+        return server != null
     }
 
     text.lineSequence().forEach { rawLine ->
@@ -35,22 +46,20 @@ internal suspend fun parseProxyServersFromUrls(
         if (line.isBlank()) return@forEach
 
         if (line.startsWithProxyServerScheme()) {
-            importCandidate(line)?.let { server ->
-                servers += server
-                return@forEach
-            }
+            if (importCandidate(line)) return@forEach
         }
 
         line.embeddedProxyServerUrls()
             .filterNot { url -> url == line }
             .forEach { url ->
-                importCandidate(url)?.let { server -> servers += server }
+                importCandidate(url)
             }
     }
 
     return ProxyServerImportResult(
         urlCount = urlCount,
-        servers = servers,
+        servers = resolveV2rayNImportCandidates(candidates)
+            .applyMihomoProviderServerOptions(context.mihomoProviderOptions),
     )
 }
 
@@ -96,6 +105,7 @@ private fun String.startsWithProxyServerScheme(): Boolean {
 }
 
 private val ProxyServerUrlPrefixes = listOf(
+    V2rayNSharePrefix,
     "${ProxyServerConstants.PROTOCOL_HTTP}://",
     "${ProxyServerConstants.PROTOCOL_SOCKS}://",
     "${ProxyServerConstants.PROTOCOL_SOCKS4}://",
@@ -110,7 +120,7 @@ private val ProxyServerUrlPrefixes = listOf(
 )
 
 private val ProxyServerUrlRegex = Regex(
-    "(?i)\\b(?:http|socks|socks4|socks5|ss|vmess|vless|trojan|hy2|hysteria2|wireguard)://[^\\s<>\"']+",
+    "(?i)\\b(?:http|socks|socks4|socks5|ss|vmess|vless|v2rayn|trojan|hy2|hysteria2|wireguard)://[^\\s<>\"']+",
 )
 
 private const val ProxyServerImportLogTag = "ProxyServerImport"

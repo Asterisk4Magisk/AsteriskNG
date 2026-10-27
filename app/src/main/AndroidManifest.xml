@@ -59,6 +59,7 @@
 
                 <data android:scheme="clash" />
                 <data android:host="install-config" />
+                <data android:host="install-sub" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -68,6 +69,7 @@
 
                 <data android:scheme="clashmeta" />
                 <data android:host="install-config" />
+                <data android:host="install-sub" />
             </intent-filter>
         </activity>
 

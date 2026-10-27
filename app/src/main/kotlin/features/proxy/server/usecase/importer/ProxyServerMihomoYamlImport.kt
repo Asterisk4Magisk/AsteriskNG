@@ -9,6 +9,8 @@ import features.proxy.server.usecase.EmptyProxyServerImportResult
 import features.proxy.server.usecase.ProxyServerImportContext
 import features.proxy.server.usecase.ProxyServerImportResult
 import features.proxy.server.usecase.ProxyServerImportSource
+import features.proxy.server.usecase.ProxyServerProviderRequest
+import kotlin.coroutines.cancellation.CancellationException
 import org.snakeyaml.engine.v2.api.Load
 import org.snakeyaml.engine.v2.api.LoadSettings
 import java.net.URI
@@ -36,7 +38,7 @@ internal suspend fun parseProxyServersFromMihomoYamlConfig(
     }
 
     var skippedCount = 0
-    val servers = configs.toMihomoProxyServers(
+    val servers = configs.applyMihomoProviderOptions(context.mihomoProviderOptions).toMihomoProxyServers(
         source = source,
         startIndex = 0,
         onSkipped = { skippedCount += 1 },
@@ -160,6 +162,8 @@ private fun Any?.mihomoProxyProviders(): List<MihomoProxyProvider> {
             type = provider.string("type").orEmpty().lowercase(),
             url = provider.string("url"),
             payload = provider.list("payload").orEmpty().mapNotNull { item -> item.asStringMap() },
+            options = MihomoProviderOptions.from(provider),
+            headers = provider.mihomoProviderHeaders(),
         )
     }
 }
@@ -168,7 +172,7 @@ private suspend fun MihomoProxyProvider.importProvider(
     context: ProxyServerImportContext,
 ): MihomoProviderImportResult {
     return when (type) {
-        "inline" -> importPayload(context.source)
+        "inline" -> importPayload(context)
         "http" -> importHttpProvider(context)
         else -> MihomoProviderImportResult.Empty
     }
@@ -180,25 +184,26 @@ private suspend fun MihomoProxyProvider.importHttpProvider(
     val providerUrl = url.normalizedProviderUrlOrNull()
     if (providerUrl == null) {
         AndroidAppLogger.warn(LogTag, "Skipped mihomo proxy-provider name=$name reason=invalid provider URL")
-        return importPayload(context.source)
+        return importPayload(context)
     }
     if (providerUrl in context.fetchedProviderUrls) {
         AndroidAppLogger.warn(LogTag, "Skipped mihomo proxy-provider name=$name reason=recursive provider URL")
-        return importPayload(context.source)
+        return importPayload(context)
     }
     val fetcher = context.providerUrlFetcher
     if (fetcher == null) {
         AndroidAppLogger.warn(LogTag, "Skipped mihomo proxy-provider name=$name reason=provider URL fetcher unavailable")
-        return importPayload(context.source)
+        return importPayload(context)
     }
     val result = runCatching {
-        val text = fetcher.fetch(providerUrl)
+        val text = fetcher.fetch(ProxyServerProviderRequest(providerUrl, headers))
         parseProxyServersFromMihomoProviderText(
             text = text,
-            parentContext = context,
+            parentContext = context.copy(mihomoProviderOptions = listOf(options) + context.mihomoProviderOptions),
             providerUrl = providerUrl,
         )
     }.onFailure { error ->
+        if (error is CancellationException || error is UnsupportedMihomoProviderException) throw error
         AndroidAppLogger.warn(
             LogTag,
             "Failed to fetch mihomo proxy-provider name=$name urlHost=${providerUrl.toLogHost()}",
@@ -211,17 +216,17 @@ private suspend fun MihomoProxyProvider.importHttpProvider(
             servers = result.servers,
         )
     } else {
-        importPayload(context.source)
+        importPayload(context)
     }
 }
 
 private fun MihomoProxyProvider.importPayload(
-    source: ProxyServerImportSource,
+    context: ProxyServerImportContext,
 ): MihomoProviderImportResult {
     if (payload.isEmpty()) return MihomoProviderImportResult.Empty
     var skippedCount = 0
-    val servers = payload.toMihomoProxyServers(
-        source = source,
+    val servers = payload.applyMihomoProviderOptions(listOf(options) + context.mihomoProviderOptions).toMihomoProxyServers(
+        source = context.source,
         startIndex = 0,
         onSkipped = { skippedCount += 1 },
     )
@@ -284,6 +289,8 @@ private data class MihomoProxyProvider(
     val type: String,
     val url: String?,
     val payload: List<MihomoYamlMap>,
+    val options: MihomoProviderOptions,
+    val headers: Map<String, List<String>>,
 )
 
 private data class MihomoProviderImportResult(

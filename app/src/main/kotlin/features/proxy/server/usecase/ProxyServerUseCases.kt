@@ -6,6 +6,7 @@ package features.proxy.server.usecase
 import app.AppState
 import app.ProxyServerState
 import app.SubscriptionGroupState
+import features.logs.AndroidAppLogger
 import features.proxy.server.list.ProxyServerListAddAction
 import features.proxy.server.model.ChainProxy
 import features.proxy.server.model.Custom
@@ -22,6 +23,8 @@ import features.proxy.server.model.VMess
 import features.proxy.server.model.Wireguard
 import features.proxy.server.model.getUrlOrNull
 import features.proxy.server.model.isCompositeProxyServer
+import features.proxy.server.usecase.importer.ImportedSubscriptionGroup
+import features.proxy.server.usecase.importer.ImportedExplicitGroup
 import ui.text.formatTemplate
 import utils.resolveSubscriptionName
 
@@ -90,11 +93,23 @@ internal fun AppState.withImportedProxyServers(
         return this
     }
     var nextServerId = nextProxyServerId
-    val importedServers = importResult.servers.map { server ->
+    val assignedIds = importResult.servers.map { nextServerId++ }
+    val importedServers = importResult.servers.mapIndexedNotNull { index, server ->
+        if (server is StrategyGroup && server.subscriptionGroupId == ImportedExplicitGroup) {
+            val memberNames = Regex(server.filter)
+            val conflicts = proxyServers.any { existing ->
+                existing.groupId == groupId && !existing.server.isCompositeProxyServer() &&
+                    existing.server !is Custom && memberNames.containsMatchIn(existing.server.getInfo().remarks)
+            }
+            if (conflicts) {
+                AndroidAppLogger.warn("ProxyServerImport", "Skipped explicit v2rayN strategy group with ambiguous existing members")
+                return@mapIndexedNotNull null
+            }
+        }
         ProxyServerState(
-            id = nextServerId++,
+            id = assignedIds[index],
             groupId = groupId,
-            server = server,
+            server = server.resolveImportedReferences(assignedIds, groupId, subscriptionManaged = false),
         )
     }
     val nextServers = importedServers + proxyServers
@@ -172,27 +187,49 @@ internal fun AppState.withUpdatedSubscriptionServers(
     var nextServerId = nextProxyServerId.coerceAtLeast(1)
     val importedServers = applicableUpdates.flatMap { update ->
         val previousGroup = proxyServers.filter { server ->
-            server.groupId == update.groupId && !server.server.isCompositeProxyServer()
+            server.groupId == update.groupId && server.server.isSubscriptionReplaceable()
         }
-        val reusableIds = matchImportedProxyServers(previousGroup, update.servers)
-        update.servers.mapIndexed { index, server ->
-            val id = reusableIds[index] ?: run {
+        fun assignId(reusableId: Int?): Int {
+            val id = reusableId ?: run {
                 while (nextServerId in usedIds) nextServerId++
                 nextServerId++
             }
             usedIds += id
+            return id
+        }
+        val assignedIds = MutableList(update.servers.size) { 0 }
+        val nodeIndexes = update.servers.indices.filter { !update.servers[it].isCompositeProxyServer() }
+        val nodeMatches = matchImportedProxyServers(
+            previousGroup.filter { !it.server.isCompositeProxyServer() },
+            nodeIndexes.map(update.servers::get),
+        )
+        nodeIndexes.forEachIndexed { matchIndex, sourceIndex ->
+            assignedIds[sourceIndex] = assignId(nodeMatches[matchIndex])
+        }
+        // Resolve child IDs before identity matching so duplicate-named downloaded
+        // chains and groups can still retain their IDs and the selected server.
+        val compositeIndexes = update.servers.indices.filter { update.servers[it].isCompositeProxyServer() }
+        val compositeMatches = matchImportedProxyServers(
+            previousGroup.filter { it.server.isCompositeProxyServer() },
+            compositeIndexes.map { index ->
+                update.servers[index].resolveImportedReferences(assignedIds, update.groupId, subscriptionManaged = true)
+            },
+        )
+        compositeIndexes.forEachIndexed { matchIndex, sourceIndex ->
+            assignedIds[sourceIndex] = assignId(compositeMatches[matchIndex])
+        }
+        update.servers.mapIndexed { index, server ->
             ProxyServerState(
-                id = id,
+                id = assignedIds[index],
                 groupId = update.groupId,
-                server = server,
+                server = server.resolveImportedReferences(assignedIds, update.groupId, subscriptionManaged = true),
             )
         }
     }
-    // Preserve composite proxy servers (strategy groups, chain proxies) even when
-    // their groupId matches an updated subscription group — they are user-created,
-    // not downloaded from the subscription, and should survive subscription updates.
+    // Preserve user-created composite servers; downloaded groups and chains follow
+    // their subscription snapshot, including removed entries and rewritten member IDs.
     val nextServers = importedServers + proxyServers.filterNot { server ->
-        server.groupId in updatedGroupIds && !server.server.isCompositeProxyServer()
+        server.groupId in updatedGroupIds && server.server.isSubscriptionReplaceable()
     }
     val selectedServerId = when {
         nextServers.any { server -> server.id == selectedProxyServerId } -> selectedProxyServerId
@@ -227,6 +264,33 @@ internal fun AppState.withUpdatedSubscriptionServers(
         nextProxyServerId = maxOf(nextProxyServerId, nextServerId),
         selectedProxyServerId = selectedServerId,
     )
+}
+
+private fun ProxyServer<*>.isSubscriptionReplaceable(): Boolean = when (this) {
+    is ChainProxy -> subscriptionManaged
+    is StrategyGroup -> subscriptionManaged
+    else -> true
+}
+
+private fun ProxyServer<*>.resolveImportedReferences(
+    assignedIds: List<Int>,
+    groupId: Int,
+    subscriptionManaged: Boolean,
+): ProxyServer<*> = when (this) {
+    is ChainProxy -> copy(
+        proxyServerIds = proxyServerIds.map { id ->
+            if (id < 0) assignedIds.getOrNull(-id - 1)?.takeIf { it > 0 }
+                ?: error("Missing imported chain member") else id
+        },
+        subscriptionManaged = subscriptionManaged,
+    )
+    is StrategyGroup -> copy(
+        subscriptionGroupId = if (subscriptionGroupId == ImportedSubscriptionGroup || subscriptionGroupId == ImportedExplicitGroup) {
+            groupId
+        } else subscriptionGroupId,
+        subscriptionManaged = subscriptionManaged,
+    )
+    else -> this
 }
 
 internal fun List<SubscriptionGroupState>.updatableSubscriptionGroups(): List<SubscriptionGroupState> {

@@ -25,6 +25,7 @@ data class StrategyGroup(
     var strategy: String = StrategyGroupConstants.TYPE_LEAST_PING,
     var subscriptionGroupId: Int? = null,
     var filter: String = "",
+    var subscriptionManaged: Boolean = false,
 ) : ProxyServer<StrategyGroup> {
     override fun getInfo(): ProxyServerInfo {
         val source = subscriptionGroupId?.toString() ?: "all"
@@ -44,6 +45,7 @@ data class StrategyGroup(
         strategy = other.strategy
         subscriptionGroupId = other.subscriptionGroupId
         filter = other.filter
+        subscriptionManaged = other.subscriptionManaged
     }
 
     override fun validateBasic(): List<ProxyServerValidationIssue> = validateFull()

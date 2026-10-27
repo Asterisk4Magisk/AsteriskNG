@@ -383,20 +383,25 @@ private suspend fun importProxyServers(
     val importResult = importProxyServersFromText(
         text = text,
         source = source,
-        providerUrlFetcher = { providerUrl ->
+        providerUrlFetcher = { request ->
             subscriptionFetcher.fetch(
-                url = providerUrl,
+                url = request.url,
                 userAgent = "",
-                options = AndroidSubscriptionFetchOptions(),
+                options = AndroidSubscriptionFetchOptions(headers = request.headers),
             )
         },
     )
+    var importedCount = 0
     if (importResult.servers.isNotEmpty()) {
-        updateAppState { state -> state.withImportedProxyServers(importResult, targetGroupId) }
+        updateAppState { state ->
+            state.withImportedProxyServers(importResult, targetGroupId).also { updated ->
+                importedCount = updated.proxyServers.size - state.proxyServers.size
+            }
+        }
     }
     tipNotifier.show(
         messages.importResultTemplate.formatTemplate(
-            "serverCount" to importResult.servers.size,
+            "serverCount" to importedCount,
         ),
     )
 }

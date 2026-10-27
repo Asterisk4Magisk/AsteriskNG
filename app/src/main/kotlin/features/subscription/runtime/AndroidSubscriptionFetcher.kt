@@ -60,6 +60,7 @@ internal class AndroidSubscriptionFetcher(
                     userAgent = userAgent.ifBlank { DefaultSubscriptionUserAgent },
                     requestCredentials = requestCredentials,
                     proxy = proxy,
+                    headers = options.headers,
                 )
             }.let { response ->
                 response.copy(
@@ -87,6 +88,7 @@ internal data class AndroidSubscriptionFetchOptions(
     val fallbackProxy: LocalProxyOptions? = null,
     val hwid: String = "",
     val ageSecretKey: String = "",
+    val headers: Map<String, List<String>> = emptyMap(),
 )
 
 private data class SubscriptionRequestCredentials(
@@ -167,8 +169,10 @@ private fun fetchWithRedirects(
     userAgent: String,
     requestCredentials: SubscriptionRequestCredentials,
     proxy: AndroidSubscriptionProxy?,
+    headers: Map<String, List<String>>,
 ): AndroidSubscriptionResponse {
     var currentUrl = url
+    var currentHeaders = headers
     repeat(MaxRedirects) {
         val connection = currentUrl.toConnection(proxy)
         try {
@@ -180,12 +184,22 @@ private fun fetchWithRedirects(
                 connection.setRequestProperty("X-Age-Public-Key", publicKey)
             }
             connection.setEmbeddedBasicAuth(currentUrl)
+            currentHeaders.forEach { (name, values) ->
+                values.forEachIndexed { index, value ->
+                    if (index == 0) connection.setRequestProperty(name, value)
+                    else connection.addRequestProperty(name, value)
+                }
+            }
 
             val code = connection.responseCode
             if (code in 300..399) {
                 val location = connection.getHeaderField("Location")
                     ?: error("Redirect location missing")
-                currentUrl = URI(currentUrl).resolve(location).toString()
+                val nextUrl = URI(currentUrl).resolve(location).toString()
+                if (!sameSubscriptionOrigin(currentUrl, nextUrl)) {
+                    currentHeaders = emptyMap()
+                }
+                currentUrl = nextUrl
                 return@repeat
             }
             if (code !in 200..299) {
@@ -200,6 +214,13 @@ private fun fetchWithRedirects(
         }
     }
     error("Too many redirects")
+}
+
+private fun sameSubscriptionOrigin(first: String, second: String): Boolean {
+    val a = URI(first)
+    val b = URI(second)
+    fun URI.effectivePort(): Int = if (port >= 0) port else if (scheme.equals("https", true)) 443 else 80
+    return a.scheme.equals(b.scheme, true) && a.host.equals(b.host, true) && a.effectivePort() == b.effectivePort()
 }
 
 private fun AndroidSubscriptionFetchOptions.toRequestCredentials(

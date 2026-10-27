@@ -82,8 +82,8 @@ private suspend fun updateSubscriptionGroup(
         val importResult = importProxyServersFromText(
             text = text,
             source = ProxyServerImportSource.SubscriptionUrl,
-            providerUrlFetcher = { providerUrl ->
-                fetchResponse(providerUrl, group.userAgent, fetchOptions).text
+            providerUrlFetcher = { request ->
+                fetchResponse(request.url, group.userAgent, fetchOptions.copy(headers = request.headers)).text
             },
         )
         ProxyServerListSubscriptionUpdate(

@@ -4,6 +4,7 @@
 package features.proxy.server.usecase
 
 import features.proxy.server.model.ProxyServer
+import features.proxy.server.usecase.importer.MihomoProviderOptions
 
 internal data class ProxyServerImportResult(
     val urlCount: Int,
@@ -21,8 +22,13 @@ internal enum class ProxyServerImportSource(
     MihomoProxyProviderUrl(logName = "mihomo_proxy_provider_url", decodeBase64 = true),
 }
 
+internal data class ProxyServerProviderRequest(
+    val url: String,
+    val headers: Map<String, List<String>> = emptyMap(),
+)
+
 internal fun interface ProxyServerProviderUrlFetcher {
-    suspend fun fetch(url: String): String
+    suspend fun fetch(request: ProxyServerProviderRequest): String
 }
 
 internal data class ProxyServerImportContext(
@@ -30,6 +36,7 @@ internal data class ProxyServerImportContext(
     val providerUrlFetcher: ProxyServerProviderUrlFetcher? = null,
     val providerDepth: Int = 0,
     val fetchedProviderUrls: Set<String> = emptySet(),
+    val mihomoProviderOptions: List<MihomoProviderOptions> = emptyList(),
 )
 
 internal typealias ProxyServerPayloadParser = suspend (String, ProxyServerImportContext) -> ProxyServerImportResult

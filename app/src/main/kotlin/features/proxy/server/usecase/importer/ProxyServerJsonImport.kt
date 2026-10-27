@@ -10,6 +10,7 @@ import features.proxy.server.model.formatCustomXrayConfigJson
 import features.proxy.server.usecase.EmptyProxyServerImportResult
 import features.proxy.server.usecase.ProxyServerImportContext
 import features.proxy.server.usecase.ProxyServerImportResult
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -17,17 +18,23 @@ import kotlinx.serialization.json.contentOrNull
 
 private const val LogTag = "ProxyServerJsonImport"
 
+// Parsing into a JSON tree and formatting it below removes comments while retaining
+// comment-like text inside strings. All other JSON syntax remains strict.
+private val XrayImportJson = Json(ProxyServer.json) {
+    allowComments = true
+}
+
 internal suspend fun parseProxyServersFromJsonConfig(
     text: String,
     context: ProxyServerImportContext,
 ): ProxyServerImportResult {
     val source = context.source
     val root = runCatching {
-        ProxyServer.json.parseToJsonElement(text.trimStart(ImportByteOrderMark))
+        XrayImportJson.parseToJsonElement(text.trimStart(ImportByteOrderMark))
     }.getOrNull() ?: return EmptyProxyServerImportResult
     val configs = when (root) {
         is JsonObject -> listOf(root)
-        is JsonArray -> root.mapNotNull { element -> element as? JsonObject }
+        is JsonArray -> root.filterIsInstance<JsonObject>()
         else -> emptyList()
     }
     if (configs.isEmpty()) {

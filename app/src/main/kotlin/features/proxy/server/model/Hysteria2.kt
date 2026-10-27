@@ -13,6 +13,7 @@ import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
 import utils.proxyUrlRemarks
+import utils.userInfoOrNull
 
 @Serializable
 data class Hysteria2(
@@ -64,12 +65,16 @@ data class Hysteria2(
         )
     }
 
-    override fun parse(url: Url): Hysteria2 {
+    override fun parse(url: Url): Hysteria2 = parse(url.toString())
+
+    internal fun parse(value: String): Hysteria2 {
+        val parsed = parseHysteria2Url(value)
+        val url = parsed.url
         //standard
         this.remarks = url.proxyUrlRemarks()
         this.server = url.proxyUrlHost()
         this.port = url.port.toString()
-        this.auth = url.user ?: ""
+        this.auth = url.userInfoOrNull().orEmpty()
         this.obfs = url.parameters["obfs"] ?: ""
         this.obfsPassword = url.parameters["obfs-password"] ?: ""
         this.sni = url.parameters["sni"] ?: ""
@@ -78,7 +83,9 @@ data class Hysteria2(
         }
         this.pinSHA256 = url.parameters["pinSHA256"] ?: ""
         //v2rayNg
-        this.mport = url.parameters["mport"] ?: url.parameters["ports"] ?: ""
+        // Keep empty mport values authoritative too, matching existing links.
+        this.mport = url.parameters["mport"] ?: url.parameters["ports"] ?: parsed.authorityPorts.orEmpty()
+        requireValidHysteria2Ports(this.mport)
         this.mportHopInt = url.parameters["mportHopInt"] ?: url.parameters["hop-interval"] ?: ""
         this.up = url.parameters["up"] ?: ""
         this.down = url.parameters["down"] ?: ""

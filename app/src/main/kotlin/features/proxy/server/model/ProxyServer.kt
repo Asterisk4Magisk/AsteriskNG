@@ -51,6 +51,13 @@ interface ProxyServer<T : ProxyServer<T>> {
             parseLegacyProxyServerUrl(value)?.let { server ->
                 return server
             }
+            // Hysteria2 authority ports may contain lists/ranges that Ktor cannot parse directly.
+            val scheme = value.substringBefore("://")
+            if (scheme.equals(ProxyServerConstants.PROTOCOL_HY2, ignoreCase = true) ||
+                scheme.equals(ProxyServerConstants.PROTOCOL_HYSTERIA2, ignoreCase = true)
+            ) {
+                return Hysteria2().parse(value)
+            }
 
             val url = Url(value)
             val server = when (url.protocol.name) {

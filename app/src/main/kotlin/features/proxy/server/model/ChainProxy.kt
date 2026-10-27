@@ -9,6 +9,7 @@ import kotlinx.serialization.Serializable
 data class ChainProxy(
     var remarks: String = "",
     var proxyServerIds: List<Int> = emptyList(),
+    var subscriptionManaged: Boolean = false,
 ) : ProxyServer<ChainProxy> {
     override fun getInfo(): ProxyServerInfo {
         return ProxyServerInfo(remarks, "${proxyServerIds.size} hops", "Chain")
@@ -24,6 +25,7 @@ data class ChainProxy(
         }
         remarks = other.remarks
         proxyServerIds = other.proxyServerIds
+        subscriptionManaged = other.subscriptionManaged
     }
 
     override fun validateBasic(): List<ProxyServerValidationIssue> = validateFull()

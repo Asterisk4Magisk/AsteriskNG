@@ -14,6 +14,7 @@ internal fun MihomoYamlMap.toMihomoV2RayParameters(
 ): V2RayParameters {
     ensureNoUnsupportedV2RayTlsOptions()
     val wsOpts = map("ws-opts")
+    val wsHeaders = wsOpts.orEmpty().mergedWsHeaders(this)
     val grpcOpts = map("grpc-opts")
     val xhttpOpts = map("xhttp-opts")
     val kcpOpts = map("kcp-opts")
@@ -42,14 +43,14 @@ internal fun MihomoYamlMap.toMihomoV2RayParameters(
             else -> null
         },
         host = when (transport) {
-            "websocket", "httpupgrade" -> wsOpts?.mergedWsHeaders(this)?.headerString("Host") ?: wsOpts?.string("host")
+            "websocket", "httpupgrade" -> wsHeaders?.headerString("Host") ?: wsOpts?.string("host")
             "xhttp" -> xhttpOpts?.let { xhttpHost?.invoke(it) }
             "mkcp" -> (kcpOpts ?: this).map("header")?.string("host", "domain")
                 ?: kcpString(kcpOpts, "host", "domain")
             else -> null
         },
         headers = when (transport) {
-            "websocket", "httpupgrade" -> wsOpts?.mergedWsHeaders(this)?.transportHeadersJson()
+            "websocket", "httpupgrade" -> wsHeaders?.transportHeadersJson()
             else -> null
         },
         mtu = kcpString(kcpOpts, "mtu"),
@@ -71,6 +72,7 @@ internal fun MihomoYamlMap.toMihomoV2RayParameters(
         alpn = csvString("alpn"),
         ech = echOpts?.takeIf { it.boolean("enable") == true }?.string("config"),
         pcs = string("fingerprint"),
+        vcn = string("name-cert-verify"),
         pbk = realityOpts?.string("public-key", "publicKey"),
         sid = realityOpts?.string("short-id", "shortId"),
         spx = realityOpts?.string("spider-x", "spiderX"),
@@ -145,9 +147,8 @@ private fun MihomoYamlMap.ensureNoUnsupportedV2RayTlsOptions() {
 }
 
 private fun MihomoYamlMap.transportHeadersJson(): String? {
-    val headers = map("headers") ?: return null
     val json = buildJsonObject {
-        headers.entries.forEach { (name, value) ->
+        this@transportHeadersJson.entries.forEach { (name, value) ->
             if (!name.equals("Host", ignoreCase = true)) {
                 value.headerValueString("transport header $name")?.let { put(name, it) }
             }
