@@ -158,7 +158,7 @@
         },
         {
             "uniqueId": "github:heiher/hev-socks5-tunnel",
-            "artifactVersion": "2.18.0",
+            "artifactVersion": "2.19.3",
             "name": "hev-socks5-tunnel",
             "description": "A tun2socks tunnel that forwards TUN traffic to a SOCKS5 server.",
             "website": "https://github.com/heiher/hev-socks5-tunnel",
