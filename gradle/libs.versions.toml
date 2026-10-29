@@ -1,5 +1,5 @@
 [versions]
-agp = "9.4.1"
+agp = "9.5.0"
 androidx-activity-compose = "1.13.0"
 androidx-navigationevent = "1.1.0"
 androidx-room = "2.8.5"
