@@ -31,8 +31,9 @@ internal class TrafficSpeedNotificationIcon(density: Float) {
         // Never redraw a bitmap already handed to NotificationManager.
         val bitmap = createBitmap(size, size)
         val canvas = Canvas(bitmap)
-        drawLine(canvas, text.value, top = 0f, bottom = 15f)
-        drawLine(canvas, text.unit, top = 17f, bottom = 24f)
+        // Keep the unit legible after SystemUI scales the 24 dp icon.
+        drawLine(canvas, text.value, top = 0f, bottom = 13f)
+        drawLine(canvas, text.unit, top = 14f, bottom = 23f)
         return Icon.createWithBitmap(bitmap).also { icon ->
             cachedText = text
             cachedIcon = icon
