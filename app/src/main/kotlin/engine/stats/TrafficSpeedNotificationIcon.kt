@@ -24,8 +24,8 @@ internal class TrafficSpeedNotificationIcon(density: Float) {
     private var cachedText: TrafficSpeedIconText? = null
     private var cachedIcon: Icon? = null
 
-    fun create(downlinkBytesPerSecond: Long): Icon {
-        val text = trafficSpeedIconText(downlinkBytesPerSecond)
+    fun create(bytesPerSecond: Long): Icon {
+        val text = trafficSpeedIconText(bytesPerSecond)
         cachedIcon?.let { icon -> if (cachedText == text) return icon }
 
         // Never redraw a bitmap already handed to NotificationManager.
