@@ -196,10 +196,14 @@ val generateProjectInfo = tasks.register<GenerateProjectInfoTask>("generateProje
 androidComponents {
     beforeVariants(selector().all()) { variant ->
         variant.enableAndroidTest = false
+        // Compose Preview uses the unit test component to package Android resources.
         (variant as? HasHostTestsBuilder)
             ?.hostTests
             ?.get(HostTestBuilder.UNIT_TEST_TYPE)
-            ?.enable = false
+            ?.apply {
+                enable = true
+                includeAndroidResources = true
+            }
     }
 
     onVariants { variant ->
