@@ -7,6 +7,9 @@ data class ShellExecOptions(
     val cwd: String? = null,
     val env: Map<String, String> = emptyMap(),
     val logFailure: Boolean = true,
+    // Streaming only: false hands lines to the callback without keeping them for the result,
+    // so a long-running stream does not grow memory; the result's stdout is then empty.
+    val retainStreamingStdout: Boolean = true,
 )
 
 data class ShellExecResult(

@@ -57,7 +57,7 @@ internal class AsteriskdClient(
             val stream = StatusWatchStream { snapshot -> trySend(snapshot) }
             val result = shell.execStreaming(
                 "${executablePath.shellQuote()} watch",
-                ShellExecOptions(logFailure = false),
+                ShellExecOptions(logFailure = false, retainStreamingStdout = false),
                 stream::accept,
             )
             when (stream.termination(result)) {
@@ -94,7 +94,7 @@ internal class AsteriskdClient(
             val stream = RunningWatchStream()
             val result = shell.execStreaming(
                 command,
-                ShellExecOptions(logFailure = false),
+                ShellExecOptions(logFailure = false, retainStreamingStdout = false),
                 stream::accept,
             )
             if (result.stderr.isNotBlank()) {

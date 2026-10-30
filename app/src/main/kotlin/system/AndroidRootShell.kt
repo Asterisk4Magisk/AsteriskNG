@@ -92,7 +92,10 @@ internal object AndroidRootShell {
                     dedicatedShell.close()
                     return@execute
                 }
-                val stdout = object : CallbackList<String>(callbackExecutor, stdoutBacking) {
+                val stdout = object : CallbackList<String>(
+                    callbackExecutor,
+                    stdoutBacking.takeIf { options.retainStreamingStdout },
+                ) {
                     override fun onAddElement(element: String) {
                         streamingCommand.processIdOrNull(element)?.let { processId ->
                             processLifetime.publishProcessId(processId)
