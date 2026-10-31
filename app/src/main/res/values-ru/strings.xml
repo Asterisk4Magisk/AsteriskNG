@@ -565,6 +565,8 @@
     <string name="proxy_traffic_stats_notification_total">Трафик: ^ %1$s / v %2$s</string>
     <string name="settings_traffic_stats_notification">Показывать статистику трафика</string>
     <string name="settings_traffic_stats_notification_summary">Показывать текущую скорость и общий трафик в уведомлениях и строке состояния</string>
+    <string name="settings_traffic_stats_screen_off_sleep">Обновлять только при включенном экране</string>
+    <string name="settings_traffic_stats_screen_off_sleep_summary">Приостанавливать обновление статистики при выключенном экране для экономии энергии</string>
 
     <!-- Quick settings tile -->
     <string name="quick_settings_tile_label">AsteriskNG</string>

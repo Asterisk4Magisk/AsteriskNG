@@ -564,6 +564,8 @@
     <string name="proxy_traffic_stats_notification_total">Lưu lượng: ↑ %1$s / ↓ %2$s</string>
     <string name="settings_traffic_stats_notification">Hiển thị dữ liệu thống kê</string>
     <string name="settings_traffic_stats_notification_summary">Hiển thị tốc độ hiện tại và tổng lưu lượng trong thông báo và trên thanh trạng thái</string>
+    <string name="settings_traffic_stats_screen_off_sleep">Chỉ làm mới khi màn hình bật</string>
+    <string name="settings_traffic_stats_screen_off_sleep_summary">Tạm dừng cập nhật số liệu thống kê khi màn hình tắt để tiết kiệm pin</string>
 
     <!-- Quick settings tile -->
     <string name="quick_settings_tile_label">AsteriskNG</string>
