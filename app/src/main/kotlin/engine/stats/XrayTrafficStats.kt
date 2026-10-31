@@ -44,6 +44,17 @@ internal class XrayTrafficSessionAccumulator {
     private val speedSamples = ArrayDeque<XrayTrafficSpeedSample>()
     private var speedWindowElapsedMillis = 0L
 
+    /** Adds [delta] to the total and restarts the speed window, reporting zero speed. */
+    fun recordWithoutSpeed(delta: XrayTrafficBytes = XrayTrafficBytes()): XrayTrafficSessionSample {
+        totalBytes += delta
+        speedSamples.clear()
+        speedWindowElapsedMillis = 0L
+        return XrayTrafficSessionSample(
+            speedBytesPerSecond = XrayTrafficBytes(),
+            totalBytes = totalBytes,
+        )
+    }
+
     fun record(
         delta: XrayTrafficBytes,
         elapsedMillis: Long,

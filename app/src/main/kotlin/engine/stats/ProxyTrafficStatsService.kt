@@ -8,11 +8,14 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
+import android.os.PowerManager
 import android.os.SystemClock
 import androidx.core.content.ContextCompat
 import app.R
@@ -47,6 +50,24 @@ class ProxyTrafficStatsService : Service() {
     private var accumulator = XrayTrafficSessionAccumulator()
     private var foregroundStarted = false
     private var latestStartId = 0
+    private var screenReceiverRegistered = false
+
+    // Sampling pauses while the screen is off; Xray keeps counting, so totals stay exact.
+    private val screenReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            val runtime = activeRuntime ?: return
+            when (intent?.action) {
+                Intent.ACTION_SCREEN_OFF -> {
+                    monitor.cancel()
+                    notificationManager.notify(
+                        NotificationId,
+                        buildNotification(runtime.serverName, accumulator.recordWithoutSpeed()),
+                    )
+                }
+                Intent.ACTION_SCREEN_ON -> if (!monitor.isActive) startSampling(runtime)
+            }
+        }
+    }
 
     override fun onCreate() {
         super.onCreate()
@@ -85,7 +106,7 @@ class ProxyTrafficStatsService : Service() {
             return START_NOT_STICKY
         }
 
-        if (runtime == activeRuntime && monitor.isActive) {
+        if (runtime == activeRuntime && (monitor.isActive || !isScreenInteractive())) {
             return START_STICKY
         }
         if (runtime != activeRuntime) {
@@ -104,11 +125,19 @@ class ProxyTrafficStatsService : Service() {
     private fun startStats(runtime: ProxyTrafficStatsRuntime, startId: Int): Boolean {
         monitor.cancel()
         if (!startForegroundNotification(runtime.serverName, startId)) return false
+        registerScreenReceiver()
+        if (isScreenInteractive()) startSampling(runtime)
+        return true
+    }
 
+    private fun startSampling(runtime: ProxyTrafficStatsRuntime) {
         val sessionAccumulator = accumulator
         monitor.start {
             var lastPollAt = SystemClock.elapsedRealtime()
             var failures = 0
+            // The first query returns bytes counted before sampling (re)started, e.g. while the
+            // screen was off; they belong to the total, not to the current speed.
+            var catchUp = true
             XrayStatsClient(
                 listenAddress = runtime.listenAddress,
                 port = runtime.port,
@@ -123,12 +152,18 @@ class ProxyTrafficStatsService : Service() {
                         val delta = client.queryInboundTraffic(reset = true)
                         currentCoroutineContext().ensureActive()
                         failures = 0
+                        val sampleCatchUp = catchUp
+                        catchUp = false
                         publish {
                             notificationManager.notify(
                                 NotificationId,
                                 buildNotification(
                                     serverName = runtime.serverName,
-                                    sample = sessionAccumulator.record(delta, elapsedMillis),
+                                    sample = if (sampleCatchUp) {
+                                        sessionAccumulator.recordWithoutSpeed(delta)
+                                    } else {
+                                        sessionAccumulator.record(delta, elapsedMillis)
+                                    },
                                 ),
                             )
                         }
@@ -151,10 +186,10 @@ class ProxyTrafficStatsService : Service() {
                 }
             }
         }
-        return true
     }
 
     private fun stopStats() {
+        unregisterScreenReceiver()
         monitor.cancel()
         activeRuntime = null
         accumulator = XrayTrafficSessionAccumulator()
@@ -163,6 +198,26 @@ class ProxyTrafficStatsService : Service() {
         }
         foregroundStarted = false
         notificationManager.cancel(NotificationId)
+    }
+
+    private fun registerScreenReceiver() {
+        if (screenReceiverRegistered) return
+        val filter = IntentFilter().apply {
+            addAction(Intent.ACTION_SCREEN_ON)
+            addAction(Intent.ACTION_SCREEN_OFF)
+        }
+        ContextCompat.registerReceiver(this, screenReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
+        screenReceiverRegistered = true
+    }
+
+    private fun unregisterScreenReceiver() {
+        if (!screenReceiverRegistered) return
+        unregisterReceiver(screenReceiver)
+        screenReceiverRegistered = false
+    }
+
+    private fun isScreenInteractive(): Boolean {
+        return getSystemService(PowerManager::class.java)?.isInteractive ?: true
     }
 
     private fun startForegroundNotification(serverName: String, startId: Int): Boolean {
