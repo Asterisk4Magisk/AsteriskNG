@@ -109,6 +109,7 @@ internal data class ProxyTrafficStatsRuntime(
     val port: Int,
     val serverName: String,
     val apiTag: String = XrayStatsApiTag,
+    val screenOffSleep: Boolean = true,
 )
 
 internal object ProxyTrafficStatsRuntimeStore {
@@ -124,6 +125,7 @@ internal object ProxyTrafficStatsRuntimeStore {
             apiTag = preferences.getString(KeyApiTag, XrayStatsApiTag)
                 ?.takeIf(String::isNotBlank)
                 ?: XrayStatsApiTag,
+            screenOffSleep = preferences.getBoolean(KeyScreenOffSleep, true),
         )
     }
 
@@ -140,6 +142,7 @@ internal object ProxyTrafficStatsRuntimeStore {
             putInt(KeyPort, runtime.port)
             putString(KeyServerName, runtime.serverName)
             putString(KeyApiTag, runtime.apiTag)
+            putBoolean(KeyScreenOffSleep, runtime.screenOffSleep)
         }
     }
 
@@ -154,3 +157,4 @@ private const val KeyListenAddress = "listen_address"
 private const val KeyPort = "port"
 private const val KeyServerName = "server_name"
 private const val KeyApiTag = "api_tag"
+private const val KeyScreenOffSleep = "screen_off_sleep"

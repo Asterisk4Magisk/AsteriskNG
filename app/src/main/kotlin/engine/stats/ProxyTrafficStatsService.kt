@@ -8,11 +8,14 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
+import android.os.PowerManager
 import android.os.SystemClock
 import androidx.core.content.ContextCompat
 import app.R
@@ -47,6 +50,25 @@ class ProxyTrafficStatsService : Service() {
     private var accumulator = XrayTrafficSessionAccumulator()
     private var foregroundStarted = false
     private var latestStartId = 0
+    private var screenReceiverRegistered = false
+
+    private val screenReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            val runtime = activeRuntime ?: return
+            if (!runtime.screenOffSleep) return
+            when (intent?.action) {
+                Intent.ACTION_SCREEN_OFF -> {
+                    monitor.cancel()
+                }
+                Intent.ACTION_SCREEN_ON -> {
+                    if (!monitor.isActive) {
+                        accumulator.resetSpeedWindow()
+                        startSamplingLoop(runtime)
+                    }
+                }
+            }
+        }
+    }
 
     override fun onCreate() {
         super.onCreate()
@@ -85,7 +107,14 @@ class ProxyTrafficStatsService : Service() {
             return START_NOT_STICKY
         }
 
-        if (runtime == activeRuntime && monitor.isActive) {
+        if (runtime == activeRuntime) {
+            val shouldBeActive = !runtime.screenOffSleep || isScreenInteractive()
+            if (shouldBeActive && !monitor.isActive) {
+                accumulator.resetSpeedWindow()
+                startSamplingLoop(runtime)
+            } else if (!shouldBeActive && monitor.isActive) {
+                monitor.cancel()
+            }
             return START_STICKY
         }
         if (runtime != activeRuntime) {
@@ -104,7 +133,15 @@ class ProxyTrafficStatsService : Service() {
     private fun startStats(runtime: ProxyTrafficStatsRuntime, startId: Int): Boolean {
         monitor.cancel()
         if (!startForegroundNotification(runtime.serverName, startId)) return false
+        registerScreenReceiver()
+        if (!runtime.screenOffSleep || isScreenInteractive()) {
+            startSamplingLoop(runtime)
+        }
+        return true
+    }
 
+    private fun startSamplingLoop(runtime: ProxyTrafficStatsRuntime) {
+        monitor.cancel()
         val sessionAccumulator = accumulator
         monitor.start {
             var lastPollAt = SystemClock.elapsedRealtime()
@@ -151,10 +188,10 @@ class ProxyTrafficStatsService : Service() {
                 }
             }
         }
-        return true
     }
 
     private fun stopStats() {
+        unregisterScreenReceiver()
         monitor.cancel()
         activeRuntime = null
         accumulator = XrayTrafficSessionAccumulator()
@@ -163,6 +200,29 @@ class ProxyTrafficStatsService : Service() {
         }
         foregroundStarted = false
         notificationManager.cancel(NotificationId)
+    }
+
+    private fun registerScreenReceiver() {
+        if (screenReceiverRegistered) return
+        val filter = IntentFilter().apply {
+            addAction(Intent.ACTION_SCREEN_ON)
+            addAction(Intent.ACTION_SCREEN_OFF)
+        }
+        registerReceiver(screenReceiver, filter)
+        screenReceiverRegistered = true
+    }
+
+    private fun unregisterScreenReceiver() {
+        if (!screenReceiverRegistered) return
+        runCatching {
+            unregisterReceiver(screenReceiver)
+        }
+        screenReceiverRegistered = false
+    }
+
+    private fun isScreenInteractive(): Boolean {
+        val powerManager = getSystemService(PowerManager::class.java)
+        return powerManager?.isInteractive ?: true
     }
 
     private fun startForegroundNotification(serverName: String, startId: Int): Boolean {
@@ -242,6 +302,7 @@ class ProxyTrafficStatsService : Service() {
         val listenAddress = getStringExtra(ExtraListenAddress)?.takeIf(String::isNotBlank) ?: return null
         val port = getIntExtra(ExtraPort, 0).takeIf { value -> value > 0 } ?: return null
         val serverName = getStringExtra(ExtraServerName).orEmpty()
+        val screenOffSleep = getBooleanExtra(ExtraScreenOffSleep, true)
         return ProxyTrafficStatsRuntime(
             listenAddress = listenAddress,
             port = port,
@@ -249,6 +310,7 @@ class ProxyTrafficStatsService : Service() {
             apiTag = getStringExtra(ExtraApiTag)
                 ?.takeIf(String::isNotBlank)
                 ?: XrayStatsApiTag,
+            screenOffSleep = screenOffSleep,
         )
     }
 
@@ -279,7 +341,8 @@ class ProxyTrafficStatsService : Service() {
                                 .putExtra(ExtraListenAddress, runtime.listenAddress)
                                 .putExtra(ExtraPort, runtime.port)
                                 .putExtra(ExtraServerName, runtime.serverName)
-                                .putExtra(ExtraApiTag, runtime.apiTag),
+                                .putExtra(ExtraApiTag, runtime.apiTag)
+                                .putExtra(ExtraScreenOffSleep, runtime.screenOffSleep),
                         )
                     },
                     onFailure = { error ->
@@ -305,6 +368,7 @@ private const val ExtraListenAddress = "listen_address"
 private const val ExtraPort = "port"
 private const val ExtraServerName = "server_name"
 private const val ExtraApiTag = "api_tag"
+private const val ExtraScreenOffSleep = "screen_off_sleep"
 private const val ChannelId = "proxy_traffic_stats"
 private const val NotificationId = 3001
 private const val PollIntervalMillis = 1_000L

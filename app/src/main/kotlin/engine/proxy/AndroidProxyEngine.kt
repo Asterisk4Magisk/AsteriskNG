@@ -359,6 +359,7 @@ class AndroidProxyEngine(
             port = statsApiConfig.port,
             serverName = selectedServer.displayTitle(),
             apiTag = statsApiConfig.apiTag,
+            screenOffSleep = appState.enableTrafficStatsScreenOffSleep,
         )
         return request to runtime
     }

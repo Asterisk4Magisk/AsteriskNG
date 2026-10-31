@@ -293,6 +293,7 @@ internal fun SettingsProxyModeSections(
     runMode: Int,
     localProxySettingsSummary: String,
     enableTrafficStatsNotification: Boolean,
+    enableTrafficStatsScreenOffSleep: Boolean,
     enableVpnAppendHttpProxy: Boolean,
     enableVpnHevTun: Boolean,
     enableAutoConnect: Boolean,
@@ -307,6 +308,7 @@ internal fun SettingsProxyModeSections(
     privateAddressCidrsSummary: String,
     onOpenLocalProxySettings: () -> Unit,
     onEnableTrafficStatsNotificationChange: (Boolean) -> Unit,
+    onEnableTrafficStatsScreenOffSleepChange: (Boolean) -> Unit,
     onEnableVpnAppendHttpProxyChange: (Boolean) -> Unit,
     onEnableVpnHevTunChange: (Boolean) -> Unit,
     onEnableAutoConnectChange: (Boolean) -> Unit,
@@ -345,6 +347,18 @@ internal fun SettingsProxyModeSections(
                     checked = enableTrafficStatsNotification,
                     onCheckedChange = onEnableTrafficStatsNotificationChange,
                 )
+                AnimatedVisibility(
+                    visible = enableTrafficStatsNotification,
+                    enter = fadeIn() + expandVertically(),
+                    exit = shrinkVertically() + fadeOut(),
+                ) {
+                    SwitchPreference(
+                        title = stringResource(R.string.settings_traffic_stats_screen_off_sleep),
+                        summary = stringResource(R.string.settings_traffic_stats_screen_off_sleep_summary),
+                        checked = enableTrafficStatsScreenOffSleep,
+                        onCheckedChange = onEnableTrafficStatsScreenOffSleepChange,
+                    )
+                }
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                     SwitchPreference(
                         title = stringResource(R.string.settings_vpn_append_http_proxy),
@@ -445,6 +459,18 @@ internal fun SettingsProxyModeSections(
                     checked = enableTrafficStatsNotification,
                     onCheckedChange = onEnableTrafficStatsNotificationChange,
                 )
+                AnimatedVisibility(
+                    visible = enableTrafficStatsNotification,
+                    enter = fadeIn() + expandVertically(),
+                    exit = shrinkVertically() + fadeOut(),
+                ) {
+                    SwitchPreference(
+                        title = stringResource(R.string.settings_traffic_stats_screen_off_sleep),
+                        summary = stringResource(R.string.settings_traffic_stats_screen_off_sleep_summary),
+                        checked = enableTrafficStatsScreenOffSleep,
+                        onCheckedChange = onEnableTrafficStatsScreenOffSleepChange,
+                    )
+                }
                 ArrowPreference(
                     title = stringResource(R.string.settings_local_proxy),
                     summary = localProxySettingsSummary,

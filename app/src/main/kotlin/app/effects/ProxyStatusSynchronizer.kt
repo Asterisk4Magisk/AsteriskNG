@@ -22,6 +22,7 @@ import app.modes.isRootRunMode
 import data.AndroidAppStateStore
 import engine.proxy.AndroidProxyEngine
 import engine.proxy.ProxyEngineStatus
+import engine.stats.ProxyTrafficStatsRuntimeStore
 import engine.stats.ProxyTrafficStatsService
 import features.logs.AndroidAppLogger
 import kotlinx.coroutines.flow.Flow
@@ -112,9 +113,22 @@ internal fun ProxyStatusSynchronizer(
         }
     }
 
-    LaunchedEffect(appContext, appState.enableTrafficStatsNotification) {
+    LaunchedEffect(
+        appContext,
+        appState.enableTrafficStatsNotification,
+        appState.enableTrafficStatsScreenOffSleep,
+    ) {
         if (!appState.enableTrafficStatsNotification) {
             ProxyTrafficStatsService.reconcile(appContext, null)
+        } else if (appState.proxyRunning) {
+            ProxyTrafficStatsRuntimeStore.read(appContext)?.let { currentRuntime ->
+                if (currentRuntime.screenOffSleep != appState.enableTrafficStatsScreenOffSleep) {
+                    val updatedRuntime = currentRuntime.copy(
+                        screenOffSleep = appState.enableTrafficStatsScreenOffSleep,
+                    )
+                    ProxyTrafficStatsService.reconcile(appContext, updatedRuntime)
+                }
+            }
         }
     }
 
