@@ -8,14 +8,11 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
-import android.os.PowerManager
 import android.os.SystemClock
 import androidx.core.content.ContextCompat
 import app.R
@@ -50,24 +47,7 @@ class ProxyTrafficStatsService : Service() {
     private var accumulator = XrayTrafficSessionAccumulator()
     private var foregroundStarted = false
     private var latestStartId = 0
-    private var screenReceiverRegistered = false
-
-    // Sampling pauses while the screen is off; Xray keeps counting, so totals stay exact.
-    private val screenReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            val runtime = activeRuntime ?: return
-            when (intent?.action) {
-                Intent.ACTION_SCREEN_OFF -> {
-                    monitor.cancel()
-                    notificationManager.notify(
-                        NotificationId,
-                        buildNotification(runtime.serverName, accumulator.recordWithoutSpeed()),
-                    )
-                }
-                Intent.ACTION_SCREEN_ON -> if (!monitor.isActive) startSampling(runtime)
-            }
-        }
-    }
+    private val screenObserver = ScreenInteractiveObserver(this, ::onScreenInteractiveChanged)
 
     override fun onCreate() {
         super.onCreate()
@@ -106,7 +86,7 @@ class ProxyTrafficStatsService : Service() {
             return START_NOT_STICKY
         }
 
-        if (runtime == activeRuntime && (monitor.isActive || !isScreenInteractive())) {
+        if (runtime == activeRuntime && (monitor.isActive || !screenObserver.isInteractive)) {
             return START_STICKY
         }
         if (runtime != activeRuntime) {
@@ -125,9 +105,23 @@ class ProxyTrafficStatsService : Service() {
     private fun startStats(runtime: ProxyTrafficStatsRuntime, startId: Int): Boolean {
         monitor.cancel()
         if (!startForegroundNotification(runtime.serverName, startId)) return false
-        registerScreenReceiver()
-        if (isScreenInteractive()) startSampling(runtime)
+        screenObserver.register()
+        if (screenObserver.isInteractive) startSampling(runtime)
         return true
+    }
+
+    // Sampling pauses while the screen is off; Xray keeps counting, so totals stay exact.
+    private fun onScreenInteractiveChanged(interactive: Boolean) {
+        val runtime = activeRuntime ?: return
+        if (!interactive) {
+            monitor.cancel()
+            notificationManager.notify(
+                NotificationId,
+                buildNotification(runtime.serverName, accumulator.recordWithoutSpeed()),
+            )
+        } else if (!monitor.isActive) {
+            startSampling(runtime)
+        }
     }
 
     private fun startSampling(runtime: ProxyTrafficStatsRuntime) {
@@ -189,7 +183,7 @@ class ProxyTrafficStatsService : Service() {
     }
 
     private fun stopStats() {
-        unregisterScreenReceiver()
+        screenObserver.unregister()
         monitor.cancel()
         activeRuntime = null
         accumulator = XrayTrafficSessionAccumulator()
@@ -198,26 +192,6 @@ class ProxyTrafficStatsService : Service() {
         }
         foregroundStarted = false
         notificationManager.cancel(NotificationId)
-    }
-
-    private fun registerScreenReceiver() {
-        if (screenReceiverRegistered) return
-        val filter = IntentFilter().apply {
-            addAction(Intent.ACTION_SCREEN_ON)
-            addAction(Intent.ACTION_SCREEN_OFF)
-        }
-        ContextCompat.registerReceiver(this, screenReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
-        screenReceiverRegistered = true
-    }
-
-    private fun unregisterScreenReceiver() {
-        if (!screenReceiverRegistered) return
-        unregisterReceiver(screenReceiver)
-        screenReceiverRegistered = false
-    }
-
-    private fun isScreenInteractive(): Boolean {
-        return getSystemService(PowerManager::class.java)?.isInteractive ?: true
     }
 
     private fun startForegroundNotification(serverName: String, startId: Int): Boolean {
