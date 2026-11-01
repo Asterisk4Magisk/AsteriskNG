@@ -172,10 +172,14 @@ class AndroidProxyEngine(
         val hasOtherActiveEngine = activeEngine.let { active -> active != null && active !== requestedEngine }
         var rootResumeChecked = false
         // A start that reaches an already running engine does not relaunch the core, so the
-        // ports it is running with must be kept instead of being resolved again.
-        if (!explicitRestart && requestedEngine is VpnXrayEngine && activeEngine === requestedEngine) {
+        // ports it is running with must be kept instead of being resolved again. The VPN tunnel
+        // outlives this process, so a fresh process (no active engine yet) checks it as well.
+        if (!explicitRestart && requestedEngine is VpnXrayEngine &&
+            (activeEngine == null || activeEngine === requestedEngine)
+        ) {
             val status = requestedEngine.status()
             if (status.running) {
+                activeEngine = requestedEngine
                 status.withTrafficStatsReconciled(request.appState, restore = true)
                 return@withContext status.copy(appState = request.appState)
             }

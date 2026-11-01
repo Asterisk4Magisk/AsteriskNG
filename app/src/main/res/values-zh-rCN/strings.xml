@@ -365,6 +365,7 @@
     <string name="error_vpn_permission_launcher_missing">VPN 权限请求器未注册</string>
     <string name="error_vpn_start_config_missing">VPN Service 启动配置缺失</string>
     <string name="error_vpn_tun_fd_unavailable">VPN TUN 文件描述符不可用</string>
+    <string name="error_vpn_session_unavailable">无法发布 VPN 会话状态，隧道未启动</string>
     <string name="error_vpn_tunnel_establish_failed">无法建立 VPN 隧道</string>
     <string name="settings_vpn_append_http_proxy">追加 HTTP 代理</string>
     <string name="settings_vpn_append_http_proxy_summary">让受支持的应用直接使用 HTTP 代理</string>

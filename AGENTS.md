@@ -28,6 +28,15 @@ VPN Service is an independent non-ROOT execution path. Even on a rooted device, 
 - When switching from ROOT to VPN, any active ROOT cycle must be stopped by the ROOT lifecycle boundary before entering VPN. The VPN runtime itself must not perform ROOT cleanup.
 - Changes to proxy orchestration, mode selection, or lifecycle handling must include a regression check that the entire VPN lifecycle performs zero ROOT operations.
 
+### Keep the VPN Service in Its Own Process
+
+`engine.vpn.AsteriskVpnService` and the Xray core it hosts (AndroidLibXrayLite and Hev TUN) run in the `:vpn` process so the app process stays reclaimable while a tunnel is up. The app process remains the only place that decides anything; `:vpn` only executes.
+
+- The processes share exactly three contracts in `engine/vpn`: `AsteriskVpnService.start/stop` (explicit intents answered through a `ResultReceiver`), `VpnSession` (the `vpn-session` file whose lock the service holds while the tunnel is up; the only source for "is the tunnel running", its local proxy, and whether an access log is written), and the resume hand-off (a boot or always-on start promotes the service to the foreground and hands the start back to `features.boot.VpnResumeReceiver`). Do not reintroduce in-process statics that another process would have to see.
+- `:vpn` must not initialize the app state store, schedulers, WorkManager, or any log repository, and must not read or write files owned by the app process such as `logcat.log`; the core itself writes its `error.log` / `access.log`. The app process clears the previous session's service logs before it sends a start and tails the core logs into its repositories while the tunnel runs (`VpnXrayEngine`). `AsteriskApplication.onCreate` returns early in `:vpn`.
+- The configuration is always compiled in the app process, including for boot and always-on starts; the service never recompiles or replays it.
+- Traffic statistics keep using the Xray stats API inbound over loopback; do not add another control listener for cross-process access.
+
 ## Repository Structure and Product Boundaries
 
 - Application ID: `org.asterisk.zcc.ang`.

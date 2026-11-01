@@ -42,22 +42,6 @@ internal class AppSettingsPreferences(
         }
     }
 
-    /**
-     * Whether the VPN Service tunnel was up when the process last ran. It is cleared on every
-     * orderly stop and survives only a process kill, which lets an app update restore the
-     * tunnel without starting one the user had stopped.
-     */
-    fun isVpnSessionActive(): Boolean = preferences.getBoolean(KeyVpnSessionActive, false)
-
-    @SuppressLint("UseKtx", "ApplySharedPref")
-    fun setVpnSessionActive(active: Boolean) {
-        if (isVpnSessionActive() == active) return
-        val editor = preferences.edit().putBoolean(KeyVpnSessionActive, active)
-        // A start is committed synchronously: an app update kills the process without a
-        // callback. A stop may also run on the main thread, so it is applied asynchronously.
-        if (active) editor.commit() else editor.apply()
-    }
-
     fun load(): AppState {
         val defaults = AppState()
         val customResourceFiles = preferences.getCustomResourceFileList(
@@ -494,7 +478,6 @@ private const val KeyLocalProxyPassword = "local_proxy_password"
 private const val KeyEnableVpnAppendHttpProxy = "enable_vpn_append_http_proxy"
 private const val KeyEnableVpnHevTun = "enable_vpn_hev_tun"
 private const val KeyEnableAutoConnect = "enable_auto_connect"
-private const val KeyVpnSessionActive = "vpn_session_active"
 private const val KeyTunMtu = "tun_mtu"
 private const val KeyTunVpnDns = "tun_vpn_dns"
 private const val KeyTunIpv4Cidr = "tun_ipv4_cidr"

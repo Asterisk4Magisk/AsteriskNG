@@ -4,6 +4,7 @@
 package engine.vpn
 
 import android.annotation.SuppressLint
+import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -18,44 +19,32 @@ import android.os.Handler
 import android.os.Looper
 import android.os.ParcelFileDescriptor
 import app.R
-import app.AsteriskApplication
 import app.modes.ProxyAppListModeBlacklist
 import app.modes.ProxyAppListModeGlobal
 import app.modes.ProxyAppListModeWhitelist
-import app.modes.RunModeVpnService
 import androidx.core.app.NotificationCompat
-import data.AppSettingsPreferences
-import engine.proxy.DenyVpnPermission
-import engine.proxy.ProxyEngineStartRequest
+import features.boot.VpnResumeReceiver
 import engine.network.NetworkDefaults
 import engine.proxy.LocalProxyLoopbackAddress
-import engine.proxy.LocalProxyRuntime
 import engine.vpn.hevtun.HevTunRuntime
-import engine.xray.logDirectoryPath
-import engine.xray.startCoreLogTailers
 import features.logs.AndroidAppLogger
-import features.logs.CoreLogFileTailer
-import features.logs.clearVpnServiceLogsAsApp
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withTimeout
 import system.AndroidLauncherIcon
 import system.getInstalledApplicationsCompat
 import utils.toTrimmedNonEmptyDistinctList
+import java.io.Closeable
 import java.io.File
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
-import kotlin.time.Duration.Companion.milliseconds
 
 @SuppressLint("VpnServicePolicy")
 class AsteriskVpnService : VpnService() {
     private var tunFileDescriptor: ParcelFileDescriptor? = null
-    private var logFileTailers: List<CoreLogFileTailer> = emptyList()
     private var hevTunRuntime: HevTunRuntime? = null
     private val serviceJob = SupervisorJob()
     private val serviceScope = CoroutineScope(serviceJob + Dispatchers.IO)
@@ -64,45 +53,53 @@ class AsteriskVpnService : VpnService() {
     @Volatile
     private var foregroundStarted = false
 
+    private var resumeWatchdog: Runnable? = null
+
     @Volatile
-    private var latestStartId = 0
-    private val sessionPreferences by lazy { AppSettingsPreferences(this) }
+    private var running = false
+    private var session: Closeable? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        latestStartId = startId
+        val reply = intent?.serviceReply()
         when (intent?.action) {
             AsteriskVpnServiceIntents.ACTION_STOP -> {
+                cancelResumeWatchdog()
                 serviceScope.launch {
-                    try {
+                    val result = runCatching {
                         operationMutex.withLock {
                             stopVpn()
                         }
-                    } finally {
-                        stopSelfOnMain(startId)
+                    }.onFailure { error ->
+                        AndroidAppLogger.warn(LogTag, "Failed to stop VPN Service", error)
                     }
+                    reply?.sendServiceResult(result)
+                    stopSelfOnMain(startId)
                 }
             }
 
             AsteriskVpnServiceIntents.ACTION_START -> {
+                cancelResumeWatchdog()
                 val config = intent.readVpnServiceStartConfig()
                 if (config == null) {
-                    completeStart(Result.failure(IllegalStateException(getString(R.string.error_vpn_start_config_missing))))
+                    reply?.sendServiceResult(
+                        Result.failure(IllegalStateException(getString(R.string.error_vpn_start_config_missing))),
+                    )
                     stopSelf(startId)
                     return START_NOT_STICKY
                 }
                 serviceScope.launch {
                     operationMutex.withLock {
-                        runCatching {
+                        val result = runCatching {
                             startVpn(config)
-                        }.onSuccess {
-                            sessionPreferences.setVpnSessionActive(true)
-                            completeStart(Result.success(Unit))
+                            // A resumed start kept the service in the foreground until now;
+                            // the system's VPN binding keeps the process alive from here on.
+                            stopForegroundNotification()
                         }.onFailure { error ->
                             AndroidAppLogger.error(LogTag, "Failed to start VPN Service", error)
                             stopVpn()
-                            completeStart(Result.failure(error))
                             stopSelfOnMain(startId)
                         }
+                        reply?.sendServiceResult(result)
                     }
                 }
             }
@@ -116,24 +113,18 @@ class AsteriskVpnService : VpnService() {
     }
 
     /**
-     * Starts the tunnel from the persisted state when the caller only names the service: the
-     * boot receiver's resume request and the system's always-on VPN start.
+     * Handles a start that only names the service: the boot receiver's resume request and the
+     * system's always-on VPN start.
      *
-     * The service must already be a foreground service before it spends time compiling the
-     * configuration: a `startForegroundService()` caller has five seconds to reach
-     * `startForeground()`, and a background start would otherwise be stopped while it compiles.
-     * The actual start is delegated to the shared proxy engine, which resolves the dynamic
-     * ports and compiles the configuration exactly as a manual start does. Once the tunnel is
-     * up, the system's binding to the VPN service keeps the process alive just as after a
-     * manual start, so the start-up notification is removed again.
+     * The service must already be a foreground service before the start continues: a
+     * `startForegroundService()` caller has five seconds to reach `startForeground()`, and the
+     * app process may only start this service while it runs in the foreground. The app state
+     * and the configuration compiler belong to the app process, so the start is handed back to
+     * [VpnResumeReceiver], which starts the tunnel exactly like a manual start; the
+     * [ACTION_START][AsteriskVpnServiceIntents.ACTION_START] that follows removes the start-up
+     * notification again. A start that never arrives is released by the watchdog.
      */
     private fun resumeVpn(startId: Int) {
-        val asteriskApplication = application as? AsteriskApplication
-        if (asteriskApplication == null) {
-            AndroidAppLogger.error(LogTag, "Cannot resume VPN Service without the Asterisk application")
-            stopSelfOnMain(startId)
-            return
-        }
         // Without consent the foreground-service type is not allowed and the tunnel would fail.
         if (VpnService.prepare(this) != null) {
             AndroidAppLogger.warn(LogTag, "Refused to resume VPN Service without VPN permission")
@@ -147,51 +138,31 @@ class AsteriskVpnService : VpnService() {
             stopSelfOnMain(startId)
             return
         }
-        serviceScope.launch {
-            val result = runCatching {
-                val state = asteriskApplication.stateStore.state.value
-                check(state.runMode == RunModeVpnService) {
-                    "VPN Service is not the active run mode"
+        if (running) {
+            stopForegroundNotification()
+            return
+        }
+        sendBroadcast(Intent(this, VpnResumeReceiver::class.java))
+        cancelResumeWatchdog()
+        val watchdog = Runnable {
+            resumeWatchdog = null
+            serviceScope.launch {
+                operationMutex.withLock {
+                    if (running) return@withLock
+                    AndroidAppLogger.warn(LogTag, "Released the VPN Service because the resume was never completed")
+                    stopVpn()
+                    // stopSelf(id) leaves the service alone when a newer start arrived meanwhile.
+                    stopSelfOnMain(startId)
                 }
-                val server = checkNotNull(
-                    state.proxyServers.firstOrNull { server -> server.id == state.selectedProxyServerId },
-                ) {
-                    getString(R.string.proxy_server_list_select_first)
-                }
-                asteriskApplication.proxyEngine.start(
-                    ProxyEngineStartRequest(state, server),
-                    DenyVpnPermission,
-                )
-            }
-            val status = result.getOrNull()
-            if (status?.running == true) {
-                asteriskApplication.stateStore.update { current ->
-                    current.copy(
-                        proxyRunning = true,
-                        localProxyPort = status.appState?.localProxyPort ?: current.localProxyPort,
-                    )
-                }
-                stopForegroundNotification()
-                return@launch
-            }
-            AndroidAppLogger.error(
-                LogTag,
-                "Failed to resume VPN Service",
-                result.exceptionOrNull() ?: IllegalStateException("VPN Service did not start"),
-            )
-            operationMutex.withLock {
-                // Another start may own the service by now; leave its tunnel alone.
-                if (running || pendingStart != null) {
-                    stopForegroundNotification()
-                    return@withLock
-                }
-                stopVpn()
-                asteriskApplication.stateStore.update { current -> current.copy(proxyRunning = false) }
-                // The engine's own start used a newer start id; stopSelf(id) only stops the
-                // service when no start arrived after the one it names.
-                stopSelfOnMain(latestStartId)
             }
         }
+        resumeWatchdog = watchdog
+        mainHandler.postDelayed(watchdog, ResumeWatchdogMillis)
+    }
+
+    private fun cancelResumeWatchdog() {
+        resumeWatchdog?.let(mainHandler::removeCallbacks)
+        resumeWatchdog = null
     }
 
     private fun promoteToForeground(): Boolean {
@@ -246,6 +217,7 @@ class AsteriskVpnService : VpnService() {
     }
 
     override fun onDestroy() {
+        cancelResumeWatchdog()
         runCatching {
             stopVpn()
         }.onFailure { error ->
@@ -275,8 +247,11 @@ class AsteriskVpnService : VpnService() {
     private fun startVpn(config: VpnServiceStartConfig) {
         // Keep the foreground promotion from resumeVpn() while clearing a previous session.
         stopVpn(removeForeground = false)
-        clearVpnServiceLogsAsApp(File(config.coreLogPaths.logDirectoryPath()), LogTag)
-        logFileTailers = config.coreLogPaths.startCoreLogTailers(config.enableAccessLog)
+        session = runCatching {
+            VpnSession.open(this, config.localProxyOptions, config.enableAccessLog)
+        }.getOrElse { error ->
+            throw IllegalStateException(getString(R.string.error_vpn_session_unavailable), error)
+        }
         tunFileDescriptor = establishTun(config)
         val tunFd = tunFileDescriptor?.fd ?: error(getString(R.string.error_vpn_tun_fd_unavailable))
         AndroidLibXrayLiteRuntime.start(
@@ -289,7 +264,6 @@ class AsteriskVpnService : VpnService() {
             runtime.start(hevConfig, tunFd)
             AndroidAppLogger.info(LogTag, "Started Hev TUN with VPN file descriptor")
         }
-        LocalProxyRuntime.update(config.localProxyOptions)
         running = true
     }
 
@@ -405,8 +379,6 @@ class AsteriskVpnService : VpnService() {
     }
 
     private fun stopVpn(removeForeground: Boolean = true) {
-        logFileTailers.forEach { tailer -> tailer.stop() }
-        logFileTailers = emptyList()
         stopNativeRuntimesBounded()
         runCatching {
             tunFileDescriptor?.close()
@@ -414,9 +386,13 @@ class AsteriskVpnService : VpnService() {
             AndroidAppLogger.warn(LogTag, "Failed to close VPN TUN file descriptor", error)
         }
         tunFileDescriptor = null
-        LocalProxyRuntime.clear()
         running = false
-        sessionPreferences.setVpnSessionActive(false)
+        runCatching {
+            session?.close()
+        }.onFailure { error ->
+            AndroidAppLogger.warn(LogTag, "Failed to close the VPN session", error)
+        }
+        session = null
         if (removeForeground) stopForegroundNotification()
     }
 
@@ -459,40 +435,40 @@ class AsteriskVpnService : VpnService() {
         private const val ForegroundChannelId = "vpn-service"
         private const val ForegroundNotificationId = 4
 
-        @Volatile
-        private var running = false
-
-        @Volatile
-        private var pendingStart: CompletableDeferred<Result<Unit>>? = null
+        private const val StartTimeoutMillis = 10_000L
+        private const val StopTimeoutMillis = 5_000L
+        private const val ResumeWatchdogMillis = 60_000L
 
         internal suspend fun start(context: Context, config: VpnServiceStartConfig) {
-            val result = CompletableDeferred<Result<Unit>>()
-            pendingStart = result
-            try {
-                context.startService(AsteriskVpnServiceIntents.startIntent(context, config))
-                withTimeout(10_000.milliseconds) {
-                    result.await()
-                }.getOrThrow()
-            } finally {
-                if (pendingStart === result) {
-                    pendingStart = null
-                }
+            awaitServiceCall(context, AsteriskVpnServiceIntents.startIntent(context, config), StartTimeoutMillis)
+        }
+
+        internal suspend fun stop(context: Context) {
+            awaitServiceCall(context, AsteriskVpnServiceIntents.stopIntent(context), StopTimeoutMillis)
+        }
+
+        internal fun isRunning(context: Context): Boolean = VpnSession.isRunning(context)
+
+        /** Must match `android:process` of this service in the manifest. */
+        internal const val ServiceProcessSuffix = ":vpn"
+
+        /** Whether [application] runs in this service's own process, which hosts the core only. */
+        internal fun isServiceProcess(application: Application): Boolean {
+            return currentProcessName(application) == application.packageName + ServiceProcessSuffix
+        }
+
+        private fun currentProcessName(application: Application): String {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                Application.getProcessName()?.takeIf(String::isNotEmpty)?.let { return it }
             }
+            // argv is NUL separated; its first entry is the process name.
+            runCatching { File("/proc/self/cmdline").readBytes() }.getOrNull()
+                ?.toString(Charsets.UTF_8)
+                ?.substringBefore('\u0000')
+                ?.takeIf(String::isNotEmpty)
+                ?.let { return it }
+            AndroidAppLogger.platformWarn(LogTag, "Unable to resolve the process name; assuming the app process")
+            return application.packageName
         }
-
-        internal fun stop(context: Context) {
-            running = false
-            context.startService(AsteriskVpnServiceIntents.stopIntent(context))
-        }
-
-        internal fun isRunning(): Boolean {
-            return running && AndroidLibXrayLiteRuntime.isRunning()
-        }
-
-        private fun completeStart(result: Result<Unit>) {
-            pendingStart?.complete(result)
-            pendingStart = null
-        }
-
     }
 }

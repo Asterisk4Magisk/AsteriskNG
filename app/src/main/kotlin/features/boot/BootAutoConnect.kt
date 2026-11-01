@@ -13,8 +13,10 @@ import app.AsteriskApplication
 import app.MainActivity
 import app.R
 import app.modes.RunModeVpnService
+import engine.proxy.DenyVpnPermission
 import engine.proxy.ProxyEngineStartRequest
 import engine.proxy.VpnPermissionRequester
+import engine.vpn.AsteriskVpnService
 import engine.vpn.AsteriskVpnServiceIntents
 import features.logs.AndroidAppLogger
 import kotlin.coroutines.cancellation.CancellationException
@@ -22,11 +24,12 @@ import kotlin.coroutines.cancellation.CancellationException
 /**
  * Entry points for the VPN Service that run without a visible activity.
  *
- * [AutoConnectBootReceiver] only hands the service to the foreground; the service itself
- * compiles the configuration through the regular proxy engine, so the boot path cannot drift
- * away from an ordinary start. When the VPN consent is missing the receiver cannot show the
- * system dialog (background activity launches are blocked), so it posts a notification that
- * reuses the activity consent flow through [connectAfterConsent].
+ * [AutoConnectBootReceiver] only hands the service to the foreground. The service may run in its
+ * own process, so it hands the start back through [VpnResumeReceiver] and this process compiles
+ * the configuration through the regular proxy engine ([resume]); the boot path cannot drift away
+ * from an ordinary start. When the VPN consent is missing the receiver cannot show the system
+ * dialog (background activity launches are blocked), so it posts a notification that reuses the
+ * activity consent flow through [connect].
  */
 internal object BootAutoConnect {
     const val ActionConnectAfterConsent = "app.action.CONNECT_AFTER_CONSENT"
@@ -76,11 +79,11 @@ internal object BootAutoConnect {
     }
 
     /**
-     * Starts the VPN Service once the user is in front of the activity. This only ever starts:
-     * the engine returns the live status when the tunnel is already up, so a stale notification
-     * cannot turn a running VPN off.
+     * Starts the VPN Service from the persisted state: once the user is in front of the activity
+     * after consent, or from [resume]. This only ever starts: the engine returns the live status
+     * when the tunnel is already up, so a stale notification cannot turn a running VPN off.
      */
-    suspend fun connectAfterConsent(
+    suspend fun connect(
         context: Context,
         requestVpnPermission: VpnPermissionRequester,
     ): Result<Boolean> {
@@ -107,5 +110,18 @@ internal object BootAutoConnect {
             AndroidAppLogger.warn(LogTag, "Failed to connect after granting the VPN permission", error)
             application.stateStore.update { current -> current.copy(proxyRunning = false) }
         }.map { status -> status.running }
+    }
+
+    /**
+     * Completes a start the VPN Service could not perform itself: the boot receiver's resume
+     * request and the system's always-on VPN start. The service is already in the foreground and
+     * waits for this process; when no tunnel comes up it is released again.
+     */
+    suspend fun resume(context: Context) {
+        if (connect(context, DenyVpnPermission).getOrNull() == true) return
+        runCatching { AsteriskVpnService.stop(context) }.onFailure { error ->
+            if (error is CancellationException) throw error
+            AndroidAppLogger.warn(LogTag, "Failed to release the VPN Service after a declined resume", error)
+        }
     }
 }

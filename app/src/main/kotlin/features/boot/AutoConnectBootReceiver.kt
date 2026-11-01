@@ -8,7 +8,7 @@ import android.content.Context
 import android.content.Intent
 import app.modes.RunModeVpnService
 import data.AndroidAppStateStore
-import data.AppSettingsPreferences
+import engine.vpn.VpnSession
 import features.logs.AndroidAppLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -20,9 +20,9 @@ import kotlin.coroutines.cancellation.CancellationException
  * Starts the VPN Service after boot when the user enabled auto connect, and restores it after
  * an app update when it was running before.
  *
- * Only the foreground-service hand-off happens here; compiling the configuration and
- * establishing the tunnel stay in [engine.vpn.AsteriskVpnService], exactly like a manual
- * start. The receiver is disabled in the manifest and enabled again from
+ * Only the foreground-service hand-off happens here. The service hands the start back to the app
+ * process ([VpnResumeReceiver]), which compiles the configuration exactly like a manual start.
+ * The receiver is disabled in the manifest and enabled again from
  * [BootAutoConnect.setComponentEnabled] so users who never opt in pay no boot wake-up.
  */
 class AutoConnectBootReceiver : BroadcastReceiver() {
@@ -71,7 +71,7 @@ class AutoConnectBootReceiver : BroadcastReceiver() {
         // An update only restores a tunnel that was up when the old version was killed; it must
         // not start one the user had stopped.
         if (action == Intent.ACTION_MY_PACKAGE_REPLACED &&
-            !AppSettingsPreferences(context).isVpnSessionActive()
+            !VpnSession.wasInterrupted(context)
         ) {
             return false
         }

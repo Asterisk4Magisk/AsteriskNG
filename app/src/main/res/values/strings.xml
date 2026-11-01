@@ -365,6 +365,7 @@
     <string name="error_vpn_permission_launcher_missing">VPN permission launcher is not registered</string>
     <string name="error_vpn_start_config_missing">VPN Service start configuration is missing</string>
     <string name="error_vpn_tun_fd_unavailable">VPN TUN file descriptor is unavailable</string>
+    <string name="error_vpn_session_unavailable">Unable to publish the VPN session; the tunnel was not started</string>
     <string name="error_vpn_tunnel_establish_failed">Unable to establish VPN tunnel</string>
     <string name="settings_vpn_append_http_proxy">Append HTTP proxy</string>
     <string name="settings_vpn_append_http_proxy_summary">Supported apps use HTTP proxy directly</string>

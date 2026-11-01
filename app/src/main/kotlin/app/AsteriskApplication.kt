@@ -23,6 +23,7 @@ import coil3.SingletonImageLoader
 import data.AppSettingsPreferences
 import data.AndroidAppStateStore
 import engine.proxy.AndroidProxyEngine
+import engine.vpn.AsteriskVpnService
 import system.AndroidRootShellGateway
 import features.subscription.runtime.AndroidSubscriptionFetcher
 import features.subscription.runtime.AndroidSubscriptionScheduleGateway
@@ -89,6 +90,9 @@ class AsteriskApplication : Application(), SingletonImageLoader.Factory {
 
     override fun onCreate() {
         super.onCreate()
+        // The VPN Service process hosts the core only. The state store, the schedulers,
+        // WorkManager and the log repositories belong to this app process.
+        if (AsteriskVpnService.isServiceProcess(this)) return
         appScope.launch {
             val scheduler = ResourceAutoUpdateScheduler(applicationContext)
             stateStore.state

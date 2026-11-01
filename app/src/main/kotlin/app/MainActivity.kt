@@ -165,7 +165,7 @@ class MainActivity : ComponentActivity() {
         pendingAutoConnect = false
         lifecycleScope.launch {
             val notifier = AndroidToastTipNotifier(application)
-            BootAutoConnect.connectAfterConsent(applicationContext, vpnPermissionRequester::request)
+            BootAutoConnect.connect(applicationContext, vpnPermissionRequester::request)
                 .onSuccess { running ->
                     if (running) notifier.show(appString(R.string.proxy_server_list_service_started))
                 }

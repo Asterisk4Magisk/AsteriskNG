@@ -365,6 +365,7 @@
     <string name="error_vpn_permission_launcher_missing">Trình yêu cầu quyền VPN chưa được đăng ký</string>
     <string name="error_vpn_start_config_missing">Thiếu cấu hình khởi động VPN Service</string>
     <string name="error_vpn_tun_fd_unavailable">File descriptor TUN của VPN không khả dụng</string>
+    <string name="error_vpn_session_unavailable">Không thể công bố trạng thái phiên VPN; đường hầm chưa được khởi động</string>
     <string name="error_vpn_tunnel_establish_failed">Không thể thiết lập đường hầm VPN</string>
     <string name="settings_vpn_append_http_proxy">Thêm proxy HTTP</string>
     <string name="settings_vpn_append_http_proxy_summary">Cho phép ứng dụng được hỗ trợ sử dụng trực tiếp proxy HTTP</string>

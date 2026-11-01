@@ -366,6 +366,7 @@
     <string name="error_vpn_permission_launcher_missing">Компонент запроса разрешений VPN не зарегистрирован</string>
     <string name="error_vpn_start_config_missing">Отсутствует конфигурация для запуска службы VPN</string>
     <string name="error_vpn_tun_fd_unavailable">Дескриптор файла VPN TUN недоступен</string>
+    <string name="error_vpn_session_unavailable">Не удалось опубликовать состояние VPN-сеанса; туннель не запущен</string>
     <string name="error_vpn_tunnel_establish_failed">Не удалось установить VPN-туннель</string>
     <string name="settings_vpn_append_http_proxy">Добавить HTTP-прокси</string>
     <string name="settings_vpn_append_http_proxy_summary">Поддерживаемые приложения будут использовать HTTP-прокси напрямую</string>
