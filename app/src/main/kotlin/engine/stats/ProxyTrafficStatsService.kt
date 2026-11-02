@@ -71,14 +71,18 @@ class ProxyTrafficStatsService : Service() {
         val runtime = if (intent?.action == ActionStart) {
             // Every startForegroundService() request must reach startForeground() before the
             // service may stop, including requests superseded by a later stop request.
-            val serverName = intent.readRuntime()?.serverName.orEmpty()
-            if (!foregroundStarted && !startForegroundNotification(serverName, startId)) {
-                requests.consumeStart()
+            val requested = intent.readRuntime()
+            if (!foregroundStarted && !startForegroundNotification(requested?.serverName.orEmpty(), startId)) {
+                intent.acknowledgeTrafficStatsStart()
                 return START_NOT_STICKY
             }
-            requests.consumeStart()
+            // The app process waits for this before it may stop the service.
+            intent.acknowledgeTrafficStatsStart()
+            requested
         } else {
-            intent?.readRuntime() ?: ProxyTrafficStatsRuntimeStore.read(this)
+            // The runtime comes from the app process only: a sticky restart in the `:service`
+            // process cannot rebuild it, so the app process starts the service again instead.
+            intent?.readRuntime()
         }
         if (runtime == null) {
             stopStats()
@@ -87,13 +91,14 @@ class ProxyTrafficStatsService : Service() {
         }
 
         if (runtime == activeRuntime && (monitor.isActive || !screenObserver.isInteractive)) {
-            return START_STICKY
+            return START_NOT_STICKY
         }
         if (runtime != activeRuntime) {
             accumulator = XrayTrafficSessionAccumulator()
         }
         activeRuntime = runtime
-        return if (startStats(runtime, startId)) START_STICKY else START_NOT_STICKY
+        startStats(runtime, startId)
+        return START_NOT_STICKY
     }
 
     override fun onDestroy() {
@@ -282,7 +287,7 @@ class ProxyTrafficStatsService : Service() {
     }
 
     companion object {
-        private val requests = TrafficStatsServiceRequests<ProxyTrafficStatsRuntime>()
+        private val requests = TrafficStatsServiceRequests()
 
         internal fun reconcile(context: Context, runtime: ProxyTrafficStatsRuntime?) {
             if (runtime == null) {
@@ -298,7 +303,7 @@ class ProxyTrafficStatsService : Service() {
         ) {
             val appContext = context.applicationContext
             ProxyTrafficStatsRuntimeStore.write(appContext, runtime)
-            requests.start(runtime) {
+            requests.start { acknowledgement ->
                 tryStartTrafficStatsService(
                     start = {
                         ContextCompat.startForegroundService(
@@ -308,7 +313,8 @@ class ProxyTrafficStatsService : Service() {
                                 .putExtra(ExtraListenAddress, runtime.listenAddress)
                                 .putExtra(ExtraPort, runtime.port)
                                 .putExtra(ExtraServerName, runtime.serverName)
-                                .putExtra(ExtraApiTag, runtime.apiTag),
+                                .putExtra(ExtraApiTag, runtime.apiTag)
+                                .putTrafficStatsStartAcknowledgement(acknowledgement),
                         )
                     },
                     onFailure = { error ->

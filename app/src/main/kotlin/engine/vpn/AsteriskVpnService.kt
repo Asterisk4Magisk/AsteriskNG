@@ -477,9 +477,12 @@ class AsteriskVpnService : VpnService() {
         internal fun isRunning(context: Context): Boolean = VpnSession.isRunning(context)
 
         /** Must match `android:process` of this service in the manifest. */
-        internal const val ServiceProcessSuffix = ":vpn"
+        internal const val ServiceProcessSuffix = ":service"
 
-        /** Whether [application] runs in this service's own process, which hosts the core only. */
+        /**
+         * Whether [application] runs in the `:service` process, which hosts the VPN Service with its
+         * core and the traffic statistics service, and nothing that decides.
+         */
         internal fun isServiceProcess(application: Application): Boolean {
             return currentProcessName(application) == application.packageName + ServiceProcessSuffix
         }

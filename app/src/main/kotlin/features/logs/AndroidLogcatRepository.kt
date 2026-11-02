@@ -20,20 +20,20 @@ import java.util.concurrent.atomic.AtomicBoolean
 /**
  * The app's own log, persisted to `logcat.log`.
  *
- * The app process and the VPN Service process both append to that one file, each line under an
- * exclusive lock of the file, so the file stays in write order. The VPN Service process only
+ * The app process and the `:service` process both append to that one file, each line under an
+ * exclusive lock of the file, so the file stays in write order. The `:service` process only
  * appends; the app process shows the file and follows the other process' lines through inotify.
  */
 internal object AndroidLogcatRepository : InMemoryCoreLogRepository() {
     private const val LogTag = "AndroidLogcatRepository"
 
-    /** Folds a burst of lines from the VPN Service process into one read. */
+    /** Folds a burst of lines from the `:service` process into one read. */
     private const val MinFollowIntervalMillis = 250L
 
     private val restoredPreviousLogs = AtomicBoolean(false)
     private var appContext: Context? = null
 
-    /** Whether this is the VPN Service process, which appends to the file but never shows it. */
+    /** Whether this is the `:service` process, which appends to the file but never shows it. */
     @Volatile
     private var serviceProcess = false
     private val logFile = SharedLogFile(
@@ -43,7 +43,7 @@ internal object AndroidLogcatRepository : InMemoryCoreLogRepository() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     /**
-     * Writes the VPN Service process' lines in order without ever blocking a caller on the file
+     * Writes the `:service` process' lines in order without ever blocking a caller on the file
      * lock, which the app process may hold.
      */
     @OptIn(ExperimentalCoroutinesApi::class)

@@ -160,9 +160,12 @@
             </intent-filter>
         </receiver>
 
+        <!-- Runs in the ":service" process beside the VPN Service, so showing traffic statistics
+             never keeps the UI process alive, in VPN and ROOT modes alike. -->
         <service
             android:name="engine.stats.ProxyTrafficStatsService"
             android:exported="false"
+            android:process=":service"
             android:foregroundServiceType="specialUse">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
@@ -187,14 +190,14 @@
              settings. Lint's ForegroundServicePermission check only models the exact-alarm
              criterion, so the documented VPN criterion is suppressed here instead of adding an
              alarm permission this app never uses.
-             The service and its core run in their own ":vpn" process so the app process stays
+             The service and its core run in the ":service" process so the app process stays
              reclaimable; keep the name in sync with AsteriskVpnService.ServiceProcessSuffix. -->
         <service
             android:name="engine.vpn.AsteriskVpnService"
             android:exported="false"
             android:foregroundServiceType="systemExempted"
             android:permission="android.permission.BIND_VPN_SERVICE"
-            android:process=":vpn"
+            android:process=":service"
             tools:ignore="ForegroundServicePermission,VpnServicePolicy">
             <intent-filter>
                 <action android:name="android.net.VpnService" />

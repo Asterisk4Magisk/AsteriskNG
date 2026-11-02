@@ -20,6 +20,10 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.os.ResultReceiver
 
 /**
  * Owns one traffic sampling session. Lifecycle methods are called on the service
@@ -111,41 +115,62 @@ internal fun tryStartTrafficStatsService(
 }
 
 /**
- * Serializes start and stop requests for a traffic stats foreground service.
+ * Serializes start and stop requests for a traffic stats foreground service, which runs in the
+ * `:service` process.
  *
- * After startForegroundService(), the service must call startForeground() before it is
- * stopped; a stopService() issued earlier makes the system crash the app with
- * ForegroundServiceDidNotStartInTimeException. While a start request is undelivered,
- * stop requests are therefore deferred to the service, which enters the foreground,
- * consumes the request and stops itself when no runtime is requested anymore.
+ * After startForegroundService(), the service must call startForeground() before it is stopped;
+ * a stopService() issued earlier makes the system crash the service process with
+ * ForegroundServiceDidNotStartInTimeException. Each start request therefore carries an
+ * acknowledgement that the service sends once it is in the foreground, and a stop requested
+ * while a start is unacknowledged waits for it. A start whose acknowledgement never comes,
+ * because the service process died, stops counting after [StartAcknowledgementTimeoutMillis].
  */
-internal class TrafficStatsServiceRequests<T : Any> {
+internal class TrafficStatsServiceRequests {
     private val lock = Any()
-    private var pendingStarts = 0
-    private var requestedRuntime: T? = null
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private val pendingStarts = mutableSetOf<Any>()
+    private var deferredStop: (() -> Unit)? = null
 
-    fun start(runtime: T, requestStart: () -> Boolean) {
+    fun start(requestStart: (acknowledgement: ResultReceiver) -> Boolean) {
         synchronized(lock) {
-            requestedRuntime = runtime
-            if (requestStart()) pendingStarts += 1
+            deferredStop = null
+            val token = Any()
+            val acknowledgement = object : ResultReceiver(null) {
+                override fun onReceiveResult(resultCode: Int, resultData: Bundle?) = acknowledge(token)
+            }
+            if (!requestStart(acknowledgement)) return
+            pendingStarts += token
+            mainHandler.postDelayed({ acknowledge(token) }, StartAcknowledgementTimeoutMillis)
         }
     }
 
     fun stop(stopService: () -> Unit) {
         synchronized(lock) {
-            requestedRuntime = null
-            if (pendingStarts == 0) stopService()
+            if (pendingStarts.isEmpty()) stopService() else deferredStop = stopService
         }
     }
 
-    /** Called by the service for each delivered start request, after startForeground(). */
-    fun consumeStart(): T? {
-        synchronized(lock) {
-            if (pendingStarts > 0) pendingStarts -= 1
-            return requestedRuntime
+    private fun acknowledge(token: Any) {
+        val stop = synchronized(lock) {
+            if (!pendingStarts.remove(token) || pendingStarts.isNotEmpty()) return
+            deferredStop.also { deferredStop = null }
         }
+        stop?.invoke()
     }
 }
+
+internal fun Intent.putTrafficStatsStartAcknowledgement(acknowledgement: ResultReceiver): Intent {
+    return putExtra(ExtraStartAcknowledgement, acknowledgement)
+}
+
+/** Sent by the service for each start request once it reached startForeground(). */
+internal fun Intent.acknowledgeTrafficStatsStart() {
+    @Suppress("DEPRECATION")
+    getParcelableExtra<ResultReceiver>(ExtraStartAcknowledgement)?.send(0, null)
+}
+
+private const val ExtraStartAcknowledgement = "start_acknowledgement"
+private const val StartAcknowledgementTimeoutMillis = 15_000L
 
 internal data class ProxyTrafficStatsRuntime(
     val listenAddress: String,
