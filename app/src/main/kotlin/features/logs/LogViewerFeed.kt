@@ -3,6 +3,9 @@
 
 package features.logs
 
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+
 internal suspend fun collectLogViewerEntries(
     repository: CoreLogRepository,
     paused: Boolean,
@@ -11,6 +14,10 @@ internal suspend fun collectLogViewerEntries(
     repository.refresh()
     onEntries(repository.entries.value)
     if (!paused) {
-        repository.entries.collect(onEntries)
+        // The log is followed only while it is shown live, so nothing reads it otherwise.
+        coroutineScope {
+            launch { repository.follow() }
+            repository.entries.collect(onEntries)
+        }
     }
 }

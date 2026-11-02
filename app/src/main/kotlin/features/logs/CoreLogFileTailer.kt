@@ -3,81 +3,79 @@
 
 package features.logs
 
-import kotlinx.coroutines.CoroutineScope
+import android.os.FileObserver
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.RandomAccessFile
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
-import kotlin.time.Duration.Companion.milliseconds
 
 internal data class CoreLogFile(
     val path: String,
     val defaultLevel: String,
 )
 
-internal class CoreLogFileTailer(
-    private val logFiles: List<CoreLogFile>,
+/**
+ * Appends the lines that are written to [logFile] from now on to [repository], until the caller
+ * is cancelled. inotify reports each write, so an idle core costs nothing, and a burst of writes
+ * is read in one go at most every [MinFollowReadIntervalMillis]. Callers follow only while
+ * someone looks at the log; earlier lines come from the repository's own refresh.
+ */
+internal suspend fun followCoreLogFile(logFile: CoreLogFile, repository: CoreLogRepository) {
+    if (logFile.path.isBlank()) return
+    coroutineScope {
+        val reader = CoreLogFileReader(logFile, repository)
+        // The core keeps its file open and appends to it; clearing the logs recreates it.
+        val unwatch = LogDirectoryWatcher.watchCoalesced(
+            file = File(logFile.path),
+            mask = FileObserver.MODIFY or FileObserver.CREATE or FileObserver.MOVED_TO,
+            scope = this,
+            minIntervalMillis = MinFollowReadIntervalMillis,
+            onChange = { withContext(Dispatchers.IO) { reader.readNewLines() } },
+        )
+        try {
+            awaitCancellation()
+        } finally {
+            unwatch()
+        }
+    }
+}
+
+private class CoreLogFileReader(
+    private val logFile: CoreLogFile,
     private val repository: CoreLogRepository,
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val file = File(logFile.path)
+    private var position = runCatching { file.length() }.getOrDefault(0L)
+    private var failureLogged = false
 
-    fun start() {
-        logFiles
-            .filter { logFile -> logFile.path.isNotBlank() }
-            .forEach { logFile ->
-                scope.launch {
-                    tail(logFile)
+    fun readNewLines() {
+        if (!file.exists()) return
+        runCatching {
+            RandomAccessFile(file, "r").use { reader ->
+                if (position > reader.length()) {
+                    position = 0L
                 }
-            }
-    }
+                reader.seek(position)
 
-    fun stop() {
-        scope.cancel()
-    }
-
-    private suspend fun tail(logFile: CoreLogFile) {
-        val file = File(logFile.path)
-        file.parentFile?.mkdirs()
-        var position = runCatching { file.length() }.getOrDefault(0L)
-        var failureLogged = false
-
-        while (scope.isActive) {
-            if (!file.exists()) {
-                delay(TailIntervalMillis.milliseconds)
-                continue
-            }
-
-            runCatching {
-                RandomAccessFile(file, "r").use { reader ->
-                    if (position > reader.length()) {
-                        position = 0L
-                    }
-                    reader.seek(position)
-
-                    var line = reader.readUtf8Line()
-                    while (line != null) {
-                        repository.appendParsedCoreLogLine(line, logFile.defaultLevel)
-                        line = reader.readUtf8Line()
-                    }
-                    position = reader.filePointer
+                var line = reader.readUtf8Line()
+                while (line != null) {
+                    repository.appendParsedCoreLogLine(line, logFile.defaultLevel)
+                    line = reader.readUtf8Line()
                 }
-            }.onSuccess {
-                failureLogged = false
-            }.onFailure { error ->
-                if (!failureLogged) {
-                    AndroidAppLogger.warn(LogTag, "Failed to tail Xray log file: ${file.absolutePath}", error)
-                    failureLogged = true
-                }
+                position = reader.filePointer
             }
-
-            delay(TailIntervalMillis.milliseconds)
+        }.onSuccess {
+            failureLogged = false
+        }.onFailure { error ->
+            if (!failureLogged) {
+                AndroidAppLogger.warn(LogTag, "Failed to follow Xray log file: ${file.absolutePath}", error)
+                failureLogged = true
+            }
         }
     }
 
@@ -88,10 +86,11 @@ internal class CoreLogFileTailer(
     }
 
     private companion object {
-        private const val LogTag = "CoreLogFileTailer"
-        private const val TailIntervalMillis = 500L
+        private const val LogTag = "CoreLogFileReader"
     }
 }
+
+private const val MinFollowReadIntervalMillis = 250L
 
 internal data class ParsedCoreLogLine(
     val time: String?,

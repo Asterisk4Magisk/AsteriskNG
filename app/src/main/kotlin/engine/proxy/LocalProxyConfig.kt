@@ -36,6 +36,10 @@ internal data class LocalProxyOptions(
 internal object LocalProxyRuntime {
     private val currentOptions = AtomicReference<LocalProxyOptions?>()
 
+    /** Reads the proxy of a tunnel hosted by another process; see [attachExternalSource]. */
+    @Volatile
+    private var externalSource: (() -> LocalProxyOptions?)? = null
+
     fun update(options: LocalProxyOptions) {
         currentOptions.set(options)
     }
@@ -44,8 +48,17 @@ internal object LocalProxyRuntime {
         currentOptions.set(null)
     }
 
+    /**
+     * Lets [current] fall back to a runtime that lives in another process, such as the VPN
+     * Service. That runtime publishes its proxy itself, so it is read on demand instead of being
+     * mirrored here, and a process that just started sees it without asking for a status first.
+     */
+    fun attachExternalSource(source: () -> LocalProxyOptions?) {
+        externalSource = source
+    }
+
     fun current(): LocalProxyOptions? {
-        return currentOptions.get()
+        return currentOptions.get() ?: externalSource?.invoke()
     }
 }
 

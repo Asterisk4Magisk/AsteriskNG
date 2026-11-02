@@ -29,6 +29,12 @@ interface CoreLogRepository {
     fun clear()
 
     suspend fun refresh() = Unit
+
+    /**
+     * Keeps [entries] in step with the persisted log while the caller is active, for a log that
+     * another process writes. Returns at once for logs that need no following.
+     */
+    suspend fun follow() = Unit
 }
 
 open class InMemoryCoreLogRepository(

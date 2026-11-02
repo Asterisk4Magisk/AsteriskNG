@@ -55,6 +55,11 @@ internal abstract class AndroidXrayLogRepository(
         replaceRestoredLines(restoredLines)
     }
 
+    override suspend fun follow() {
+        val context = appContext ?: return
+        followCoreLogFile(logFile(context), this)
+    }
+
     private fun restorePreviousLogs() {
         val context = appContext ?: return
         if (!restoredPreviousLogs.compareAndSet(false, true) || entries.value.isNotEmpty()) {

@@ -5,8 +5,12 @@ package engine.vpn
 
 import android.content.Context
 import android.content.Intent
+import android.os.Binder
 import android.os.Bundle
+import android.os.IBinder
+import android.os.RemoteException
 import android.os.ResultReceiver
+import android.os.SystemClock
 import app.modes.ProxyAppListModeGlobal
 import engine.hevtun.DefaultHevSocks5TunnelLogLevel
 import engine.hevtun.DefaultHevSocks5TunnelTcpReadWriteTimeoutMillis
@@ -16,8 +20,7 @@ import engine.proxy.LocalProxyLoopbackAddress
 import engine.proxy.LocalProxyOptions
 import engine.xray.XrayCoreLogPaths
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.TimeoutCancellationException
-import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration.Companion.milliseconds
 
 internal object AsteriskVpnServiceIntents {
@@ -53,8 +56,20 @@ internal object AsteriskVpnServiceIntents {
 
 private const val EXTRA_SERVICE_REPLY = "service_reply"
 private const val EXTRA_SERVICE_REPLY_MESSAGE = "message"
+private const val EXTRA_SERVICE_PROCESS = "service_process"
+private const val EXTRA_SERVICE_ACCEPT_DEADLINE = "service_accept_deadline"
 private const val ServiceReplySuccess = 0
 private const val ServiceReplyFailure = 1
+private const val ServiceReplyAccepted = 2
+
+/** Lets an accepted request outlive a reply that is still in flight when the deadline passes. */
+private const val AcceptGraceMillis = 2_000L
+
+/**
+ * Lives as long as the service process. A caller links to its death, so a process that dies
+ * while a request is running answers that request at once instead of after a timeout.
+ */
+private val serviceProcessToken = Binder()
 
 internal fun Intent.putServiceReply(reply: ResultReceiver) {
     putExtra(EXTRA_SERVICE_REPLY, reply)
@@ -63,6 +78,22 @@ internal fun Intent.putServiceReply(reply: ResultReceiver) {
 internal fun Intent.serviceReply(): ResultReceiver? {
     @Suppress("DEPRECATION")
     return getParcelableExtra(EXTRA_SERVICE_REPLY)
+}
+
+/**
+ * Accepts a request in the service process before any work starts. A request that arrives after
+ * its caller stopped waiting is refused, so a late start can never bring up a tunnel the app
+ * already reported as failed; otherwise the caller learns which process to watch.
+ */
+internal fun Intent.acceptServiceCall(): Boolean {
+    val reply = serviceReply() ?: return true
+    val deadline = getLongExtra(EXTRA_SERVICE_ACCEPT_DEADLINE, Long.MAX_VALUE)
+    if (SystemClock.elapsedRealtime() > deadline) {
+        reply.sendServiceResult(Result.failure(IllegalStateException("$action arrived after its caller gave up")))
+        return false
+    }
+    reply.send(ServiceReplyAccepted, Bundle().apply { putBinder(EXTRA_SERVICE_PROCESS, serviceProcessToken) })
+    return true
 }
 
 internal fun ResultReceiver.sendServiceResult(result: Result<Unit>) {
@@ -81,34 +112,67 @@ internal fun ResultReceiver.sendServiceResult(result: Result<Unit>) {
 
 /**
  * Sends [intent] to the VPN Service, which may run in another process, and waits for its reply.
- * A service that never answers is a failed call rather than a cancellation, so callers can fall
- * back or report it like any other failure.
+ *
+ * Only the delivery is bounded: the service must accept the request within [acceptTimeoutMillis],
+ * which covers launching its process, and refuses it once that deadline has passed. An accepted
+ * request is then awaited for as long as it runs, however long the core takes to start, and
+ * ends early with [onServiceProcessDeath] when the service process dies first. A service that
+ * never accepts is a failed call rather than a cancellation, so callers can fall back or report
+ * it like any other failure.
  */
-internal suspend fun awaitServiceCall(context: Context, intent: Intent, timeoutMillis: Long) {
+internal suspend fun awaitServiceCall(
+    context: Context,
+    intent: Intent,
+    acceptTimeoutMillis: Long,
+    onServiceProcessDeath: () -> Result<Unit>,
+) {
+    val accepted = CompletableDeferred<ServiceCallAcceptance>()
     val reply = CompletableDeferred<Result<Unit>>()
+    intent.putExtra(EXTRA_SERVICE_ACCEPT_DEADLINE, SystemClock.elapsedRealtime() + acceptTimeoutMillis)
     intent.putServiceReply(
         object : ResultReceiver(null) {
             override fun onReceiveResult(resultCode: Int, resultData: Bundle?) {
-                reply.complete(
-                    if (resultCode == ServiceReplySuccess) {
-                        Result.success(Unit)
-                    } else {
+                when (resultCode) {
+                    ServiceReplyAccepted -> accepted.complete(
+                        ServiceCallAcceptance(resultData?.getBinder(EXTRA_SERVICE_PROCESS)),
+                    )
+                    ServiceReplySuccess -> reply.complete(Result.success(Unit))
+                    else -> reply.complete(
                         Result.failure(
                             IllegalStateException(resultData?.getString(EXTRA_SERVICE_REPLY_MESSAGE).orEmpty()),
-                        )
-                    },
-                )
+                        ),
+                    )
+                }
+                // A request refused before it started has its final answer without an acceptance.
+                if (resultCode != ServiceReplyAccepted) accepted.complete(ServiceCallAcceptance(null))
             }
         },
     )
     context.startService(intent)
-    val result = try {
-        withTimeout(timeoutMillis.milliseconds) { reply.await() }
-    } catch (error: TimeoutCancellationException) {
-        Result.failure(IllegalStateException("VPN Service did not answer ${intent.action}", error))
+    val serviceProcess = withTimeoutOrNull((acceptTimeoutMillis + AcceptGraceMillis).milliseconds) {
+        accepted.await()
+    }?.serviceProcess ?: if (reply.isCompleted) {
+        null
+    } else {
+        throw IllegalStateException("VPN Service did not answer ${intent.action}")
     }
-    result.getOrThrow()
+    val deathRecipient = IBinder.DeathRecipient { reply.complete(onServiceProcessDeath()) }
+    val linked = serviceProcess != null && try {
+        serviceProcess.linkToDeath(deathRecipient, 0)
+        true
+    } catch (_: RemoteException) {
+        // The process died between accepting the request and this link.
+        reply.complete(onServiceProcessDeath())
+        false
+    }
+    try {
+        reply.await().getOrThrow()
+    } finally {
+        if (linked) serviceProcess?.unlinkToDeath(deathRecipient, 0)
+    }
 }
+
+private class ServiceCallAcceptance(val serviceProcess: IBinder?)
 
 internal fun Intent.readVpnServiceStartConfig(): VpnServiceStartConfig? {
     val sessionName = getStringExtra(EXTRA_SESSION_NAME) ?: return null
