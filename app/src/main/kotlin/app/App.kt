@@ -102,10 +102,11 @@ fun App(
     val enhancementModuleCoordinator = remember(appContext) {
         EnhancementModuleCoordinator { AndroidEnhancementModuleBackend(appContext) }
     }
-    val rootBootScriptUseCase = remember(appContext, rootAccess) {
+    val rootBootScriptUseCase = remember(appContext, rootAccess, proxyEngine) {
         RootBootScriptUseCase(
             context = appContext,
             rootAccess = rootAccess,
+            lifecycleLock = proxyEngine,
         )
     }
     val rootEbpfProbeUseCase = remember(appContext, rootAccess) {

@@ -7,6 +7,7 @@ import android.content.Context
 import app.AppState
 import app.modes.isRootRunMode
 import engine.proxy.ProxyEngineStartRequest
+import engine.proxy.ProxyLifecycleLock
 import engine.root.runtime.RootFailureKind
 import engine.root.runtime.RootOperationResult
 import engine.root.runtime.RootRequestedAction
@@ -20,25 +21,32 @@ import system.AndroidRootShellGateway
 internal class RootBootScriptUseCase(
     context: Context,
     private val rootAccess: AndroidRootShellGateway,
+    private val lifecycleLock: ProxyLifecycleLock,
 ) {
     private val appContext = context.applicationContext
     private val controller = RootSupervisorController(appContext, rootAccess)
 
+    // Boot publication writes the runtime configuration a launching cycle reads, so it
+    // waits for any lifecycle operation.
     suspend fun setEnabled(
         state: AppState,
         enabled: Boolean,
-    ): RootBootScriptResult {
+    ): RootBootScriptResult = lifecycleLock.withLifecycleLock {
         if (!rootAccess.hasRootAccess()) {
-            return RootBootScriptResult.RootUnavailable
+            return@withLifecycleLock RootBootScriptResult.RootUnavailable
         }
-        return if (enabled) {
+        if (enabled) {
             install(state)
         } else {
             uninstall(rootAccessVerified = true)
         }
     }
 
-    suspend fun refresh(state: AppState): RootBootScriptResult {
+    suspend fun refresh(state: AppState): RootBootScriptResult =
+        lifecycleLock.withLifecycleLock { refreshWithinLifecycle(state) }
+
+    /** [refresh] for callers already inside [ProxyLifecycleLock.withLifecycleLock]. */
+    suspend fun refreshWithinLifecycle(state: AppState): RootBootScriptResult {
         if (!state.enableRootBootScript) {
             return RootBootScriptResult.Success
         }
