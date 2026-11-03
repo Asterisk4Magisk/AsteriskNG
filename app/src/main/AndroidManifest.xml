@@ -184,7 +184,16 @@
             <meta-data
                 android:name="android.service.quicksettings.TOGGLEABLE_TILE"
                 android:value="true" />
+            <meta-data
+                android:name="android.service.quicksettings.ACTIVE_TILE"
+                android:value="true" />
         </service>
+
+        <!-- Receives the runtime events that the ROOT supervisor sends by explicit component, so the
+             tile is current before the panel opens; only root can deliver to it. -->
+        <receiver
+            android:name="features.quicksettings.QuickSettingsTileRefreshReceiver"
+            android:exported="false" />
 
         <!-- systemExempted is the documented type for a VPN app configured in the system VPN
              settings. Lint's ForegroundServicePermission check only models the exact-alarm

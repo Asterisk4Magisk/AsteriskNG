@@ -56,6 +56,7 @@ internal data class AsteriskdConfig(
     val helper: AsteriskdHelper?,
     val serviceControl: AsteriskdServiceControlConfig,
     val dnsEnhancement: AsteriskdDnsEnhancementConfig? = null,
+    val runtimeEventReceiver: String?,
 )
 
 internal data class AsteriskdServiceControlConfig(

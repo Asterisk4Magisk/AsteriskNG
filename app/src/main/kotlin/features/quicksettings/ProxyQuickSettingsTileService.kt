@@ -5,7 +5,6 @@ package features.quicksettings
 
 import android.annotation.SuppressLint
 import android.app.PendingIntent
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.net.VpnService
@@ -80,7 +79,7 @@ class ProxyQuickSettingsTileService : TileService() {
         val appContext = applicationContext
         operationScope.launch {
             updateTile(processing = true)
-            requestTileRefresh(appContext)
+            requestQuickSettingsTileRefresh(appContext)
             var finalRunning: Boolean? = null
             try {
                 finalRunning = toggleProxy()
@@ -257,18 +256,7 @@ class ProxyQuickSettingsTileService : TileService() {
             }
 
             delay(TileRefreshSettleDelayMillis.milliseconds)
-            requestTileRefresh(context)
-        }
-
-        private fun requestTileRefresh(context: Context) {
-            runCatching {
-                requestListeningState(
-                    context,
-                    ComponentName(context, ProxyQuickSettingsTileService::class.java),
-                )
-            }.onFailure { error ->
-                AndroidAppLogger.warn(LogTag, "Failed to request quick settings tile refresh", error)
-            }
+            requestQuickSettingsTileRefresh(context)
         }
 
         private const val TileRefreshSettleDelayMillis = 1_000L

@@ -3,6 +3,7 @@
 
 package engine.root.config
 
+import android.content.ComponentName
 import android.content.Context
 import app.AppState
 import app.ProxyServerState
@@ -24,6 +25,7 @@ import features.resources.runtime.XrayResourceFilePaths
 import features.resources.runtime.xrayRootResourceFilePaths
 import features.proxy.server.model.Custom
 import kotlinx.serialization.json.JsonObject
+import features.quicksettings.QuickSettingsTileRefreshReceiver
 import java.io.File
 
 internal class RootConfigBuildContext(
@@ -52,6 +54,8 @@ internal class RootConfigBuildContext(
             ),
         )
         return appState.toRootStartConfig(
+            runtimeEventReceiver = ComponentName(androidContext, QuickSettingsTileRefreshReceiver::class.java)
+                .flattenToString(),
             xrayConfigJson = xrayConfigJson,
             resourceFilePaths = resourceFilePaths,
         )
@@ -86,6 +90,7 @@ internal fun Context.prepareRootConfigBuildContext(request: ProxyEngineStartRequ
 }
 
 private fun AppState.toRootStartConfig(
+    runtimeEventReceiver: String,
     xrayConfigJson: String,
     resourceFilePaths: XrayResourceFilePaths,
 ): RootStartConfig {
@@ -112,6 +117,7 @@ private fun AppState.toRootStartConfig(
         fakeDnsIpv4Pool = fakeDnsIpv4Pool.normalizedFakeIpIpv4Pool(),
         enableBoot = enableRootBootScript,
         serviceControl = serviceControl,
+        runtimeEventReceiver = runtimeEventReceiver,
     )
 }
 

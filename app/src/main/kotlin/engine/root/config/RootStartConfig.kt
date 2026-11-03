@@ -35,6 +35,7 @@ internal data class RootStartConfig(
     val fakeDnsIpv4Pool: String,
     val enableBoot: Boolean,
     val serviceControl: ServiceControlSettings,
+    val runtimeEventReceiver: String,
 )
 
 internal data class RootModeStartConfig(

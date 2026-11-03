@@ -9,6 +9,8 @@ import features.settings.servicecontrol.normalizeBssidOrNull
 import features.settings.servicecontrol.parseServiceCron
 
 internal object AsteriskdConfigValidator {
+    private val RuntimeEventReceiverPattern = Regex("^[A-Za-z0-9_.]+/[A-Za-z0-9_.$]+$")
+
     fun validate(config: AsteriskdConfig) = with(config) {
         require(owner == AsteriskdOwner.AsteriskNg && coreType == AsteriskdCoreType.Xray)
         AsteriskdNgConfigFactory.requireRunnableMode(mode)
@@ -18,6 +20,7 @@ internal object AsteriskdConfigValidator {
         require(network.appPolicy.bypassUids == network.appPolicy.bypassUids.distinct().sorted())
         require((network.appPolicy.directCidrPathV4 == null) == (network.appPolicy.directCidrPathV6 == null))
         validateServiceControl(serviceControl)
+        validateRuntimeEventReceiver(runtimeEventReceiver)
         dnsEnhancement?.let { enhancement ->
             require(enhancement.required && enhancement.consumerVersion == 2 && enhancement.coreDnsGeneration > 0)
             require(network.enableLocalDns)
@@ -44,6 +47,12 @@ internal object AsteriskdConfigValidator {
             require(pathV4.isNotBlank() && !network.appPolicy.directCidrPathV6.isNullOrBlank())
             require((matcher != null) xor (mode == AsteriskdMode.Bpf2Socks))
         }
+    }
+
+    // Matches the asteriskd check: the value is the only argument of `cmd activity broadcast -n`.
+    private fun validateRuntimeEventReceiver(value: String?) {
+        if (value == null) return
+        require(value.length in 1..255 && RuntimeEventReceiverPattern.matches(value))
     }
 
     private fun validateServiceControl(value: AsteriskdServiceControlConfig) {

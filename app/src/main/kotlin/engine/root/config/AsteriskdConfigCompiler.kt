@@ -90,5 +90,6 @@ internal fun RootStartConfig.buildAsteriskdConfig(
         helper = helper,
         serviceControl = serviceControl.toAsteriskdServiceControlConfig(),
         dnsEnhancement = rootDnsEnhancementConfig(enableAppListEnhancement, mode, enableLocalDns, xrayConfigJson.toByteArray(Charsets.UTF_8)),
+        runtimeEventReceiver = runtimeEventReceiver,
     )
 }
