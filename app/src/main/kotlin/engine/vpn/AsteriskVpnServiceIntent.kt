@@ -168,7 +168,7 @@ internal suspend fun awaitServiceCall(
     try {
         reply.await().getOrThrow()
     } finally {
-        if (linked) serviceProcess?.unlinkToDeath(deathRecipient, 0)
+        if (linked) serviceProcess.unlinkToDeath(deathRecipient, 0)
     }
 }
 
