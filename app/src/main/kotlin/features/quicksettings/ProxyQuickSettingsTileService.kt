@@ -32,6 +32,7 @@ import kotlinx.coroutines.launch
 import ui.feedback.rootOperationTipMessageOrNull
 import java.lang.ref.WeakReference
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicLong
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -75,6 +76,7 @@ class ProxyQuickSettingsTileService : TileService() {
         super.onClick()
         activeService = WeakReference(this)
         if (!operationInProgress.compareAndSet(false, true)) return
+        operationSequence.incrementAndGet()
 
         val appContext = applicationContext
         operationScope.launch {
@@ -110,11 +112,18 @@ class ProxyQuickSettingsTileService : TileService() {
     }
 
     private suspend fun refreshTileState() {
+        val sequence = operationSequence.get()
         if (operationInProgress.get()) {
             updateTile(processing = true)
             return
         }
         val running = syncProxyRunningState()
+        // A toggle that began while the status was read owns the tile; the status is stale.
+        if (operationInProgress.get()) {
+            updateTile(processing = true)
+            return
+        }
+        if (operationSequence.get() != sequence) return
         updateTile(running = running)
     }
 
@@ -238,6 +247,7 @@ class ProxyQuickSettingsTileService : TileService() {
 
         private val operationScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
         private val operationInProgress = AtomicBoolean(false)
+        private val operationSequence = AtomicLong(0)
         private var activeService: WeakReference<ProxyQuickSettingsTileService>? = null
 
         private suspend fun ProxyQuickSettingsTileService.refreshTileAfterToggle(
