@@ -62,6 +62,7 @@ private data class RootBootScriptRefresh(
 
 private data class RootBootScriptSignature(
     val enabled: Boolean,
+    val enableTrafficStatsNotification: Boolean,
     val enableAppListEnhancement: Boolean,
     val runMode: Int,
     val selectedProxyServerId: Int,
@@ -120,6 +121,7 @@ private fun AppState.toRootBootScriptRefresh(): RootBootScriptRefresh {
         appState = this,
         signature = RootBootScriptSignature(
             enabled = enableRootBootScript,
+            enableTrafficStatsNotification = enableTrafficStatsNotification,
             enableAppListEnhancement = enableAppListEnhancement,
             runMode = runMode,
             selectedProxyServerId = selectedProxyServerId,
