@@ -6,18 +6,13 @@ package engine.proxy
 import android.content.Context
 import app.AppState
 import app.R
-import app.displayTitle
 import app.modes.RunModeVpnService
 import engine.proxy.mode.AndroidModeProxyEngine
 import engine.root.RootModeEngine
 import engine.root.runtime.model.RootRuntimeMode
 import engine.root.runtime.model.RootRuntimeOwner
-import engine.stats.ProxyTrafficStatsRuntime
 import engine.stats.ProxyTrafficStatsRuntimeStore
 import engine.stats.ProxyTrafficStatsService
-import engine.stats.XrayStatsApiListenAddress
-import engine.stats.resolveXrayStatsApiPort
-import engine.stats.xrayStatsApiExcludedPorts
 import engine.vpn.VpnXrayEngine
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -199,7 +194,7 @@ class AndroidProxyEngine(
         }
         ProxyTrafficStatsService.reconcile(appContext, null)
         val resolvedBaseRequest = request.copy(appState = request.appState.withResolvedDynamicLocalProxyPort())
-        val (resolvedRequest, trafficStatsRuntime) = resolvedBaseRequest.withTrafficStatsConfig()
+        val (resolvedRequest, trafficStatsRuntime) = resolvedBaseRequest.withTrafficStatsConfig(appContext)
         val nextEngine = resolvedRequest.appState.runMode.engine()
         val currentEngine = activeEngine ?: findEngineToStop(resolvedRequest.appState.runMode)
         val rootToRootRestart = explicitRestart && currentEngine is RootModeEngine && nextEngine is RootModeEngine
@@ -346,28 +341,6 @@ class AndroidProxyEngine(
 
     private suspend fun AndroidModeProxyEngine.ownsRootRuntime(): Boolean {
         return this is RootModeEngine && ownsRuntime()
-    }
-
-    private fun ProxyEngineStartRequest.withTrafficStatsConfig(): Pair<ProxyEngineStartRequest, ProxyTrafficStatsRuntime?> {
-        if (!appState.enableTrafficStatsNotification) {
-            return this to null
-        }
-        val port = resolveXrayStatsApiPort(
-            preferredPort = ProxyTrafficStatsRuntimeStore.readPort(appContext),
-            excludedPorts = appState.xrayStatsApiExcludedPorts(),
-        )
-        val request = copy(
-            xrayStatsApiListenAddress = XrayStatsApiListenAddress,
-            xrayStatsApiPort = port,
-        )
-        val statsApiConfig = checkNotNull(request.xrayStatsApiConfig())
-        val runtime = ProxyTrafficStatsRuntime(
-            listenAddress = statsApiConfig.listenAddress,
-            port = statsApiConfig.port,
-            serverName = selectedServer.displayTitle(),
-            apiTag = statsApiConfig.apiTag,
-        )
-        return request to runtime
     }
 
     private fun ProxyEngineStatus.withTrafficStatsReconciled(
