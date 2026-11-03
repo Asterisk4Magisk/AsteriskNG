@@ -52,6 +52,7 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.Copy
 import top.yukonga.miuix.kmp.icon.extended.Delete
 import top.yukonga.miuix.kmp.icon.extended.Edit
 import top.yukonga.miuix.kmp.icon.extended.Refresh
@@ -60,6 +61,8 @@ import top.yukonga.miuix.kmp.preference.WindowSpinnerPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowDialog
 import features.proxy.server.display.displayName
+import ui.components.IconDropdownMenu
+import ui.components.IconDropdownMenuEntry
 import ui.components.WarningConfirmDialog
 import ui.components.draggedCardShadow
 import ui.text.formatTemplate
@@ -378,6 +381,8 @@ internal fun SubscriptionGroupCard(
     isDragging: Boolean,
     onToggle: (Boolean) -> Unit,
     onUpdate: (() -> Unit)?,
+    shareActions: List<SubscriptionGroupShareAction>,
+    onShareAction: (SubscriptionGroupShareAction) -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     modifier: Modifier = Modifier,
@@ -475,6 +480,14 @@ internal fun SubscriptionGroupCard(
                     )
                 }
             }
+            if (shareActions.isNotEmpty()) {
+                IconDropdownMenu(
+                    imageVector = MiuixIcons.Copy,
+                    contentDescription = stringResource(R.string.subscription_share_group),
+                    entries = subscriptionGroupShareMenuEntries(shareActions),
+                    onAction = onShareAction,
+                )
+            }
             IconButton(onClick = onEdit) {
                 Icon(
                     imageVector = MiuixIcons.Edit,
@@ -497,5 +510,23 @@ internal fun SubscriptionGroupCard(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun subscriptionGroupShareMenuEntries(
+    actions: List<SubscriptionGroupShareAction>,
+): List<IconDropdownMenuEntry<SubscriptionGroupShareAction>> {
+    return actions.map { action ->
+        IconDropdownMenuEntry(
+            key = action,
+            title = when (action) {
+                SubscriptionGroupShareAction.SubscriptionQrCode -> stringResource(R.string.subscription_share_qr_code)
+                SubscriptionGroupShareAction.SubscriptionUrl -> stringResource(R.string.subscription_share_url)
+                SubscriptionGroupShareAction.ServerUrls -> stringResource(R.string.proxy_server_list_copy_all_urls)
+                SubscriptionGroupShareAction.ServerUrlsFile -> stringResource(R.string.subscription_share_export_file)
+            },
+            action = action,
+        )
     }
 }

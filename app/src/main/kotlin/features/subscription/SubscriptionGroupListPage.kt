@@ -46,11 +46,19 @@ import ui.layout.pageListPadding
 import ui.layout.pageScrollModifiers
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.platform.LocalContext
 import data.AndroidAppStateStore
+import features.proxy.server.display.displayName
+import features.proxy.server.list.ProxyServerQrCodeDialog
+import features.proxy.server.list.copyProxyServerShareUrls
+import features.proxy.server.list.emptyMessage
+import features.proxy.server.list.proxyServerShareUrls
 import features.proxy.server.usecase.withUpdatedSubscriptionServers
 import features.subscription.usecase.subscriptionUpdateMessage
 import features.subscription.usecase.toSubscriptionFetchOptions
 import features.subscription.usecase.updateSubscriptions
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import sh.calvin.reorderable.ReorderableItem
 import top.yukonga.miuix.kmp.anim.folmeSpring
@@ -61,6 +69,7 @@ import ui.components.rememberReorderPreview
 import ui.components.rememberReorderableLazyListContentPaddingWithoutTop
 import ui.components.rememberReorderableScrollThresholdPadding
 import ui.components.reorderByIds
+import ui.clipboard.setPlainText
 
 private const val SubscriptionGroupListHeaderItemCount = 1
 
@@ -86,6 +95,75 @@ fun SubscriptionGroupListPage(
     var showGroupEditor by remember { mutableStateOf(false) }
     var pendingGroupDeletion by remember { mutableStateOf<SubscriptionGroupState?>(null) }
     val editingGroup = editingGroupId?.let { id -> groups.firstOrNull { it.id == id } }
+    val context = LocalContext.current
+    val clipboard = LocalClipboard.current
+    val defaultGroupName = stringResource(R.string.subscription_default_group)
+    val copiedMessage = stringResource(R.string.common_copied)
+    val unsupportedMessage = stringResource(R.string.common_unsupported)
+    val configInvalidMessage = stringResource(R.string.proxy_server_config_invalid)
+    val shareExportedMessage = stringResource(R.string.subscription_share_exported)
+    val shareExportFailedMessage = stringResource(R.string.subscription_share_export_failed)
+    // The subscription QR code is shown from the page, not the card, so it survives the menu
+    // closing and the card recomposing while the dialog is open.
+    var shareQrCodeState by remember { mutableStateOf<SubscriptionGroupShareQrState?>(null) }
+    val serverCountsByGroup = remember(appState.proxyServers) {
+        appState.proxyServers.groupingBy { server -> server.groupId }.eachCount()
+    }
+
+    /** Writes the group's server URLs to a document chosen by the user. */
+    fun exportGroupServerUrls(group: SubscriptionGroupState) {
+        val appContext = context.applicationContext
+        val servers = stateStore.state.value.proxyServers.inSubscriptionGroup(group.id)
+        scope.launch {
+            val urls = proxyServerShareUrls(servers)
+            if (urls.text.isBlank()) {
+                services.tipNotifier.show(urls.emptyMessage(unsupportedMessage, configInvalidMessage))
+                return@launch
+            }
+            try {
+                val fileName = subscriptionGroupShareFileName(group.displayName(defaultGroupName))
+                val uri = services.logFileCreator(fileName) ?: return@launch
+                appContext.writeSubscriptionGroupShareDocument(uri, urls.text)
+                services.tipNotifier.show(shareExportedMessage)
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Throwable) {
+                services.tipNotifier.showError(error, shareExportFailedMessage)
+            }
+        }
+    }
+
+    fun shareGroup(group: SubscriptionGroupState, action: SubscriptionGroupShareAction) {
+        when (action) {
+            SubscriptionGroupShareAction.SubscriptionQrCode -> {
+                shareQrCodeState = SubscriptionGroupShareQrState(
+                    title = group.displayName(defaultGroupName),
+                    url = group.url,
+                )
+            }
+
+            SubscriptionGroupShareAction.SubscriptionUrl -> scope.launch {
+                clipboard.setPlainText(group.url)
+                services.tipNotifier.show(copiedMessage)
+            }
+
+            SubscriptionGroupShareAction.ServerUrls -> {
+                val servers = stateStore.state.value.proxyServers.inSubscriptionGroup(group.id)
+                scope.launch {
+                    copyProxyServerShareUrls(
+                        servers = servers,
+                        clipboard = clipboard,
+                        tipNotifier = services.tipNotifier,
+                        copiedMessage = copiedMessage,
+                        unsupportedMessage = unsupportedMessage,
+                        configInvalidMessage = configInvalidMessage,
+                    )
+                }
+            }
+
+            SubscriptionGroupShareAction.ServerUrlsFile -> exportGroupServerUrls(group)
+        }
+    }
 
     fun closeGroupEditor() {
         showGroupEditor = false
@@ -237,6 +315,11 @@ fun SubscriptionGroupListPage(
                             } else {
                                 null
                             },
+                            shareActions = subscriptionGroupShareActions(
+                                group = group,
+                                serverCount = serverCountsByGroup[group.id] ?: 0,
+                            ),
+                            onShareAction = { action -> shareGroup(group, action) },
                             onEdit = {
                                 editingGroupId = group.id
                                 showGroupEditor = true
@@ -268,6 +351,13 @@ fun SubscriptionGroupListPage(
                 scope.launch { services.tipNotifier.show(invalidSubscriptionUrlMessage) }
             },
         )
+        shareQrCodeState?.let { state ->
+            ProxyServerQrCodeDialog(
+                title = state.title,
+                text = state.url,
+                onDismissRequest = { shareQrCodeState = null },
+            )
+        }
         pendingGroupDeletion?.let { group ->
             DeleteConfirmationDialog(
                 show = true,
@@ -281,6 +371,12 @@ fun SubscriptionGroupListPage(
         }
     }
 }
+
+/** What the group-level QR dialog encodes: a subscription URL and the group it belongs to. */
+private data class SubscriptionGroupShareQrState(
+    val title: String,
+    val url: String,
+)
 
 private fun updateSubscriptionGroup(
     group: SubscriptionGroupState,

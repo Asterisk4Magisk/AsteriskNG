@@ -262,6 +262,12 @@
     <string name="subscription_install_existing_url">Địa chỉ đăng ký đã tồn tại trong "{name}", đang cập nhật nhóm này</string>
     <string name="subscription_invalid_url">URL đăng ký không hợp lệ</string>
     <string name="subscription_manual_group">Nhóm nút thủ công</string>
+    <string name="subscription_share_export_failed">Không thể xuất nhóm</string>
+    <string name="subscription_share_export_file">Xuất liên kết ra tệp</string>
+    <string name="subscription_share_exported">Đã xuất nhóm</string>
+    <string name="subscription_share_group">Chia sẻ nhóm đăng ký</string>
+    <string name="subscription_share_qr_code">Mã QR đăng ký</string>
+    <string name="subscription_share_url">Sao chép liên kết đăng ký</string>
     <string name="subscription_unnamed_group">Nhóm chưa đặt tên</string>
     <string name="subscription_update_group">Cập nhật nhóm đăng ký</string>
     <string name="subscription_update_interval">Cập nhật mỗi {interval} giờ</string>

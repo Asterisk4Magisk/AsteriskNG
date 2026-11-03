@@ -27,7 +27,6 @@ import app.navigation.Navigator
 import app.navigation.Route
 import data.AndroidAppStateStore
 import engine.proxy.latency.ProxyServerLatencyTestMode
-import features.proxy.server.model.getUrlOrNull
 import features.proxy.server.usecase.ProxyServiceResult
 import features.proxy.server.usecase.ProxyServiceUseCase
 import features.proxy.server.usecase.ProxyServerImportFileUseCase
@@ -53,7 +52,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.ScrollBehavior
 import ui.clipboard.getPlainText
-import ui.clipboard.setPlainText
 import ui.components.DeleteConfirmationDialog
 import ui.feedback.AndroidToastTipNotifier
 import ui.layout.AdaptiveTopAppBar
@@ -633,27 +631,14 @@ private fun copyCurrentGroupUrls(
     messages: ProxyServerListMessages,
 ) {
     scope.launch {
-        var invalidCount = 0
-        val urls = servers.mapNotNull { server ->
-            if (server.server.validateBasic().isNotEmpty()) {
-                invalidCount++
-                return@mapNotNull null
-            }
-            runCatching { server.server.getUrlOrNull() }.fold(
-                onSuccess = { url -> url },
-                onFailure = {
-                    invalidCount++
-                    null
-                },
-            )
-        }
-            .joinToString("\n")
-        if (urls.isBlank()) {
-            tipNotifier.show(if (invalidCount > 0) messages.configInvalid else messages.unsupported)
-        } else {
-            clipboard.setPlainText(urls)
-            tipNotifier.show(messages.copied)
-        }
+        copyProxyServerShareUrls(
+            servers = servers,
+            clipboard = clipboard,
+            tipNotifier = tipNotifier,
+            copiedMessage = messages.copied,
+            unsupportedMessage = messages.unsupported,
+            configInvalidMessage = messages.configInvalid,
+        )
     }
 }
 

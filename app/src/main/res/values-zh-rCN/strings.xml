@@ -262,6 +262,12 @@
     <string name="subscription_install_existing_url">订阅地址已存在于“{name}”，正在更新该分组</string>
     <string name="subscription_invalid_url">无效的订阅 URL</string>
     <string name="subscription_manual_group">手动节点分组</string>
+    <string name="subscription_share_export_failed">分组导出失败</string>
+    <string name="subscription_share_export_file">导出链接到文件</string>
+    <string name="subscription_share_exported">分组已导出</string>
+    <string name="subscription_share_group">分享订阅分组</string>
+    <string name="subscription_share_qr_code">订阅二维码</string>
+    <string name="subscription_share_url">复制订阅链接</string>
     <string name="subscription_unnamed_group">未命名分组</string>
     <string name="subscription_update_group">更新订阅分组</string>
     <string name="subscription_update_interval">每 {interval} 小时更新</string>

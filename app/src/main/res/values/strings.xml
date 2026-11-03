@@ -262,6 +262,12 @@
     <string name="subscription_install_existing_url">A matching subscription URL already exists in {name}; updating that group</string>
     <string name="subscription_invalid_url">Invalid subscription URL</string>
     <string name="subscription_manual_group">Manual proxy server group</string>
+    <string name="subscription_share_export_failed">Unable to export the group</string>
+    <string name="subscription_share_export_file">Export links to file</string>
+    <string name="subscription_share_exported">Group exported</string>
+    <string name="subscription_share_group">Share subscription group</string>
+    <string name="subscription_share_qr_code">Subscription QR code</string>
+    <string name="subscription_share_url">Copy subscription link</string>
     <string name="subscription_unnamed_group">Unnamed group</string>
     <string name="subscription_update_group">Update subscription group</string>
     <string name="subscription_update_interval">Update every {interval} hours</string>
