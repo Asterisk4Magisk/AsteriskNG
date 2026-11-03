@@ -130,10 +130,12 @@ internal class TrafficStatsServiceRequests {
     private val mainHandler = Handler(Looper.getMainLooper())
     private val pendingStarts = mutableSetOf<Any>()
     private var deferredStop: (() -> Unit)? = null
+    private var stopped = false
 
     fun start(requestStart: (acknowledgement: ResultReceiver) -> Boolean) {
         synchronized(lock) {
             deferredStop = null
+            stopped = false
             val token = Any()
             val acknowledgement = object : ResultReceiver(null) {
                 override fun onReceiveResult(resultCode: Int, resultData: Bundle?) = acknowledge(token)
@@ -144,10 +146,18 @@ internal class TrafficStatsServiceRequests {
         }
     }
 
-    fun stop(stopService: () -> Unit) {
+    /**
+     * Returns false, without stopping, when this process requested no start since its last stop:
+     * status reads stop the service on every stopped result. The first stop in a process always
+     * runs, since the service outlives the process that started it.
+     */
+    fun stop(stopService: () -> Unit): Boolean {
         synchronized(lock) {
+            if (stopped) return false
+            stopped = true
             if (pendingStarts.isEmpty()) stopService() else deferredStop = stopService
         }
+        return true
     }
 
     private fun acknowledge(token: Any) {

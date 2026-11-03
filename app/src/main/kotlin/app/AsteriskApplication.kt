@@ -12,7 +12,8 @@ import features.resources.runtime.AndroidResourceFileDownloadCancellation
 import android.app.Application
 import app.modes.RunModeVpnService
 import features.boot.BootAutoConnect
-import features.quicksettings.requestQuickSettingsTileRefresh
+import features.quicksettings.quickSettingsTileState
+import features.quicksettings.refreshQuickSettingsTileUnlessShowing
 import system.AndroidAppIconFetcher
 import features.logs.AndroidAccessLogRepository
 import features.logs.AndroidAsteriskdLogRepository
@@ -120,15 +121,15 @@ class AsteriskApplication : Application(), SingletonImageLoader.Factory {
     /**
      * Asks SystemUI to rebind the quick settings tile whenever a state source in this process
      * changes it; the first collection is the refresh at process start. The language is included
-     * because opening the panel no longer refreshes an active tile. The tile writing back
-     * `proxyRunning` triggers one more round, which converges because the state then matches.
+     * because opening the panel no longer refreshes an active tile. A `proxyRunning` the tile
+     * writes back itself is skipped, since the tile shows it without reading the status again.
      */
     private fun refreshQuickSettingsTileOnProxyStateChange() {
         appScope.launch {
             stateStore.state
-                .map { state -> Triple(state.runMode, state.proxyRunning, state.languageMode) }
+                .map { state -> state.quickSettingsTileState() }
                 .distinctUntilChanged()
-                .collect { requestQuickSettingsTileRefresh(applicationContext) }
+                .collect { tileState -> refreshQuickSettingsTileUnlessShowing(applicationContext, tileState) }
         }
     }
 
