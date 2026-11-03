@@ -118,11 +118,6 @@ internal fun ProxyStatusSynchronizer(
         }
     }
 
-    LaunchedEffect(appContext, appState.proxyRunning) {
-        if (!appState.proxyRunning) {
-            ProxyTrafficStatsService.reconcile(appContext, null)
-        }
-    }
 }
 
 internal suspend fun observeProxyStatus(
