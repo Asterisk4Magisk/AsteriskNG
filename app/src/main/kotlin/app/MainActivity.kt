@@ -87,8 +87,8 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    private val notificationPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission(),
+    private val startupPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions(),
     ) {}
 
     private val vpnPermissionLauncher = registerForActivityResult(
@@ -246,11 +246,16 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun requestStartupPermissions() {
-        if (
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
-        ) {
-            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        val permissions = buildList {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                add(Manifest.permission.POST_NOTIFICATIONS)
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.CINNAMON_BUN) {
+                add(Manifest.permission.ACCESS_LOCAL_NETWORK)
+            }
+        }.filter { checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED }
+        if (permissions.isNotEmpty()) {
+            startupPermissionLauncher.launch(permissions.toTypedArray())
         }
     }
 
