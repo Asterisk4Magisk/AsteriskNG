@@ -57,6 +57,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import app.R
+import features.proxy.server.display.displayProxyServerProtocolName
 import app.modes.ProxyServerListLayoutDouble
 import app.modes.ProxyServerListLayoutMultiple
 import app.modes.ProxyServerListLayoutSingle
@@ -101,7 +102,8 @@ private val ProxyServerListFloatingToolbarBottomSpacing = 16.dp
 private val ProxyServerListFloatingToolbarContentGap = 12.dp
 private val ProxyServerListGroupTabHeight = 36.dp
 private val ProxyServerListGroupTabSpacing = 8.dp
-private val ProxyServerListCompactCardHeight = 96.dp
+// Compact (multi-column) cards fit a two-line title, a 2dp gap and the protocol/latency row.
+private val ProxyServerListCompactCardHeight = 80.dp
 private val ProxyServerListCompactCardPadding = 10.dp
 internal val ProxyServerListFloatingToolbarReservedBottomPadding =
     ProxyServerListFloatingToolbarButtonSize +
@@ -557,7 +559,7 @@ private fun ProxyServerListCompactItemCard(
                     lineHeight = 17.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = MiuixTheme.colorScheme.onSurface,
-                    maxLines = 3,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
                 Row(
@@ -568,7 +570,7 @@ private fun ProxyServerListCompactItemCard(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     ProtocolChip(
-                        text = displayText.protocol,
+                        text = displayText.protocol.displayProxyServerProtocolName(compact = true),
                         modifier = Modifier.weight(1f, fill = false),
                         compact = true,
                         selected = selected,
