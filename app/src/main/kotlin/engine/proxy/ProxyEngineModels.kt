@@ -3,14 +3,20 @@
 
 package engine.proxy
 
+import android.content.Context
 import android.content.Intent
 import app.AppState
 import app.ProxyServerState
+import app.displayTitle
 import engine.root.runtime.model.RootRuntimeOwner
 import engine.root.runtime.model.RootRuntimeSnapshot
+import engine.stats.ProxyTrafficStatsRuntime
+import engine.stats.ProxyTrafficStatsRuntimeStore
+import engine.stats.XrayStatsApiListenAddress
+import engine.stats.resolveXrayStatsApiPort
+import engine.stats.xrayStatsApiExcludedPorts
 import engine.xray.XrayStatsApiConfig
 import engine.xray.xrayStatsApiTag
-
 /** Asks the user for VPN consent; returns whether it was granted. */
 typealias VpnPermissionRequester = suspend (Intent) -> Boolean
 
@@ -51,4 +57,34 @@ internal fun ProxyEngineStartRequest.xrayStatsApiConfig(): XrayStatsApiConfig? {
         port = port,
         apiTag = selectedServer.server.xrayStatsApiTag(),
     )
+}
+
+internal fun ProxyEngineStartRequest.withTrafficStatsConfig(
+    context: Context,
+    writeStore: Boolean = false,
+    verifyAvailability: Boolean = true,
+): Pair<ProxyEngineStartRequest, ProxyTrafficStatsRuntime?> {
+    if (!appState.enableTrafficStatsNotification) {
+        return this to null
+    }
+    val port = resolveXrayStatsApiPort(
+        preferredPort = ProxyTrafficStatsRuntimeStore.readPort(context),
+        excludedPorts = appState.xrayStatsApiExcludedPorts(),
+        verifyAvailability = verifyAvailability,
+    )
+    val request = copy(
+        xrayStatsApiListenAddress = XrayStatsApiListenAddress,
+        xrayStatsApiPort = port,
+    )
+    val statsApiConfig = checkNotNull(request.xrayStatsApiConfig())
+    val runtime = ProxyTrafficStatsRuntime(
+        listenAddress = statsApiConfig.listenAddress,
+        port = statsApiConfig.port,
+        serverName = selectedServer.displayTitle(),
+        apiTag = statsApiConfig.apiTag,
+    )
+    if (writeStore) {
+        ProxyTrafficStatsRuntimeStore.write(context, runtime)
+    }
+    return request to runtime
 }

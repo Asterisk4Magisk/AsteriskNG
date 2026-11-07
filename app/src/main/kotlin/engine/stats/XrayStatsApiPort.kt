@@ -38,11 +38,12 @@ internal fun findAvailableXrayStatsApiPort(
 internal fun resolveXrayStatsApiPort(
     preferredPort: Int?,
     excludedPorts: Set<Int>,
+    verifyAvailability: Boolean = true,
 ): Int {
     val port = preferredPort?.takeIf { value ->
-            value > 0 &&
+        value > 0 &&
             value !in excludedPorts &&
-            isTcpPortAvailable(XrayStatsApiListenAddress, value)
+            (!verifyAvailability || isTcpPortAvailable(XrayStatsApiListenAddress, value))
     }
     return port ?: findAvailableXrayStatsApiPort(excludedPorts)
 }
