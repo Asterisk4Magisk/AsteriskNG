@@ -17,6 +17,7 @@ import engine.stats.resolveXrayStatsApiPort
 import engine.stats.xrayStatsApiExcludedPorts
 import engine.xray.XrayStatsApiConfig
 import engine.xray.xrayStatsApiTag
+
 /** Asks the user for VPN consent; returns whether it was granted. */
 typealias VpnPermissionRequester = suspend (Intent) -> Boolean
 
@@ -59,19 +60,27 @@ internal fun ProxyEngineStartRequest.xrayStatsApiConfig(): XrayStatsApiConfig? {
     )
 }
 
+/**
+ * Adds the stats API inbound to a configuration that is about to be published. The port is
+ * persisted as soon as it is allocated, so the running core and the ROOT boot script always
+ * share it; see [resolveXrayStatsApiPort] for when [verifyAvailability] must be off.
+ */
 internal fun ProxyEngineStartRequest.withTrafficStatsConfig(
     context: Context,
-    writeStore: Boolean = false,
-    verifyAvailability: Boolean = true,
+    verifyAvailability: Boolean,
 ): Pair<ProxyEngineStartRequest, ProxyTrafficStatsRuntime?> {
     if (!appState.enableTrafficStatsNotification) {
         return this to null
     }
+    val storedPort = ProxyTrafficStatsRuntimeStore.readPort(context)
     val port = resolveXrayStatsApiPort(
-        preferredPort = ProxyTrafficStatsRuntimeStore.readPort(context),
+        preferredPort = storedPort,
         excludedPorts = appState.xrayStatsApiExcludedPorts(),
         verifyAvailability = verifyAvailability,
     )
+    if (port != storedPort) {
+        ProxyTrafficStatsRuntimeStore.writePort(context, port)
+    }
     val request = copy(
         xrayStatsApiListenAddress = XrayStatsApiListenAddress,
         xrayStatsApiPort = port,
@@ -83,8 +92,5 @@ internal fun ProxyEngineStartRequest.withTrafficStatsConfig(
         serverName = selectedServer.displayTitle(),
         apiTag = statsApiConfig.apiTag,
     )
-    if (writeStore) {
-        ProxyTrafficStatsRuntimeStore.write(context, runtime)
-    }
     return request to runtime
 }

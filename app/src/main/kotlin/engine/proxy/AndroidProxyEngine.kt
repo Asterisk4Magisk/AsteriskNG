@@ -129,10 +129,12 @@ class AndroidProxyEngine(
                 activeEngine = null
                 return@withLock resolvedState.copy(proxyRunning = false)
             }
+            // The republished configuration may relaunch the core, so it keeps the stats API
+            // port the running core and the boot script already use.
+            val (request, _) = ProxyEngineStartRequest(resolvedState, selectedServer)
+                .withTrafficStatsConfig(appContext, verifyAvailability = false)
             val wasRunning = withContext(Dispatchers.Default) {
-                rootEngine.reconfigureServiceControl(
-                    ProxyEngineStartRequest(resolvedState, selectedServer),
-                )
+                rootEngine.reconfigureServiceControl(request)
             }
             activeEngine = rootEngine.takeIf { wasRunning }
             resolvedState.copy(proxyRunning = wasRunning)
@@ -194,9 +196,14 @@ class AndroidProxyEngine(
         }
         ProxyTrafficStatsService.reconcile(appContext, null)
         val resolvedBaseRequest = request.copy(appState = request.appState.withResolvedDynamicLocalProxyPort())
-        val (resolvedRequest, trafficStatsRuntime) = resolvedBaseRequest.withTrafficStatsConfig(appContext)
-        val nextEngine = resolvedRequest.appState.runMode.engine()
-        val currentEngine = activeEngine ?: findEngineToStop(resolvedRequest.appState.runMode)
+        val nextEngine = resolvedBaseRequest.appState.runMode.engine()
+        val currentEngine = activeEngine ?: findEngineToStop(resolvedBaseRequest.appState.runMode)
+        // A runtime of this app may still hold the stats API port until it is replaced below,
+        // so the port is only checked for a foreign holder when no such runtime exists.
+        val (resolvedRequest, trafficStatsRuntime) = resolvedBaseRequest.withTrafficStatsConfig(
+            context = appContext,
+            verifyAvailability = currentEngine == null,
+        )
         val rootToRootRestart = explicitRestart && currentEngine is RootModeEngine && nextEngine is RootModeEngine
         if (currentEngine != null && currentEngine !== nextEngine && !rootToRootRestart) {
             if (currentEngine is RootModeEngine) currentEngine.shutdown() else currentEngine.stop()

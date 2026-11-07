@@ -5,27 +5,33 @@ package app.effects
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
 import app.AppState
 import app.modes.isRootRunMode
 import data.AndroidAppStateStore
 import engine.proxy.withResolvedDynamicLocalProxyPort
+import engine.stats.ProxyTrafficStatsRuntimeStore
 import features.logs.AndroidAppLogger
 import features.proxy.server.model.ProxyServer
 import features.routing.model.RouteRule
 import features.settings.usecase.RootBootScriptResult
 import features.settings.usecase.RootBootScriptUseCase
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
 
 @Composable
 internal fun RootBootScriptSynchronizer(
     stateStore: AndroidAppStateStore,
     rootBootScriptUseCase: RootBootScriptUseCase,
 ) {
-    LaunchedEffect(stateStore, rootBootScriptUseCase) {
-        stateStore.state
-            .map { state -> state.toRootBootScriptRefresh() }
+    val appContext = LocalContext.current.applicationContext
+    LaunchedEffect(stateStore, rootBootScriptUseCase, appContext) {
+        // The boot script bakes in the stats API port, so a port replaced by a start refreshes it.
+        combine(
+            stateStore.state,
+            ProxyTrafficStatsRuntimeStore.observePort(appContext),
+        ) { state, statsApiPort -> state.toRootBootScriptRefresh(statsApiPort) }
             .distinctUntilChanged { previous, next -> previous.signature == next.signature }
             .conflate()
             .collect { refresh ->
@@ -63,6 +69,7 @@ private data class RootBootScriptRefresh(
 private data class RootBootScriptSignature(
     val enabled: Boolean,
     val enableTrafficStatsNotification: Boolean,
+    val statsApiPort: Int?,
     val enableAppListEnhancement: Boolean,
     val runMode: Int,
     val selectedProxyServerId: Int,
@@ -116,12 +123,13 @@ private data class RootBootScriptProxyServerState(
     val server: ProxyServer<*>,
 )
 
-private fun AppState.toRootBootScriptRefresh(): RootBootScriptRefresh {
+private fun AppState.toRootBootScriptRefresh(statsApiPort: Int?): RootBootScriptRefresh {
     return RootBootScriptRefresh(
         appState = this,
         signature = RootBootScriptSignature(
             enabled = enableRootBootScript,
             enableTrafficStatsNotification = enableTrafficStatsNotification,
+            statsApiPort = statsApiPort,
             enableAppListEnhancement = enableAppListEnhancement,
             runMode = runMode,
             selectedProxyServerId = selectedProxyServerId,

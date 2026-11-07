@@ -7,6 +7,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.SharedPreferences
 import android.os.PowerManager
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
@@ -18,6 +19,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import android.os.Bundle
@@ -208,6 +213,21 @@ internal object ProxyTrafficStatsRuntimeStore {
     fun readPort(context: Context): Int? {
         return context.preferences().getInt(KeyPort, 0).takeIf { value -> value > 0 }
     }
+
+    fun writePort(context: Context, port: Int) {
+        context.preferences().edit { putInt(KeyPort, port) }
+    }
+
+    /** Emits the stored stats API port now and whenever it changes. */
+    fun observePort(context: Context): Flow<Int?> = callbackFlow {
+        val preferences = context.preferences()
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (key == KeyPort) trySend(readPort(context))
+        }
+        preferences.registerOnSharedPreferenceChangeListener(listener)
+        trySend(readPort(context))
+        awaitClose { preferences.unregisterOnSharedPreferenceChangeListener(listener) }
+    }.distinctUntilChanged()
 
     fun write(
         context: Context,
