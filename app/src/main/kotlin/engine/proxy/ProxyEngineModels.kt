@@ -62,6 +62,7 @@ internal fun ProxyEngineStartRequest.xrayStatsApiConfig(): XrayStatsApiConfig? {
 internal fun ProxyEngineStartRequest.withTrafficStatsConfig(
     context: Context,
     writeStore: Boolean = false,
+    verifyAvailability: Boolean = true,
 ): Pair<ProxyEngineStartRequest, ProxyTrafficStatsRuntime?> {
     if (!appState.enableTrafficStatsNotification) {
         return this to null
@@ -69,6 +70,7 @@ internal fun ProxyEngineStartRequest.withTrafficStatsConfig(
     val port = resolveXrayStatsApiPort(
         preferredPort = ProxyTrafficStatsRuntimeStore.readPort(context),
         excludedPorts = appState.xrayStatsApiExcludedPorts(),
+        verifyAvailability = verifyAvailability,
     )
     val request = copy(
         xrayStatsApiListenAddress = XrayStatsApiListenAddress,
