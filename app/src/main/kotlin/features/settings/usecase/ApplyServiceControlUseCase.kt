@@ -4,7 +4,7 @@
 package features.settings.usecase
 
 import app.AppState
-import app.ServiceControlSettings
+import features.settings.servicecontrol.ServiceControlSettings
 import engine.proxy.AndroidProxyEngine
 import features.settings.servicecontrol.normalizeServiceControlSettings
 

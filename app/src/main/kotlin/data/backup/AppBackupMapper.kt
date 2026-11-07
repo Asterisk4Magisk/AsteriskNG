@@ -5,12 +5,12 @@ package data.backup
 
 import app.withCompatibleProxyAppListMode
 import app.AppState
-import app.ServiceControlSchedule
-import app.ServiceControlKeyguard
+import features.settings.servicecontrol.ServiceControlSchedule
+import features.settings.servicecontrol.ServiceControlKeyguard
 import features.settings.servicecontrol.normalizeServiceControlSettings
-import app.ServiceControlSettings
-import app.ServiceControlWifi
-import app.ServiceControlWifiRule
+import features.settings.servicecontrol.ServiceControlSettings
+import features.settings.servicecontrol.ServiceControlWifi
+import features.settings.servicecontrol.ServiceControlWifiRule
 import app.CustomResourceFileState
 import app.ProxyServerState
 import app.SubscriptionGroupState

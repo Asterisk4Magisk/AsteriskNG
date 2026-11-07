@@ -4,9 +4,9 @@
 package features.settings.sheets
 
 import android.os.Build
-import app.ServiceControlKeyguardRule
-import app.supportsKeyguardControl
-import app.withRule
+import features.settings.servicecontrol.ServiceControlKeyguardRule
+import features.settings.servicecontrol.supportsKeyguardControl
+import features.settings.servicecontrol.withRule
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -27,9 +27,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import app.R
-import app.ServiceControlSettings
-import app.ServiceControlWifiRule
-import app.ServiceControlWifiRuleKind
+import features.settings.servicecontrol.ServiceControlSettings
+import features.settings.servicecontrol.ServiceControlWifiRule
+import features.settings.servicecontrol.ServiceControlWifiRuleKind
 import features.settings.servicecontrol.ServiceCronParseResult
 import features.settings.servicecontrol.canSaveServiceControlDraft
 import features.settings.servicecontrol.isValidServiceSsid

@@ -1,7 +1,7 @@
 // Copyright 2026, AsteriskNG contributors
 // SPDX-License-Identifier: GPL-3.0
 
-package app
+package features.settings.servicecontrol
 
 data class ServiceControlSettings(
     val enabled: Boolean = false,

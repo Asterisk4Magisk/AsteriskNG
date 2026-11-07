@@ -9,11 +9,11 @@ import android.content.SharedPreferences
 import androidx.core.content.edit
 import app.AppState
 import app.CustomResourceFileState
-import app.ServiceControlSchedule
-import app.ServiceControlKeyguard
-import app.ServiceControlSettings
-import app.ServiceControlWifi
-import app.ServiceControlWifiRule
+import features.settings.servicecontrol.ServiceControlSchedule
+import features.settings.servicecontrol.ServiceControlKeyguard
+import features.settings.servicecontrol.ServiceControlSettings
+import features.settings.servicecontrol.ServiceControlWifi
+import features.settings.servicecontrol.ServiceControlWifiRule
 import app.modes.ColorModeThemeDark
 import app.modes.ColorModeThemeLight
 import app.modes.ColorModeThemeSystem

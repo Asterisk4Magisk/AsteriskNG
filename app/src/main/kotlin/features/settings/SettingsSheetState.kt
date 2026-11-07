@@ -38,7 +38,7 @@ internal class SettingsSheetState(
     var ignoredInterfacesDraft by mutableStateOf(emptyList<String>())
 
     var showServiceControl by mutableStateOf(false)
-    var serviceControlDraft by mutableStateOf(app.ServiceControlSettings())
+    var serviceControlDraft by mutableStateOf(features.settings.servicecontrol.ServiceControlSettings())
 
     var showPrivateAddresses by mutableStateOf(false)
     var privateAddressCidrsDraft by mutableStateOf(emptyList<String>())

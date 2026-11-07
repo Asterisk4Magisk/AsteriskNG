@@ -46,6 +46,7 @@ import system.AndroidLauncherIcon
 import system.applyScreenshotProtection
 import system.setRecentTasksHidden
 import ui.feedback.AndroidToastTipNotifier
+import system.currentSystemUiSnapshot
 
 class MainActivity : ComponentActivity() {
     private var pendingAutoConnect = false

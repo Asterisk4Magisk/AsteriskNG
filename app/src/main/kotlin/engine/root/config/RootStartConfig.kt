@@ -3,7 +3,7 @@
 
 package engine.root.config
 
-import app.ServiceControlSettings
+import features.settings.servicecontrol.ServiceControlSettings
 import engine.network.NetworkLimits
 import engine.proxy.LocalProxyOptions
 import engine.root.daemon.config.AsteriskdConfig

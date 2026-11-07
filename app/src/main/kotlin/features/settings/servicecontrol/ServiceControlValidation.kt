@@ -3,9 +3,6 @@
 
 package features.settings.servicecontrol
 
-import app.ServiceControlSettings
-import app.ServiceControlWifiRule
-import app.ServiceControlWifiRuleKind
 import java.nio.charset.StandardCharsets
 
 private const val MaxServiceControlListSize = 64

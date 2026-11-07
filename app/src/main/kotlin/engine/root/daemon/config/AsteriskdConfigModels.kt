@@ -4,9 +4,9 @@
 package engine.root.daemon.config
 
 import android.os.Build
-import app.ServiceControlKeyguard
-import app.supportsKeyguardControl
-import app.ServiceControlSettings
+import features.settings.servicecontrol.ServiceControlKeyguard
+import features.settings.servicecontrol.supportsKeyguardControl
+import features.settings.servicecontrol.ServiceControlSettings
 import features.settings.servicecontrol.normalizeServiceControlSettings
 
 internal enum class AsteriskdOwner(val wireValue: String) {
@@ -106,7 +106,7 @@ internal fun ServiceControlSettings.toAsteriskdServiceControlConfig(): Asteriskd
     )
 }
 
-private fun app.ServiceControlWifiRule.toAsteriskdWifiRule(): AsteriskdWifiRule =
+private fun features.settings.servicecontrol.ServiceControlWifiRule.toAsteriskdWifiRule(): AsteriskdWifiRule =
     AsteriskdWifiRule(enabled = enabled, ssids = ssids, bssids = bssids)
 
 internal data class AsteriskdCoreConfig(

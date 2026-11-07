@@ -16,7 +16,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import app.AppState
-import app.ServiceControlSettings
+import features.settings.servicecontrol.ServiceControlSettings
 import app.collectAppState
 import app.modes.isRootRunMode
 import data.AndroidAppStateStore

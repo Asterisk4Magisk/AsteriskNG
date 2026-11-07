@@ -29,6 +29,7 @@ import features.resources.ResourceFileDirectCidrIpv4Url
 import features.resources.ResourceFileDirectCidrIpv6Url
 import features.resources.ResourceFileV2FlyGeoIpOnlyCnPrivateUrl
 import features.routing.model.RouteRule
+import features.settings.servicecontrol.ServiceControlSettings
 
 data class AppState(
     val colorMode: Int = ColorModeSystem,
