@@ -46,6 +46,7 @@ The traffic statistics service (`engine.stats.ProxyTrafficStatsService`) runs in
 ## Repository Structure and Product Boundaries
 
 - Application ID: `org.asterisk.zcc.ang`. Debug builds append `.debug` and take the DEV-badged launcher icon from `app/src/debug/res`, so a debug build installs next to a release build.
+  - Known and accepted: the debug and release builds share the ROOT owner `asteriskng` and the boot script `/data/adb/service.d/asteriskng_start.sh`. With both installed, neither reports the other as a foreign owner, so either can stop the other's ROOT session, and turning start-on-boot on or off in one overwrites or removes the other's script. They also share the app label, the deep-link schemes, and the secret dial code, so a deep link offers two identical entries and the dial code reaches both.
 - Core: Xray; ROOT owner/core: `asteriskng` / `xray`.
 - ROOT modes: TPROXY, TUN2SOCKS, and BPF2SOCKS.
 - `app/`: Android application, Compose UI, data layer, VPN/ROOT orchestration, and core adapters.

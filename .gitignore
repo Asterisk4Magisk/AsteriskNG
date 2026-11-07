@@ -2,10 +2,8 @@
 .kotlin
 .gradle
 **/build/
-**/release/
-**/debug/
-!app/src/debug/
-!app/src/debug/**
+/app/release/
+/app/debug/
 xcuserdata
 !src/**/build/
 local.properties
