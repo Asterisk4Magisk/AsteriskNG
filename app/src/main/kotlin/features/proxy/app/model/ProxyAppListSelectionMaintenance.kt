@@ -27,7 +27,7 @@ internal fun pruneProxyAppListSelectedApps(
     return selectedApps
         .toTrimmedNonEmptyDistinctList()
         .filter { key ->
-            val parsedKey = key.toProxyAppSelectionKey() ?: return@filter false
+            val parsedKey = key.toProxyAppSelectionKeyOrNull() ?: return@filter false
             if (parsedKey.packageName == selfPackageName) {
                 return@filter false
             }
@@ -39,32 +39,4 @@ internal fun pruneProxyAppListSelectedApps(
             }
             parsedKey.normalizedKey in installedKeys
         }
-}
-
-private data class ProxyAppSelectionKey(
-    val userId: Int?,
-    val packageName: String,
-) {
-    val normalizedKey: String
-        get() = userId?.let { id -> "$id:$packageName" } ?: packageName
-}
-
-private fun String.toProxyAppSelectionKey(): ProxyAppSelectionKey? {
-    val normalized = trim().takeIf(String::isNotEmpty) ?: return null
-    val separatorIndex = normalized.indexOf(':')
-    if (separatorIndex < 0) {
-        return ProxyAppSelectionKey(
-            userId = null,
-            packageName = normalized,
-        )
-    }
-
-    val userId = normalized.substring(0, separatorIndex).trim().toIntOrNull()
-        ?: return null
-    val packageName = normalized.substring(separatorIndex + 1).trim().takeIf(String::isNotEmpty)
-        ?: return null
-    return ProxyAppSelectionKey(
-        userId = userId,
-        packageName = packageName,
-    )
 }

@@ -10,9 +10,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import androidx.annotation.StringRes
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -40,8 +38,6 @@ import features.subscription.runtime.AndroidSubscriptionFetcher
 import features.subscription.subscriptionInstallMessage
 import features.subscription.toSubscriptionInstallConfigOrNull
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
 import system.AndroidLauncherIcon
 import system.applyScreenshotProtection
 import system.setRecentTasksHidden
@@ -190,38 +186,16 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun observeRecentTasksVisibility() {
-        val state = (application as AsteriskApplication).stateStore.state
-        setRecentTasksHidden(state.value.hideRecentTasks)
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                state.map { it.hideRecentTasks }
-                    .distinctUntilChanged()
-                    .collect { setRecentTasksHidden(it) }
-            }
-        }
+        applyAppStateWhileStarted(AppState::hideRecentTasks) { value -> setRecentTasksHidden(value) }
     }
 
     private fun observeScreenshotProtection() {
-        val state = (application as AsteriskApplication).stateStore.state
-        applyScreenshotProtection(state.value.allowScreenshots)
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                state.map { it.allowScreenshots }
-                    .distinctUntilChanged()
-                    .collect { applyScreenshotProtection(it) }
-            }
-        }
+        applyAppStateWhileStarted(AppState::allowScreenshots) { value -> applyScreenshotProtection(value) }
     }
 
     private fun observeLauncherIconVisibility() {
-        val state = (application as AsteriskApplication).stateStore.state
-        AndroidLauncherIcon.setHidden(applicationContext, state.value.hideLauncherIcon)
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                state.map { it.hideLauncherIcon }
-                    .distinctUntilChanged()
-                    .collect { AndroidLauncherIcon.setHidden(applicationContext, it) }
-            }
+        applyAppStateWhileStarted(AppState::hideLauncherIcon) { hidden ->
+            AndroidLauncherIcon.setHidden(applicationContext, hidden)
         }
     }
 

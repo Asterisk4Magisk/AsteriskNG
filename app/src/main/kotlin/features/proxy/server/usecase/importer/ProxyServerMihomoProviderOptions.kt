@@ -12,7 +12,7 @@ import features.proxy.server.model.Trojan
 import features.proxy.server.model.VLESS
 import features.proxy.server.model.VMess
 import features.proxy.server.model.Wireguard
-import java.net.URLDecoder
+import utils.decodeUrlComponentPreservingPlus
 
 /** The subset of provider overrides represented by NG's structured Xray nodes. */
 internal class MihomoProviderOptions private constructor(
@@ -207,7 +207,7 @@ internal fun String.withMihomoProviderUrlOverrides(options: List<MihomoProviderO
     val queryIndex = indexOf('?').takeIf { it in 0 until fragmentIndex } ?: return this
     val query = substring(queryIndex + 1, fragmentIndex).split('&').filterNot { entry ->
         val key = entry.substringBefore('=')
-        runCatching { URLDecoder.decode(key, Charsets.UTF_8.name()) }.getOrDefault(key) == "insecure"
+        key.decodeUrlComponentPreservingPlus() == "insecure"
     }.joinToString("&")
     return substring(0, queryIndex) + (if (query.isEmpty()) "" else "?$query") + substring(fragmentIndex)
 }

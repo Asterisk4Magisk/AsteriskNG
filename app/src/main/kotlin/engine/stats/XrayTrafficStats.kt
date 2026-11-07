@@ -4,7 +4,6 @@
 package engine.stats
 
 import engine.xray.XrayTags
-import java.util.Locale
 
 internal enum class XrayTrafficDirection {
     Uplink,
@@ -126,20 +125,6 @@ internal fun aggregateInboundTraffic(
     return XrayTrafficBytes(uplink = uplink, downlink = downlink)
 }
 
-internal fun Long.toTrafficSizeString(): String {
-    var size = toDouble()
-    var unitIndex = 0
-    while (size >= TrafficUnitThreshold && unitIndex < TrafficUnits.lastIndex) {
-        size /= TrafficUnitDivisor
-        unitIndex += 1
-    }
-    return String.format(Locale.getDefault(), "%.1f %s", size, TrafficUnits[unitIndex])
-}
-
-internal fun Long.toTrafficSpeedString(): String {
-    return "${toTrafficSizeString()}/s"
-}
-
 private const val XrayStatNameSeparator = ">>>"
 private const val XrayInboundTrafficStatPartCount = 4
 private const val XrayInboundStatPrefix = "inbound"
@@ -147,10 +132,7 @@ private const val XrayTrafficStatMiddle = "traffic"
 private const val XrayTrafficStatUplink = "uplink"
 private const val XrayTrafficStatDownlink = "downlink"
 private const val TrafficSpeedWindowMillis = 3_000L
-private const val TrafficUnitThreshold = 1000L
-private const val TrafficUnitDivisor = 1024.0
 
-private val TrafficUnits = listOf("B", "KB", "MB", "GB", "TB", "PB")
 internal fun xrayTrafficExcludedInboundTags(apiTag: String): Set<String> = setOf(
     apiTag,
     XrayTags.DEFAULT_ROUTE_LOOPBACK_INBOUND,

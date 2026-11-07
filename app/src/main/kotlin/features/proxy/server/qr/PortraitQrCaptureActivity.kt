@@ -22,24 +22,20 @@ import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
-import app.AsteriskApplication
+import app.AppState
 import app.R
+import app.applyAppStateWhileStarted
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.client.android.Intents
 import com.journeyapps.barcodescanner.CaptureManager
 import com.journeyapps.barcodescanner.DecoratedBarcodeView
 import com.journeyapps.barcodescanner.Size
-import data.AppSettingsPreferences
 import features.logs.AndroidAppLogger
-import features.settings.locale.localizedAppContext
+import features.settings.locale.localizedFromSavedLanguage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import system.applyScreenshotProtection
@@ -75,8 +71,7 @@ class PortraitQrCaptureActivity : ComponentActivity() {
     }
 
     override fun attachBaseContext(newBase: Context) {
-        val languageMode = AppSettingsPreferences(newBase).load().languageMode
-        super.attachBaseContext(newBase.localizedAppContext(languageMode))
+        super.attachBaseContext(newBase.localizedFromSavedLanguage())
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -91,15 +86,7 @@ class PortraitQrCaptureActivity : ComponentActivity() {
     }
 
     private fun observeScreenshotProtection() {
-        val state = (application as AsteriskApplication).stateStore.state
-        applyScreenshotProtection(state.value.allowScreenshots)
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                state.map { it.allowScreenshots }
-                    .distinctUntilChanged()
-                    .collect { applyScreenshotProtection(it) }
-            }
-        }
+        applyAppStateWhileStarted(AppState::allowScreenshots) { value -> applyScreenshotProtection(value) }
     }
 
     private fun initializeContent(): DecoratedBarcodeView {

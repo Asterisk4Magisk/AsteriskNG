@@ -3,7 +3,7 @@
 
 package features.subscription
 
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.runtime.getValue
 import app.SubscriptionGroupState
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -27,20 +27,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
-import top.yukonga.miuix.kmp.anim.folmeSpring
 import app.R
 import androidx.compose.ui.res.stringResource
 import top.yukonga.miuix.kmp.basic.Card
@@ -64,7 +60,8 @@ import features.proxy.server.display.displayName
 import ui.components.IconDropdownMenu
 import ui.components.IconDropdownMenuEntry
 import ui.components.WarningConfirmDialog
-import ui.components.draggedCardShadow
+import ui.components.animateDraggedCardLift
+import ui.components.draggedCardLift
 import ui.text.formatTemplate
 
 @Composable
@@ -389,32 +386,14 @@ internal fun SubscriptionGroupCard(
     dragModifier: Modifier = Modifier,
 ) {
     val defaultGroupName = stringResource(R.string.subscription_default_group)
-    val animatedScale by animateFloatAsState(
-        targetValue = if (isDragging) 1.025f else 1f,
-        animationSpec = folmeSpring(damping = 0.9f, response = 0.38f),
-        label = "subscriptionGroupDragScale",
-    )
-    val animatedShadowAlpha by animateFloatAsState(
-        targetValue = if (isDragging) 1f else 0f,
-        animationSpec = folmeSpring(damping = 0.9f, response = 0.38f),
-        label = "subscriptionGroupDragShadowAlpha",
-    )
-    val shadowColor = MiuixTheme.colorScheme.primary
+    val dragLift = animateDraggedCardLift(isDragging, label = "subscriptionGroupDrag")
 
     Card(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp)
             .padding(bottom = 12.dp)
-            .zIndex(if (isDragging) 1f else 0f)
-            .graphicsLayer {
-                scaleX = animatedScale
-                scaleY = animatedScale
-            }
-            .draggedCardShadow(
-                alpha = animatedShadowAlpha,
-                color = shadowColor,
-            )
+            .draggedCardLift(dragLift)
             .then(dragModifier),
         insideMargin = PaddingValues(16.dp),
     ) {

@@ -38,62 +38,10 @@ internal fun LazyListScope.hysteria2ProxyServer(hy2Edit: Hysteria2) {
             )
         }
         SmallTitle(text = stringResource(R.string.proxy_editor_properties))
-        TextField(
-            label = stringResource(R.string.proxy_editor_remarks),
-            state = rememberTextFieldState(initialText = hy2Edit.remarks),
-            lineLimits = TextFieldLineLimits.SingleLine,
-            inputTransformation = InputTransformation {
-                hy2Edit.remarks = asCharSequence().toString()
-            },
-            modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
-            onKeyboardAction = { focusManager.clearFocus() },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-        )
-        TextField(
-            label = stringResource(R.string.proxy_editor_server),
-            state = rememberTextFieldState(initialText = hy2Edit.server),
-            lineLimits = TextFieldLineLimits.SingleLine,
-            inputTransformation = InputTransformation {
-                hy2Edit.server = asCharSequence().toString()
-            },
-            modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
-            onKeyboardAction = { focusManager.clearFocus() },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-        )
-        TextField(
-            label = stringResource(R.string.proxy_editor_port),
-            state = rememberTextFieldState(initialText = hy2Edit.port),
-            lineLimits = TextFieldLineLimits.SingleLine,
-            inputTransformation = InputTransformation {
-                if (!asCharSequence().isDigitsOnly()) {
-                    revertAllChanges()
-                    return@InputTransformation
-                }
-                hy2Edit.port = asCharSequence().toString()
-            },
-            modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
-            onKeyboardAction = { focusManager.clearFocus() },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-        )
-        TextField(
-            label = stringResource(R.string.proxy_editor_auth),
-            state = rememberTextFieldState(initialText = hy2Edit.auth),
-            lineLimits = TextFieldLineLimits.SingleLine,
-            inputTransformation = InputTransformation {
-                hy2Edit.auth = asCharSequence().toString()
-            },
-            modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
-            onKeyboardAction = { focusManager.clearFocus() },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-        )
+        ProxyEditorTextField(stringResource(R.string.proxy_editor_remarks), hy2Edit.remarks) { hy2Edit.remarks = it }
+        ProxyEditorTextField(stringResource(R.string.proxy_editor_server), hy2Edit.server) { hy2Edit.server = it }
+        ProxyEditorTextField(stringResource(R.string.proxy_editor_port), hy2Edit.port, digitsOnly = true) { hy2Edit.port = it }
+        ProxyEditorTextField(stringResource(R.string.proxy_editor_auth), hy2Edit.auth) { hy2Edit.auth = it }
         TextField(
             label = stringResource(R.string.proxy_editor_obfs_password),
             state = rememberTextFieldState(initialText = hy2Edit.obfsPassword),
@@ -109,62 +57,10 @@ internal fun LazyListScope.hysteria2ProxyServer(hy2Edit: Hysteria2) {
             onKeyboardAction = { focusManager.clearFocus() },
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
         )
-        TextField(
-            label = stringResource(R.string.proxy_editor_mport),
-            state = rememberTextFieldState(initialText = hy2Edit.mport),
-            lineLimits = TextFieldLineLimits.SingleLine,
-            inputTransformation = InputTransformation {
-                hy2Edit.mport = asCharSequence().toString()
-            },
-            modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
-            onKeyboardAction = { focusManager.clearFocus() },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-        )
-        TextField(
-            label = stringResource(R.string.proxy_editor_mport_hop_interval),
-            state = rememberTextFieldState(initialText = hy2Edit.mportHopInt),
-            lineLimits = TextFieldLineLimits.SingleLine,
-            inputTransformation = InputTransformation {
-                if (!asCharSequence().isDigitsOnly()) {
-                    revertAllChanges()
-                    return@InputTransformation
-                }
-                hy2Edit.mportHopInt = asCharSequence().toString()
-            },
-            modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
-            onKeyboardAction = { focusManager.clearFocus() },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-        )
-        TextField(
-            label = stringResource(R.string.proxy_editor_down_bandwidth),
-            state = rememberTextFieldState(initialText = hy2Edit.down),
-            lineLimits = TextFieldLineLimits.SingleLine,
-            inputTransformation = InputTransformation {
-                hy2Edit.down = asCharSequence().toString()
-            },
-            modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
-            onKeyboardAction = { focusManager.clearFocus() },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-        )
-        TextField(
-            label = stringResource(R.string.proxy_editor_up_bandwidth),
-            state = rememberTextFieldState(initialText = hy2Edit.up),
-            lineLimits = TextFieldLineLimits.SingleLine,
-            inputTransformation = InputTransformation {
-                hy2Edit.up = asCharSequence().toString()
-            },
-            modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
-            onKeyboardAction = { focusManager.clearFocus() },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-        )
+        ProxyEditorTextField(stringResource(R.string.proxy_editor_mport), hy2Edit.mport) { hy2Edit.mport = it }
+        ProxyEditorTextField(stringResource(R.string.proxy_editor_mport_hop_interval), hy2Edit.mportHopInt, digitsOnly = true) { hy2Edit.mportHopInt = it }
+        ProxyEditorTextField(stringResource(R.string.proxy_editor_down_bandwidth), hy2Edit.down) { hy2Edit.down = it }
+        ProxyEditorTextField(stringResource(R.string.proxy_editor_up_bandwidth), hy2Edit.up) { hy2Edit.up = it }
         OverlayDropdownPreference(
             title = stringResource(R.string.proxy_editor_security),
             items = securityOptions,
@@ -185,32 +81,8 @@ internal fun LazyListScope.hysteria2ProxyServer(hy2Edit: Hysteria2) {
         ) {
             Column {
                 SmallTitle(text = stringResource(R.string.proxy_editor_tls_settings))
-                TextField(
-                    label = "SNI",
-                    state = rememberTextFieldState(initialText = hy2Edit.sni),
-                    lineLimits = TextFieldLineLimits.SingleLine,
-                    inputTransformation = InputTransformation {
-                        hy2Edit.sni = asCharSequence().toString()
-                    },
-                    modifier = Modifier
-                        .padding(horizontal = 12.dp)
-                        .padding(bottom = 12.dp),
-                    onKeyboardAction = { focusManager.clearFocus() },
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                )
-                TextField(
-                    label = stringResource(R.string.proxy_editor_certificate_fingerprint),
-                    state = rememberTextFieldState(initialText = hy2Edit.pinSHA256),
-                    lineLimits = TextFieldLineLimits.SingleLine,
-                    inputTransformation = InputTransformation {
-                        hy2Edit.pinSHA256 = asCharSequence().toString()
-                    },
-                    modifier = Modifier
-                        .padding(horizontal = 12.dp)
-                        .padding(bottom = 12.dp),
-                    onKeyboardAction = { focusManager.clearFocus() },
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                )
+                ProxyEditorTextField("SNI", hy2Edit.sni) { hy2Edit.sni = it }
+                ProxyEditorTextField(stringResource(R.string.proxy_editor_certificate_fingerprint), hy2Edit.pinSHA256) { hy2Edit.pinSHA256 = it }
             }
         }
     }

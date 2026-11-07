@@ -5,15 +5,9 @@ package features.proxy.server.editor
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.text.input.InputTransformation
-import androidx.compose.foundation.text.input.TextFieldLineLimits
-import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import app.R
 import features.proxy.server.model.Trojan
@@ -21,13 +15,11 @@ import features.proxy.server.model.VLESS
 import features.proxy.server.model.VMess
 import androidx.compose.ui.res.stringResource
 import top.yukonga.miuix.kmp.basic.SmallTitle
-import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 
 
 internal fun LazyListScope.vmessProxyServer(vmessEdit: VMess) {
     item(key = "properties") {
-        val focusManager = LocalFocusManager.current
         val encryptionOptions = remember {
             listOf(
                 "auto",
@@ -42,62 +34,10 @@ internal fun LazyListScope.vmessProxyServer(vmessEdit: VMess) {
             )
         }
         SmallTitle(text = stringResource(R.string.proxy_editor_properties))
-        TextField(
-            label = stringResource(R.string.proxy_editor_remarks),
-            state = rememberTextFieldState(initialText = vmessEdit.remarks),
-            lineLimits = TextFieldLineLimits.SingleLine,
-            inputTransformation = InputTransformation {
-                vmessEdit.remarks = asCharSequence().toString()
-            },
-            modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
-            onKeyboardAction = { focusManager.clearFocus() },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-        )
-        TextField(
-            label = stringResource(R.string.proxy_editor_server),
-            state = rememberTextFieldState(initialText = vmessEdit.server),
-            lineLimits = TextFieldLineLimits.SingleLine,
-            inputTransformation = InputTransformation {
-                vmessEdit.server = asCharSequence().toString()
-            },
-            modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
-            onKeyboardAction = { focusManager.clearFocus() },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-        )
-        TextField(
-            label = stringResource(R.string.proxy_editor_port),
-            state = rememberTextFieldState(initialText = vmessEdit.port),
-            lineLimits = TextFieldLineLimits.SingleLine,
-            inputTransformation = InputTransformation {
-                if (!asCharSequence().isDigitsOnly()) {
-                    revertAllChanges()
-                    return@InputTransformation
-                }
-                vmessEdit.port = asCharSequence().toString()
-            },
-            modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
-            onKeyboardAction = { focusManager.clearFocus() },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-        )
-        TextField(
-            label = stringResource(R.string.proxy_editor_user_id),
-            state = rememberTextFieldState(initialText = vmessEdit.id),
-            lineLimits = TextFieldLineLimits.SingleLine,
-            inputTransformation = InputTransformation {
-                vmessEdit.id = asCharSequence().toString()
-            },
-            modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
-            onKeyboardAction = { focusManager.clearFocus() },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-        )
+        ProxyEditorTextField(stringResource(R.string.proxy_editor_remarks), vmessEdit.remarks) { vmessEdit.remarks = it }
+        ProxyEditorTextField(stringResource(R.string.proxy_editor_server), vmessEdit.server) { vmessEdit.server = it }
+        ProxyEditorTextField(stringResource(R.string.proxy_editor_port), vmessEdit.port, digitsOnly = true) { vmessEdit.port = it }
+        ProxyEditorTextField(stringResource(R.string.proxy_editor_user_id), vmessEdit.id) { vmessEdit.id = it }
         OverlayDropdownPreference(
             title = stringResource(R.string.proxy_editor_encryption),
             items = encryptionOptions,
@@ -116,71 +56,17 @@ internal fun LazyListScope.vmessProxyServer(vmessEdit: VMess) {
 
 internal fun LazyListScope.trojanProxyServer(trojanEdit: Trojan) {
     item(key = "properties") {
-        val focusManager = LocalFocusManager.current
         SmallTitle(text = stringResource(R.string.proxy_editor_properties))
-        TextField(
-            label = stringResource(R.string.proxy_editor_remarks),
-            state = rememberTextFieldState(initialText = trojanEdit.remarks),
-            lineLimits = TextFieldLineLimits.SingleLine,
-            inputTransformation = InputTransformation {
-                trojanEdit.remarks = asCharSequence().toString()
-            },
-            modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
-            onKeyboardAction = { focusManager.clearFocus() },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-        )
-        TextField(
-            label = stringResource(R.string.proxy_editor_server),
-            state = rememberTextFieldState(initialText = trojanEdit.server),
-            lineLimits = TextFieldLineLimits.SingleLine,
-            inputTransformation = InputTransformation {
-                trojanEdit.server = asCharSequence().toString()
-            },
-            modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
-            onKeyboardAction = { focusManager.clearFocus() },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-        )
-        TextField(
-            label = stringResource(R.string.proxy_editor_port),
-            state = rememberTextFieldState(initialText = trojanEdit.port),
-            lineLimits = TextFieldLineLimits.SingleLine,
-            inputTransformation = InputTransformation {
-                if (!asCharSequence().isDigitsOnly()) {
-                    revertAllChanges()
-                    return@InputTransformation
-                }
-                trojanEdit.port = asCharSequence().toString()
-            },
-            modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
-            onKeyboardAction = { focusManager.clearFocus() },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-        )
-        TextField(
-            label = stringResource(R.string.proxy_editor_password),
-            state = rememberTextFieldState(initialText = trojanEdit.password),
-            lineLimits = TextFieldLineLimits.SingleLine,
-            inputTransformation = InputTransformation {
-                trojanEdit.password = asCharSequence().toString()
-            },
-            modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
-            onKeyboardAction = { focusManager.clearFocus() },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-        )
+        ProxyEditorTextField(stringResource(R.string.proxy_editor_remarks), trojanEdit.remarks) { trojanEdit.remarks = it }
+        ProxyEditorTextField(stringResource(R.string.proxy_editor_server), trojanEdit.server) { trojanEdit.server = it }
+        ProxyEditorTextField(stringResource(R.string.proxy_editor_port), trojanEdit.port, digitsOnly = true) { trojanEdit.port = it }
+        ProxyEditorTextField(stringResource(R.string.proxy_editor_password), trojanEdit.password) { trojanEdit.password = it }
     }
     v2rayServerTransport(trojanEdit.parms)
 }
 
 internal fun LazyListScope.vlessProxyServer(vlessEdit: VLESS) {
     item(key = "properties") {
-        val focusManager = LocalFocusManager.current
         val flowOptions = remember {
             listOf(
                 "",
@@ -194,75 +80,11 @@ internal fun LazyListScope.vlessProxyServer(vlessEdit: VLESS) {
             )
         }
         SmallTitle(text = stringResource(R.string.proxy_editor_properties))
-        TextField(
-            label = stringResource(R.string.proxy_editor_remarks),
-            state = rememberTextFieldState(initialText = vlessEdit.remarks),
-            lineLimits = TextFieldLineLimits.SingleLine,
-            inputTransformation = InputTransformation {
-                vlessEdit.remarks = asCharSequence().toString()
-            },
-            modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
-            onKeyboardAction = { focusManager.clearFocus() },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-        )
-        TextField(
-            label = stringResource(R.string.proxy_editor_server),
-            state = rememberTextFieldState(initialText = vlessEdit.server),
-            lineLimits = TextFieldLineLimits.SingleLine,
-            inputTransformation = InputTransformation {
-                vlessEdit.server = asCharSequence().toString()
-            },
-            modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
-            onKeyboardAction = { focusManager.clearFocus() },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-        )
-        TextField(
-            label = stringResource(R.string.proxy_editor_port),
-            state = rememberTextFieldState(initialText = vlessEdit.port),
-            lineLimits = TextFieldLineLimits.SingleLine,
-            inputTransformation = InputTransformation {
-                if (!asCharSequence().isDigitsOnly()) {
-                    revertAllChanges()
-                    return@InputTransformation
-                }
-                vlessEdit.port = asCharSequence().toString()
-            },
-            modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
-            onKeyboardAction = { focusManager.clearFocus() },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-        )
-        TextField(
-            label = stringResource(R.string.proxy_editor_user_id),
-            state = rememberTextFieldState(initialText = vlessEdit.id),
-            lineLimits = TextFieldLineLimits.SingleLine,
-            inputTransformation = InputTransformation {
-                vlessEdit.id = asCharSequence().toString()
-            },
-            modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
-            onKeyboardAction = { focusManager.clearFocus() },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-        )
-        TextField(
-            label = stringResource(R.string.proxy_editor_encryption),
-            state = rememberTextFieldState(initialText = vlessEdit.encryption.ifBlank { "none" }),
-            lineLimits = TextFieldLineLimits.SingleLine,
-            inputTransformation = InputTransformation {
-                vlessEdit.encryption = asCharSequence().toString()
-            },
-            modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
-            onKeyboardAction = { focusManager.clearFocus() },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-        )
+        ProxyEditorTextField(stringResource(R.string.proxy_editor_remarks), vlessEdit.remarks) { vlessEdit.remarks = it }
+        ProxyEditorTextField(stringResource(R.string.proxy_editor_server), vlessEdit.server) { vlessEdit.server = it }
+        ProxyEditorTextField(stringResource(R.string.proxy_editor_port), vlessEdit.port, digitsOnly = true) { vlessEdit.port = it }
+        ProxyEditorTextField(stringResource(R.string.proxy_editor_user_id), vlessEdit.id) { vlessEdit.id = it }
+        ProxyEditorTextField(stringResource(R.string.proxy_editor_encryption), vlessEdit.encryption.ifBlank { "none" }) { vlessEdit.encryption = it }
         OverlayDropdownPreference(
             title = stringResource(R.string.proxy_editor_flow),
             items = flowOptions,

@@ -3,7 +3,6 @@
 
 package features.routing
 
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -25,13 +24,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
 import app.DefaultRouteOutboundTag
 import app.R
 import engine.network.isIpOrCidrAddress
@@ -40,7 +37,6 @@ import engine.xray.isValidXrayExternalDomainRule
 import engine.xray.isXrayExternalDomainRuleCandidate
 import features.proxy.app.AppPackagePickerAction
 import features.routing.model.RouteRule
-import top.yukonga.miuix.kmp.anim.folmeSpring
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
@@ -57,7 +53,8 @@ import top.yukonga.miuix.kmp.preference.WindowDropdownPreference
 import top.yukonga.miuix.kmp.window.WindowBottomSheet
 import ui.components.StringListEditor
 import ui.components.StringListStatusText
-import ui.components.draggedCardShadow
+import ui.components.animateDraggedCardLift
+import ui.components.draggedCardLift
 import utils.toTrimmedNonEmptyDistinctList
 
 internal data class RouteRuleOutboundOption(
@@ -98,32 +95,14 @@ internal fun RouteRuleCard(
     modifier: Modifier = Modifier,
     dragModifier: Modifier = Modifier,
 ) {
-    val animatedScale by animateFloatAsState(
-        targetValue = if (isDragging) 1.025f else 1f,
-        animationSpec = folmeSpring(damping = 0.9f, response = 0.38f),
-        label = "routeRuleDragScale",
-    )
-    val animatedShadowAlpha by animateFloatAsState(
-        targetValue = if (isDragging) 1f else 0f,
-        animationSpec = folmeSpring(damping = 0.9f, response = 0.38f),
-        label = "routeRuleDragShadowAlpha",
-    )
-    val shadowColor = MiuixTheme.colorScheme.primary
+    val dragLift = animateDraggedCardLift(isDragging, label = "routeRuleDrag")
 
     Card(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp)
             .padding(bottom = 12.dp)
-            .zIndex(if (isDragging) 1f else 0f)
-            .graphicsLayer {
-                scaleX = animatedScale
-                scaleY = animatedScale
-            }
-            .draggedCardShadow(
-                alpha = animatedShadowAlpha,
-                color = shadowColor,
-            )
+            .draggedCardLift(dragLift)
             .then(dragModifier),
         insideMargin = PaddingValues(16.dp),
     ) {

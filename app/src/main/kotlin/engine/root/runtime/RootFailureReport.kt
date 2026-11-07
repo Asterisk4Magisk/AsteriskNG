@@ -7,7 +7,6 @@ import android.content.Context
 import android.os.Build
 import android.system.Os
 import android.system.OsConstants
-import android.util.Base64
 import androidx.core.content.pm.PackageInfoCompat
 import engine.root.publication.RootRuntimeLayout
 import engine.root.runtime.RootFailureReport.Companion.AppLogWindowMillis
@@ -17,6 +16,7 @@ import kotlinx.coroutines.ensureActive
 import system.RootShellGateway
 import system.ShellExecOptions
 import system.getPackageInfoCompat
+import utils.decodeBase64StringOrNull
 import utils.shellQuote
 import java.io.File
 import java.text.SimpleDateFormat
@@ -193,9 +193,7 @@ internal data class RootFailureReport(
         private fun decodeAppLogLine(line: String): String {
             val parts = line.split('\t')
             if (parts.size < 3) return line
-            val decoded = runCatching {
-                String(Base64.decode(parts[2], Base64.DEFAULT), Charsets.UTF_8)
-            }.getOrNull() ?: return line
+            val decoded = parts[2].decodeBase64StringOrNull() ?: return line
             return "${parts[0]} ${parts[1]} $decoded"
         }
 

@@ -3,16 +3,10 @@
 
 package features.proxy.server.model
 
-import utils.putIfNotBlank
-import io.ktor.http.URLBuilder
 import io.ktor.http.URLProtocol
 import io.ktor.http.Url
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
-import utils.decodeFlexibleBase64ToStringOrRaw
 import utils.proxyUrlRemarks
-import utils.userInfoOrNull
 
 @Serializable
 data class Socks(
@@ -30,14 +24,7 @@ data class Socks(
         return OutboundObject(
             tag = tag,
             protocol = ProxyServerConstants.PROTOCOL_SOCKS,
-            settings = buildJsonObject {
-                put("address", server)
-                put("port", port.toXrayPort())
-                putIfNotBlank("user", user)
-                if (!user.isNullOrBlank()) {
-                    put("pass", password.orEmpty())
-                }
-            },
+            settings = userPasswordOutboundSettings(server, port, user, password),
         )
     }
 
@@ -45,27 +32,22 @@ data class Socks(
         this.remarks = url.proxyUrlRemarks()
         this.server = url.proxyUrlHost()
         this.port = url.port.toString()
-        url.userInfoOrNull()?.let { str ->
-            val info = str.decodeFlexibleBase64ToStringOrRaw()
-            val pos = info.indexOfFirst { it == ':' }
-            if (pos > -1) {
-                this.user = info.substring(0, pos)
-                this.password = info.substring(pos + 1)
-            }
+        url.userPasswordOrNull()?.let { (user, password) ->
+            this.user = user
+            this.password = password
         }
         return this
     }
 
-    override fun getUrl(): String {
-        return URLBuilder().apply {
-            protocol = URLProtocol.createOrDefault(ProxyServerConstants.PROTOCOL_SOCKS)
-            setProxyUrlHost(this@Socks.server)
-            this@Socks.port.toIntOrNull()?.let { port = it }
-            if (!this@Socks.user.isNullOrBlank())
-                user = "${this@Socks.user}:${this@Socks.password.orEmpty()}".encodeToByteArray().encodeProxyUrlBase64()
-            fragment = this@Socks.remarks
-        }.buildString()
-    }
+    override fun getUrl(): String =
+        userPasswordProxyUrl(
+            URLProtocol.createOrDefault(ProxyServerConstants.PROTOCOL_SOCKS),
+            server,
+            port,
+            user,
+            password,
+            remarks,
+        )
 
     override fun update(other: ProxyServer<*>) {
         if (other !is Socks) {

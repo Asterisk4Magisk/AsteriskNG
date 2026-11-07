@@ -6,6 +6,7 @@ package features.proxy.app.usecase
 import app.modes.ProxyAppListModeBlacklist
 import app.modes.ProxyAppListModeGlobal
 import app.modes.ProxyAppListModeWhitelist
+import features.proxy.app.model.toProxyAppSelectionKeyOrNull
 import ui.clipboard.ClipboardImportException
 import ui.clipboard.ClipboardImportFailure
 import ui.clipboard.ClipboardImportMode
@@ -114,17 +115,14 @@ private fun String.toSelectionKey(currentUserId: Int): String {
     if (any(Char::isWhitespace)) {
         throw ClipboardImportException(ClipboardImportFailure.InvalidAppEntry)
     }
-    val separatorIndex = indexOf(':')
-    if (separatorIndex < 0) {
-        return "$currentUserId:$this"
-    }
-    val userId = substring(0, separatorIndex).toIntOrNull()
-        ?: throw ClipboardImportException(ClipboardImportFailure.InvalidAppUserId)
-    val packageName = substring(separatorIndex + 1)
-    if (packageName.isBlank()) {
-        throw ClipboardImportException(ClipboardImportFailure.InvalidAppEntry)
-    }
-    return "$userId:$packageName"
+    val key = toProxyAppSelectionKeyOrNull() ?: throw ClipboardImportException(
+        if (':' in this && substringBefore(':').toIntOrNull() == null) {
+            ClipboardImportFailure.InvalidAppUserId
+        } else {
+            ClipboardImportFailure.InvalidAppEntry
+        },
+    )
+    return "${key.userIdOr(currentUserId)}:${key.packageName}"
 }
 
 private const val ImportByteOrderMark = '\uFEFF'

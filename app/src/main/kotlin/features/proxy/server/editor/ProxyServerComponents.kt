@@ -13,6 +13,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.InputTransformation
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -58,7 +59,6 @@ internal fun LazyListScope.strategyGroupProxyServer(
     groupOptions: List<ProxyServerEditorGroupOption>,
 ) {
     item(key = "properties") {
-        val focusManager = LocalFocusManager.current
         val strategyValues = remember {
             listOf(
                 StrategyGroupConstants.TYPE_LEAST_PING,
@@ -88,19 +88,7 @@ internal fun LazyListScope.strategyGroupProxyServer(
         }
 
         SmallTitle(text = stringResource(R.string.proxy_editor_properties))
-        TextField(
-            label = stringResource(R.string.proxy_editor_remarks),
-            state = rememberTextFieldState(initialText = strategyGroupEdit.remarks),
-            lineLimits = TextFieldLineLimits.SingleLine,
-            inputTransformation = InputTransformation {
-                strategyGroupEdit.remarks = asCharSequence().toString()
-            },
-            modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
-            onKeyboardAction = { focusManager.clearFocus() },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-        )
+        ProxyEditorTextField(stringResource(R.string.proxy_editor_remarks), strategyGroupEdit.remarks) { strategyGroupEdit.remarks = it }
         OverlayDropdownPreference(
             title = stringResource(R.string.proxy_editor_strategy_group_type),
             items = strategyLabels,
@@ -125,19 +113,7 @@ internal fun LazyListScope.strategyGroupProxyServer(
                 strategyGroupEdit.subscriptionGroupId = effectiveGroupOptions[index].id
             },
         )
-        TextField(
-            label = stringResource(R.string.proxy_editor_strategy_group_filter),
-            state = rememberTextFieldState(initialText = strategyGroupEdit.filter),
-            lineLimits = TextFieldLineLimits.SingleLine,
-            inputTransformation = InputTransformation {
-                strategyGroupEdit.filter = asCharSequence().toString()
-            },
-            modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
-            onKeyboardAction = { focusManager.clearFocus() },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-        )
+        ProxyEditorTextField(stringResource(R.string.proxy_editor_strategy_group_filter), strategyGroupEdit.filter) { strategyGroupEdit.filter = it }
     }
 }
 internal fun LazyListScope.chainProxyServer(
@@ -145,7 +121,6 @@ internal fun LazyListScope.chainProxyServer(
     memberOptions: List<ProxyServerEditorMemberOption>,
 ) {
     item(key = "properties") {
-        val focusManager = LocalFocusManager.current
         var members by remember(chainProxyEdit) {
             mutableStateOf(chainProxyEdit.proxyServerIds.ifEmpty { listOf(0, 0) })
         }
@@ -161,19 +136,7 @@ internal fun LazyListScope.chainProxyServer(
         }
 
         SmallTitle(text = stringResource(R.string.proxy_editor_properties))
-        TextField(
-            label = stringResource(R.string.proxy_editor_remarks),
-            state = rememberTextFieldState(initialText = chainProxyEdit.remarks),
-            lineLimits = TextFieldLineLimits.SingleLine,
-            inputTransformation = InputTransformation {
-                chainProxyEdit.remarks = asCharSequence().toString()
-            },
-            modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
-            onKeyboardAction = { focusManager.clearFocus() },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-        )
+        ProxyEditorTextField(stringResource(R.string.proxy_editor_remarks), chainProxyEdit.remarks) { chainProxyEdit.remarks = it }
         SmallTitle(text = stringResource(R.string.proxy_editor_chain_members))
         members.forEachIndexed { index, memberId ->
             val selectedIndex = effectiveMemberOptions
@@ -224,4 +187,37 @@ internal fun LazyListScope.chainProxyServer(
             )
         }
     }
+}
+
+/** A single editor field: reports each edit, optionally digits-only or multi-line, and closes the keyboard on Done. */
+@Composable
+internal fun ProxyEditorTextField(
+    label: String,
+    initialText: String,
+    digitsOnly: Boolean = false,
+    multiLine: Boolean = false,
+    onValueChange: (String) -> Unit,
+) {
+    val focusManager = LocalFocusManager.current
+    TextField(
+        label = label,
+        state = rememberTextFieldState(initialText = initialText),
+        lineLimits = if (multiLine) {
+            TextFieldLineLimits.MultiLine(minHeightInLines = 5, maxHeightInLines = 20)
+        } else {
+            TextFieldLineLimits.SingleLine
+        },
+        inputTransformation = InputTransformation {
+            if (digitsOnly && !asCharSequence().isDigitsOnly()) {
+                revertAllChanges()
+                return@InputTransformation
+            }
+            onValueChange(asCharSequence().toString())
+        },
+        modifier = Modifier
+            .padding(horizontal = 12.dp)
+            .padding(bottom = 12.dp),
+        onKeyboardAction = { focusManager.clearFocus() },
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+    )
 }

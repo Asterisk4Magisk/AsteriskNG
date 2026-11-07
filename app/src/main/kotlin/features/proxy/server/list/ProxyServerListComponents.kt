@@ -4,7 +4,6 @@
 package features.proxy.server.list
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.slideInHorizontally
@@ -40,7 +39,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -55,7 +53,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
 import app.R
 import features.proxy.server.display.displayProxyServerProtocolName
 import app.modes.ProxyServerListLayoutDouble
@@ -64,7 +61,6 @@ import app.modes.ProxyServerListLayoutSingle
 import app.modes.ProxyServerListSortDefault
 import app.modes.ProxyServerListSortLatency
 import app.modes.ProxyServerListSortName
-import top.yukonga.miuix.kmp.anim.folmeSpring
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.DropdownEntry
@@ -91,7 +87,8 @@ import top.yukonga.miuix.kmp.window.WindowCascadingListPopup
 import ui.isInDarkTheme
 import ui.components.IconDropdownMenu
 import ui.components.IconDropdownMenuEntry
-import ui.components.draggedCardShadow
+import ui.components.animateDraggedCardLift
+import ui.components.draggedCardLift
 import kotlin.math.floor
 import kotlin.math.roundToInt
 
@@ -359,32 +356,14 @@ private fun ProxyServerListExpandedItemCard(
     isDragging: Boolean,
     dragModifier: Modifier,
 ) {
-    val animatedScale by animateFloatAsState(
-        targetValue = if (isDragging) 1.025f else 1f,
-        animationSpec = folmeSpring(damping = 0.9f, response = 0.38f),
-        label = "proxyServerDragScale",
-    )
-    val animatedShadowAlpha by animateFloatAsState(
-        targetValue = if (isDragging) 1f else 0f,
-        animationSpec = folmeSpring(damping = 0.9f, response = 0.38f),
-        label = "proxyServerDragShadowAlpha",
-    )
-    val shadowColor = MiuixTheme.colorScheme.primary
+    val dragLift = animateDraggedCardLift(isDragging, label = "proxyServerDrag")
 
     Card(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp)
             .padding(bottom = 12.dp)
-            .zIndex(if (isDragging) 1f else 0f)
-            .graphicsLayer {
-                scaleX = animatedScale
-                scaleY = animatedScale
-            }
-            .draggedCardShadow(
-                alpha = animatedShadowAlpha,
-                color = shadowColor,
-            )
+            .draggedCardLift(dragLift)
             .then(dragModifier),
         colors = CardDefaults.defaultColors(
             color = if (selected) {
@@ -497,31 +476,13 @@ private fun ProxyServerListCompactItemCard(
     var showActionMenu by remember { mutableStateOf(false) }
     var actionMenuOffset by remember { mutableStateOf(IntOffset.Zero) }
     val hapticFeedback = LocalHapticFeedback.current
-    val animatedScale by animateFloatAsState(
-        targetValue = if (isDragging) 1.025f else 1f,
-        animationSpec = folmeSpring(damping = 0.9f, response = 0.38f),
-        label = "proxyServerCompactDragScale",
-    )
-    val animatedShadowAlpha by animateFloatAsState(
-        targetValue = if (isDragging) 1f else 0f,
-        animationSpec = folmeSpring(damping = 0.9f, response = 0.38f),
-        label = "proxyServerCompactDragShadowAlpha",
-    )
-    val shadowColor = MiuixTheme.colorScheme.primary
+    val dragLift = animateDraggedCardLift(isDragging, label = "proxyServerCompactDrag")
 
     Box(
         modifier = modifier
             .fillMaxWidth()
             .height(ProxyServerListCompactCardHeight)
-            .zIndex(if (isDragging) 1f else 0f)
-            .graphicsLayer {
-                scaleX = animatedScale
-                scaleY = animatedScale
-            }
-            .draggedCardShadow(
-                alpha = animatedShadowAlpha,
-                color = shadowColor,
-            )
+            .draggedCardLift(dragLift)
             .then(dragModifier),
     ) {
         Card(

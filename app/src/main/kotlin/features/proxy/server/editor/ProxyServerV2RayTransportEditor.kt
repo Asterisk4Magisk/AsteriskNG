@@ -124,40 +124,8 @@ internal fun LazyListScope.v2rayServerTransport(params: V2RayParameters) {
         ) {
             Column {
                 SmallTitle(text = stringResource(R.string.proxy_editor_transport_kcp))
-                TextField(
-                    label = stringResource(R.string.proxy_editor_mkcp_mtu),
-                    state = rememberTextFieldState(initialText = params.mtu ?: ""),
-                    lineLimits = TextFieldLineLimits.SingleLine,
-                    inputTransformation = InputTransformation {
-                        if (!asCharSequence().isDigitsOnly()) {
-                            revertAllChanges()
-                            return@InputTransformation
-                        }
-                        params.mtu = asCharSequence().toString()
-                    },
-                    modifier = Modifier
-                        .padding(horizontal = 12.dp)
-                        .padding(bottom = 12.dp),
-                    onKeyboardAction = { focusManager.clearFocus() },
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                )
-                TextField(
-                    label = stringResource(R.string.proxy_editor_mkcp_tti),
-                    state = rememberTextFieldState(initialText = params.tti ?: ""),
-                    lineLimits = TextFieldLineLimits.SingleLine,
-                    inputTransformation = InputTransformation {
-                        if (!asCharSequence().isDigitsOnly()) {
-                            revertAllChanges()
-                            return@InputTransformation
-                        }
-                        params.tti = asCharSequence().toString()
-                    },
-                    modifier = Modifier
-                        .padding(horizontal = 12.dp)
-                        .padding(bottom = 12.dp),
-                    onKeyboardAction = { focusManager.clearFocus() },
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                )
+                ProxyEditorTextField(stringResource(R.string.proxy_editor_mkcp_mtu), params.mtu ?: "", digitsOnly = true) { params.mtu = it }
+                ProxyEditorTextField(stringResource(R.string.proxy_editor_mkcp_tti), params.tti ?: "", digitsOnly = true) { params.tti = it }
             }
         }
         //ws
@@ -168,32 +136,8 @@ internal fun LazyListScope.v2rayServerTransport(params: V2RayParameters) {
         ) {
             Column {
                 SmallTitle(text = stringResource(R.string.proxy_editor_transport_ws))
-                TextField(
-                    label = "ws host",
-                    state = rememberTextFieldState(initialText = params.host ?: ""),
-                    lineLimits = TextFieldLineLimits.SingleLine,
-                    inputTransformation = InputTransformation {
-                        params.host = asCharSequence().toString()
-                    },
-                    modifier = Modifier
-                        .padding(horizontal = 12.dp)
-                        .padding(bottom = 12.dp),
-                    onKeyboardAction = { focusManager.clearFocus() },
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                )
-                TextField(
-                    label = "ws path",
-                    state = rememberTextFieldState(initialText = params.path ?: ""),
-                    lineLimits = TextFieldLineLimits.SingleLine,
-                    inputTransformation = InputTransformation {
-                        params.path = asCharSequence().toString()
-                    },
-                    modifier = Modifier
-                        .padding(horizontal = 12.dp)
-                        .padding(bottom = 12.dp),
-                    onKeyboardAction = { focusManager.clearFocus() },
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                )
+                ProxyEditorTextField("ws host", params.host ?: "") { params.host = it }
+                ProxyEditorTextField("ws path", params.path ?: "") { params.path = it }
             }
         }
         //httpupgrade
@@ -204,32 +148,8 @@ internal fun LazyListScope.v2rayServerTransport(params: V2RayParameters) {
         ) {
             Column {
                 SmallTitle(text = stringResource(R.string.proxy_editor_transport_httpupgrade))
-                TextField(
-                    label = "httpupgrade host",
-                    state = rememberTextFieldState(initialText = params.host ?: ""),
-                    lineLimits = TextFieldLineLimits.SingleLine,
-                    inputTransformation = InputTransformation {
-                        params.host = asCharSequence().toString()
-                    },
-                    modifier = Modifier
-                        .padding(horizontal = 12.dp)
-                        .padding(bottom = 12.dp),
-                    onKeyboardAction = { focusManager.clearFocus() },
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                )
-                TextField(
-                    label = "httpupgrade path",
-                    state = rememberTextFieldState(initialText = params.path ?: ""),
-                    lineLimits = TextFieldLineLimits.SingleLine,
-                    inputTransformation = InputTransformation {
-                        params.path = asCharSequence().toString()
-                    },
-                    modifier = Modifier
-                        .padding(horizontal = 12.dp)
-                        .padding(bottom = 12.dp),
-                    onKeyboardAction = { focusManager.clearFocus() },
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                )
+                ProxyEditorTextField("httpupgrade host", params.host ?: "") { params.host = it }
+                ProxyEditorTextField("httpupgrade path", params.path ?: "") { params.path = it }
             }
         }
         //xhttp
@@ -260,45 +180,9 @@ internal fun LazyListScope.v2rayServerTransport(params: V2RayParameters) {
                         params.mode = modeOptions[newMode]
                     },
                 )
-                TextField(
-                    label = "xhttp host",
-                    state = rememberTextFieldState(initialText = params.host ?: ""),
-                    lineLimits = TextFieldLineLimits.SingleLine,
-                    inputTransformation = InputTransformation {
-                        params.host = asCharSequence().toString()
-                    },
-                    modifier = Modifier
-                        .padding(horizontal = 12.dp)
-                        .padding(bottom = 12.dp),
-                    onKeyboardAction = { focusManager.clearFocus() },
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                )
-                TextField(
-                    label = "xhttp path",
-                    state = rememberTextFieldState(initialText = params.path ?: ""),
-                    lineLimits = TextFieldLineLimits.SingleLine,
-                    inputTransformation = InputTransformation {
-                        params.path = asCharSequence().toString()
-                    },
-                    modifier = Modifier
-                        .padding(horizontal = 12.dp)
-                        .padding(bottom = 12.dp),
-                    onKeyboardAction = { focusManager.clearFocus() },
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                )
-                TextField(
-                    label = stringResource(R.string.proxy_editor_xhttp_extra),
-                    state = rememberTextFieldState(initialText = params.extra ?: ""),
-                    lineLimits = TextFieldLineLimits.MultiLine(minHeightInLines = 5, maxHeightInLines = 20),
-                    inputTransformation = InputTransformation {
-                        params.extra = asCharSequence().toString()
-                    },
-                    modifier = Modifier
-                        .padding(horizontal = 12.dp)
-                        .padding(bottom = 12.dp),
-                    onKeyboardAction = { focusManager.clearFocus() },
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                )
+                ProxyEditorTextField("xhttp host", params.host ?: "") { params.host = it }
+                ProxyEditorTextField("xhttp path", params.path ?: "") { params.path = it }
+                ProxyEditorTextField(stringResource(R.string.proxy_editor_xhttp_extra), params.extra ?: "", multiLine = true) { params.extra = it }
             }
         }
         //grpc
@@ -329,47 +213,11 @@ internal fun LazyListScope.v2rayServerTransport(params: V2RayParameters) {
                         params.mode = modeOptions[newMode]
                     },
                 )
-                TextField(
-                    label = "gRPC authority",
-                    state = rememberTextFieldState(initialText = params.authority ?: ""),
-                    lineLimits = TextFieldLineLimits.SingleLine,
-                    inputTransformation = InputTransformation {
-                        params.authority = asCharSequence().toString()
-                    },
-                    modifier = Modifier
-                        .padding(horizontal = 12.dp)
-                        .padding(bottom = 12.dp),
-                    onKeyboardAction = { focusManager.clearFocus() },
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                )
-                TextField(
-                    label = "gRPC serviceName",
-                    state = rememberTextFieldState(initialText = params.serviceName ?: ""),
-                    lineLimits = TextFieldLineLimits.SingleLine,
-                    inputTransformation = InputTransformation {
-                        params.serviceName = asCharSequence().toString()
-                    },
-                    modifier = Modifier
-                        .padding(horizontal = 12.dp)
-                        .padding(bottom = 12.dp),
-                    onKeyboardAction = { focusManager.clearFocus() },
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                )
+                ProxyEditorTextField("gRPC authority", params.authority ?: "") { params.authority = it }
+                ProxyEditorTextField("gRPC serviceName", params.serviceName ?: "") { params.serviceName = it }
             }
         }
-        TextField(
-            label = stringResource(R.string.proxy_editor_final_mask),
-            state = rememberTextFieldState(initialText = params.fm ?: ""),
-            lineLimits = TextFieldLineLimits.MultiLine(minHeightInLines = 5, maxHeightInLines = 20),
-            inputTransformation = InputTransformation {
-                params.fm = asCharSequence().toString()
-            },
-            modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
-            onKeyboardAction = { focusManager.clearFocus() },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-        )
+        ProxyEditorTextField(stringResource(R.string.proxy_editor_final_mask), params.fm ?: "", multiLine = true) { params.fm = it }
 
         val fingerprintOptions = remember {
             listOf(
@@ -427,19 +275,7 @@ internal fun LazyListScope.v2rayServerTransport(params: V2RayParameters) {
         ) {
             Column {
                 SmallTitle(text = stringResource(R.string.proxy_editor_tls_settings))
-                TextField(
-                    label = "SNI",
-                    state = rememberTextFieldState(initialText = params.sni ?: ""),
-                    lineLimits = TextFieldLineLimits.SingleLine,
-                    inputTransformation = InputTransformation {
-                        params.sni = asCharSequence().toString()
-                    },
-                    modifier = Modifier
-                        .padding(horizontal = 12.dp)
-                        .padding(bottom = 12.dp),
-                    onKeyboardAction = { focusManager.clearFocus() },
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                )
+                ProxyEditorTextField("SNI", params.sni ?: "") { params.sni = it }
                 OverlayDropdownPreference(
                     title = stringResource(R.string.proxy_editor_tls_fingerprint),
                     items = fingerprintOptions,
@@ -464,45 +300,9 @@ internal fun LazyListScope.v2rayServerTransport(params: V2RayParameters) {
                         params.alpn = alpnOptions[newAlpn]
                     },
                 )
-                TextField(
-                    label = "EchConfigList",
-                    state = rememberTextFieldState(initialText = params.ech ?: ""),
-                    lineLimits = TextFieldLineLimits.SingleLine,
-                    inputTransformation = InputTransformation {
-                        params.ech = asCharSequence().toString()
-                    },
-                    modifier = Modifier
-                        .padding(horizontal = 12.dp)
-                        .padding(bottom = 12.dp),
-                    onKeyboardAction = { focusManager.clearFocus() },
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                )
-                TextField(
-                    label = stringResource(R.string.proxy_editor_certificate_fingerprint),
-                    state = rememberTextFieldState(initialText = params.pcs ?: ""),
-                    lineLimits = TextFieldLineLimits.SingleLine,
-                    inputTransformation = InputTransformation {
-                        params.pcs = asCharSequence().toString()
-                    },
-                    modifier = Modifier
-                        .padding(horizontal = 12.dp)
-                        .padding(bottom = 12.dp),
-                    onKeyboardAction = { focusManager.clearFocus() },
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                )
-                TextField(
-                    label = "VerifyPeerCertByName",
-                    state = rememberTextFieldState(initialText = params.vcn ?: ""),
-                    lineLimits = TextFieldLineLimits.SingleLine,
-                    inputTransformation = InputTransformation {
-                        params.vcn = asCharSequence().toString()
-                    },
-                    modifier = Modifier
-                        .padding(horizontal = 12.dp)
-                        .padding(bottom = 12.dp),
-                    onKeyboardAction = { focusManager.clearFocus() },
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                )
+                ProxyEditorTextField("EchConfigList", params.ech ?: "") { params.ech = it }
+                ProxyEditorTextField(stringResource(R.string.proxy_editor_certificate_fingerprint), params.pcs ?: "") { params.pcs = it }
+                ProxyEditorTextField("VerifyPeerCertByName", params.vcn ?: "") { params.vcn = it }
             }
         }
         //reality
@@ -513,19 +313,7 @@ internal fun LazyListScope.v2rayServerTransport(params: V2RayParameters) {
         ) {
             Column {
                 SmallTitle(text = stringResource(R.string.proxy_editor_reality_settings))
-                TextField(
-                    label = "SNI",
-                    state = rememberTextFieldState(initialText = params.sni ?: ""),
-                    lineLimits = TextFieldLineLimits.SingleLine,
-                    inputTransformation = InputTransformation {
-                        params.sni = asCharSequence().toString()
-                    },
-                    modifier = Modifier
-                        .padding(horizontal = 12.dp)
-                        .padding(bottom = 12.dp),
-                    onKeyboardAction = { focusManager.clearFocus() },
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                )
+                ProxyEditorTextField("SNI", params.sni ?: "") { params.sni = it }
                 OverlayDropdownPreference(
                     title = stringResource(R.string.proxy_editor_tls_fingerprint),
                     items = fingerprintOptions,
@@ -538,58 +326,10 @@ internal fun LazyListScope.v2rayServerTransport(params: V2RayParameters) {
                         params.fp = fingerprintOptions[newFingerprint]
                     },
                 )
-                TextField(
-                    label = "PublicKey",
-                    state = rememberTextFieldState(initialText = params.pbk ?: ""),
-                    lineLimits = TextFieldLineLimits.SingleLine,
-                    inputTransformation = InputTransformation {
-                        params.pbk = asCharSequence().toString()
-                    },
-                    modifier = Modifier
-                        .padding(horizontal = 12.dp)
-                        .padding(bottom = 12.dp),
-                    onKeyboardAction = { focusManager.clearFocus() },
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                )
-                TextField(
-                    label = "ShortId",
-                    state = rememberTextFieldState(initialText = params.sid ?: ""),
-                    lineLimits = TextFieldLineLimits.SingleLine,
-                    inputTransformation = InputTransformation {
-                        params.sid = asCharSequence().toString()
-                    },
-                    modifier = Modifier
-                        .padding(horizontal = 12.dp)
-                        .padding(bottom = 12.dp),
-                    onKeyboardAction = { focusManager.clearFocus() },
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                )
-                TextField(
-                    label = "SpiderX",
-                    state = rememberTextFieldState(initialText = params.spx ?: ""),
-                    lineLimits = TextFieldLineLimits.SingleLine,
-                    inputTransformation = InputTransformation {
-                        params.spx = asCharSequence().toString()
-                    },
-                    modifier = Modifier
-                        .padding(horizontal = 12.dp)
-                        .padding(bottom = 12.dp),
-                    onKeyboardAction = { focusManager.clearFocus() },
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                )
-                TextField(
-                    label = "Mldsa65Verify",
-                    state = rememberTextFieldState(initialText = params.pqv ?: ""),
-                    lineLimits = TextFieldLineLimits.SingleLine,
-                    inputTransformation = InputTransformation {
-                        params.pqv = asCharSequence().toString()
-                    },
-                    modifier = Modifier
-                        .padding(horizontal = 12.dp)
-                        .padding(bottom = 12.dp),
-                    onKeyboardAction = { focusManager.clearFocus() },
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                )
+                ProxyEditorTextField("PublicKey", params.pbk ?: "") { params.pbk = it }
+                ProxyEditorTextField("ShortId", params.sid ?: "") { params.sid = it }
+                ProxyEditorTextField("SpiderX", params.spx ?: "") { params.spx = it }
+                ProxyEditorTextField("Mldsa65Verify", params.pqv ?: "") { params.pqv = it }
             }
         }
     }

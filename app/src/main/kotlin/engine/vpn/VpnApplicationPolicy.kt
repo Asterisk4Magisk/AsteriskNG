@@ -7,7 +7,7 @@ import app.AppState
 import app.modes.ProxyAppListModeBlacklist
 import app.modes.ProxyAppListModeGlobal
 import app.modes.ProxyAppListModeWhitelist
-import utils.toTrimmedNonEmptyDistinctList
+import features.proxy.app.model.toProxyAppSelectionKeyOrNull
 
 internal data class VpnApplicationPolicy(
     val mode: Int = ProxyAppListModeGlobal,
@@ -33,17 +33,8 @@ internal fun AppState.toVpnApplicationPolicy(currentUserId: Int): VpnApplication
 
 private fun List<String>.toVpnServicePackageNames(currentUserId: Int): List<String> {
     return mapNotNull { key ->
-        val separatorIndex = key.indexOf(':')
-        if (separatorIndex < 0) {
-            key
-        } else {
-            val userId = key.substring(0, separatorIndex).toIntOrNull()
-            if (userId == currentUserId) {
-                key.substring(separatorIndex + 1)
-            } else {
-                null
-            }
-        }
-    }
-        .toTrimmedNonEmptyDistinctList()
+        key.toProxyAppSelectionKeyOrNull()
+            ?.takeIf { parsed -> parsed.userIdOr(currentUserId) == currentUserId }
+            ?.packageName
+    }.distinct()
 }

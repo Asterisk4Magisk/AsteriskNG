@@ -24,6 +24,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.intOrNull
 import utils.decodeFlexibleBase64OrNull
+import utils.toCsvValues
 
 internal const val V2rayNSharePrefix = "v2rayn://"
 internal const val ImportedSubscriptionGroup = -1
@@ -57,9 +58,8 @@ internal fun resolveV2rayNImportCandidates(candidates: List<ProxyUrlImportCandid
         runCatching {
             val item = candidate.share ?: return@runCatching candidate
             if (!candidate.server.isCompositeProxyServer()) return@runCatching candidate
-            val extra = item.objectValue("ProtoExtraObj")
-            val children = extra.text("ChildItems").orEmpty().split(',')
-                .map(String::trim).filter(String::isNotEmpty)
+            val extra = item.objectOrEmpty("ProtoExtraObj")
+            val children = extra.text("ChildItems").toCsvValues()
             val members = children.map { id ->
                 val member = byId[id] ?: error("Missing v2rayN child")
                 require(!member.server.isCompositeProxyServer()) { "Nested v2rayN groups are not supported" }
@@ -106,8 +106,7 @@ internal fun resolveV2rayNImportCandidates(candidates: List<ProxyUrlImportCandid
     return resolved.map { candidate ->
         val server = candidate.server
         if (server !is ChainProxy) return@map server
-        val ids = candidate.share!!.objectValue("ProtoExtraObj").text("ChildItems").orEmpty()
-            .split(',').map(String::trim).filter(String::isNotEmpty)
+        val ids = candidate.share!!.objectOrEmpty("ProtoExtraObj").text("ChildItems").toCsvValues()
         server.copy(proxyServerIds = ids.map { id ->
             // Negative IDs are batch-local indexes, resolved before persistence.
             val member = byId.getValue(id)
@@ -124,7 +123,7 @@ private fun JsonObject.toV2rayNProxyServer(index: Int): ProxyServer<*> {
     val server = text("Address").orEmpty()
     val port = number("Port")?.toString().orEmpty()
     val password = text("Password").orEmpty()
-    val extra = objectValue("ProtoExtraObj")
+    val extra = objectOrEmpty("ProtoExtraObj")
     require(text("AllowInsecure")?.lowercase() !in setOf("true", "1")) { "Insecure TLS is not supported" }
     if (type == 101) return StrategyGroup(
         remarks = remarks,
@@ -178,7 +177,7 @@ private fun JsonObject.toV2rayNProxyServer(index: Int): ProxyServer<*> {
 }
 
 private fun JsonObject.v2rayNParameters(defaultSecurity: String): V2RayParameters {
-    val transport = objectValue("TransportExtraObj")
+    val transport = objectOrEmpty("TransportExtraObj")
     val network = text("Network").toCanonicalV2RayTransportType()
     return V2RayParameters(
         type = network,
@@ -200,5 +199,5 @@ private fun JsonObject.text(key: String): String? = (get(key) as? JsonPrimitive)
 private fun JsonObject.number(key: String): Int? = (get(key) as? JsonPrimitive)?.let { value ->
     if (value.contentOrNull == null) null else requireNotNull(value.intOrNull) { "Invalid v2rayN integer field" }
 }
-private fun JsonObject.objectValue(key: String): JsonObject = get(key) as? JsonObject ?: JsonObject(emptyMap())
+private fun JsonObject.objectOrEmpty(key: String): JsonObject = get(key) as? JsonObject ?: JsonObject(emptyMap())
 private fun JsonObject.positiveBandwidth(key: String): String = number(key)?.takeIf { it > 0 }?.let { "${it}Mbps" }.orEmpty()

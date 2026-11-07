@@ -20,6 +20,7 @@ import app.modes.LanguageModeRussian
 import app.modes.LanguageModeSimplifiedChinese
 import app.modes.LanguageModeVietnamese
 import app.modes.normalizeColorMode
+import data.AppSettingsPreferences
 import java.util.Locale
 
 private fun languageTagForMode(mode: Int): String? = when (mode) {
@@ -72,6 +73,10 @@ internal fun Context.localizedAppContext(
     val locale = resolveAppLocale(languageMode, resources.configuration.primaryLocale())
     return createConfigurationContext(localizedConfiguration(locale, colorMode))
 }
+
+/** Localize a component that starts without the app state, from the persisted language. */
+internal fun Context.localizedFromSavedLanguage(): Context =
+    localizedAppContext(AppSettingsPreferences(this).load().languageMode)
 
 private fun Configuration.primaryLocale(): Locale {
     return locales[0] ?: Locale.getDefault()

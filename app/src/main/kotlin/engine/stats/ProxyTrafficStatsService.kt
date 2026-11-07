@@ -28,6 +28,7 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.isActive
 import system.AndroidLauncherIcon
 import kotlin.time.Duration.Companion.milliseconds
+import utils.toReadableBytes
 
 class ProxyTrafficStatsService : Service() {
     private val serviceJob = SupervisorJob()
@@ -219,13 +220,13 @@ class ProxyTrafficStatsService : Service() {
     ): Notification {
         val speedText = getString(
             R.string.proxy_traffic_stats_notification_speed,
-            sample.speedBytesPerSecond.uplink.toTrafficSpeedString(),
-            sample.speedBytesPerSecond.downlink.toTrafficSpeedString(),
+            "${sample.speedBytesPerSecond.uplink.toReadableBytes(keepTrailingZero = true)}/s",
+            "${sample.speedBytesPerSecond.downlink.toReadableBytes(keepTrailingZero = true)}/s",
         )
         val totalText = getString(
             R.string.proxy_traffic_stats_notification_total,
-            sample.totalBytes.uplink.toTrafficSizeString(),
-            sample.totalBytes.downlink.toTrafficSizeString(),
+            sample.totalBytes.uplink.toReadableBytes(keepTrailingZero = true),
+            sample.totalBytes.downlink.toReadableBytes(keepTrailingZero = true),
         )
         return notificationBuilder()
             .setSmallIcon(speedIcon.create(sample.speedBytesPerSecond.let { it.uplink + it.downlink }))

@@ -61,8 +61,9 @@ import top.yukonga.miuix.kmp.preference.OverlaySpinnerPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowDialog
 import ui.text.formatTemplate
-import java.text.DateFormat
-import java.util.Date
+import utils.ReadableByteUnit
+import utils.toReadableBytes
+import utils.toReadableDateTimeOrDash
 
 @Composable
 internal fun settingsResourceFileSourceOptions() = listOf(
@@ -605,29 +606,10 @@ private fun ResourceFileStatusChip(
 @Composable
 private fun ResourceFileStatus.updatedAtText(): String {
     return stringResource(R.string.settings_resource_files_updated_at)
-        .formatTemplate("time" to updatedAtMillis.toReadableDateTime())
+        .formatTemplate("time" to updatedAtMillis.toReadableDateTimeOrDash())
 }
 
 @Composable
 private fun ResourceFileStatus.sizeText(): String {
-    return stringResource(R.string.settings_resource_files_size).formatTemplate("size" to sizeBytes.toReadableSize())
-}
-
-private fun Long.toReadableSize(): String {
-    if (this < 1024) return "$this B"
-    val kib = this / 1024.0
-    if (kib < 1024) return "${kib.formatOneDecimal()} KiB"
-    val mib = kib / 1024.0
-    return "${mib.formatOneDecimal()} MiB"
-}
-
-private fun Double.formatOneDecimal(): String {
-    val rounded = kotlin.math.round(this * 10.0) / 10.0
-    val text = rounded.toString()
-    return text.removeSuffix(".0")
-}
-
-private fun Long.toReadableDateTime(): String {
-    if (this <= 0L) return "-"
-    return DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(this))
+    return stringResource(R.string.settings_resource_files_size).formatTemplate("size" to sizeBytes.toReadableBytes(maxUnit = ReadableByteUnit.MiB))
 }

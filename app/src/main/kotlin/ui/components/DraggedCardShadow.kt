@@ -3,14 +3,23 @@
 
 package ui.components
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
+import top.yukonga.miuix.kmp.anim.folmeSpring
 import top.yukonga.miuix.kmp.basic.CardDefaults
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 fun Modifier.draggedCardShadow(
     alpha: Float,
@@ -43,3 +52,47 @@ fun Modifier.draggedCardShadow(
         }
     }
 }
+
+@Stable
+internal class DraggedCardLift(
+    val isDragging: Boolean,
+    private val scaleState: State<Float>,
+    val shadowAlpha: Float,
+    val shadowColor: Color,
+) {
+    val scale: Float
+        get() = scaleState.value
+}
+
+/** Animate the scale and glow of a card while it is dragged; [label] prefixes both animations. */
+@Composable
+internal fun animateDraggedCardLift(isDragging: Boolean, label: String): DraggedCardLift {
+    val scale = animateFloatAsState(
+        targetValue = if (isDragging) 1.025f else 1f,
+        animationSpec = folmeSpring(damping = 0.9f, response = 0.38f),
+        label = "${label}Scale",
+    )
+    val shadowAlpha by animateFloatAsState(
+        targetValue = if (isDragging) 1f else 0f,
+        animationSpec = folmeSpring(damping = 0.9f, response = 0.38f),
+        label = "${label}ShadowAlpha",
+    )
+    return DraggedCardLift(
+        isDragging = isDragging,
+        scaleState = scale,
+        shadowAlpha = shadowAlpha,
+        shadowColor = MiuixTheme.colorScheme.primary,
+    )
+}
+
+/** Draw a dragged card above its siblings, scaled, with the dragged glow behind it. */
+internal fun Modifier.draggedCardLift(lift: DraggedCardLift): Modifier =
+    zIndex(if (lift.isDragging) 1f else 0f)
+        .graphicsLayer {
+            scaleX = lift.scale
+            scaleY = lift.scale
+        }
+        .draggedCardShadow(
+            alpha = lift.shadowAlpha,
+            color = lift.shadowColor,
+        )
