@@ -86,8 +86,12 @@ internal fun ProxyStatusSynchronizer(
                                         proxyEngine.rootStatusWatchGeneration.value,
                                 )
                             }
+                            // The notification follows the observed runtime: the in-memory
+                            // proxyRunning still reads false right after the process starts.
                             if (status.running) {
                                 proxyEngine.restoreTrafficStats(stateStore.state.value)
+                            } else {
+                                ProxyTrafficStatsService.reconcile(appContext, null)
                             }
                         }
                     } catch (error: CancellationException) {
@@ -117,7 +121,6 @@ internal fun ProxyStatusSynchronizer(
             ProxyTrafficStatsService.reconcile(appContext, null)
         }
     }
-
 }
 
 internal suspend fun observeProxyStatus(
