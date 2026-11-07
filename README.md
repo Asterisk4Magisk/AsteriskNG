@@ -89,6 +89,8 @@ On macOS or Linux:
 
 The build downloads the pinned AndroidLibXrayLite AAR, builds the native submodules, and produces ABI split APKs plus a universal APK.
 
+Debug builds carry the application id `org.asterisk.zcc.ang.debug` and a DEV-badged launcher icon (`app/src/debug/res`), so a debug build installs alongside a release build.
+
 If Gradle cannot find the Android NDK, configure it through Android Studio, `ndk.dir` in `local.properties`, or `ANDROID_NDK_HOME`.
 
 ## License

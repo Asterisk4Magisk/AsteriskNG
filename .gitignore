@@ -4,6 +4,8 @@
 **/build/
 **/release/
 **/debug/
+!app/src/debug/
+!app/src/debug/**
 xcuserdata
 !src/**/build/
 local.properties

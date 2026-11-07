@@ -45,7 +45,7 @@ The traffic statistics service (`engine.stats.ProxyTrafficStatsService`) runs in
 
 ## Repository Structure and Product Boundaries
 
-- Application ID: `org.asterisk.zcc.ang`.
+- Application ID: `org.asterisk.zcc.ang`. Debug builds append `.debug` and take the DEV-badged launcher icon from `app/src/debug/res`, so a debug build installs next to a release build.
 - Core: Xray; ROOT owner/core: `asteriskng` / `xray`.
 - ROOT modes: TPROXY, TUN2SOCKS, and BPF2SOCKS.
 - `app/`: Android application, Compose UI, data layer, VPN/ROOT orchestration, and core adapters.

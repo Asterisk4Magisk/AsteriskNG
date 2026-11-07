@@ -65,6 +65,10 @@ android {
 
     buildTypes {
         debug {
+            // Installs side by side with a release build: application id
+            // org.asterisk.zcc.ang.debug and a DEV-badged launcher icon from
+            // src/debug/res.
+            applicationIdSuffix = ".debug"
             isMinifyEnabled = false
         }
 
