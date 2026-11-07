@@ -74,7 +74,7 @@ internal class RootBootScriptUseCase(
             ?: return RootBootScriptResult.MissingServer
         return runCatching {
             val (request, _) = ProxyEngineStartRequest(state, selectedServer)
-                .withTrafficStatsConfig(appContext, writeStore = true)
+                .withTrafficStatsConfig(appContext, writeStore = true, verifyAvailability = false)
             if (state.runMode.isRootRunMode()) {
                 installRootBootScript(state.runMode, request)
             }
