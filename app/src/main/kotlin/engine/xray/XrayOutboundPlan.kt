@@ -27,6 +27,9 @@ internal data class XrayBalancerPlan(
     val tag: String,
     val selector: String,
     val strategy: String,
+    // Without it Xray sends an unpickable balancer's traffic to the default handler, which is the
+    // default-route loopback when the balancer is the default route: the connection then loops forever.
+    val fallbackTag: String,
 )
 
 internal data class XrayOutboundPlan(

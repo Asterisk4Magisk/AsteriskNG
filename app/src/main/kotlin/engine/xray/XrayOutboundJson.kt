@@ -70,6 +70,7 @@ internal fun buildXrayBalancers(plans: List<XrayBalancerPlan>): List<JsonObject>
                     put("type", plan.strategy)
                 },
             )
+            put("fallbackTag", plan.fallbackTag)
         }
     }
 }
