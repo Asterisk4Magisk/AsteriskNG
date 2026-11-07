@@ -31,7 +31,7 @@ import app.ProxyServerState
 import app.R
 import app.collectProxyServerListState
 import engine.proxy.latency.ProxyServerLatencyTestMode
-import features.proxy.server.usecase.ProxyServiceResult
+import engine.proxy.ProxyServiceResult
 import features.proxy.server.usecase.restartProxyServiceAfterSelection
 import features.proxy.server.usecase.runProxyServerLatencyTest
 import features.subscription.DefaultSubscriptionGroupId

@@ -29,7 +29,7 @@ import data.AppSettingsPreferences
 import engine.vpn.AndroidVpnPermissionRequester
 import features.boot.BootAutoConnect
 import features.logs.AndroidLogFileCreator
-import features.proxy.server.qr.AndroidQrCodeScanRequester
+import features.qr.AndroidQrCodeScanRequester
 import features.resources.runtime.AndroidResourceFilePicker
 import features.settings.locale.localizedAppContext
 import features.subscription.SubscriptionInstallConfigUseCase

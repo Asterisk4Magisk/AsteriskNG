@@ -19,8 +19,8 @@ import app.R
 import app.modes.RunModeVpnService
 import data.AndroidAppStateStore
 import features.logs.AndroidAppLogger
-import features.proxy.server.usecase.ProxyServiceResult
-import features.proxy.server.usecase.ProxyServiceUseCase
+import engine.proxy.ProxyServiceResult
+import engine.proxy.ProxyServiceUseCase
 import features.settings.locale.localizedFromSavedLanguage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

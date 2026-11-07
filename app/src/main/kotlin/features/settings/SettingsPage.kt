@@ -39,7 +39,7 @@ import app.modes.isRootRunMode
 import app.navigation.Route
 import data.backup.AppBackupRestorePreview
 import engine.proxy.withResolvedDynamicLocalProxyPort
-import features.proxy.server.usecase.ProxyServiceResult
+import engine.proxy.ProxyServiceResult
 import features.settings.sheets.externalInterfacesSummary
 import features.settings.sheets.fragmentSettingsSummary
 import features.settings.sheets.ignoredInterfacesSummary

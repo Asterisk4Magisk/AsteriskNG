@@ -27,8 +27,8 @@ import app.navigation.Navigator
 import app.navigation.Route
 import data.AndroidAppStateStore
 import engine.proxy.latency.ProxyServerLatencyTestMode
-import features.proxy.server.usecase.ProxyServiceResult
-import features.proxy.server.usecase.ProxyServiceUseCase
+import engine.proxy.ProxyServiceResult
+import engine.proxy.ProxyServiceUseCase
 import features.proxy.server.usecase.ProxyServerImportFileUseCase
 import features.proxy.server.usecase.ProxyServerImportSource
 import features.proxy.server.usecase.createProxyServer

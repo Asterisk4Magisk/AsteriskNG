@@ -1,14 +1,10 @@
 // Copyright 2026, AsteriskNG contributors
 // SPDX-License-Identifier: GPL-3.0
 
-package features.proxy.server.usecase
+package engine.proxy
 
 import app.AppState
 import app.ProxyServerState
-import engine.proxy.AndroidProxyEngine
-import engine.proxy.DenyVpnPermission
-import engine.proxy.ProxyEngineStartRequest
-import engine.proxy.VpnPermissionRequester
 import engine.root.runtime.RootFailureKind
 import engine.root.runtime.RootOperationBlockedException
 import engine.root.runtime.RootOperationLogRecord

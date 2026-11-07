@@ -26,7 +26,7 @@ import data.backup.AppBackupUseCase
 import engine.proxy.VpnPermissionRequester
 import engine.proxy.latency.AndroidProxyLatencyTester
 import features.proxy.server.usecase.ProxyServerImportFileUseCase
-import features.proxy.server.usecase.ProxyServiceUseCase
+import engine.proxy.ProxyServiceUseCase
 import features.resources.ResourceFileUseCase
 import features.settings.locale.ProvideAppLanguage
 import features.settings.usecase.SwitchRunModeUseCase

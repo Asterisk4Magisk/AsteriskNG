@@ -9,8 +9,8 @@ import android.content.Intent
 import app.AsteriskApplication
 import data.AndroidAppStateStore
 import features.logs.AndroidAppLogger
-import features.proxy.server.usecase.ProxyServiceResult
-import features.proxy.server.usecase.ProxyServiceUseCase
+import engine.proxy.ProxyServiceResult
+import engine.proxy.ProxyServiceUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
