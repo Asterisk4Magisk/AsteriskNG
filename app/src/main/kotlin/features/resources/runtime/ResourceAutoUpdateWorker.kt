@@ -8,6 +8,7 @@ import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import app.AsteriskApplication
+import app.effects.synchronizeProxyStatus
 import app.ResourceFileKind
 import app.resourceFileUpdateSource
 import features.logs.AndroidAppLogger
@@ -38,6 +39,15 @@ internal class ResourceAutoUpdateWorker(context: Context, parameters: WorkerPara
             progress.clear()
             return@withContext Result.success()
         }
+        // This worker may be what started the process: `proxyRunning` is not persisted and only the
+        // UI keeps it in sync for ROOT modes, so probe the proxy before choosing direct downloads.
+        synchronizeProxyStatus(
+            currentState = { application.stateStore.state.value },
+            readStatus = { snapshot ->
+                runCatching { application.proxyEngine.status(snapshot.runMode, snapshot) }.getOrNull()
+            },
+            updateAppState = application.stateStore::update,
+        )
         val state = application.stateStore.state.value
         // Core urlFor() is null; reserved names are excluded from custom downloads too.
         val all = ResourceFileUpdateRequest.All(
