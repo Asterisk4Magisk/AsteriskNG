@@ -357,6 +357,7 @@
     <string name="proxy_error_dialog_occurred_at">Время: %1$s</string>
     <string name="proxy_error_dialog_service_log">Журнал запуска</string>
     <string name="proxy_error_dialog_title">Не удалось запустить прокси</string>
+    <string name="proxy_service_auto_apply_failed">Не удалось применить обновление к работающей службе</string>
     <string name="settings_proxy_bpf2socks">Настройки прокси (BPF2SOCKS)</string>
     <string name="settings_proxy_tproxy">Настройки прокси (TPROXY)</string>
     <string name="settings_proxy_tun2socks">Настройки прокси (TUN2SOCKS)</string>

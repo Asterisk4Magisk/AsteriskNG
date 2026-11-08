@@ -356,6 +356,7 @@
     <string name="proxy_error_dialog_occurred_at">Thời gian: %1$s</string>
     <string name="proxy_error_dialog_service_log">Nhật ký khởi động</string>
     <string name="proxy_error_dialog_title">Không thể khởi động proxy</string>
+    <string name="proxy_service_auto_apply_failed">Không thể áp dụng bản cập nhật cho dịch vụ đang chạy</string>
     <string name="settings_proxy_bpf2socks">Cài đặt proxy (BPF2SOCKS)</string>
     <string name="settings_proxy_tproxy">Cài đặt proxy (TPROXY)</string>
     <string name="settings_proxy_tun2socks">Cài đặt proxy (TUN2SOCKS)</string>

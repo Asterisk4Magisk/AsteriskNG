@@ -29,6 +29,14 @@ import engine.proxy.LocalProxyRuntime
 import engine.vpn.AsteriskVpnService
 import engine.vpn.VpnSession
 import app.effects.synchronizeProxyStatus
+import app.effects.RunningConfigurationApplier
+import engine.proxy.ProxyServiceResult
+import engine.proxy.ProxyServiceUseCase
+import features.logs.AndroidAppLogger
+import features.proxy.server.model.isCompositeProxyServer
+import features.resources.ResourceFileUpdateResult
+import features.resources.isBusy
+import ui.feedback.AndroidToastTipNotifier
 import system.AndroidRootShellGateway
 import features.subscription.runtime.AndroidSubscriptionFetcher
 import features.subscription.runtime.AndroidSubscriptionScheduleGateway
@@ -93,6 +101,68 @@ class AsteriskApplication : Application(), SingletonImageLoader.Factory {
         )
     }
 
+    /** Applies successful resource and subscription updates to a running core. */
+    private val runningConfigurationApplier by lazy {
+        RunningConfigurationApplier(
+            scope = appScope,
+            updatesBusy = resourceFileUpdateCoordinator.state.map { state -> state.isBusy },
+            apply = ::applyConfigurationToRunningCore,
+            reportFailure = { error ->
+                AndroidAppLogger.error(RunningConfigurationLogTag, "Automatic configuration apply failed", error)
+            },
+        )
+    }
+
+    /**
+     * Every subscription update commits its servers together with the group's update time, from
+     * the UI, the scheduled worker and the broadcast alike. Such a commit is applied when it
+     * changed what the core runs: the selected server, or any server a selected chain or
+     * strategy group resolves through. Manual edits keep their current behavior.
+     */
+    private fun applySubscriptionUpdates() {
+        appScope.launch {
+            var previous: AppState? = null
+            stateStore.state.collect { current ->
+                val prior = previous
+                previous = current
+                if (prior != null && current.isSubscriptionCommitChangingRuntimeFrom(prior)) {
+                    runningConfigurationApplier.request()
+                }
+            }
+        }
+    }
+
+    /** An explicit restart of a core that is still running; a stopped core is left alone. */
+    private suspend fun applyConfigurationToRunningCore() {
+        val state = stateStore.state.value
+        val server = state.proxyServers.firstOrNull { it.id == state.selectedProxyServerId } ?: return
+        val running = runCatching { proxyEngine.status(state.runMode, state).running }.getOrNull()
+        if (running != true) return
+        val useCase = ProxyServiceUseCase(proxyEngine)
+        when (val result = useCase.applyConfiguration(state, server)) {
+            is ProxyServiceResult.Success -> {
+                AndroidAppLogger.info(RunningConfigurationLogTag, "Applied updated configuration")
+                stateStore.update { current ->
+                    current.copy(
+                        proxyRunning = result.proxyRunning,
+                        localProxyPort = result.appState?.localProxyPort ?: current.localProxyPort,
+                    )
+                }
+            }
+            ProxyServiceResult.MissingServer -> Unit
+            is ProxyServiceResult.Failed -> {
+                // A failed restart may already have stopped the core, so read back what runs.
+                runCatching { proxyEngine.status(state.runMode, state).running }.getOrNull()?.let { running ->
+                    stateStore.update { current -> current.copy(proxyRunning = running) }
+                }
+                AndroidToastTipNotifier(applicationContext).showError(
+                    result.error,
+                    getString(R.string.proxy_service_auto_apply_failed),
+                )
+            }
+        }
+    }
+
     /**
      * Brings the app state in line when a tunnel ends in the service process, whether it was
      * stopped, revoked or its process died. The session watch reports the end, so this costs
@@ -145,6 +215,12 @@ class AsteriskApplication : Application(), SingletonImageLoader.Factory {
         // HTTP fetches here go through the tunnel's local proxy, which the service publishes.
         LocalProxyRuntime.attachExternalSource { VpnSession.runningLocalProxyOptions(applicationContext) }
         synchronizeOnVpnSessionEnd()
+        applySubscriptionUpdates()
+        appScope.launch {
+            resourceFileUpdateCoordinator.results.collect { result ->
+                if (result is ResourceFileUpdateResult.Success) runningConfigurationApplier.request()
+            }
+        }
         refreshQuickSettingsTileOnProxyStateChange()
         appScope.launch {
             val scheduler = ResourceAutoUpdateScheduler(applicationContext)
@@ -203,3 +279,20 @@ class AsteriskApplication : Application(), SingletonImageLoader.Factory {
         val enabled: Boolean,
     )
 }
+
+private fun AppState.isSubscriptionCommitChangingRuntimeFrom(previous: AppState): Boolean {
+    val committed = subscriptionGroups.any { group ->
+        previous.subscriptionGroups.any { prior ->
+            prior.id == group.id && prior.lastUpdatedAtMillis != group.lastUpdatedAtMillis
+        }
+    }
+    if (!committed) return false
+    if (selectedProxyServerId != previous.selectedProxyServerId) return true
+    val selected = proxyServers.firstOrNull { server -> server.id == selectedProxyServerId }
+    val priorSelected = previous.proxyServers.firstOrNull { server -> server.id == selectedProxyServerId }
+    if (selected != priorSelected) return true
+    // Chains and strategy groups resolve their members from the whole server list.
+    return selected?.server?.isCompositeProxyServer() == true && proxyServers != previous.proxyServers
+}
+
+private const val RunningConfigurationLogTag = "RunningConfiguration"

@@ -356,6 +356,7 @@
     <string name="proxy_error_dialog_occurred_at">Time: %1$s</string>
     <string name="proxy_error_dialog_service_log">Start log</string>
     <string name="proxy_error_dialog_title">Failed to start proxy</string>
+    <string name="proxy_service_auto_apply_failed">Unable to apply the update to the running service</string>
     <string name="settings_proxy_bpf2socks">Proxy settings (BPF2SOCKS)</string>
     <string name="settings_proxy_tproxy">Proxy settings (TPROXY)</string>
     <string name="settings_proxy_tun2socks">Proxy settings (TUN2SOCKS)</string>

@@ -356,6 +356,7 @@
     <string name="proxy_error_dialog_occurred_at">时间：%1$s</string>
     <string name="proxy_error_dialog_service_log">启动日志</string>
     <string name="proxy_error_dialog_title">代理启动失败</string>
+    <string name="proxy_service_auto_apply_failed">更新内容未能应用到运行中的服务</string>
     <string name="settings_proxy_bpf2socks">代理设置（BPF2SOCKS）</string>
     <string name="settings_proxy_tproxy">代理设置（TPROXY）</string>
     <string name="settings_proxy_tun2socks">代理设置（TUN2SOCKS）</string>
