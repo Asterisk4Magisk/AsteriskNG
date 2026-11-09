@@ -627,7 +627,6 @@
     <string name="error_resource_file_picker_missing">Resource file picker is not registered</string>
     <string name="resource_file_download_notification_cancelled">Resource file update cancelled</string>
     <string name="resource_file_download_notification_channel">Resource file updates</string>
-    <string name="resource_file_download_notification_complete">Resource files updated</string>
     <string name="resource_file_download_notification_failed">Resource file update failed: %1$s</string>
     <string name="resource_file_download_notification_progress">Downloading %1$s</string>
     <string name="resource_file_download_notification_title">Updating resource files</string>

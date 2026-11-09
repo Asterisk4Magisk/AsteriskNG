@@ -627,7 +627,6 @@
     <string name="error_resource_file_picker_missing">资源文件选择器未注册</string>
     <string name="resource_file_download_notification_cancelled">资源文件更新已取消</string>
     <string name="resource_file_download_notification_channel">资源文件更新</string>
-    <string name="resource_file_download_notification_complete">资源文件更新完成</string>
     <string name="resource_file_download_notification_failed">资源文件更新失败：%1$s</string>
     <string name="resource_file_download_notification_progress">正在下载 %1$s</string>
     <string name="resource_file_download_notification_title">正在更新资源文件</string>

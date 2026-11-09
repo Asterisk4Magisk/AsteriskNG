@@ -627,7 +627,6 @@
     <string name="error_resource_file_picker_missing">Trình chọn tệp tài nguyên chưa được đăng ký</string>
     <string name="resource_file_download_notification_cancelled">Đã hủy cập nhật tệp tài nguyên</string>
     <string name="resource_file_download_notification_channel">Cập nhật tệp tài nguyên</string>
-    <string name="resource_file_download_notification_complete">Cập nhật tệp tài nguyên hoàn tất</string>
     <string name="resource_file_download_notification_failed">Cập nhật tệp tài nguyên thất bại: %1$s</string>
     <string name="resource_file_download_notification_progress">Đang tải %1$s</string>
     <string name="resource_file_download_notification_title">Đang cập nhật tệp tài nguyên</string>

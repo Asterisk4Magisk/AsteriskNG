@@ -76,30 +76,9 @@ internal class AndroidResourceFileDownloadNotifier(
         )
     }
 
-    fun showComplete() {
-        if (!canNotify()) return
-        notificationManager.notify(
-            ResourceFileDownloadNotificationId,
-            terminalBuilder(
-                icon = android.R.drawable.stat_sys_download_done,
-                title = appContext.getString(R.string.resource_file_download_notification_title),
-                text = appContext.getString(R.string.resource_file_download_notification_complete),
-            )
-                .build(),
-        )
-    }
-
-    fun showCancelled() {
-        if (!canNotify()) return
-        notificationManager.notify(
-            ResourceFileDownloadNotificationId,
-            terminalBuilder(
-                icon = android.R.drawable.stat_notify_error,
-                title = appContext.getString(R.string.resource_file_download_notification_title),
-                text = appContext.getString(R.string.resource_file_download_notification_cancelled),
-            )
-                .build(),
-        )
+    /** Completed and cancelled updates leave nothing behind; only failures stay visible. */
+    fun dismiss() {
+        notificationManager.cancel(ResourceFileDownloadNotificationId)
     }
 
     fun showFailed(message: String) {

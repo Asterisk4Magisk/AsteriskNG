@@ -628,7 +628,6 @@
     <string name="error_resource_file_picker_missing">Компонент выбора файлов ресурсов не зарегистрирован</string>
     <string name="resource_file_download_notification_cancelled">Обновление файлов ресурсов отменено</string>
     <string name="resource_file_download_notification_channel">Обновление файлов ресурсов</string>
-    <string name="resource_file_download_notification_complete">Файлы ресурсов успешно обновлены</string>
     <string name="resource_file_download_notification_failed">Ошибка обновления файлов ресурсов: %1$s</string>
     <string name="resource_file_download_notification_progress">Скачивание %1$s</string>
     <string name="resource_file_download_notification_title">Обновление файлов ресурсов</string>
