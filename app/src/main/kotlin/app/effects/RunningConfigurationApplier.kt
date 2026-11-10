@@ -38,7 +38,9 @@ internal class RunningConfigurationApplier(
             while (true) {
                 requests.receive()
                 do {
-                    while (withTimeoutOrNull(settleDelay) { requests.receive() } != null) Unit
+                    do {
+                        val received = withTimeoutOrNull(settleDelay) { requests.receive() }
+                    } while (received != null)
                     // Batches enqueue one file at a time, so idle right after a busy stretch may
                     // only be the gap before the next file; settle once more after waiting.
                     val wasBusy = updatesBusy.first()
