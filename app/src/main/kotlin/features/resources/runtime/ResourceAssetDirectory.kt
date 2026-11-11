@@ -50,6 +50,8 @@ internal class ResourceAssetDirectory(private val runtimeDir: File) {
                     false
                 }
                 !Files.isRegularFile(entry.toPath(), LinkOption.NOFOLLOW_LINKS) -> false
+                // The core owns these files; keep them out of both cleanup and the resource list.
+                isSystemDnsHelperFile(entry.name) -> false
                 !supported(entry.name) -> {
                     Files.delete(entry.toPath())
                     false
@@ -68,6 +70,10 @@ internal class ResourceAssetDirectory(private val runtimeDir: File) {
         val Lock = Any()
     }
 }
+
+private fun isSystemDnsHelperFile(name: String): Boolean =
+    name == "system-dns-helper.dex" ||
+        (name.startsWith(".system-dns-helper-") && name.endsWith(".dex"))
 
 internal fun writeResourceAtomically(target: File, write: (OutputStream) -> Unit) {
     val staging = target.parentFile?.takeIf { it.name == "assets" }
