@@ -496,9 +496,9 @@
     <string name="settings_mux">Mux</string>
     <string name="settings_mux_concurrency">TCP concurrency</string>
     <string name="settings_mux_concurrency_error" tools:ignore="TypographyDashes">Use -1, 0, or 1–128</string>
-    <string name="settings_mux_concurrency_summary" tools:ignore="TypographyDashes">-1 off, 0 default, 1–128</string>
+    <string name="settings_mux_concurrency_summary" tools:ignore="TypographyDashes">-1 off; 0–128 use 128 concurrent connections</string>
     <string name="settings_mux_description">May reduce latency, but can interrupt streams. Use with care.</string>
-    <string name="settings_mux_display_default_8">default 8</string>
+    <string name="settings_mux_display_default_128">default 128</string>
     <string name="settings_mux_display_disabled">disabled</string>
     <string name="settings_mux_display_same_as_tcp">same as TCP</string>
     <string name="settings_mux_enabled">Enable Mux</string>

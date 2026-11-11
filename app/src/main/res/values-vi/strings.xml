@@ -496,9 +496,9 @@
     <string name="settings_mux">Mux</string>
     <string name="settings_mux_concurrency">Đồng thời TCP</string>
     <string name="settings_mux_concurrency_error" tools:ignore="TypographyDashes">Vui lòng nhập -1, 0 hoặc 1–128</string>
-    <string name="settings_mux_concurrency_summary" tools:ignore="TypographyDashes">-1 tắt, 0 mặc định, 1–128</string>
+    <string name="settings_mux_concurrency_summary" tools:ignore="TypographyDashes">-1 tắt; 0–128 đều dùng 128 kết nối đồng thời</string>
     <string name="settings_mux_description">Giảm độ trễ, nhưng có thể gây ngắt kết nối, hãy thận trọng khi sử dụng</string>
-    <string name="settings_mux_display_default_8">Mặc định 8</string>
+    <string name="settings_mux_display_default_128">Mặc định 128</string>
     <string name="settings_mux_display_disabled">Đã tắt</string>
     <string name="settings_mux_display_same_as_tcp">Giống TCP</string>
     <string name="settings_mux_enabled">Bật Mux</string>

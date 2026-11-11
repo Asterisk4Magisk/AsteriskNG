@@ -496,9 +496,9 @@
     <string name="settings_mux">Mux</string>
     <string name="settings_mux_concurrency">TCP 并发</string>
     <string name="settings_mux_concurrency_error" tools:ignore="TypographyDashes">请输入 -1、0 或 1–128</string>
-    <string name="settings_mux_concurrency_summary" tools:ignore="TypographyDashes">-1 关闭，0 默认，1–128</string>
+    <string name="settings_mux_concurrency_summary" tools:ignore="TypographyDashes">-1 关闭；0–128 均使用 128 并发</string>
     <string name="settings_mux_description">降低延迟，但可能会断流，谨慎使用</string>
-    <string name="settings_mux_display_default_8">默认 8</string>
+    <string name="settings_mux_display_default_128">默认 128</string>
     <string name="settings_mux_display_disabled">已禁用</string>
     <string name="settings_mux_display_same_as_tcp">同 TCP</string>
     <string name="settings_mux_enabled">启用 Mux</string>

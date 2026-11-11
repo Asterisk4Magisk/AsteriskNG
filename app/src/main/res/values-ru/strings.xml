@@ -497,9 +497,9 @@
     <string name="settings_mux">Мультиплексирование (Mux)</string>
     <string name="settings_mux_concurrency">Параллельность TCP (Concurrency)</string>
     <string name="settings_mux_concurrency_error" tools:ignore="TypographyDashes">Допустимые значения: -1, 0, или от 1 до 128</string>
-    <string name="settings_mux_concurrency_summary" tools:ignore="TypographyDashes">-1 выкл, 0 по умолчанию, диапазон 1–128</string>
+    <string name="settings_mux_concurrency_summary" tools:ignore="TypographyDashes">-1 выкл; значения 0–128 используют 128 одновременных соединений</string>
     <string name="settings_mux_description">Может снизить задержку соединения, но способно вызывать прерывания в стриминговых потоках. Используйте с осторожностью.</string>
-    <string name="settings_mux_display_default_8">по умолчанию 8</string>
+    <string name="settings_mux_display_default_128">по умолчанию 128</string>
     <string name="settings_mux_display_disabled">отключено</string>
     <string name="settings_mux_display_same_as_tcp">как в TCP</string>
     <string name="settings_mux_enabled">Включить Mux</string>

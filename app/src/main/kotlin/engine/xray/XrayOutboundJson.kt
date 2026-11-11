@@ -232,7 +232,7 @@ private fun buildFragmentOutbound(appState: AppState): JsonObject {
 private fun buildMuxConfig(appState: AppState): JsonObject {
     return buildJsonObject {
         put("enabled", true)
-        put("concurrency", appState.muxConcurrency.toMuxConcurrency())
+        put("concurrency", appState.muxConcurrency.toXrayMuxConcurrency())
         put("xudpConcurrency", appState.muxXudpConcurrency.toMuxXudpConcurrency())
         put("xudpProxyUDP443", appState.muxXudpProxyUdp443.toMuxUdp443Mode())
     }
@@ -274,10 +274,6 @@ private fun AppState.wireguardDomainStrategy(): String {
         enableIpv6 -> "ForceIP"
         else -> "ForceIPv4"
     }
-}
-
-private fun String.toMuxConcurrency(): Int {
-    return toIntCoercedInOrDefault(-1..MaxMuxConcurrency, default = DefaultMuxConcurrency.toInt())
 }
 
 private fun String.toMuxXudpConcurrency(): Int {

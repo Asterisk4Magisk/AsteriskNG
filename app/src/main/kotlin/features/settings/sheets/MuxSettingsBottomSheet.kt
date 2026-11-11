@@ -20,6 +20,7 @@ import engine.xray.DefaultMuxXudpConcurrency
 import engine.xray.MaxMuxConcurrency
 import engine.xray.MaxMuxXudpConcurrency
 import engine.xray.MuxUdp443Values
+import engine.xray.toXrayMuxConcurrency
 import app.R
 import androidx.compose.ui.res.stringResource
 import top.yukonga.miuix.kmp.basic.Text
@@ -198,11 +199,10 @@ private fun muxUdp443Options(): List<String> {
 
 @Composable
 private fun muxConcurrencyDisplay(value: String): String {
-    val concurrency = value.toIntOrNull()
+    val concurrency = value.toXrayMuxConcurrency()
     return when {
-        concurrency == null -> stringResource(R.string.settings_mux_display_default_8)
         concurrency < 0 -> stringResource(R.string.settings_mux_display_disabled)
-        concurrency == 0 -> stringResource(R.string.settings_mux_display_default_8)
+        value.toIntOrNull() == null || value.toIntOrNull() == 0 -> stringResource(R.string.settings_mux_display_default_128)
         else -> concurrency.toString()
     }
 }
