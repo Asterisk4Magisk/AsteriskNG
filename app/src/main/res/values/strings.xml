@@ -46,17 +46,17 @@
     <string name="proxy_server_copy_qr_code">QR code</string>
     <string name="proxy_server_copy_url">Share URL</string>
     <string name="proxy_server_list_add">Add server</string>
-    <string name="proxy_server_list_add_chain_proxy">Add Chain proxy</string>
+    <string name="proxy_server_list_add_chain_proxy">Add Chain Proxy</string>
     <string name="proxy_server_list_add_custom">Add Custom</string>
     <string name="proxy_server_list_add_http">Add HTTP</string>
     <string name="proxy_server_list_add_hysteria2">Add Hysteria2</string>
     <string name="proxy_server_list_add_shadowsocks">Add Shadowsocks</string>
     <string name="proxy_server_list_add_socks">Add Socks</string>
-    <string name="proxy_server_list_add_strategy_group">Add Strategy group</string>
+    <string name="proxy_server_list_add_strategy_group">Add Strategy Group</string>
     <string name="proxy_server_list_add_trojan">Add Trojan</string>
     <string name="proxy_server_list_add_vless">Add VLESS</string>
     <string name="proxy_server_list_add_vmess">Add VMess</string>
-    <string name="proxy_server_list_add_wireguard">Add Wireguard</string>
+    <string name="proxy_server_list_add_wireguard">Add WireGuard</string>
     <string name="proxy_server_list_add_masque">Add MASQUE</string>
     <string name="proxy_server_list_all">All</string>
     <string name="proxy_server_list_all_deleted">Deleted {count} proxy servers</string>
@@ -507,7 +507,7 @@
     <string name="settings_mux_selected">Enabled: TCP {tcp}, XUDP {xudp}, QUIC {udp443}</string>
     <string name="settings_mux_udp443">QUIC handling</string>
     <string name="settings_mux_udp443_allow">Multiplex</string>
-    <string name="settings_mux_udp443_reject">No proxy</string>
+    <string name="settings_mux_udp443_reject">Reject</string>
     <string name="settings_mux_udp443_skip">Native</string>
     <string name="settings_mux_xudp_concurrency">XUDP concurrency</string>
     <string name="settings_mux_xudp_concurrency_error" tools:ignore="TypographyDashes">Use -1, 0, or 1–1024</string>
