@@ -15,7 +15,7 @@
         },
         {
             "uniqueId": "github:Asterisk4Magisk/AndroidLibXrayLite",
-            "artifactVersion": "v26.11.9",
+            "artifactVersion": "v26.11.13",
             "name": "AndroidLibXrayLite",
             "description": "Android AAR wrapper for Xray-core, built with gomobile.",
             "website": "https://github.com/Asterisk4Magisk/AndroidLibXrayLite",
@@ -41,7 +41,7 @@
         },
         {
             "uniqueId": "github:Asterisk4Magisk/asteriskd",
-            "artifactVersion": "v2.3.0",
+            "artifactVersion": "v2.3.1",
             "name": "asteriskd",
             "description": "A root Android daemon that synchronizes local-address bypass rules and pinned eBPF maps.",
             "website": "https://github.com/Asterisk4Magisk/asteriskd",
@@ -54,7 +54,7 @@
         },
         {
             "uniqueId": "github:Asterisk4Magisk/bpf2socks",
-            "artifactVersion": "v1.2.2",
+            "artifactVersion": "v1.2.3",
             "name": "bpf2socks",
             "description": "A root Android/Linux traffic bridge that forwards TCP and UDP through a SOCKS5 upstream using eBPF.",
             "website": "https://github.com/Asterisk4Magisk/bpf2socks",

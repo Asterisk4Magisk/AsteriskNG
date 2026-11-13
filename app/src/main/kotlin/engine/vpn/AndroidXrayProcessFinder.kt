@@ -4,14 +4,25 @@
 package engine.vpn
 
 import android.content.Context
+import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.os.Build
 import android.system.OsConstants
 import libv2ray.ProcessFinder
+import system.getApplicationInfoCompat
 import java.net.InetSocketAddress
 
 internal class AndroidXrayProcessFinder(context: Context) : ProcessFinder {
     private val connectivityManager = context.applicationContext.getSystemService(ConnectivityManager::class.java)
+    private val packageManager = context.applicationContext.packageManager
+
+    override fun findUIDByPackageName(packageName: String): Long {
+        return try {
+            packageManager.getApplicationInfoCompat(packageName).uid.toLong()
+        } catch (_: PackageManager.NameNotFoundException) {
+            InvalidUid
+        }
+    }
 
     override fun findProcessByConnection(
         network: String,

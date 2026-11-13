@@ -66,6 +66,7 @@ private val buildHevTunAssetTasks = ProjectConfig.SUPPORTED_ANDROID_ABIS.flatMap
             description = "Build Hev TUN ${artifact.displayName} for Android $abi."
             dependsOn(syncHevSocks5TunnelVersion)
             sourceDirectory.set(hevSocks5TunnelSubmoduleDir)
+            patchDirectory.set(layout.projectDirectory.dir("src/main/patches"))
             outputFile.set(generatedJniLibsDir.map { directory ->
                 directory.file("$abi/${artifact.outputFileName}")
             })

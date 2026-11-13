@@ -32,7 +32,7 @@ internal object AndroidLibXrayLiteRuntime {
                 controller.registerProcessFinder(AndroidXrayProcessFinder(context))
                 processFinderOwner = controller
             }
-            controller.startLoop(context.resolveVpnXrayProcessRules(config.xrayConfigJson), tunFd)
+            controller.startLoop(config.xrayConfigJson, tunFd)
         }.onFailure { error ->
             runCatching { controller.stopLoop() }
                 .onFailure { stopError ->

@@ -152,6 +152,7 @@ internal data class AsteriskdHevSocks5TunnelHelper(
     val executablePath: String,
     val socksHost: String,
     val socksPort: Int,
+    val flowMetadataToken: String = "",
     val tunnelName: String,
     val mtu: Int,
     val ipv4Address: String,
@@ -168,6 +169,7 @@ internal data class AsteriskdBpf2SocksHelper(
     val bridgePort: Int,
     val socksHost: String,
     val socksPort: Int,
+    val flowMetadataToken: String = "",
     val workerCount: Int = 0,
     // 0 leaves bridge TCP socket buffers to kernel autotuning.
     val tcpBufferSize: Int = 0,

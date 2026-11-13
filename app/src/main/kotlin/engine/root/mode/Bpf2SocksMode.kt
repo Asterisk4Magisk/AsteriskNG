@@ -52,7 +52,8 @@ internal fun RootConfigBuildContext.buildBpf2SocksStartConfig(): RootModeStartCo
                 bridgeListenAddress = RootBpf2SocksListenAddress,
                 bridgePort = appState.bpf2SocksBridgePortValue(),
                 socksHost = RootBpf2SocksSocksInboundAddress,
-                socksPort = socksPort,
+                socksPort = bridgeOptions.port,
+                flowMetadataToken = bridgeOptions.password,
             ),
         ),
     )

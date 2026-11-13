@@ -12,9 +12,11 @@ import engine.hevtun.HevSocks5TunnelConfigFileName
 import engine.hevtun.HevSocks5TunnelLogFileName
 import engine.hevtun.hevSocks5TunnelLogFile
 import engine.hevtun.hevSocks5TunnelSocksTargetAddress
+import engine.proxy.FlowMetadataInboundTag
 import engine.proxy.LocalProxyOptions
 import engine.proxy.ProxyEngineStartRequest
 import engine.proxy.buildLocalSocksInbound
+import engine.proxy.flowMetadataOptions
 import engine.proxy.toLocalProxyOptions
 import engine.proxy.xrayStatsApiConfig
 import engine.xray.XrayConfigFactory
@@ -24,11 +26,12 @@ import engine.xray.XrayTags
 import engine.xray.buildXrayOutboundPlan
 import engine.xray.prepareXrayCoreLogPaths
 import engine.xray.validateXrayExternalRoutingResources
-import features.resources.runtime.prepareXrayResourceFilePaths
+import engine.xray.withFlowMetadata
 import features.proxy.server.model.Custom
-import system.toAndroidUserId
+import features.resources.runtime.prepareXrayResourceFilePaths
 import java.io.File
 import kotlinx.serialization.json.JsonObject
+import system.toAndroidUserId
 
 internal data class VpnServiceStartConfig(
     val sessionName: String,
@@ -93,7 +96,7 @@ internal object VpnXrayConfigFactory {
                     dnsHijackInboundTags = vpnDnsHijackInboundTags(appState.enableVpnHevTun),
                     statsApiConfig = request.xrayStatsApiConfig(),
                 ),
-            ),
+            ).withFlowMetadata(context, appState),
             applicationPolicy = appState.toVpnApplicationPolicy(Process.myUid().toAndroidUserId()),
             localProxyOptions = localProxyOptions,
             appendHttpProxyOptions = appendHttpProxyOptions,
@@ -103,7 +106,11 @@ internal object VpnXrayConfigFactory {
             hevSocks5TunnelConfig = buildVpnHevSocks5TunnelConfig(
                 dataDir = resourceFilePaths.dataDir,
                 coreLogPaths = coreLogPaths,
-                localProxyOptions = localProxyOptions,
+                localProxyOptions = if (appState.enableVpnHevTun) {
+                    context.flowMetadataOptions()
+                } else {
+                    localProxyOptions
+                },
                 tunOptions = tunOptions,
                 enableIpv6 = appState.enableIpv6,
                 useHevTun = appState.enableVpnHevTun,
@@ -131,7 +138,7 @@ internal fun buildVpnXrayInbounds(
 
 internal fun vpnDnsHijackInboundTags(useHevTun: Boolean): List<String> {
     return if (useHevTun) {
-        listOf(XrayTags.LOCAL_SOCKS_INBOUND)
+        listOf(XrayTags.LOCAL_SOCKS_INBOUND, FlowMetadataInboundTag)
     } else {
         listOf(XrayTags.VPN_TUN_INBOUND)
     }

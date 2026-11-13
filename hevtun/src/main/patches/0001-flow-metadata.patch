@@ -1,0 +1,68 @@
+diff --git a/src/hev-socks5-session.c b/src/hev-socks5-session.c
+--- a/src/hev-socks5-session.c
++++ b/src/hev-socks5-session.c
+@@ -17,6 +17,7 @@
+ #include "hev-socks5-tunnel.h"
+ 
+ #include "hev-socks5-session.h"
++#include "hev-flow-metadata.h"
+ 
+ void
+ hev_socks5_session_run (HevSocks5Session *self)
+@@ -26,6 +27,11 @@
+     int res;
+ 
+     LOG_D ("%p socks5 session run", self);
++
++    if (hev_flow_enabled ()) {
++        hev_flow_run (self);
++        return;
++    }
+ 
+     srv = hev_config_get_socks5_server ();
+ 
+diff --git a/src/hev-socks5-session-udp.c b/src/hev-socks5-session-udp.c
+--- a/src/hev-socks5-session-udp.c
++++ b/src/hev-socks5-session-udp.c
+@@ -29,6 +29,7 @@
+ #include "hev-socks5-tunnel.h"
+ 
+ #include "hev-socks5-session-udp.h"
++#include "hev-flow-metadata.h"
+ 
+ typedef struct _HevSocks5UDPFrame HevSocks5UDPFrame;
+ 
+@@ -42,6 +43,9 @@
+ static int
+ udp_check_ctrl (HevSocks5 *self)
+ {
++    if (hev_flow_enabled ())
++        return 0;
++
+     if (self->type == HEV_SOCKS5_TYPE_UDP_IN_UDP) {
+         ssize_t res;
+         char buf;
+@@ -99,7 +103,10 @@
+             msgv[i].addr = &frame->addr;
+         }
+ 
+-        res = hev_socks5_udp_sendmmsg (HEV_SOCKS5_UDP (self), msgv, res);
++        if (hev_flow_enabled ())
++            res = hev_flow_sendmmsg (self, msgv, res, task_io_yielder);
++        else
++            res = hev_socks5_udp_sendmmsg (HEV_SOCKS5_UDP (self), msgv, res);
+         if (res <= 0) {
+             LOG_D ("%p socks5 session udp fwd f send", self);
+             return -1;
+@@ -190,7 +197,10 @@
+         msgv[i].len = size;
+     }
+ 
+-    res = hev_socks5_udp_recvmmsg (HEV_SOCKS5_UDP (self), msgv, num, 1);
++    if (hev_flow_enabled ())
++        res = hev_flow_recvmmsg (self, msgv, num);
++    else
++        res = hev_socks5_udp_recvmmsg (HEV_SOCKS5_UDP (self), msgv, num, 1);
+     if (res <= 0) {
+         if (res == -1 && errno == EAGAIN)
+             return 0;
