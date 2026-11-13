@@ -14,10 +14,10 @@ object ProjectConfig {
     const val VERSION_NAME = "1.4.27-dev"
     const val PACKAGE_NAME = "org.asterisk.zcc.ang"
     const val ASTERISKD_VERSION = "v2.3.1"
-    const val BPF2SOCKS_VERSION = "v1.2.3"
+    const val BPF2SOCKS_VERSION = "v1.2.4"
     const val BPF_MATCHER_VERSION = "v1.0.2"
     const val ENHANCE_VERSION = "v1.0.8"
-    const val ANDROID_LIB_XRAY_LITE_VERSION = "v26.11.13"
+    const val ANDROID_LIB_XRAY_LITE_VERSION = "v26.11.14"
     const val HEV_SOCKS5_TUNNEL_VERSION = "2.19.3"
     const val TARGET_SDK = 37
     const val TARGET_SDK_MINOR = 2

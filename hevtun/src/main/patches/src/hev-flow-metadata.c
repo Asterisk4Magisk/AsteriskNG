@@ -19,6 +19,8 @@ void hev_flow_run(HevSocks5Session *self) {
         uint8_t header[FLOW_METADATA_MAX_HEADER];
         size_t n, sent = 0;
         if (!tcp->pcb || hev_socks5_client_connect(client, srv->addr, srv->port) < 0) return;
+        // Connecting yields; a client reset can clear the PCB while we wait.
+        if (!tcp->pcb) return;
         hev_socks5_addr_from_lwip(&dst, &tcp->pcb->local_ip, tcp->pcb->local_port);
         n = hev_flow_header(header, &tcp->pcb->remote_ip, tcp->pcb->remote_port, &dst, 0);
         if (!n) return;
