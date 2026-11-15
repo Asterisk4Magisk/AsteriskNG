@@ -5,20 +5,7 @@
 
 package features.proxy.server.editor
 
-import androidx.navigationevent.compose.rememberNavigationEventState
-
-import androidx.navigationevent.compose.NavigationBackHandler
-
-import androidx.navigationevent.NavigationEventInfo
-
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-
-import androidx.compose.ui.platform.LocalFocusManager
-
-import androidx.compose.runtime.saveable.rememberSaveable
-
-import androidx.compose.runtime.LaunchedEffect
-
+import ui.layout.rememberCodeEditorFocusState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -120,23 +107,9 @@ fun ProxyServerPage(
     val configJsonState = remember(psEdit) {
         (psEdit as? Custom)?.let { JsonCodeEditorState(it.configJson) }
     }
-    val focusManager = LocalFocusManager.current
-    val keyboard = LocalSoftwareKeyboardController.current
-    var editorExpanded by rememberSaveable { mutableStateOf(false) }
-    LaunchedEffect(configJsonState?.isFocused) {
-        if (configJsonState?.isFocused == true) editorExpanded = true
-    }
-    fun exitEditor() {
-        configJsonState?.clearFocus()
-        focusManager.clearFocus(force = true)
-        keyboard?.hide()
-        editorExpanded = false
-    }
-    val editorBackState = rememberNavigationEventState(NavigationEventInfo.None)
-    NavigationBackHandler(
-        state = editorBackState,
-        isBackEnabled = editorExpanded,
-        onBackCompleted = ::exitEditor,
+    val editorFocus = rememberCodeEditorFocusState(
+        editorFocused = configJsonState?.isFocused == true,
+        clearEditorFocus = { configJsonState?.clearFocus() },
     )
     var pendingSaveIssues by remember { mutableStateOf<List<ProxyServerValidationIssue>>(emptyList()) }
     fun saveProxyServer() {
@@ -201,7 +174,7 @@ fun ProxyServerPage(
                 scrollBehavior = topAppBarScrollBehavior,
                 navigationIcon = {
                     BackNavigationIcon(
-                        onClick = { if (editorExpanded) exitEditor() else navigator.pop() },
+                        onClick = { if (editorFocus.expanded) editorFocus.exit() else navigator.pop() },
                     )
                 },
                 actions = {
@@ -270,7 +243,7 @@ fun ProxyServerPage(
             CustomProxyServerEditor(
                 customEdit = psEdit,
                 configJsonState = requireNotNull(configJsonState),
-                editorExpanded = editorExpanded,
+                editorExpanded = editorFocus.expanded,
                 contentPadding = contentPadding,
             )
             return@Scaffold

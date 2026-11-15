@@ -78,6 +78,7 @@ internal class JsonCodeEditorState(
     }
 
     fun clearFocus() {
+        editor?.hideSoftInput()
         editor?.clearFocus()
     }
 
