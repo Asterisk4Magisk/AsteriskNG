@@ -365,11 +365,7 @@ private fun UidChip(
             .padding(horizontal = 8.dp, vertical = 4.dp),
     ) {
         Text(
-            text = if (sharedUid) {
-                "SUID:${uid?.toString() ?: "..."}"
-            } else {
-                "UID:${uid?.toString() ?: "..."}"
-            },
+            text = uid?.toString() ?: "...",
             fontSize = 12.sp,
             fontWeight = if (sharedUid) FontWeight.SemiBold else FontWeight.Medium,
             color = if (!enabled) {
