@@ -30,8 +30,8 @@ internal fun rememberCodeEditorFocusState(
     val focusManager = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
     var expanded by rememberSaveable { mutableStateOf(false) }
-    LaunchedEffect(editorFocused, searchActive) {
-        if (editorFocused || searchActive) expanded = true
+    LaunchedEffect(editorFocused) {
+        if (editorFocused) expanded = true
     }
     val exit = {
         clearEditorFocus()
