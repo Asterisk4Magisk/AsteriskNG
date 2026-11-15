@@ -79,6 +79,7 @@ interface ProxyServer<T : ProxyServer<T>> {
                 ProxyServerConstants.PROTOCOL_TROJAN -> Trojan().parse(url)
                 ProxyServerConstants.PROTOCOL_HY2, ProxyServerConstants.PROTOCOL_HYSTERIA2 -> Hysteria2().parse(url)
                 ProxyServerConstants.PROTOCOL_WIREGUARD -> Wireguard().parse(url)
+                ProxyServerConstants.PROTOCOL_MASQUE -> Masque().parse(url)
                 else -> {
                     unsupportedProxyServerUrl(url)
                 }
