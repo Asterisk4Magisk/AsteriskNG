@@ -7,7 +7,6 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.fadeIn
-import ui.layout.codeEditorShowsSupportingContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -53,6 +52,8 @@ import top.yukonga.miuix.kmp.preference.SwitchPreference
 @Composable
 internal fun CustomProxyServerEditor(
     customEdit: Custom,
+    configJsonState: JsonCodeEditorState,
+    editorExpanded: Boolean,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(),
 ) {
@@ -68,9 +69,6 @@ internal fun CustomProxyServerEditor(
     val remarksState = rememberTextFieldState(initialText = customEdit.remarks)
     var overrideAsteriskInboundAndDns by remember(customEdit) {
         mutableStateOf(customEdit.overrideAsteriskInboundAndDns)
-    }
-    val configJsonState = remember(customEdit) {
-        JsonCodeEditorState(customEdit.configJson)
     }
 
     LaunchedEffect(customEdit) {
@@ -102,7 +100,7 @@ internal fun CustomProxyServerEditor(
             .padding(contentPadding),
     ) {
         AnimatedVisibility(
-            visible = codeEditorShowsSupportingContent(configJsonState.isFocused),
+            visible = !editorExpanded,
             enter = fadeIn() + expandVertically(),
             exit = fadeOut() + shrinkVertically(),
         ) {

@@ -77,6 +77,10 @@ internal class JsonCodeEditorState(
         }
     }
 
+    fun clearFocus() {
+        editor?.clearFocus()
+    }
+
     fun snapshotText(): String = editor?.text?.toString() ?: retainedText
 
     fun replaceText(text: String, placeCursorAtEnd: Boolean = true) {
@@ -173,7 +177,7 @@ private fun JsonSoraEditor.configure(
     setTypefaceLineNumber(Typeface.MONOSPACE)
     setLineSpacing(dp(EditorLineSpacing).toFloat(), 1f)
     setTabWidth(EditorTabWidth)
-    setWordwrap(false)
+    isWordwrap = false
     setPinLineNumber(true)
     setLineNumberEnabled(true)
     setDisplayLnPanel(false)
@@ -181,9 +185,9 @@ private fun JsonSoraEditor.configure(
     setDividerWidth(dp(DividerWidth).toFloat())
     setHighlightCurrentBlock(false)
     setBlockLineEnabled(false)
-    setRenderFunctionCharacters(false)
+    isRenderFunctionCharacters = false
     setLigatureEnabled(false)
-    setScalable(true)
+    isScalable = true
     setCursorAnimationEnabled(true)
     setInputType(
         InputType.TYPE_CLASS_TEXT or

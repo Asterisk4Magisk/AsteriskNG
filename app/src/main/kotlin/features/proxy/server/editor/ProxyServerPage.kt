@@ -5,6 +5,20 @@
 
 package features.proxy.server.editor
 
+import androidx.navigationevent.compose.rememberNavigationEventState
+
+import androidx.navigationevent.compose.NavigationBackHandler
+
+import androidx.navigationevent.NavigationEventInfo
+
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+
+import androidx.compose.ui.platform.LocalFocusManager
+
+import androidx.compose.runtime.saveable.rememberSaveable
+
+import androidx.compose.runtime.LaunchedEffect
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -103,6 +117,27 @@ fun ProxyServerPage(
     val psEdit = remember(ps) {
         ps.editableCopy()
     }
+    val configJsonState = remember(psEdit) {
+        (psEdit as? Custom)?.let { JsonCodeEditorState(it.configJson) }
+    }
+    val focusManager = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
+    var editorExpanded by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(configJsonState?.isFocused) {
+        if (configJsonState?.isFocused == true) editorExpanded = true
+    }
+    fun exitEditor() {
+        configJsonState?.clearFocus()
+        focusManager.clearFocus(force = true)
+        keyboard?.hide()
+        editorExpanded = false
+    }
+    val editorBackState = rememberNavigationEventState(NavigationEventInfo.None)
+    NavigationBackHandler(
+        state = editorBackState,
+        isBackEnabled = editorExpanded,
+        onBackCompleted = ::exitEditor,
+    )
     var pendingSaveIssues by remember { mutableStateOf<List<ProxyServerValidationIssue>>(emptyList()) }
     fun saveProxyServer() {
         if (resultKey != null && serverId != null) {
@@ -166,7 +201,7 @@ fun ProxyServerPage(
                 scrollBehavior = topAppBarScrollBehavior,
                 navigationIcon = {
                     BackNavigationIcon(
-                        onClick = { navigator.pop() },
+                        onClick = { if (editorExpanded) exitEditor() else navigator.pop() },
                     )
                 },
                 actions = {
@@ -234,6 +269,8 @@ fun ProxyServerPage(
         if (psEdit is Custom) {
             CustomProxyServerEditor(
                 customEdit = psEdit,
+                configJsonState = requireNotNull(configJsonState),
+                editorExpanded = editorExpanded,
                 contentPadding = contentPadding,
             )
             return@Scaffold
