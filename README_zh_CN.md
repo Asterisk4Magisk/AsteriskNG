@@ -91,7 +91,7 @@ macOS 或 Linux：
 
 debug 版本使用 application id `org.asterisk.zcc.ang.debug`，并使用带 DEV 横幅的启动图标（`app/src/debug/res`），因此可以和 release 版本同时安装。
 
-如果 Gradle 找不到 Android NDK，请通过 Android Studio、`local.properties` 中的 `ndk.dir` 或 `ANDROID_NDK_HOME` 配置。
+Android NDK 版本由 [`buildSrc/src/main/kotlin/BuildConfig.kt`](buildSrc/src/main/kotlin/BuildConfig.kt) 中的 `ProjectConfig.NDK_VERSION` 固定。请通过 SDK Manager 安装该版本。
 
 ## 许可
 

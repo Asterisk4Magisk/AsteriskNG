@@ -49,6 +49,12 @@ abstract class BuildEnhanceTask : DefaultTask() {
     abstract val minSdk: Property<Int>
 
     @get:Input
+    abstract val ndkVersion: Property<String>
+
+    @get:Internal
+    abstract val ndkDirectory: DirectoryProperty
+
+    @get:Input
     abstract val targetAbis: ListProperty<String>
 
     init {
@@ -65,12 +71,7 @@ abstract class BuildEnhanceTask : DefaultTask() {
                 System.getenv(name)?.takeIf(String::isNotBlank)?.let(::File)
             }
             ?: throw GradleException("Android SDK location is missing.")
-        val ndkDir = properties.getProperty("ndk.dir")?.takeIf(String::isNotBlank)?.let(::File)
-            ?: listOf("ANDROID_NDK_HOME", "ANDROID_NDK_ROOT").firstNotNullOfOrNull { name ->
-                System.getenv(name)?.takeIf(String::isNotBlank)?.let(::File)
-            }
-            ?: sdkDir.resolve("ndk").listFiles()?.filter(File::isDirectory)?.maxByOrNull(File::getName)
-            ?: throw GradleException("Android NDK location is missing.")
+        val ndkDir = ndkDirectory.get().asFile
         val sourceDir = sourceDirectory.get().asFile
         val script = sourceDir.resolve("tools/build.py")
         if (!script.isFile) throw GradleException("AsteriskEnhance source is missing: $sourceDir")

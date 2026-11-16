@@ -7,7 +7,6 @@ plugins {
 
 private val hevSocks5TunnelSubmoduleDir = layout.projectDirectory.dir("src/main/jni/hev-socks5-tunnel")
 private val generatedJniLibsDir: Provider<Directory> = layout.buildDirectory.dir("generated/jniLibs")
-private val rootLocalPropertiesFile = rootProject.layout.projectDirectory.file("local.properties")
 private val hevTunArtifacts = listOf(
     HevTunArtifactSpec(
         name = "jni",
@@ -26,6 +25,7 @@ private val hevTunArtifacts = listOf(
 android {
     namespace = "hevtun"
     compileSdk = ProjectConfig.TARGET_SDK
+    ndkVersion = ProjectConfig.NDK_VERSION
 
     defaultConfig {
         minSdk = ProjectConfig.MIN_SDK
@@ -70,10 +70,9 @@ private val buildHevTunAssetTasks = ProjectConfig.SUPPORTED_ANDROID_ABIS.flatMap
             outputFile.set(generatedJniLibsDir.map { directory ->
                 directory.file("$abi/${artifact.outputFileName}")
             })
-            if (rootLocalPropertiesFile.asFile.exists()) {
-                localPropertiesFile.set(rootLocalPropertiesFile)
-            }
             minSdk.set(ProjectConfig.MIN_SDK)
+            ndkVersion.set(ProjectConfig.NDK_VERSION)
+            ndkDirectory.set(androidComponents.sdkComponents.ndkDirectory)
             androidAbi.set(abi)
             this.artifact.set(artifact.name)
         }

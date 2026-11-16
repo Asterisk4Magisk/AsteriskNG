@@ -25,6 +25,7 @@ android {
             minorApiLevel = ProjectConfig.TARGET_SDK_MINOR
         }
     }
+    ndkVersion = ProjectConfig.NDK_VERSION
 
     // Built-in Kotlin inherits this JVM target.
     compileOptions {

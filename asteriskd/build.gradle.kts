@@ -11,6 +11,7 @@ val asteriskdSubmoduleDir = layout.projectDirectory.dir("src/main/native")
 android {
     namespace = "asteriskd"
     compileSdk = ProjectConfig.TARGET_SDK
+    ndkVersion = ProjectConfig.NDK_VERSION
 
     defaultConfig {
         minSdk = ProjectConfig.MIN_SDK
@@ -41,10 +42,9 @@ val buildAsteriskd = tasks.register<BuildAsteriskdTask>("buildAsteriskd") {
     dependsOn(syncAsteriskdVersion)
     sourceDirectory.set(asteriskdSubmoduleDir)
     outputDirectory.set(generatedJniLibsDir)
-    rootProject.layout.projectDirectory.file("local.properties")
-        .takeIf { it.asFile.exists() }
-        ?.let(localPropertiesFile::set)
     minSdk.set(ProjectConfig.MIN_SDK)
+    ndkVersion.set(ProjectConfig.NDK_VERSION)
+    ndkDirectory.set(androidComponents.sdkComponents.ndkDirectory)
     targetAbis.set(ProjectConfig.SUPPORTED_ANDROID_ABIS)
 }
 

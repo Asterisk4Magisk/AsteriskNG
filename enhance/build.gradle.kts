@@ -19,6 +19,7 @@ val generatedModuleDir = layout.buildDirectory.dir("generated/magiskModule")
 android {
     namespace = "enhance"
     compileSdk = ProjectConfig.TARGET_SDK
+    ndkVersion = ProjectConfig.NDK_VERSION
 
     defaultConfig {
         minSdk = ProjectConfig.MIN_SDK
@@ -71,6 +72,8 @@ val buildEnhance = tasks.register<BuildEnhanceTask>("buildEnhance") {
         .takeIf { it.asFile.exists() }
         ?.let(localPropertiesFile::set)
     minSdk.set(ProjectConfig.MIN_SDK)
+    ndkVersion.set(ProjectConfig.NDK_VERSION)
+    ndkDirectory.set(androidComponents.sdkComponents.ndkDirectory)
     targetAbis.set(ProjectConfig.SUPPORTED_ANDROID_ABIS)
 }
 

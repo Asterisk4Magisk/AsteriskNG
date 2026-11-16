@@ -74,6 +74,12 @@ jobs:
             exit 1
           fi
 
+          ndk_version="$(sed -n 's/^[[:space:]]*const val NDK_VERSION = "\([^"]\+\)".*/\1/p' buildSrc/src/main/kotlin/BuildConfig.kt | head -n 1)"
+          if [ -z "$ndk_version" ]; then
+            echo "::error::Unable to read ProjectConfig.NDK_VERSION from buildSrc/src/main/kotlin/BuildConfig.kt."
+            exit 1
+          fi
+
           available_packages="$(sdkmanager --list | awk '{ print $1 }')"
           platform_package="platforms;android-${target_sdk}"
           if ! grep -Fxq "$platform_package" <<< "$available_packages"; then
@@ -86,20 +92,19 @@ jobs:
           fi
 
           build_tools_package="$(printf '%s\n' "$available_packages" | awk '$1 ~ /^build-tools;[0-9]/ { print $1 }' | sort -V | tail -n 1)"
-          ndk_package="$(printf '%s\n' "$available_packages" | awk '$1 ~ /^ndk;[0-9]/ { print $1 }' | sort -V | tail -n 1)"
+          ndk_package="ndk;$ndk_version"
 
           if [ -z "$build_tools_package" ]; then
             echo "::error::No Android build-tools package is available from sdkmanager."
             exit 1
           fi
-          if [ -z "$ndk_package" ]; then
-            echo "::error::No Android NDK package is available from sdkmanager."
+          if ! grep -Fxq "$ndk_package" <<< "$available_packages"; then
+            echo "::error::Android NDK package $ndk_package requested by ProjectConfig.NDK_VERSION is not available from sdkmanager."
             exit 1
           fi
 
           sdkmanager --install "$platform_package" "platforms;android-${target_sdk}.${target_sdk_minor}" "$build_tools_package" "$ndk_package"
 
-          ndk_version="${ndk_package#ndk;}"
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/$ndk_version" >> "$GITHUB_ENV"
           echo "ANDROID_NDK_ROOT=$ANDROID_HOME/ndk/$ndk_version" >> "$GITHUB_ENV"
 

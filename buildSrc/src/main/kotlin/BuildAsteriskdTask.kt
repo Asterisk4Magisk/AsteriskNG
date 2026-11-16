@@ -4,18 +4,15 @@
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
-import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.gradle.process.ExecOperations
 import java.io.File
-import java.util.Properties
 import javax.inject.Inject
 
 abstract class BuildAsteriskdTask : DefaultTask() {
@@ -28,12 +25,14 @@ abstract class BuildAsteriskdTask : DefaultTask() {
     @get:OutputDirectory
     abstract val outputDirectory: DirectoryProperty
 
-    @get:Optional
-    @get:InputFile
-    abstract val localPropertiesFile: RegularFileProperty
-
     @get:Input
     abstract val minSdk: Property<Int>
+
+    @get:Input
+    abstract val ndkVersion: Property<String>
+
+    @get:Internal
+    abstract val ndkDirectory: DirectoryProperty
 
     @get:Input
     abstract val targetAbis: ListProperty<String>
@@ -55,7 +54,7 @@ abstract class BuildAsteriskdTask : DefaultTask() {
         if (sources.isEmpty()) {
             throw GradleException("No asteriskd C sources found in ${sourceDir.absolutePath}")
         }
-        val ndkDir = findNdkDir()
+        val ndkDir = ndkDirectory.get().asFile
         val outputDir = outputDirectory.get().asFile
         outputDir.mkdirs()
         targetAbis.get().map { abi -> abi.toAsteriskdAbiTarget() }.forEach { target ->
@@ -101,25 +100,6 @@ abstract class BuildAsteriskdTask : DefaultTask() {
                 throw GradleException("Android NDK clang not found: ${clang.absolutePath}")
             }
         }
-    }
-
-    private fun findNdkDir(): File {
-        listOf("ANDROID_NDK_HOME", "ANDROID_NDK_ROOT").forEach { name ->
-            System.getenv(name)?.takeIf(String::isNotBlank)?.let(::File)?.let { return it }
-        }
-        localPropertiesFile.orNull?.asFile?.takeIf(File::exists)?.let { file ->
-            val properties = Properties().also { properties -> file.inputStream().use(properties::load) }
-            properties.getProperty("ndk.dir")?.takeIf(String::isNotBlank)?.let(::File)?.let { return it }
-            properties.getProperty("sdk.dir")?.takeIf(String::isNotBlank)?.let(::File)?.let { sdk ->
-                sdk.resolve("ndk").listFiles()?.filter(File::isDirectory)?.maxByOrNull(File::getName)?.let { return it }
-            }
-        }
-        listOf("ANDROID_HOME", "ANDROID_SDK_ROOT").forEach { name ->
-            System.getenv(name)?.takeIf(String::isNotBlank)?.let(::File)?.let { sdk ->
-                sdk.resolve("ndk").listFiles()?.filter(File::isDirectory)?.maxByOrNull(File::getName)?.let { return it }
-            }
-        }
-        throw GradleException("Android NDK not found. Set ndk.dir, ANDROID_NDK_HOME, or install an NDK under the Android SDK.")
     }
 }
 

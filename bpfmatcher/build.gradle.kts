@@ -11,6 +11,7 @@ val bpfMatcherSubmoduleDir = layout.projectDirectory.dir("src/main/native")
 android {
     namespace = "bpfmatcher"
     compileSdk = ProjectConfig.TARGET_SDK
+    ndkVersion = ProjectConfig.NDK_VERSION
 
     defaultConfig {
         minSdk = ProjectConfig.MIN_SDK
@@ -49,10 +50,9 @@ val buildBpfMatcher = tasks.register<BuildBpfMatcherTask>("buildBpfMatcher") {
     dependsOn(syncBpfMatcherVersion)
     sourceFile.set(bpfMatcherSubmoduleDir.file("bpf-matcher.c"))
     outputDirectory.set(generatedJniLibsDir)
-    rootProject.layout.projectDirectory.file("local.properties")
-        .takeIf { it.asFile.exists() }
-        ?.let(localPropertiesFile::set)
     minSdk.set(ProjectConfig.MIN_SDK)
+    ndkVersion.set(ProjectConfig.NDK_VERSION)
+    ndkDirectory.set(androidComponents.sdkComponents.ndkDirectory)
     targetAbis.set(ProjectConfig.SUPPORTED_ANDROID_ABIS)
 }
 

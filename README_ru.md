@@ -89,7 +89,7 @@ git submodule update --init --recursive
 
 При сборке загружается AAR AndroidLibXrayLite фиксированной версии, собираются нативные субмодули и создаются отдельные APK для каждой ABI, а также универсальный APK.
 
-Если Gradle не может найти Android NDK, настройте его через Android Studio, параметр `ndk.dir` в `local.properties` или переменную `ANDROID_NDK_HOME`.
+Версия Android NDK фиксируется параметром `ProjectConfig.NDK_VERSION` в [`buildSrc/src/main/kotlin/BuildConfig.kt`](buildSrc/src/main/kotlin/BuildConfig.kt). Установите эту версию через SDK Manager.
 
 ## Лицензия
 

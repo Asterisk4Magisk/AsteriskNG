@@ -11,7 +11,7 @@ import org.gradle.api.tasks.TaskAction
 object ProjectConfig {
     const val JVM_VERSION = 26
     const val PROJECT_NAME = "AsteriskNG"
-    const val VERSION_NAME = "1.4.27-dev"
+    const val VERSION_NAME = "1.5.0-dev"
     const val PACKAGE_NAME = "org.asterisk.zcc.ang"
     const val ASTERISKD_VERSION = "v2.3.1"
     const val BPF2SOCKS_VERSION = "v1.2.4"
@@ -22,6 +22,7 @@ object ProjectConfig {
     const val TARGET_SDK = 37
     const val TARGET_SDK_MINOR = 2
     const val MIN_SDK = 26
+    const val NDK_VERSION = "30.0.16248370"
     val SUPPORTED_ANDROID_ABIS = listOf("arm64-v8a", "armeabi-v7a", "x86", "x86_64")
 }
 

@@ -89,7 +89,7 @@ Trên macOS hoặc Linux:
 
 Quá trình biên dịch tải xuống AAR AndroidLibXrayLite với phiên bản cố định, biên dịch các submodule native và tạo APK riêng cho từng ABI cùng với APK universal.
 
-Nếu Gradle không tìm thấy Android NDK, hãy cấu hình qua Android Studio, thuộc tính `ndk.dir` trong `local.properties`, hoặc biến môi trường `ANDROID_NDK_HOME`.
+Phiên bản Android NDK được cố định bằng `ProjectConfig.NDK_VERSION` trong [`buildSrc/src/main/kotlin/BuildConfig.kt`](buildSrc/src/main/kotlin/BuildConfig.kt). Hãy cài đặt phiên bản này qua SDK Manager.
 
 ## Giấy phép
 

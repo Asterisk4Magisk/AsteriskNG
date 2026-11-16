@@ -4,18 +4,15 @@
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
-import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.gradle.process.ExecOperations
 import java.io.File
-import java.util.Properties
 import javax.inject.Inject
 
 abstract class BuildBpf2SocksTask : DefaultTask() {
@@ -28,12 +25,14 @@ abstract class BuildBpf2SocksTask : DefaultTask() {
     @get:OutputDirectory
     abstract val outputDirectory: DirectoryProperty
 
-    @get:Optional
-    @get:InputFile
-    abstract val localPropertiesFile: RegularFileProperty
-
     @get:Input
     abstract val minSdk: Property<Int>
+
+    @get:Input
+    abstract val ndkVersion: Property<String>
+
+    @get:Internal
+    abstract val ndkDirectory: DirectoryProperty
 
     @get:Input
     abstract val targetAbis: ListProperty<String>
@@ -60,7 +59,7 @@ abstract class BuildBpf2SocksTask : DefaultTask() {
             throw GradleException("No bpf2socks C sources found under ${sourceDir.absolutePath}")
         }
 
-        val ndkDir = findNdkDir()
+        val ndkDir = ndkDirectory.get().asFile
         val embeddedSource = buildEmbeddedBpfSource(ndkDir, sourceDir)
         val sources = userSpaceSources + embeddedSource
         val outputDir = outputDirectory.get().asFile
@@ -164,36 +163,6 @@ abstract class BuildBpf2SocksTask : DefaultTask() {
         else -> "linux-x86_64"
     }
 
-    private fun findNdkDir(): File {
-        listOf("ANDROID_NDK_HOME", "ANDROID_NDK_ROOT").forEach { name ->
-            System.getenv(name)?.takeIf(String::isNotBlank)?.let { path -> return File(path) }
-        }
-
-        val localProperties = localPropertiesFile.orNull?.asFile
-        if (localProperties != null && localProperties.exists()) {
-            val properties = Properties()
-            localProperties.inputStream().use(properties::load)
-            properties.getProperty("ndk.dir")?.takeIf(String::isNotBlank)?.let { path -> return File(path) }
-            properties.getProperty("sdk.dir")?.takeIf(String::isNotBlank)?.let { path ->
-                File(path, "ndk").latestChildDirectoryForBpf2Socks()?.let { return it }
-            }
-        }
-
-        listOf("ANDROID_HOME", "ANDROID_SDK_ROOT").forEach { name ->
-            System.getenv(name)?.takeIf(String::isNotBlank)?.let { path ->
-                File(path, "ndk").latestChildDirectoryForBpf2Socks()?.let { return it }
-            }
-        }
-
-        throw GradleException("Android NDK not found. Set ndk.dir, ANDROID_NDK_HOME, or install an NDK under the Android SDK.")
-    }
-
-}
-
-private fun File.latestChildDirectoryForBpf2Socks(): File? {
-    return listFiles()
-        ?.filter(File::isDirectory)
-        ?.maxByOrNull { directory -> directory.name }
 }
 
 private enum class Bpf2SocksAbiTarget(

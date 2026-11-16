@@ -8,15 +8,13 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
-import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.process.ExecOperations
 import java.io.File
-import java.util.Properties
 import javax.inject.Inject
 
 abstract class BuildHevTunTask : DefaultTask() {
@@ -34,13 +32,14 @@ abstract class BuildHevTunTask : DefaultTask() {
     @get:OutputFile
     abstract val outputFile: RegularFileProperty
 
-    @get:Optional
-    @get:InputFile
-    @get:PathSensitive(PathSensitivity.NONE)
-    abstract val localPropertiesFile: RegularFileProperty
-
     @get:Input
     abstract val minSdk: Property<Int>
+
+    @get:Input
+    abstract val ndkVersion: Property<String>
+
+    @get:Internal
+    abstract val ndkDirectory: DirectoryProperty
 
     @get:Input
     abstract val androidAbi: Property<String>
@@ -57,7 +56,7 @@ abstract class BuildHevTunTask : DefaultTask() {
     fun build() {
         val artifact = HevTunArtifact.fromName(artifact.get())
         val abi = androidAbi.get()
-        val ndkBuild = findNdkBuild(findNdkDir())
+        val ndkBuild = findNdkBuild(ndkDirectory.get().asFile)
         val sourceDir = prepareBuildSource(sourceDirectory.get().asFile)
         val finalOutput = outputFile.get().asFile
         val outputDir = finalOutput.parentFile
@@ -213,36 +212,6 @@ abstract class BuildHevTunTask : DefaultTask() {
         }
         return ndkBuild
     }
-
-    private fun findNdkDir(): File {
-        listOf("ANDROID_NDK_HOME", "ANDROID_NDK_ROOT").forEach { name ->
-            System.getenv(name)?.takeIf(String::isNotBlank)?.let { return File(it) }
-        }
-
-        val localProperties = localPropertiesFile.orNull?.asFile
-        if (localProperties != null && localProperties.exists()) {
-            val properties = Properties()
-            localProperties.inputStream().use(properties::load)
-            properties.getProperty("ndk.dir")?.takeIf(String::isNotBlank)?.let { return File(it) }
-            properties.getProperty("sdk.dir")?.takeIf(String::isNotBlank)?.let { path ->
-                File(path, "ndk").latestChildDirectoryForHevTun()?.let { return it }
-            }
-        }
-
-        listOf("ANDROID_HOME", "ANDROID_SDK_ROOT").forEach { name ->
-            System.getenv(name)?.takeIf(String::isNotBlank)?.let { path ->
-                File(path, "ndk").latestChildDirectoryForHevTun()?.let { return it }
-            }
-        }
-
-        throw GradleException("Android NDK not found. Set ndk.dir, ANDROID_NDK_HOME, or install an NDK under the Android SDK.")
-    }
-}
-
-private fun File.latestChildDirectoryForHevTun(): File? {
-    return listFiles()
-        ?.filter(File::isDirectory)
-        ?.maxByOrNull { directory -> directory.name }
 }
 
 private enum class HevTunArtifact(
