@@ -18,6 +18,7 @@ val generatedModuleDir = layout.buildDirectory.dir("generated/magiskModule")
 
 android {
     namespace = "enhance"
+    buildToolsVersion = ProjectConfig.BUILD_TOOLS_VERSION
     compileSdk = ProjectConfig.TARGET_SDK
     ndkVersion = ProjectConfig.NDK_VERSION
 

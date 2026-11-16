@@ -9,7 +9,6 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 
 object ProjectConfig {
-    const val JVM_VERSION = 26
     const val PROJECT_NAME = "AsteriskNG"
     const val VERSION_NAME = "1.5.0-dev"
     const val PACKAGE_NAME = "org.asterisk.zcc.ang"
@@ -19,6 +18,8 @@ object ProjectConfig {
     const val ENHANCE_VERSION = "v1.0.8"
     const val ANDROID_LIB_XRAY_LITE_VERSION = "v26.11.15"
     const val HEV_SOCKS5_TUNNEL_VERSION = "2.19.3"
+    const val JVM_VERSION = 26
+    const val BUILD_TOOLS_VERSION = "37.0.0"
     const val TARGET_SDK = 37
     const val TARGET_SDK_MINOR = 2
     const val MIN_SDK = 26

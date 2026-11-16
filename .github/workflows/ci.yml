@@ -62,6 +62,7 @@ jobs:
             exit "$licenses_status"
           fi
 
+          build_tools_version="$(sed -n 's/^[[:space:]]*const val BUILD_TOOLS_VERSION = "\([^"]\+\)".*/\1/p' buildSrc/src/main/kotlin/BuildConfig.kt | head -n 1)"
           target_sdk="$(sed -n 's/^[[:space:]]*const val TARGET_SDK = \([0-9]\+\).*/\1/p' buildSrc/src/main/kotlin/BuildConfig.kt | head -n 1)"
           if [ -z "$target_sdk" ]; then
             echo "::error::Unable to read ProjectConfig.TARGET_SDK from buildSrc/src/main/kotlin/BuildConfig.kt."
@@ -91,11 +92,11 @@ jobs:
             fi
           fi
 
-          build_tools_package="$(printf '%s\n' "$available_packages" | awk '$1 ~ /^build-tools;[0-9]/ { print $1 }' | sort -V | tail -n 1)"
+          build_tools_package="build-tools;$build_tools_version"
           ndk_package="ndk;$ndk_version"
 
-          if [ -z "$build_tools_package" ]; then
-            echo "::error::No Android build-tools package is available from sdkmanager."
+          if ! grep -Fxq "$build_tools_package" <<< "$available_packages"; then
+            echo "::error::Android build-tools package $build_tools_package requested by ProjectConfig.BUILD_TOOLS_VERSION is not available from sdkmanager."
             exit 1
           fi
           if ! grep -Fxq "$ndk_package" <<< "$available_packages"; then
@@ -105,6 +106,7 @@ jobs:
 
           sdkmanager --install "$platform_package" "platforms;android-${target_sdk}.${target_sdk_minor}" "$build_tools_package" "$ndk_package"
 
+          echo "ANDROID_BUILD_TOOLS_VERSION=$build_tools_version" >> "$GITHUB_ENV"
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/$ndk_version" >> "$GITHUB_ENV"
           echo "ANDROID_NDK_ROOT=$ANDROID_HOME/ndk/$ndk_version" >> "$GITHUB_ENV"
 

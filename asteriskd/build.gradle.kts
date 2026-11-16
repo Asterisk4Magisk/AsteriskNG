@@ -10,6 +10,7 @@ val asteriskdSubmoduleDir = layout.projectDirectory.dir("src/main/native")
 
 android {
     namespace = "asteriskd"
+    buildToolsVersion = ProjectConfig.BUILD_TOOLS_VERSION
     compileSdk = ProjectConfig.TARGET_SDK
     ndkVersion = ProjectConfig.NDK_VERSION
 

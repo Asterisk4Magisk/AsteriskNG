@@ -20,6 +20,7 @@ val grpcVersion = versionCatalog.findVersion("grpc").get().requiredVersion
 
 android {
     namespace = "app"
+    buildToolsVersion = ProjectConfig.BUILD_TOOLS_VERSION
     compileSdk {
         version = release(ProjectConfig.TARGET_SDK) {
             minorApiLevel = ProjectConfig.TARGET_SDK_MINOR

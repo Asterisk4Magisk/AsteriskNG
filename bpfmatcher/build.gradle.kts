@@ -10,6 +10,7 @@ val bpfMatcherSubmoduleDir = layout.projectDirectory.dir("src/main/native")
 
 android {
     namespace = "bpfmatcher"
+    buildToolsVersion = ProjectConfig.BUILD_TOOLS_VERSION
     compileSdk = ProjectConfig.TARGET_SDK
     ndkVersion = ProjectConfig.NDK_VERSION
 
