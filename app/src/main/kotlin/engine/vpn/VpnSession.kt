@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import org.json.JSONObject
 import java.io.Closeable
 import java.io.File
+import java.io.FileNotFoundException
 import java.io.RandomAccessFile
 import kotlin.concurrent.thread
 
@@ -83,21 +84,28 @@ internal object VpnSession {
      * Whether the service process currently holds the session. Probes from other processes are
      * serialized because two overlapping probes in one process would throw.
      */
-    fun isRunning(context: Context): Boolean {
+    fun isRunning(context: Context): Boolean = runCatching { readRunning(context) }.getOrElse { error ->
+        AndroidAppLogger.warn(LogTag, "Failed to probe the VPN session", error)
+        false
+    }
+
+    /** Reads the session without treating an I/O failure as a stopped tunnel. */
+    fun readRunning(context: Context): Boolean {
         if (ownedHere) return true
         val file = file(context)
-        if (!file.isFile) return false
         return synchronized(probeLock) {
+            if (!file.isFile) return@synchronized false
             // A parked watcher proves the lock is held, and probing beside it would overlap.
             if (watching) return@synchronized true
-            runCatching {
+            try {
                 RandomAccessFile(file, "r").use { access ->
                     val probe = access.channel.tryLock(0L, Long.MAX_VALUE, true) ?: return@use true
                     probe.release()
                     false
                 }
-            }.getOrElse { error ->
-                AndroidAppLogger.warn(LogTag, "Failed to probe the VPN session", error)
+            } catch (error: FileNotFoundException) {
+                // A clean stop removes the file and can race with opening it.
+                if (file.isFile) throw error
                 false
             }
         }

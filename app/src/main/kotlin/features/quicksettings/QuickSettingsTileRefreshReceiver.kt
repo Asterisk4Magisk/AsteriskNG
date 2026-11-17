@@ -10,6 +10,6 @@ import android.content.Intent
 /** Runtime events the ROOT supervisor sends by explicit component; the intent carries no state. */
 class QuickSettingsTileRefreshReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        requestQuickSettingsTileRefresh(context)
+        ProxyQuickSettingsTileService.refreshIfListening()
     }
 }

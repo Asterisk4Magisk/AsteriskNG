@@ -22,6 +22,7 @@ import engine.root.runtime.RootFailureWatcher
 import engine.root.runtime.RootRuntimeBusyException
 import engine.root.runtime.RootRuntimeConflictException
 import engine.root.runtime.RootSupervisorController
+import engine.root.runtime.boundSnapshot
 import engine.root.runtime.toStableProxyEngineStatus
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -157,6 +158,12 @@ internal class RootModeEngine(
 
     suspend fun ownsRuntime(): Boolean {
         return controller.ownsRuntime()
+    }
+
+    internal suspend fun readStatus(): ProxyEngineStatus {
+        val snapshot = controller.status().boundSnapshot()
+            ?: return ProxyEngineStatus(running = false, runMode = runMode)
+        return controller.proxyStatus(snapshot, runMode, definition.daemonMode)
     }
 
     override suspend fun status(): ProxyEngineStatus {

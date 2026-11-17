@@ -82,7 +82,8 @@ internal class ProxyServiceUseCase(
         )
     }
 
-    private suspend fun start(
+    /** An explicit start never turns an already running proxy off. */
+    suspend fun start(
         state: AppState,
         selectedServer: ProxyServerState?,
     ): ProxyServiceResult {
