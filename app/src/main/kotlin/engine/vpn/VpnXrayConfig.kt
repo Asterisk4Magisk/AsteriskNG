@@ -26,7 +26,6 @@ import engine.xray.XrayTags
 import engine.xray.buildXrayOutboundPlan
 import engine.xray.prepareXrayCoreLogPaths
 import engine.xray.validateXrayExternalRoutingResources
-import engine.xray.withFlowMetadata
 import features.proxy.server.model.Custom
 import features.resources.runtime.prepareXrayResourceFilePaths
 import java.io.File
@@ -82,6 +81,7 @@ internal object VpnXrayConfigFactory {
             enableLocalDns = appState.effectiveLocalDnsEnabled,
             dnsServers = tunOptions.dnsServers,
             xrayConfigJson = XrayConfigFactory.buildXrayConfig(
+                context,
                 XrayConfigRequest(
                     appState = appState,
                     selectedServer = request.selectedServer,
@@ -96,7 +96,7 @@ internal object VpnXrayConfigFactory {
                     dnsHijackInboundTags = vpnDnsHijackInboundTags(appState.enableVpnHevTun),
                     statsApiConfig = request.xrayStatsApiConfig(),
                 ),
-            ).withFlowMetadata(context, appState),
+            ),
             applicationPolicy = appState.toVpnApplicationPolicy(Process.myUid().toAndroidUserId()),
             localProxyOptions = localProxyOptions,
             appendHttpProxyOptions = appendHttpProxyOptions,

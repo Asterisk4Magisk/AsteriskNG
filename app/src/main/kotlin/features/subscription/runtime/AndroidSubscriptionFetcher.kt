@@ -13,6 +13,8 @@ import features.subscription.SubscriptionHttpException
 import engine.proxy.LocalProxyLoopbackAddress
 import engine.proxy.LocalProxyOptions
 import engine.proxy.LocalProxyRuntime
+import features.proxy.server.usecase.readProxyServerImportText
+import features.proxy.server.usecase.requireProxyServerImportSize
 import java.io.IOException
 import java.net.Socket
 import kotlinx.coroutines.Dispatchers
@@ -204,8 +206,9 @@ private fun fetchWithRedirects(
             if (code !in 200..299) {
                 throw SubscriptionHttpException(code)
             }
+            requireProxyServerImportSize(connection.contentLengthLong)
             return AndroidSubscriptionResponse(
-                text = connection.inputStream.bufferedReader().use { reader -> reader.readText() },
+                text = connection.inputStream.use { it.readProxyServerImportText() },
                 remoteName = decodeContentDispositionFilename(connection.getHeaderField("Content-Disposition")),
             )
         } finally {

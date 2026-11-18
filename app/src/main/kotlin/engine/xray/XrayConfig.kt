@@ -3,8 +3,10 @@
 
 package engine.xray
 
+import android.content.Context
 import app.AppState
 import app.ProxyServerState
+import engine.proxy.usesFlowMetadata
 import features.proxy.server.model.Custom
 import features.proxy.server.model.ProxyServer
 import kotlinx.serialization.json.JsonObject
@@ -30,13 +32,16 @@ internal data class XrayProxyOutboundServer(
 )
 
 internal object XrayConfigFactory {
-    fun buildXrayConfig(request: XrayConfigRequest): String {
+    fun buildXrayConfig(context: Context, request: XrayConfigRequest): String {
         val customServer = request.selectedServer.server as? Custom
-        if (customServer != null) {
-            return buildCustomXrayConfig(request, customServer)
+        val config = if (customServer != null) {
+            buildCustomXrayConfig(request, customServer)
+        } else {
+            buildGeneratedXrayConfig(request).toJsonObject()
         }
-
-        val config = buildGeneratedXrayConfig(request).toJsonObject()
+        if (request.appState.usesFlowMetadata()) {
+            return config.withFlowMetadata(context, request.appState).toString()
+        }
         return XrayConfigPrettyJson.encodeToString(config).withSingleTrailingLf()
     }
 }
@@ -45,7 +50,8 @@ internal object XraySpeedTestConfigFactory {
     fun buildXraySpeedTestConfig(request: XrayConfigRequest): String {
         val customServer = request.selectedServer.server as? Custom
         if (customServer != null) {
-            return buildCustomXrayConfig(request, customServer)
+            val config = buildCustomXrayConfig(request, customServer)
+            return XrayConfigPrettyJson.encodeToString(config).withSingleTrailingLf()
         }
 
         val speedTestState = request.appState.copy(enableMux = false)
@@ -101,8 +107,6 @@ private fun buildGeneratedXrayConfig(request: XrayConfigRequest): GeneratedXrayC
 private fun buildCustomXrayConfig(
     request: XrayConfigRequest,
     server: Custom,
-): String {
-    val config = CustomXrayConfigRewriter.rewrite(request, server)
+): JsonObject =
+    CustomXrayConfigRewriter.rewrite(request, server)
         .withXrayStatsApiConfig(request.statsApiConfig)
-    return XrayConfigPrettyJson.encodeToString(config).withSingleTrailingLf()
-}

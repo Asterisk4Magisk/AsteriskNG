@@ -24,7 +24,6 @@ import engine.xray.XrayStatsApiConfig
 import engine.xray.buildXrayOutboundPlan
 import engine.xray.prepareXrayCoreLogPaths
 import engine.xray.validateXrayExternalRoutingResources
-import engine.xray.withFlowMetadata
 import features.proxy.server.model.Custom
 import features.quicksettings.QuickSettingsTileRefreshReceiver
 import features.resources.runtime.XrayResourceFilePaths
@@ -51,6 +50,7 @@ internal class RootConfigBuildContext(
         statsApiConfig: XrayStatsApiConfig? = this.statsApiConfig,
     ): RootStartConfig {
         val xrayConfigJson = XrayConfigFactory.buildXrayConfig(
+            androidContext,
             XrayConfigRequest(
                 appState = appState,
                 selectedServer = selectedServer,
@@ -68,7 +68,7 @@ internal class RootConfigBuildContext(
         return appState.toRootStartConfig(
             runtimeEventReceiver = ComponentName(androidContext, QuickSettingsTileRefreshReceiver::class.java)
                 .flattenToString(),
-            xrayConfigJson = xrayConfigJson.withFlowMetadata(androidContext, appState),
+            xrayConfigJson = xrayConfigJson,
             resourceFilePaths = resourceFilePaths,
         )
     }
