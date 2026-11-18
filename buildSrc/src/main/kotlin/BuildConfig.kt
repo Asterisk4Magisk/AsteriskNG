@@ -17,7 +17,7 @@ object ProjectConfig {
     const val BPF_MATCHER_VERSION = "v1.0.2"
     const val ENHANCE_VERSION = "v1.0.8"
     const val ANDROID_LIB_XRAY_LITE_VERSION = "v26.11.15"
-    const val HEV_SOCKS5_TUNNEL_VERSION = "2.19.3"
+    const val HEV_SOCKS5_TUNNEL_VERSION = "2.20.0"
     const val JVM_VERSION = 26
     const val BUILD_TOOLS_VERSION = "37.0.0"
     const val TARGET_SDK = 37
