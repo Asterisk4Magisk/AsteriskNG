@@ -44,15 +44,6 @@ class ProxyQuickSettingsTileService : TileService() {
     private var refreshJob: Job? = null
     private val stateStore by lazy { AndroidAppStateStore.get(applicationContext) }
     private val proxyEngine by lazy { (application as AsteriskApplication).proxyEngine }
-    private val proxyServiceUseCase by lazy {
-        ProxyServiceUseCase(
-            proxyEngine = proxyEngine,
-            requestVpnPermission = { intent ->
-                launchActivityAndCollapse(intent)
-                false
-            },
-        )
-    }
 
     override fun attachBaseContext(newBase: Context) {
         super.attachBaseContext(newBase.localizedFromSavedLanguage())
@@ -63,7 +54,11 @@ class ProxyQuickSettingsTileService : TileService() {
         activeService = WeakReference(this)
         // A normal tile is bound whenever the panel opens, including after process death.
         // Keep it unavailable until its first live status has replaced SystemUI's cached state.
-        updateTile(processing = true)
+        if (operationInProgress.get()) {
+            showProcessing()
+        } else {
+            updateTile(running = null)
+        }
         listeningJob?.cancel()
         listeningJob = serviceScope.launch {
             // A surviving VPN may end before the app has ever shown it as running.
@@ -96,28 +91,26 @@ class ProxyQuickSettingsTileService : TileService() {
             Tile.STATE_INACTIVE -> true
             else -> return
         }
+        val runMode = stateStore.state.value.runMode
         if (!operationInProgress.compareAndSet(false, true)) return
         operationSequence.incrementAndGet()
+        refreshJob?.cancel()
 
-        operationScope.launch {
-            var finalRunning: Boolean? = null
+        if (runMode != RunModeVpnService) {
             try {
-                updateTile(processing = true)
-                finalRunning = setProxyRunning(shouldRun)
-            } catch (error: Throwable) {
-                if (error is CancellationException) throw error
-                showToast(error.quickSettingsErrorMessage())
-            } finally {
-                operationInProgress.set(false)
-                activeService?.get()?.let { service ->
-                    if (finalRunning == null) {
-                        service.refreshTile()
-                    } else {
-                        service.refreshJob?.cancel()
-                        service.updateTile(running = finalRunning)
-                    }
+                RootQuickSettingsOperationService.start(this, runMode, shouldRun)
+            } catch (error: Exception) {
+                try {
+                    reportToggleFailure(this, error)
+                } finally {
+                    finishToggle()
                 }
             }
+            return
+        }
+
+        operationScope.launch {
+            runToggle(this@ProxyQuickSettingsTileService, runMode, shouldRun, ::launchActivityAndCollapse)
         }
     }
 
@@ -133,74 +126,19 @@ class ProxyQuickSettingsTileService : TileService() {
         }
     }
 
-    private fun refreshTile() {
+    private fun refreshTile(): Job {
         refreshJob?.cancel()
-        refreshJob = serviceScope.launch { refreshTileState() }
+        return serviceScope.launch { refreshTileState() }.also { refreshJob = it }
     }
 
     private suspend fun refreshTileState() {
         val sequence = operationSequence.get()
-        if (operationInProgress.get()) {
-            updateTile(processing = true)
-            return
-        }
+        if (operationInProgress.get()) return
         val running = readProxyRunningState()
         // A toggle that began while the status was read owns the tile; the status is stale.
-        if (operationInProgress.get()) {
-            updateTile(processing = true)
-            return
-        }
+        if (operationInProgress.get()) return
         if (operationSequence.get() != sequence) return
         updateTile(running = running)
-    }
-
-    private suspend fun setProxyRunning(shouldRun: Boolean): Boolean? {
-        val state = stateStore.state.value
-        if (shouldRun && state.requiresVpnPermission()) {
-            showToast(getString(R.string.quick_settings_tile_vpn_permission_required))
-            launchActivityAndCollapse(VpnService.prepare(this))
-            stateStore.update { currentState -> currentState.copy(proxyRunning = false) }
-            return null
-        }
-
-        val result = if (shouldRun) {
-            val selectedServer = state.proxyServers.firstOrNull { server -> server.id == state.selectedProxyServerId }
-            proxyServiceUseCase.start(state, selectedServer)
-        } else {
-            proxyServiceUseCase.stop(state.runMode)
-        }
-        return when (result) {
-            is ProxyServiceResult.Success -> {
-                stateStore.update { currentState ->
-                    currentState.copy(
-                        proxyRunning = result.proxyRunning,
-                        localProxyPort = result.appState?.localProxyPort ?: currentState.localProxyPort,
-                    )
-                }
-                showToast(
-                    if (result.proxyRunning) {
-                        getString(R.string.proxy_server_list_service_started)
-                    } else {
-                        getString(R.string.proxy_server_list_service_stopped)
-                    },
-                )
-                result.proxyRunning.takeIf { stateStore.state.value.runMode == state.runMode }
-            }
-
-            ProxyServiceResult.MissingServer -> {
-                showToast(getString(R.string.proxy_server_list_select_first))
-                null
-            }
-
-            is ProxyServiceResult.Failed -> {
-                showToast(result.error.quickSettingsErrorMessage())
-                null
-            }
-        }
-    }
-
-    private fun Throwable.quickSettingsErrorMessage(): String {
-        return rootOperationTipMessageOrNull(this@ProxyQuickSettingsTileService) ?: message ?: getString(R.string.quick_settings_tile_toggle_failed)
     }
 
     private suspend fun readProxyRunningState(): Boolean? {
@@ -219,40 +157,31 @@ class ProxyQuickSettingsTileService : TileService() {
         }
     }
 
-    private fun AppState.requiresVpnPermission(): Boolean {
-        return runMode == RunModeVpnService && VpnService.prepare(this@ProxyQuickSettingsTileService) != null
+    private fun showProcessing() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val tile = qsTile ?: return
+            tile.subtitle = getString(R.string.quick_settings_tile_processing)
+            tile.updateTile()
+        }
     }
 
-    private fun updateTile(
-        running: Boolean? = null,
-        processing: Boolean = false,
-    ) {
+    private fun updateTile(running: Boolean?) {
         val tile = qsTile ?: return
         tile.label = getString(R.string.quick_settings_tile_label)
         tile.state = when {
-            processing || running == null -> Tile.STATE_UNAVAILABLE
+            running == null -> Tile.STATE_UNAVAILABLE
             running -> Tile.STATE_ACTIVE
             else -> Tile.STATE_INACTIVE
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             tile.subtitle = when {
-                processing -> getString(R.string.quick_settings_tile_processing)
                 running == null -> null
-                running -> selectedProxyServerRemarks() ?: getString(R.string.quick_settings_tile_running)
+                running -> stateStore.state.value.quickSettingsActiveNodeName()
+                    ?: getString(R.string.quick_settings_tile_running)
                 else -> getString(R.string.quick_settings_tile_stopped)
             }
         }
         tile.updateTile()
-    }
-
-    private fun selectedProxyServerRemarks(): String? {
-        val state = stateStore.state.value
-        return state.proxyServers
-            .firstOrNull { server -> server.id == state.selectedProxyServerId }
-            ?.server
-            ?.getInfo()
-            ?.remarks
-            ?.takeIf(String::isNotBlank)
     }
 
     @SuppressLint("StartActivityAndCollapseDeprecated")
@@ -274,10 +203,6 @@ class ProxyQuickSettingsTileService : TileService() {
         }
     }
 
-    private fun showToast(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
-    }
-
     companion object {
         private const val LogTag = "ProxyQuickSettingsTile"
 
@@ -285,6 +210,108 @@ class ProxyQuickSettingsTileService : TileService() {
         private val operationInProgress = AtomicBoolean(false)
         private val operationSequence = AtomicLong(0)
         private var activeService: WeakReference<ProxyQuickSettingsTileService>? = null
+
+        internal suspend fun runToggle(
+            context: Context,
+            runMode: Int,
+            shouldRun: Boolean,
+            openVpnPermission: (Intent) -> Unit = {},
+        ) {
+            var finalRunning: Boolean? = null
+            try {
+                val stateStore = AndroidAppStateStore.get(context.applicationContext)
+                val state = stateStore.state.value
+                if (state.runMode != runMode) return
+
+                activeService?.get()?.showProcessing()
+                finalRunning = context.setProxyRunning(stateStore, state, shouldRun, openVpnPermission)
+            } catch (error: Exception) {
+                if (error is CancellationException) throw error
+                reportToggleFailure(context, error)
+            } finally {
+                finishToggle(finalRunning)?.join()
+            }
+        }
+
+        internal fun finishToggle(running: Boolean? = null): Job? {
+            operationInProgress.set(false)
+            val service = activeService?.get() ?: return null
+            service.refreshJob?.cancel()
+            service.updateTile(running)
+            return if (running == null) service.refreshTile() else null
+        }
+
+        private suspend fun Context.setProxyRunning(
+            stateStore: AndroidAppStateStore,
+            state: AppState,
+            shouldRun: Boolean,
+            openVpnPermission: (Intent) -> Unit,
+        ): Boolean? {
+            if (shouldRun && state.runMode == RunModeVpnService) {
+                VpnService.prepare(this)?.let { intent ->
+                    showToast(getString(R.string.quick_settings_tile_vpn_permission_required))
+                    openVpnPermission(intent)
+                    stateStore.update { currentState -> currentState.copy(proxyRunning = false) }
+                    return null
+                }
+            }
+
+            val proxyServiceUseCase = ProxyServiceUseCase(
+                proxyEngine = (applicationContext as AsteriskApplication).proxyEngine,
+                requestVpnPermission = { intent ->
+                    openVpnPermission(intent)
+                    false
+                },
+            )
+            val result = if (shouldRun) {
+                val selectedServer = state.proxyServers.firstOrNull { server -> server.id == state.selectedProxyServerId }
+                proxyServiceUseCase.start(state, selectedServer)
+            } else {
+                proxyServiceUseCase.stop(state.runMode)
+            }
+            return when (result) {
+                is ProxyServiceResult.Success -> {
+                    stateStore.update { currentState ->
+                        currentState.copy(
+                            proxyRunning = result.proxyRunning,
+                            localProxyPort = result.appState?.localProxyPort ?: currentState.localProxyPort,
+                        )
+                    }
+                    showToast(
+                        if (result.proxyRunning) {
+                            getString(R.string.proxy_server_list_service_started)
+                        } else {
+                            getString(R.string.proxy_server_list_service_stopped)
+                        },
+                    )
+                    result.proxyRunning.takeIf { stateStore.state.value.runMode == state.runMode }
+                }
+
+                ProxyServiceResult.MissingServer -> {
+                    showToast(getString(R.string.proxy_server_list_select_first))
+                    null
+                }
+
+                is ProxyServiceResult.Failed -> {
+                    showToast(result.error.quickSettingsErrorMessage(this))
+                    null
+                }
+            }
+        }
+
+        internal fun reportToggleFailure(context: Context, error: Exception) {
+            AndroidAppLogger.warn(LogTag, "Failed to toggle proxy from quick settings tile", error)
+            context.showToast(error.quickSettingsErrorMessage(context))
+        }
+
+        private fun Throwable.quickSettingsErrorMessage(context: Context): String {
+            return rootOperationTipMessageOrNull(context) ?: message
+                ?: context.getString(R.string.quick_settings_tile_toggle_failed)
+        }
+
+        private fun Context.showToast(message: String) {
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+        }
 
         /** Runtime broadcasts only refresh a bound tile; the next panel opening reads the rest. */
         internal fun refreshIfListening() {

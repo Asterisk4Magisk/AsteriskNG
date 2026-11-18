@@ -10,7 +10,15 @@ internal data class QuickSettingsTileState(
     val runMode: Int,
     val proxyRunning: Boolean,
     val languageMode: Int,
+    val activeNodeName: String?,
 )
 
 internal fun AppState.quickSettingsTileState(): QuickSettingsTileState =
-    QuickSettingsTileState(runMode = runMode, proxyRunning = proxyRunning, languageMode = languageMode)
+    QuickSettingsTileState(runMode, proxyRunning, languageMode, quickSettingsActiveNodeName())
+
+internal fun AppState.quickSettingsActiveNodeName(): String? =
+    proxyServers.firstOrNull { server -> server.id == selectedProxyServerId }
+        ?.server
+        ?.getInfo()
+        ?.remarks
+        ?.takeIf(String::isNotBlank)

@@ -188,6 +188,15 @@
                 android:value="true" />
         </service>
 
+        <service
+            android:name="features.quicksettings.RootQuickSettingsOperationService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Completes an explicit ROOT proxy start or stop from the Quick Settings tile." />
+        </service>
+
         <!-- Receives runtime events from the ROOT supervisor to refresh a listening tile.
              Closed tiles read the current status when the panel next opens; only root can deliver here. -->
         <receiver
