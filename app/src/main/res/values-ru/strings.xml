@@ -394,6 +394,7 @@
     <string name="root_foreign_owner_conflict">ROOT-прокси уже используется приложением %1$s. Остановите сервис в %1$s и повторите попытку.</string>
     <string name="settings_app_list_enhancement">Расширенная обработка списка приложений</string>
     <string name="settings_app_list_enhancement_summary">Системный DNS по списку приложений, изоляция кэша</string>
+    <string name="error_app_list_enhancement_private_dns">Отключите частный DNS для расширенной обработки списка приложений</string>
     <string name="settings_start_on_boot">Автозапуск при загрузке</string>
     <string name="settings_root_boot_script_failed">Не удалось обновить скрипт автозапуска</string>
     <string name="settings_root_boot_script_summary">Генерировать скрипт инициализации в service.d (Magisk/KernelSU)</string>

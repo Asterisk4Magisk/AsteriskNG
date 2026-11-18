@@ -200,9 +200,7 @@ class ProxyQuickSettingsTileService : TileService() {
     }
 
     private fun Throwable.quickSettingsErrorMessage(): String {
-        return rootOperationTipMessageOrNull { owner ->
-            getString(R.string.root_foreign_owner_conflict, owner)
-        } ?: message ?: getString(R.string.quick_settings_tile_toggle_failed)
+        return rootOperationTipMessageOrNull(this@ProxyQuickSettingsTileService) ?: message ?: getString(R.string.quick_settings_tile_toggle_failed)
     }
 
     private suspend fun readProxyRunningState(): Boolean? {

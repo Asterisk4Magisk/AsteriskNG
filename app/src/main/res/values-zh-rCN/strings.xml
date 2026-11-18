@@ -393,6 +393,7 @@
     <string name="root_foreign_owner_conflict">ROOT 代理服务正被 %1$s 占用，请先在 %1$s 中停止服务后重试。</string>
     <string name="settings_app_list_enhancement">应用名单增强</string>
     <string name="settings_app_list_enhancement_summary">按应用名单分流系统 DNS，并隔离缓存</string>
+    <string name="error_app_list_enhancement_private_dns">请关闭私人 DNS 后再使用应用名单增强</string>
     <string name="settings_start_on_boot">开机自启</string>
     <string name="settings_root_boot_script_failed">开机自启设置失败</string>
     <string name="settings_root_boot_script_summary">生成 service.d 启动脚本</string>

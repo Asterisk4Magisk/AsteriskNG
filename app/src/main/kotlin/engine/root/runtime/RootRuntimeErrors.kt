@@ -25,6 +25,8 @@ internal class RootPublicationException(
     cause: Throwable,
 ) : IllegalStateException("ROOT publication failed during $stage", cause)
 
+internal class RootPrivateDnsException(reason: String) : IllegalStateException(reason)
+
 internal class RootStartFailedException(
     val code: AsteriskdFailureCode?,
     val phase: AsteriskdPhase?,

@@ -393,6 +393,7 @@
     <string name="root_foreign_owner_conflict">The ROOT proxy service is being used by %1$s. Stop it in %1$s and try again.</string>
     <string name="settings_app_list_enhancement">Application list enhancement</string>
     <string name="settings_app_list_enhancement_summary">Route system DNS by app list; isolate caches</string>
+    <string name="error_app_list_enhancement_private_dns">Turn off Private DNS to use application list enhancement</string>
     <string name="settings_start_on_boot">Start on boot</string>
     <string name="settings_root_boot_script_failed">Failed to update start on boot</string>
     <string name="settings_root_boot_script_summary">Generate service.d startup script</string>

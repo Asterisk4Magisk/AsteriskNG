@@ -10,6 +10,7 @@ import engine.root.daemon.control.AsteriskdEventType
 import engine.root.daemon.control.AsteriskdPhase
 import engine.root.daemon.control.AsteriskdResultCode
 import engine.root.daemon.control.AsteriskdSnapshot
+import engine.root.runtime.RootPrivateDnsException
 import features.logs.AndroidAppLogger
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -230,19 +231,24 @@ internal class AsteriskdClient(
             if (event.type == AsteriskdEventType.Failed ||
                 event.snapshot.phase == AsteriskdPhase.Failed
             ) {
-                error(
-                    event.details?.message
-                        ?: event.snapshot.error?.message
-                        ?: "asteriskd entered failed phase",
-                )
+                fail(event.snapshot, event.details?.message)
             }
             inspect(event.snapshot)
         }
 
-        private fun inspect(snapshot: AsteriskdSnapshot) {
-            if (snapshot.phase == AsteriskdPhase.Failed) {
-                error(snapshot.error?.message ?: "asteriskd entered failed phase")
+        private fun fail(snapshot: AsteriskdSnapshot, message: String? = null): Nothing {
+            val dns = snapshot.dnsEnhancement
+            val reason = dns.reason
+            if (dns.required && reason != null && reason.startsWith("CACHE_ERROR ") &&
+                " reason=private-dns " in reason
+            ) {
+                throw RootPrivateDnsException(reason)
             }
+            error(message ?: snapshot.error?.message ?: "asteriskd entered failed phase")
+        }
+
+        private fun inspect(snapshot: AsteriskdSnapshot) {
+            if (snapshot.phase == AsteriskdPhase.Failed) fail(snapshot)
             if (snapshot.phase == AsteriskdPhase.Running) {
                 runningSnapshot = snapshot
                 return
