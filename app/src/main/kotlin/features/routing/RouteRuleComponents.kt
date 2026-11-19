@@ -18,7 +18,6 @@ import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -45,12 +44,14 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.basic.ArrowUpDown
 import top.yukonga.miuix.kmp.icon.extended.Delete
 import top.yukonga.miuix.kmp.icon.extended.Edit
 import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.preference.WindowDropdownPreference
 import top.yukonga.miuix.kmp.window.WindowBottomSheet
+import ui.components.IconDropdownMenu
+import ui.components.IconDropdownMenuEntry
 import ui.components.StringListEditor
 import ui.components.StringListStatusText
 import ui.components.animateDraggedCardLift
@@ -190,21 +191,18 @@ internal fun RouteRuleEditorBottomSheet(
             outboundOptions
         }
     }
-    var outboundIndex by remember(initialRule, show, effectiveOutboundOptions) {
-        mutableIntStateOf(
-            effectiveOutboundOptions
-                .indexOfFirst { it.tag == (currentOutbound ?: DefaultRouteOutboundTag) }
-                .coerceAtLeast(0),
-        )
+    var outbound by remember(initialRule, show) {
+        val tag = currentOutbound ?: DefaultRouteOutboundTag
+        val option = effectiveOutboundOptions.firstOrNull { it.tag == tag }
+        mutableStateOf(option ?: RouteRuleOutboundOption(tag = tag, label = tag))
     }
-    val selectedOutboundIndex = outboundIndex.coerceIn(0, effectiveOutboundOptions.lastIndex)
     val saveRule = {
         if (canSave) {
             onSave(
                 RouteRule(
                     id = initialRule?.id ?: nextRuleId,
                     remarks = remarks.ifBlank { unnamedRuleName },
-                    outboundTag = effectiveOutboundOptions[selectedOutboundIndex].tag,
+                    outboundTag = outbound.tag.trim().ifBlank { DefaultRouteOutboundTag },
                     domain = domains.toTrimmedNonEmptyDistinctList(),
                     ip = ips.toTrimmedNonEmptyDistinctList(),
                     port = ports.trim(),
@@ -254,7 +252,7 @@ internal fun RouteRuleEditorBottomSheet(
                     protocol = protocol,
                     network = network,
                     effectiveOutboundOptions = effectiveOutboundOptions,
-                    selectedOutboundIndex = selectedOutboundIndex,
+                    outbound = outbound,
                     onRemarksChange = { remarks = it },
                     onDomainsChange = { domains = it },
                     onIpsChange = { ips = it },
@@ -262,7 +260,7 @@ internal fun RouteRuleEditorBottomSheet(
                     onPortsChange = { ports = it },
                     onProtocolChange = { protocol = it },
                     onNetworkChange = { network = it },
-                    onOutboundIndexChange = { outboundIndex = it },
+                    onOutboundChange = { outbound = it },
                 )
             }
         }
@@ -321,7 +319,7 @@ private fun RouteRuleEditorContent(
     protocol: String,
     network: String,
     effectiveOutboundOptions: List<RouteRuleOutboundOption>,
-    selectedOutboundIndex: Int,
+    outbound: RouteRuleOutboundOption,
     onRemarksChange: (String) -> Unit,
     onDomainsChange: (List<String>) -> Unit,
     onIpsChange: (List<String>) -> Unit,
@@ -329,7 +327,7 @@ private fun RouteRuleEditorContent(
     onPortsChange: (String) -> Unit,
     onProtocolChange: (String) -> Unit,
     onNetworkChange: (String) -> Unit,
-    onOutboundIndexChange: (Int) -> Unit,
+    onOutboundChange: (RouteRuleOutboundOption) -> Unit,
 ) {
     val emptyMessage = stringResource(R.string.routing_list_empty)
     val domainInvalidMessage = stringResource(R.string.routing_domain_invalid)
@@ -433,14 +431,55 @@ private fun RouteRuleEditorContent(
                 modifier = Modifier.padding(bottom = 8.dp),
             )
         }
-        WindowDropdownPreference(
-            title = stringResource(R.string.routing_outbound_tag_label),
-            items = effectiveOutboundOptions.map { option -> option.label },
-            selectedIndex = selectedOutboundIndex,
-            onSelectedIndexChange = onOutboundIndexChange,
+        RouteRuleOutboundTagField(
+            outbound = outbound,
+            options = effectiveOutboundOptions,
+            onOutboundChange = onOutboundChange,
         )
     }
     }
+}
+
+@Composable
+private fun RouteRuleOutboundTagField(
+    outbound: RouteRuleOutboundOption,
+    options: List<RouteRuleOutboundOption>,
+    onOutboundChange: (RouteRuleOutboundOption) -> Unit,
+) {
+    val label = stringResource(R.string.routing_outbound_tag_label)
+    val tag = outbound.tag.trim()
+    val query = outbound.label.trim()
+    val suggestions = remember(tag, query, options) {
+        if (query.isEmpty() || options.any { it.tag == tag }) {
+            options
+        } else {
+            options.filter { option ->
+                option.tag.contains(query, ignoreCase = true) || option.label.contains(query, ignoreCase = true)
+            }.ifEmpty { options }
+        }
+    }
+    TextField(
+        value = outbound.label,
+        onValueChange = { value -> onOutboundChange(RouteRuleOutboundOption(tag = value, label = value)) },
+        label = label,
+        singleLine = true,
+        trailingIcon = {
+            IconDropdownMenu(
+                imageVector = MiuixIcons.Basic.ArrowUpDown,
+                contentDescription = label,
+                entries = suggestions.map { option ->
+                    IconDropdownMenuEntry(
+                        key = option.tag,
+                        title = option.label,
+                        selected = option.tag == tag,
+                        action = option,
+                    )
+                },
+                onAction = onOutboundChange,
+            )
+        },
+        modifier = Modifier.fillMaxWidth(),
+    )
 }
 
 private fun routeDomainInputError(input: String, invalidMessage: String): String? {
