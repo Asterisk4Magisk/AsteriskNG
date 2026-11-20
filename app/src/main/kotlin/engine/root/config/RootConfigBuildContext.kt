@@ -55,7 +55,6 @@ internal class RootConfigBuildContext(
                 appState = appState,
                 selectedServer = selectedServer,
                 inbounds = inbounds,
-                coreLogPaths = coreLogPaths,
                 dnsHosts = dnsHosts,
                 dnsHijackInboundTags = if (appState.usesFlowMetadata()) {
                     dnsHijackInboundTags + FlowMetadataInboundTag
@@ -64,6 +63,7 @@ internal class RootConfigBuildContext(
                 },
                 statsApiConfig = statsApiConfig,
             ),
+            coreLogPaths = coreLogPaths,
         )
         return appState.toRootStartConfig(
             runtimeEventReceiver = ComponentName(androidContext, QuickSettingsTileRefreshReceiver::class.java)

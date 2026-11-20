@@ -10,12 +10,13 @@ import engine.proxy.usesFlowMetadata
 import features.proxy.server.model.Custom
 import features.proxy.server.model.ProxyServer
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 internal data class XrayConfigRequest(
     val appState: AppState,
     val selectedServer: ProxyServerState,
     val inbounds: List<JsonObject>,
-    val coreLogPaths: XrayCoreLogPaths,
     val proxyDnsServers: List<String> = appState.proxyDns,
     val directDnsServers: List<String> = appState.directDns,
     val directDnsDomains: List<String> = appState.directDnsDomains,
@@ -32,12 +33,16 @@ internal data class XrayProxyOutboundServer(
 )
 
 internal object XrayConfigFactory {
-    fun buildXrayConfig(context: Context, request: XrayConfigRequest): String {
+    fun buildXrayConfig(
+        context: Context,
+        request: XrayConfigRequest,
+        coreLogPaths: XrayCoreLogPaths,
+    ): String {
         val customServer = request.selectedServer.server as? Custom
         val config = if (customServer != null) {
             buildCustomXrayConfig(request, customServer)
         } else {
-            buildGeneratedXrayConfig(request).toJsonObject()
+            buildGeneratedXrayConfig(request, coreLogPaths).toJsonObject()
         }
         if (request.appState.usesFlowMetadata()) {
             return config.withFlowMetadata(context, request.appState).toString()
@@ -47,17 +52,25 @@ internal object XrayConfigFactory {
 }
 
 internal object XraySpeedTestConfigFactory {
+    private val logConfig = buildJsonObject {
+        put("logLevel", XrayLogDisabled)
+    }
+
     fun buildXraySpeedTestConfig(request: XrayConfigRequest): String {
         val customServer = request.selectedServer.server as? Custom
         if (customServer != null) {
             val config = buildCustomXrayConfig(request, customServer)
-            return XrayConfigPrettyJson.encodeToString(config).withSingleTrailingLf()
+            val logKeys = config.keys.filter { it.equals("log", ignoreCase = true) }.toSet()
+            val speedTestConfig = config.updatedWithout(logKeys) {
+                put("log", logConfig)
+            }
+            return XrayConfigPrettyJson.encodeToString(speedTestConfig).withSingleTrailingLf()
         }
 
         val speedTestState = request.appState.copy(enableMux = false)
         val outboundPlan = speedTestState.buildXrayOutboundPlan(request.selectedServer)
         return GeneratedXrayConfig(
-            log = request.copy(appState = speedTestState).buildXrayLogConfig(),
+            log = logConfig,
             inbounds = emptyList<JsonObject>().toJsonObjectArray(),
             outbounds = buildXrayOutbounds(
                 appState = speedTestState,
@@ -71,7 +84,10 @@ internal object XraySpeedTestConfigFactory {
     }
 }
 
-private fun buildGeneratedXrayConfig(request: XrayConfigRequest): GeneratedXrayConfig {
+private fun buildGeneratedXrayConfig(
+    request: XrayConfigRequest,
+    coreLogPaths: XrayCoreLogPaths,
+): GeneratedXrayConfig {
     val outboundPlan = request.appState.buildXrayOutboundPlan(request.selectedServer)
     val startupProxyServerDomains = if (request.appState.enableDirectDnsForProxyServerDomains) {
         outboundPlan.proxyOutbounds.startupProxyServerDnsDomains()
@@ -88,7 +104,7 @@ private fun buildGeneratedXrayConfig(request: XrayConfigRequest): GeneratedXrayC
     )
 
     return GeneratedXrayConfig(
-        log = request.buildXrayLogConfig(),
+        log = request.appState.buildXrayLogConfig(coreLogPaths),
         dns = buildXrayDnsConfig(dnsPlan),
         inbounds = request.inbounds.toJsonObjectArray(),
         outbounds = buildXrayOutbounds(

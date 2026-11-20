@@ -8,10 +8,10 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
-internal fun XrayConfigRequest.buildXrayLogConfig(): JsonObject {
+internal fun AppState.buildXrayLogConfig(coreLogPaths: XrayCoreLogPaths): JsonObject {
     return buildJsonObject {
-        put("logLevel", appState.xrayLogLevel())
-        put("access", appState.xrayAccessLogPath(coreLogPaths))
+        put("logLevel", xrayLogLevel())
+        put("access", xrayAccessLogPath(coreLogPaths))
         put("error", coreLogPaths.errorLogPath)
     }
 }
