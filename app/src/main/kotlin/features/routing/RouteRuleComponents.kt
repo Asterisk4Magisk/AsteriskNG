@@ -4,6 +4,13 @@
 package features.routing
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.Animatable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -23,9 +30,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.constrainHeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.DefaultRouteOutboundTag
@@ -36,6 +48,7 @@ import engine.xray.isValidXrayExternalDomainRule
 import engine.xray.isXrayExternalDomainRuleCandidate
 import features.proxy.app.AppPackagePickerAction
 import features.routing.model.RouteRule
+import top.yukonga.miuix.kmp.anim.folmeSpring
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
@@ -94,6 +107,7 @@ internal fun RouteRuleCard(
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     modifier: Modifier = Modifier,
+    editEnabled: Boolean = true,
     dragModifier: Modifier = Modifier,
 ) {
     val dragLift = animateDraggedCardLift(isDragging, label = "routeRuleDrag")
@@ -145,7 +159,7 @@ internal fun RouteRuleCard(
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                IconButton(onClick = onEdit) {
+                IconButton(onClick = onEdit, enabled = editEnabled) {
                     Icon(
                         imageVector = MiuixIcons.Edit,
                         contentDescription = stringResource(R.string.routing_edit),
@@ -165,13 +179,15 @@ internal fun RouteRuleCard(
 }
 
 @Composable
-internal fun RouteRuleEditorBottomSheet(
+internal fun RouteRuleEditor(
     show: Boolean,
     initialRule: RouteRule?,
     nextRuleId: Int,
     outboundOptions: List<RouteRuleOutboundOption>,
     onDismissRequest: () -> Unit,
     onSave: (RouteRule) -> Unit,
+    inline: Boolean,
+    modifier: Modifier = Modifier,
 ) {
     val newRuleName = stringResource(R.string.routing_new_rule)
     val unnamedRuleName = stringResource(R.string.routing_unnamed_rule)
@@ -215,31 +231,20 @@ internal fun RouteRuleEditorBottomSheet(
         }
     }
 
-    WindowBottomSheet(
-        show = show,
-        title = if (initialRule == null) {
-            stringResource(R.string.routing_add_rule)
-        } else {
-            stringResource(R.string.routing_edit_rule)
-        },
-        startAction = {
-            TextButton(
-                text = stringResource(R.string.common_cancel),
-                onClick = onDismissRequest,
-            )
-        },
-        endAction = {
-            TextButton(
-                text = stringResource(R.string.common_save),
-                onClick = saveRule,
-            )
-        },
-        onDismissRequest = onDismissRequest,
-    ) {
+    if (inline && !show) return
+    val title = stringResource(if (initialRule == null) R.string.routing_add_rule else R.string.routing_edit_rule)
+    val cancel: @Composable () -> Unit = {
+        TextButton(text = stringResource(R.string.common_cancel), onClick = onDismissRequest)
+    }
+    val save: @Composable () -> Unit = {
+        TextButton(text = stringResource(R.string.common_save), onClick = saveRule, enabled = !inline || canSave)
+    }
+    val form: @Composable () -> Unit = {
         LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 24.dp),
+            modifier = Modifier.fillMaxWidth().padding(bottom = if (inline) 0.dp else 24.dp),
+            contentPadding = if (inline) {
+                PaddingValues(start = 12.dp, end = 12.dp, bottom = 24.dp)
+            } else PaddingValues(),
         ) {
             item {
                 RouteRuleEditorContent(
@@ -263,6 +268,71 @@ internal fun RouteRuleEditorBottomSheet(
                     onOutboundChange = { outbound = it },
                 )
             }
+        }
+    }
+    if (inline) {
+        BackHandler(onBack = onDismissRequest)
+        val alpha = remember { Animatable(0f) }
+        LaunchedEffect(Unit) {
+            alpha.animateTo(1f, folmeSpring(damping = 0.95f, response = 0.4f))
+        }
+        Column(
+            modifier = modifier.fillMaxSize()
+                .graphicsLayer { this.alpha = alpha.value }
+                .clip(RoundedCornerShape(16.dp))
+                .background(MiuixTheme.colorScheme.surface),
+        ) {
+            RouteRuleEditorHeader(title = title, startAction = cancel, endAction = save)
+            Box(Modifier.weight(1f)) { form() }
+        }
+    } else {
+        WindowBottomSheet(
+            show = show,
+            title = title,
+            startAction = cancel,
+            endAction = save,
+            onDismissRequest = onDismissRequest,
+            content = form,
+        )
+    }
+}
+
+@Composable
+private fun RouteRuleEditorHeader(
+    title: String,
+    startAction: @Composable () -> Unit,
+    endAction: @Composable () -> Unit,
+) {
+    Layout(
+        modifier = Modifier.fillMaxWidth().padding(start = 8.dp, end = 8.dp, top = 6.dp, bottom = 12.dp),
+        content = {
+            Box { startAction() }
+            Text(
+                text = title,
+                fontSize = MiuixTheme.textStyles.title4.fontSize,
+                fontWeight = FontWeight.Medium,
+                color = MiuixTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Box { endAction() }
+        },
+    ) { measurables, constraints ->
+        val width = constraints.maxWidth
+        val actionConstraints = constraints.copy(minWidth = 0, minHeight = 0, maxWidth = width / 3)
+        val start = measurables[0].measure(actionConstraints)
+        val end = measurables[2].measure(actionConstraints)
+        // Reserve the same space on both sides, regardless of the action labels' widths.
+        val sideWidth = maxOf(start.width, end.width) + 8.dp.roundToPx()
+        val heading = measurables[1].measure(
+            actionConstraints.copy(maxWidth = (width - 2 * sideWidth).coerceAtLeast(0)),
+        )
+        val height = constraints.constrainHeight(maxOf(start.height, heading.height, end.height))
+        layout(width, height) {
+            start.placeRelative(0, (height - start.height) / 2)
+            heading.placeRelative((width - heading.width) / 2, (height - heading.height) / 2)
+            end.placeRelative(width - end.width, (height - end.height) / 2)
         }
     }
 }

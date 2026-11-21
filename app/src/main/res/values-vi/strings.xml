@@ -24,6 +24,13 @@
     <string name="common_replace_existing">Thay thế hiện có</string>
     <string name="common_restore">Khôi phục</string>
     <string name="common_save">Lưu</string>
+    <string name="editor_switch_unsaved_title">Thay đổi chưa lưu</string>
+    <string name="editor_switch_unsaved_message">Hãy lưu hoặc bỏ các thay đổi trước khi chuyển sang mục khác.</string>
+    <string name="editor_switch_save">Lưu và chuyển</string>
+    <string name="editor_switch_discard">Bỏ thay đổi và chuyển</string>
+    <string name="editor_switch_cancel">Tiếp tục chỉnh sửa</string>
+    <string name="editor_switch_save_failed">Không thể lưu. Các thay đổi vẫn còn trong trình chỉnh sửa.</string>
+    <string name="editor_switch_target_unavailable">Mục này không còn khả dụng.</string>
     <string name="common_share">Chia sẻ</string>
     <string name="common_unknown_group">Nhóm không xác định</string>
     <string name="common_unsupported">Không được hỗ trợ</string>
@@ -85,6 +92,7 @@
     <string name="proxy_server_list_no_subscription_updates">Không có đăng ký nào để cập nhật</string>
     <string name="proxy_server_list_no_testable">Không có nút proxy nào để kiểm tra</string>
     <string name="proxy_server_list_option_layout">Bố cục</string>
+    <string name="proxy_server_list_option_layout_auto">Tự động</string>
     <string name="proxy_server_list_option_layout_double">Hai cột</string>
     <string name="proxy_server_list_option_layout_multiple">Nhiều cột</string>
     <string name="proxy_server_list_option_layout_single">Một cột</string>

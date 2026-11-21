@@ -40,30 +40,37 @@ internal fun ResourceAutoUpdatePreferences(
     interval: String,
     onEnabledChange: (Boolean) -> Unit,
     onIntervalChange: (String) -> Unit,
+    layout: @Composable (toggle: @Composable () -> Unit, intervalPreference: @Composable () -> Unit) -> Unit,
 ) {
     var editing by rememberSaveable { mutableStateOf(false) }
     val draft = rememberTextFieldState(initialText = interval)
     val valid = resourceAutoUpdateIntervalMillis(true, draft.text.toString()) != null
-    SwitchPreference(
-        title = stringResource(R.string.settings_resource_files_auto_update_title),
-        summary = stringResource(R.string.settings_resource_files_auto_update_summary),
-        checked = enabled,
-        onCheckedChange = onEnabledChange,
+    layout(
+        {
+            SwitchPreference(
+                title = stringResource(R.string.settings_resource_files_auto_update_title),
+                summary = stringResource(R.string.settings_resource_files_auto_update_summary),
+                checked = enabled,
+                onCheckedChange = onEnabledChange,
+            )
+        },
+        {
+            AnimatedVisibility(
+                visible = enabled,
+                enter = fadeIn() + expandVertically(),
+                exit = shrinkVertically() + fadeOut(),
+            ) {
+                ArrowPreference(
+                    title = stringResource(R.string.settings_resource_files_auto_update_interval_title),
+                    summary = stringResource(R.string.settings_resource_files_auto_update_hours, interval),
+                    onClick = {
+                        draft.setTextAndPlaceCursorAtEnd(interval)
+                        editing = true
+                    },
+                )
+            }
+        },
     )
-    AnimatedVisibility(
-        visible = enabled,
-        enter = fadeIn() + expandVertically(),
-        exit = shrinkVertically() + fadeOut(),
-    ) {
-        ArrowPreference(
-            title = stringResource(R.string.settings_resource_files_auto_update_interval_title),
-            summary = stringResource(R.string.settings_resource_files_auto_update_hours, interval),
-            onClick = {
-                draft.setTextAndPlaceCursorAtEnd(interval)
-                editing = true
-            },
-        )
-    }
     WindowDialog(
         show = editing,
         title = stringResource(R.string.settings_resource_files_auto_update_interval_title),

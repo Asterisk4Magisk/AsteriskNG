@@ -5,6 +5,7 @@
 
 package features.proxy.app
 
+import ui.layout.pageReadableWidth
 import android.content.pm.PackageManager
 import app.modes.ProxyAppListModeBlacklist
 import app.modes.ProxyAppListModeGlobal
@@ -511,7 +512,7 @@ private fun ProxyAppListTopBar(
             )
         },
         bottomContent = {
-            Column {
+            Column(Modifier.pageReadableWidth(maxWidth = ProxyAppListContentWidth)) {
                 ProxyAppListSearchBar(
                     searchValue = searchValue,
                     onSearchValueChange = onSearchValueChange,
@@ -577,7 +578,7 @@ private fun ProxyAppListContent(
         }
     }
 
-    Box {
+    Box(Modifier.pageReadableWidth(maxWidth = ProxyAppListContentWidth).fillMaxSize()) {
         PullToRefresh(
             isRefreshing = pageState.refreshingApps,
             onRefresh = pageState::requestRefresh,
@@ -725,3 +726,5 @@ private fun Throwable.proxyAppListClipboardImportMessage(
         else -> unsupportedFormat
     }
 }
+
+private val ProxyAppListContentWidth = 840.dp

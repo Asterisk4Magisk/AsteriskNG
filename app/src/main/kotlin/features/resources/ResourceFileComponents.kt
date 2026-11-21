@@ -6,12 +6,13 @@ package features.resources
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -30,6 +31,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -120,33 +122,6 @@ internal fun ResourceFileSourceCard(
             .padding(horizontal = 12.dp)
             .padding(bottom = 12.dp),
     ) {
-        OverlaySpinnerPreference(
-            title = stringResource(R.string.settings_resource_files_source),
-            items = sourceItems,
-            selectedIndex = selectedIndex,
-            onSelectedIndexChange = { index ->
-                if (index == ResourceFileSourceCustom) {
-                    geoIpUrlDraftState.setTextAndPlaceCursorAtEnd(
-                        customGeoIpUrl.ifBlank { selectedUpdateSource.geoIpUrl },
-                    )
-                    geoSiteUrlDraftState.setTextAndPlaceCursorAtEnd(
-                        customGeoSiteUrl.ifBlank { selectedUpdateSource.geoSiteUrl },
-                    )
-                    geoIpOnlyCnPrivateUrlDraftState.setTextAndPlaceCursorAtEnd(
-                        customGeoIpOnlyCnPrivateUrl.ifBlank { selectedUpdateSource.geoIpOnlyCnPrivateUrl },
-                    )
-                    directCidrIpv4UrlDraftState.setTextAndPlaceCursorAtEnd(
-                        customDirectCidrIpv4Url.ifBlank { selectedUpdateSource.directCidrIpv4Url },
-                    )
-                    directCidrIpv6UrlDraftState.setTextAndPlaceCursorAtEnd(
-                        customDirectCidrIpv6Url.ifBlank { selectedUpdateSource.directCidrIpv6Url },
-                    )
-                    showCustomSourceDialog = true
-                } else {
-                    onSourceChange(index)
-                }
-            },
-        )
         CustomResourceFileSourceDialog(
             show = showCustomSourceDialog,
             geoIpUrlState = geoIpUrlDraftState,
@@ -170,19 +145,66 @@ internal fun ResourceFileSourceCard(
                 showCustomSourceDialog = false
             },
         )
+        val updateAction: @Composable () -> Unit = {
+            ArrowPreference(
+                title = stringResource(
+                    if (updating) R.string.common_cancel else R.string.settings_resource_files_update,
+                ),
+                onClick = { if (updating) onCancel() else onUpdate() },
+                enabled = updating || actionsEnabled,
+            )
+        }
+        val sourcePreference: @Composable () -> Unit = {
+            OverlaySpinnerPreference(
+                title = stringResource(R.string.settings_resource_files_source),
+                items = sourceItems,
+                selectedIndex = selectedIndex,
+                onSelectedIndexChange = { index ->
+                    if (index == ResourceFileSourceCustom) {
+                        geoIpUrlDraftState.setTextAndPlaceCursorAtEnd(
+                            customGeoIpUrl.ifBlank { selectedUpdateSource.geoIpUrl },
+                        )
+                        geoSiteUrlDraftState.setTextAndPlaceCursorAtEnd(
+                            customGeoSiteUrl.ifBlank { selectedUpdateSource.geoSiteUrl },
+                        )
+                        geoIpOnlyCnPrivateUrlDraftState.setTextAndPlaceCursorAtEnd(
+                            customGeoIpOnlyCnPrivateUrl.ifBlank { selectedUpdateSource.geoIpOnlyCnPrivateUrl },
+                        )
+                        directCidrIpv4UrlDraftState.setTextAndPlaceCursorAtEnd(
+                            customDirectCidrIpv4Url.ifBlank { selectedUpdateSource.directCidrIpv4Url },
+                        )
+                        directCidrIpv6UrlDraftState.setTextAndPlaceCursorAtEnd(
+                            customDirectCidrIpv6Url.ifBlank { selectedUpdateSource.directCidrIpv6Url },
+                        )
+                        showCustomSourceDialog = true
+                    } else {
+                        onSourceChange(index)
+                    }
+                },
+            )
+        }
         ResourceAutoUpdatePreferences(
             enabled = enableResourceAutoUpdate,
             interval = autoUpdateInterval,
             onEnabledChange = onEnableResourceAutoUpdateChange,
             onIntervalChange = onAutoUpdateIntervalChange,
-        )
-        ArrowPreference(
-            title = stringResource(
-                if (updating) R.string.common_cancel else R.string.settings_resource_files_update,
-            ),
-            onClick = { if (updating) onCancel() else onUpdate() },
-            enabled = updating || actionsEnabled,
-        )
+        ) { autoUpdateToggle, updateInterval ->
+            if (useWideResourceLayout()) {
+                Row(Modifier.fillMaxWidth()) {
+                    Box(Modifier.weight(1f)) { sourcePreference() }
+                    Box(Modifier.weight(1f)) { autoUpdateToggle() }
+                }
+                Row(Modifier.fillMaxWidth()) {
+                    Box(Modifier.weight(1f).alignByBaseline()) { updateAction() }
+                    Box(Modifier.weight(1f).alignByBaseline()) { updateInterval() }
+                }
+            } else {
+                sourcePreference()
+                autoUpdateToggle()
+                updateInterval()
+                updateAction()
+            }
+        }
     }
 }
 
@@ -269,6 +291,7 @@ internal fun ResourceFileCard(
     onUpdate: (() -> Unit)? = null,
     description: String? = null,
     actionsEnabled: Boolean = true,
+    inGrid: Boolean = false,
 ) {
     val cardActionsEnabled = actionsEnabled && updateState == ResourceFileUpdateDisplayState.Idle
     ResourceFileCardSurface(
@@ -276,6 +299,7 @@ internal fun ResourceFileCard(
         status = status,
         description = description,
         modifier = modifier,
+        inGrid = inGrid,
     ) {
         if (onUpdate != null) {
             ResourceFileUpdateAction(
@@ -320,78 +344,98 @@ private fun ResourceFileCardSurface(
     fileName: String,
     status: ResourceFileStatus,
     modifier: Modifier = Modifier,
+    inGrid: Boolean = false,
     description: String? = null,
     actions: @Composable () -> Unit,
 ) {
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp)
-            .padding(bottom = 12.dp),
+            .then(if (inGrid) Modifier else Modifier.padding(start = 12.dp, end = 12.dp, bottom = 12.dp)),
         insideMargin = PaddingValues(16.dp),
     ) {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top,
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
+        val fileInfo: @Composable () -> Unit = {
+            Text(
+                text = fileName,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = MiuixTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (!description.isNullOrBlank()) {
+                Text(
+                    text = description,
+                    style = MiuixTheme.textStyles.body2,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            if (status.exists) {
+                Text(
+                    text = status.sizeText(),
+                    style = MiuixTheme.textStyles.body2,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (!status.isBundledCore) {
                     Text(
-                        text = fileName,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MiuixTheme.colorScheme.onSurface,
+                        text = status.updatedAtText(),
+                        style = MiuixTheme.textStyles.body2,
+                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
-                    if (!description.isNullOrBlank()) {
-                        Text(
-                            text = description,
-                            style = MiuixTheme.textStyles.body2,
-                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
-                    if (status.exists) {
-                        Text(
-                            text = status.sizeText(),
-                            style = MiuixTheme.textStyles.body2,
-                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                        if (!status.isBundledCore) {
-                            Text(
-                                text = status.updatedAtText(),
-                                style = MiuixTheme.textStyles.body2,
-                                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        }
+                }
+            }
+        }
+        val readiness: @Composable () -> Unit = {
+            ResourceFileStatusChip(
+                text = stringResource(
+                    if (status.exists) R.string.settings_resource_files_ready
+                    else R.string.settings_resource_files_missing,
+                ),
+                ready = status.exists,
+            )
+        }
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            val actionOffset = if (inGrid) Modifier.offset(y = 16.dp) else Modifier
+            val inlineActions = inGrid && maxWidth >= 336.dp && LocalDensity.current.fontScale <= 1.3f
+            if (inlineActions) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(Modifier.weight(1f)) { fileInfo() }
+                    Column(horizontalAlignment = Alignment.End) {
+                        readiness()
+                        Row(
+                            modifier = actionOffset,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) { actions() }
                     }
                 }
-                Spacer(Modifier.width(12.dp))
-                ResourceFileStatusChip(
-                    text = if (status.exists) {
-                        stringResource(R.string.settings_resource_files_ready)
-                    } else {
-                        stringResource(R.string.settings_resource_files_missing)
-                    },
-                    ready = status.exists,
-                )
-            }
-            Spacer(Modifier.height(12.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                actions()
+            } else {
+                Column {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.Top,
+                    ) {
+                        Column(Modifier.weight(1f)) { fileInfo() }
+                        readiness()
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(top = 12.dp).then(actionOffset),
+                        horizontalArrangement = Arrangement.End,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        actions()
+                    }
+                }
             }
         }
     }
@@ -464,12 +508,14 @@ internal fun CustomResourceFileCard(
     modifier: Modifier = Modifier,
     updateState: ResourceFileUpdateDisplayState = ResourceFileUpdateDisplayState.Idle,
     actionsEnabled: Boolean = true,
+    inGrid: Boolean = false,
 ) {
     val cardActionsEnabled = actionsEnabled && updateState == ResourceFileUpdateDisplayState.Idle
     ResourceFileCardSurface(
         fileName = fileStatus.file.name,
         status = fileStatus.status,
         modifier = modifier,
+        inGrid = inGrid,
     ) {
         if (fileStatus.file.url.isNotBlank()) {
             ResourceFileUpdateAction(

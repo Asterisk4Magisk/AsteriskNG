@@ -5,15 +5,6 @@
 
 package features.subscription
 
-import app.AppServices
-import app.AppState
-import app.LocalAppServices
-import app.LocalAppStateStore
-import app.LocalIsWideScreen
-import app.LocalNavigator
-import app.LocalUpdateAppState
-import app.SubscriptionGroupState
-import app.collectAppState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -22,32 +13,27 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import app.R
-import ui.components.BackNavigationIcon
-import ui.components.DeleteConfirmationDialog
-import ui.components.NavigationIcon
-import androidx.compose.ui.res.stringResource
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.SmallTitle
-import top.yukonga.miuix.kmp.basic.VerticalScrollBar
-import top.yukonga.miuix.kmp.basic.rememberScrollBarAdapter
-import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.extended.Add
-import ui.layout.AdaptiveTopAppBar
-import ui.text.formatTemplate
-import ui.layout.pageContentPaddingWithCutout
-import ui.layout.pageListPadding
-import ui.layout.pageScrollModifiers
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import app.AppServices
+import app.AppState
+import app.LocalAppServices
+import app.LocalAppStateStore
+import app.LocalIsWideScreen
+import app.LocalNavigator
+import app.LocalUpdateAppState
+import app.R
+import app.SubscriptionGroupState
+import app.collectAppState
 import data.AndroidAppStateStore
 import features.proxy.server.display.displayName
 import features.proxy.server.list.ProxyServerQrCodeDialog
@@ -62,14 +48,30 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import sh.calvin.reorderable.ReorderableItem
 import top.yukonga.miuix.kmp.anim.folmeSpring
+import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
+import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.SmallTitle
+import top.yukonga.miuix.kmp.basic.VerticalScrollBar
+import top.yukonga.miuix.kmp.basic.rememberScrollBarAdapter
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.Add
 import top.yukonga.miuix.kmp.interfaces.ExperimentalScrollBarApi
+import ui.clipboard.setPlainText
+import ui.components.BackNavigationIcon
+import ui.components.DeleteConfirmationDialog
+import ui.components.NavigationIcon
 import ui.components.longPressReorderDragHandle
 import ui.components.rememberAsteriskReorderableLazyListState
 import ui.components.rememberReorderPreview
 import ui.components.rememberReorderableLazyListContentPaddingWithoutTop
 import ui.components.rememberReorderableScrollThresholdPadding
 import ui.components.reorderByIds
-import ui.clipboard.setPlainText
+import ui.layout.AdaptiveTopAppBar
+import ui.layout.pageContentPaddingWithCutout
+import ui.layout.pageListPadding
+import ui.layout.pageReadableWidth
+import ui.layout.pageScrollModifiers
+import ui.text.formatTemplate
 
 private const val SubscriptionGroupListHeaderItemCount = 1
 
@@ -265,7 +267,7 @@ fun SubscriptionGroupListPage(
             onMove = preview.onMove,
         )
 
-        Box {
+        Box(Modifier.pageReadableWidth(maxWidth = 920.dp)) {
             LazyColumn(
                 state = lazyListState,
                 modifier = Modifier

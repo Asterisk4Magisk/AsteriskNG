@@ -3,9 +3,16 @@
 
 package app
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.EaseInOut
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.MutatePriority
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -15,11 +22,13 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.exclude
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
@@ -32,42 +41,43 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.unit.LayoutDirection
-import top.yukonga.miuix.kmp.nav.core.NavDisplay
-import top.yukonga.miuix.kmp.nav.core.NavDisplayEffects
-import top.yukonga.miuix.kmp.nav.core.rememberNavBackStack
-import top.yukonga.miuix.kmp.nav.core.rememberNavSystemCornerRadius
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.IntSize
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.job
-import kotlinx.coroutines.launch
 import app.navigation.Navigator
 import app.navigation.Route
-import androidx.compose.ui.res.stringResource
 import features.about.AboutPage
 import features.about.LicensePage
 import features.logs.AccessLogsPage
 import features.logs.CoreLogsPage
 import features.logs.LogcatLogsPage
 import features.proxy.app.ProxyAppListPage
-import features.resources.ResourceManagementPage
-import features.proxy.server.list.ProxyServerListPage
 import features.proxy.server.editor.ProxyServerPage
+import features.proxy.server.list.ProxyServerListPage
+import features.resources.ResourceManagementPage
 import features.routing.RoutingPage
 import features.settings.SettingsPage
 import features.subscription.SubscriptionGroupListPage
+import kotlin.math.abs
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.job
+import kotlinx.coroutines.launch
+import top.yukonga.miuix.kmp.anim.folmeSpring
 import top.yukonga.miuix.kmp.basic.NavigationBar
 import top.yukonga.miuix.kmp.basic.NavigationBarDisplayMode
 import top.yukonga.miuix.kmp.basic.NavigationBarItem
@@ -80,12 +90,16 @@ import top.yukonga.miuix.kmp.icon.extended.AppRecording
 import top.yukonga.miuix.kmp.icon.extended.Layers
 import top.yukonga.miuix.kmp.icon.extended.MindMap
 import top.yukonga.miuix.kmp.icon.extended.Settings
+import top.yukonga.miuix.kmp.nav.core.NavDisplay
+import top.yukonga.miuix.kmp.nav.core.NavDisplayEffects
+import top.yukonga.miuix.kmp.nav.core.rememberNavBackStack
+import top.yukonga.miuix.kmp.nav.core.rememberNavSystemCornerRadius
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import ui.layout.LocalAdaptiveWindow
+import ui.layout.LocalRailHandlesHorizontalInsets
+import ui.layout.avoidFold
 import ui.layout.pageWindowPadding
-import ui.layout.shouldShowSplitPane
-import kotlin.math.abs
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
+import ui.layout.rememberAdaptiveWindow
 
 private object MainNavigation {
     const val PROXY_PAGE_INDEX = 0
@@ -133,11 +147,12 @@ fun AppContent(
 
     MainScreenBackHandler(mainPagerState, navigator)
 
-    val isWideScreen = shouldShowSplitPane()
+    val window = rememberAdaptiveWindow()
 
     CompositionLocalProvider(
         LocalNavigator provides navigator,
-        LocalIsWideScreen provides isWideScreen,
+        LocalAdaptiveWindow provides window,
+        LocalIsWideScreen provides window.supportsWideContent,
     ) {
         val cornerRadius = rememberNavSystemCornerRadius()
         val effects = remember(cornerRadius) {
@@ -154,6 +169,8 @@ fun AppContent(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MiuixTheme.colorScheme.surface)
+                .avoidFold(window)
+                .clipToBounds()
                 .imePadding(),
             onBack = { navigator.pop() },
             effects = effects,
@@ -223,87 +240,69 @@ private fun Home(
     padding: PaddingValues,
     mainPagerState: MainPagerState,
 ) {
-    val isWideScreen = LocalIsWideScreen.current
+    val showNavigationRail = LocalAdaptiveWindow.current.showNavigationRail
     val layoutDirection = LocalLayoutDirection.current
     val navigationItems = MainNavigation.navigationItems()
-    Scaffold {
-        if (isWideScreen) {
-            WideScreenContent(
-                navigationItems = navigationItems,
-                layoutDirection = layoutDirection,
-                mainPagerState = mainPagerState,
-            )
-        } else {
-            CompactScreenLayout(
-                navigationItems = navigationItems,
-                padding = padding,
-                mainPagerState = mainPagerState,
-            )
-        }
-    }
-}
+    val sizeMotion = remember { folmeSpring<IntSize>(damping = 0.95f, response = 0.4f) }
+    val fadeMotion = remember { folmeSpring<Float>(damping = 0.95f, response = 0.4f) }
 
-@Composable
-private fun WideScreenContent(
-    navigationItems: List<NavigationItem>,
-    layoutDirection: LayoutDirection,
-    mainPagerState: MainPagerState,
-) {
-    val page = mainPagerState.selectedPage
-    Row {
-        NavigationRail(
-            modifier = Modifier.background(MiuixTheme.colorScheme.surface),
+    Row(Modifier.fillMaxSize()) {
+        AnimatedVisibility(
+            visible = showNavigationRail,
+            enter = expandHorizontally(sizeMotion, expandFrom = Alignment.Start) + fadeIn(fadeMotion),
+            exit = shrinkHorizontally(sizeMotion, shrinkTowards = Alignment.Start) + fadeOut(fadeMotion),
         ) {
-            navigationItems.forEachIndexed { index, item ->
-                NavigationRailItem(
-                    selected = page == index,
-                    onClick = { mainPagerState.animateToPage(index) },
-                    icon = item.icon,
-                    label = item.label,
-                )
+            NavigationRail {
+                navigationItems.forEachIndexed { index, item ->
+                    NavigationRailItem(
+                        selected = mainPagerState.selectedPage == index,
+                        onClick = { mainPagerState.animateToPage(index) },
+                        icon = item.icon,
+                        label = item.label,
+                    )
+                }
             }
         }
         Scaffold(
-            modifier = Modifier
-                .fillMaxSize(),
-            contentWindowInsets =
+            modifier = Modifier.weight(1f).fillMaxSize(),
+            contentWindowInsets = if (showNavigationRail) {
                 WindowInsets.systemBars.union(
                     WindowInsets.displayCutout.exclude(
                         WindowInsets.displayCutout.only(WindowInsetsSides.Start),
                     ),
-                ),
-        ) { padding ->
-            AppPager(
-                padding = PaddingValues(top = padding.calculateTopPadding()),
-                pagerState = mainPagerState.pagerState,
-                modifier = Modifier
-                    .imePadding()
-                    .padding(end = padding.calculateEndPadding(layoutDirection)),
-            )
+                )
+            } else {
+                WindowInsets.systemBars.union(WindowInsets.displayCutout)
+            },
+            bottomBar = {
+                AnimatedVisibility(
+                    visible = !showNavigationRail,
+                    enter = expandVertically(sizeMotion, expandFrom = Alignment.Bottom) + fadeIn(fadeMotion),
+                    exit = shrinkVertically(sizeMotion, shrinkTowards = Alignment.Bottom) + fadeOut(fadeMotion),
+                ) {
+                    NavigationBar(
+                        navigationItems = navigationItems,
+                        mainPagerState = mainPagerState,
+                    )
+                }
+            },
+        ) { innerPadding ->
+            CompositionLocalProvider(LocalRailHandlesHorizontalInsets provides showNavigationRail) {
+                AppPager(
+                    padding = if (showNavigationRail) PaddingValues(top = innerPadding.calculateTopPadding()) else innerPadding,
+                    pagerState = mainPagerState.pagerState,
+                    modifier = if (showNavigationRail) {
+                        Modifier.padding(end = innerPadding.calculateEndPadding(layoutDirection))
+                            .consumeWindowInsets(
+                                WindowInsets.displayCutout.union(WindowInsets.navigationBars)
+                                    .only(WindowInsetsSides.Horizontal),
+                            )
+                    } else {
+                        Modifier.pageWindowPadding(padding)
+                    },
+                )
+            }
         }
-    }
-}
-
-@Composable
-private fun CompactScreenLayout(
-    navigationItems: List<NavigationItem>,
-    padding: PaddingValues,
-    mainPagerState: MainPagerState,
-) {
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        bottomBar = {
-            NavigationBar(
-                navigationItems = navigationItems,
-                mainPagerState = mainPagerState,
-            )
-        },
-    ) { innerPadding ->
-        AppPager(
-            padding = innerPadding,
-            pagerState = mainPagerState.pagerState,
-            modifier = Modifier.pageWindowPadding(padding),
-        )
     }
 }
 

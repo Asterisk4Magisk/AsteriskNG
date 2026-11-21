@@ -3,6 +3,8 @@
 
 package features.proxy.server.list
 
+import androidx.compose.ui.unit.Dp
+import ui.layout.pageReadableWidth
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -17,6 +19,7 @@ import app.AppState
 import app.ProxyServerListState
 import app.ProxyServerState
 import app.R
+import app.modes.ProxyServerListLayoutAuto
 import app.modes.ProxyServerListLayoutDouble
 import app.modes.ProxyServerListLayoutMultiple
 import app.modes.ProxyServerListLayoutSingle
@@ -59,6 +62,7 @@ import ui.text.formatTemplate
 
 @Composable
 internal fun ProxyServerListTopBar(
+    contentWidth: Dp,
     isWideScreen: Boolean,
     scrollBehavior: ScrollBehavior,
     searchValue: String,
@@ -147,7 +151,7 @@ internal fun ProxyServerListTopBar(
             ) { action -> requestToolAction(action) }
         },
         bottomContent = {
-            Column {
+            Column(Modifier.pageReadableWidth(maxWidth = contentWidth)) {
                 ProxyServerListSearchBar(
                     searchValue = searchValue,
                     onSearchValueChange = onSearchValueChange,
@@ -452,6 +456,10 @@ private fun handleProxyServerListToolAction(
                 messages.realConnectionDoneTemplate,
                 false,
             )
+        }
+
+        ProxyServerListToolAction.SetLayoutAuto -> {
+            updateAppState { state -> state.copy(proxyServerListLayout = ProxyServerListLayoutAuto) }
         }
 
         ProxyServerListToolAction.SetLayoutSingle -> {

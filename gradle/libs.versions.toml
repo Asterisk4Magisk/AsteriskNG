@@ -3,16 +3,17 @@ agp = "9.5.2"
 androidx-activity-compose = "1.13.0"
 androidx-navigationevent = "1.1.0"
 androidx-room = "2.8.5"
+androidx-window = "1.5.1"
 androidx-work = "2.12.0"
-compose = "1.12.2"
 coil = "3.6.3"
+compose = "1.12.2"
 dexlib2 = "3.0.10"
+grpc = "1.85.1"
+kage = "0.8.0"
 kotlin = "2.4.21"
 kotlinx-serialization-json = "1.13.0"
 ksp = "2.3.14"
 ktor = "3.6.1"
-kage = "0.8.0"
-grpc = "1.85.1"
 libsu = "6.0.0"
 miuix = "0.9.4"
 protobuf = "4.36.2"
@@ -27,19 +28,20 @@ androidx-activity-compose = { module = "androidx.activity:activity-compose", ver
 androidx-navigationevent = { module = "org.jetbrains.androidx.navigationevent:navigationevent-compose", version.ref = "androidx-navigationevent" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "androidx-room" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "androidx-room" }
+androidx-window = { module = "androidx.window:window", version.ref = "androidx-window" }
 androidx-work-runtime = { module = "androidx.work:work-runtime", version.ref = "androidx-work" }
-compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "compose" }
-compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "compose" }
 coil = { module = "io.coil-kt.coil3:coil", version.ref = "coil" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
+compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "compose" }
+compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "compose" }
 dexlib2 = { module = "com.android.tools.smali:smali-dexlib2", version.ref = "dexlib2" }
 grpc-okhttp = { module = "io.grpc:grpc-okhttp", version.ref = "grpc" }
 grpc-protobuf-lite = { module = "io.grpc:grpc-protobuf-lite", version.ref = "grpc" }
 grpc-stub = { module = "io.grpc:grpc-stub", version.ref = "grpc" }
 javax-annotation-api = { module = "javax.annotation:javax.annotation-api", version = "1.3.2" }
+kage = { module = "com.github.android-password-store:kage", version.ref = "kage" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization-json" }
 ktor-http = { module = "io.ktor:ktor-http", version.ref = "ktor" }
-kage = { module = "com.github.android-password-store:kage", version.ref = "kage" }
 libsu-core = { module = "com.github.topjohnwu.libsu:core", version.ref = "libsu" }
 miuix-icons = { module = "top.yukonga.miuix.kmp:miuix-icons", version.ref = "miuix" }
 miuix-nav = { module = "top.yukonga.miuix.kmp:miuix-nav", version.ref = "miuix" }

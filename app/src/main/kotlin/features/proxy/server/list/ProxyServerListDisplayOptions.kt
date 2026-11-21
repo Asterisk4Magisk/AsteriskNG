@@ -5,13 +5,15 @@ package features.proxy.server.list
 
 import app.displayTitle
 import app.ProxyServerState
+import app.modes.ProxyServerListLayoutAuto
 import app.modes.ProxyServerListLayoutDouble
 import app.modes.ProxyServerListLayoutMultiple
 import app.modes.ProxyServerListSortLatency
 import app.modes.ProxyServerListSortName
 
-internal fun Int.resolvedProxyServerListColumns(): Int {
+internal fun Int.resolvedProxyServerListColumns(isWideScreen: Boolean): Int {
     return when (this) {
+        ProxyServerListLayoutAuto -> if (isWideScreen) 3 else 1
         ProxyServerListLayoutDouble -> 2
         ProxyServerListLayoutMultiple -> 3
         else -> 1

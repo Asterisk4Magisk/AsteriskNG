@@ -7,7 +7,9 @@ package features.routing
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -21,7 +23,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import app.DefaultRouteOutboundTag
 import app.LocalAppServices
 import app.LocalAppStateStore
@@ -56,20 +60,22 @@ import ui.clipboard.ClipboardImportFailure
 import ui.clipboard.ClipboardImportMode
 import ui.clipboard.getPlainText
 import ui.clipboard.setPlainText
+import ui.components.DeleteConfirmationDialog
 import ui.components.IconDropdownMenu
 import ui.components.IconDropdownMenuEntry
 import ui.components.ImportModeDialog
-import ui.components.DeleteConfirmationDialog
 import ui.components.NavigationIcon
-import ui.components.rememberReorderPreview
-import ui.components.reorderByIds
 import ui.components.longPressReorderDragHandle
 import ui.components.rememberAsteriskReorderableLazyListState
+import ui.components.rememberReorderPreview
 import ui.components.rememberReorderableLazyListContentPaddingWithoutTop
 import ui.components.rememberReorderableScrollThresholdPadding
+import ui.components.reorderByIds
 import ui.layout.AdaptiveTopAppBar
+import ui.layout.LocalAdaptiveWindow
 import ui.layout.pageContentPaddingWithCutout
 import ui.layout.pageListPadding
+import ui.layout.pageReadableWidth
 import ui.layout.pageScrollModifiers
 import ui.text.formatTemplate
 
@@ -141,13 +147,15 @@ fun RoutingPage(
     val defaultOutboundTag = appState.defaultRouteOutboundTag.effectiveDefaultOutboundTag(outboundOptions)
     val defaultOutboundLabel = outboundLabels[defaultOutboundTag] ?: defaultOutboundTag
 
+    val useInlineEditor = LocalAdaptiveWindow.current.showTwoColumns && LocalDensity.current.fontScale <= 1.3f
     var editingRule by remember { mutableStateOf<RouteRule?>(null) }
-    var showRuleDialog by remember { mutableStateOf(false) }
+    var showRuleEditor by remember { mutableStateOf(false) }
     var pendingRouteImport by remember { mutableStateOf<List<RouteRuleClipboardItem>?>(null) }
     var pendingRouteDeletion by remember { mutableStateOf<RouteRule?>(null) }
     val rules = appState.routeRules
 
     fun deleteRoute(rule: RouteRule) {
+        if (editingRule?.id == rule.id) showRuleEditor = false
         updateAppState { state ->
             state.copy(
                 routeRules = state.routeRules.filterNot { it.id == rule.id },
@@ -166,6 +174,39 @@ fun RoutingPage(
         }
     }
 
+    val editor: @Composable (Modifier) -> Unit = { modifier ->
+        RouteRuleEditor(
+            show = showRuleEditor,
+            inline = useInlineEditor,
+            modifier = modifier,
+            initialRule = editingRule,
+            nextRuleId = appState.nextRouteRuleId,
+            outboundOptions = outboundOptions,
+            onDismissRequest = { showRuleEditor = false },
+            onSave = { savedRule ->
+                updateAppState { state ->
+                    val exists = state.routeRules.any { it.id == savedRule.id }
+                    state.copy(
+                        routeRules = if (exists) {
+                            state.routeRules.map { if (it.id == savedRule.id) savedRule.copy(enabled = it.enabled) else it }
+                        } else {
+                            state.routeRules + savedRule
+                        },
+                        nextRouteRuleId = if (exists) {
+                            state.nextRouteRuleId
+                        } else {
+                            maxOf(state.nextRouteRuleId, savedRule.id + 1)
+                        },
+                    )
+                }
+                showRuleEditor = false
+                scope.launch {
+                    tipNotifier.show(savedTemplate.formatTemplate("name" to savedRule.remarks))
+                }
+            },
+        )
+    }
+
     Scaffold(
         topBar = {
             AdaptiveTopAppBar(
@@ -182,13 +223,15 @@ fun RoutingPage(
                             updateAppState { state -> state.copy(defaultRouteOutboundTag = tag) }
                         },
                     )
-                    NavigationIcon(
-                        onClick = {
-                            editingRule = null
-                            showRuleDialog = true
-                        },
-                        imageVector = MiuixIcons.Add,
-                    )
+                    if (!showRuleEditor) {
+                        NavigationIcon(
+                            onClick = {
+                                editingRule = null
+                                showRuleEditor = true
+                            },
+                            imageVector = MiuixIcons.Add,
+                        )
+                    }
                     RoutingClipboardMenu { action ->
                         when (action) {
                             RoutingClipboardAction.Import -> {
@@ -250,76 +293,88 @@ fun RoutingPage(
             onMove = preview.onMove,
         )
 
-        Box {
-            LazyColumn(
-                state = lazyListState,
-                modifier = Modifier
-                    .padding(top = listPadding.calculateTopPadding())
-                    .pageScrollModifiers(topAppBarScrollBehavior),
-                contentPadding = lazyContentPadding,
-            ) {
-                item(key = RoutingPolicyItemKey) {
-                    SmallTitle(text = stringResource(R.string.routing_domain_policy))
-                    RoutingPolicyCard(
-                        domainStrategyOptions = DomainStrategyOptions,
-                        selectedDomainStrategy = appState.routeDomainStrategy,
-                        onDomainStrategyChange = { index ->
-                            updateAppState { state -> state.copy(routeDomainStrategy = index) }
-                        },
-                    )
-                }
-                item(key = RoutingRulesTitleItemKey) {
-                    SmallTitle(text = stringResource(R.string.routing_title))
-                }
-                itemsIndexed(
-                    items = preview.items,
-                    key = { _, rule -> rule.id },
-                ) { _, rule ->
-                    ReorderableItem(reorderableLazyListState.reorderableState, key = rule.id) { isDragging ->
-                        RouteRuleCard(
-                            rule = rule,
-                            outboundLabel = outboundLabels[rule.outboundTag] ?: rule.outboundTag,
-                            isDragging = isDragging,
-                            dragModifier = Modifier.longPressReorderDragHandle(
-                                scope = this,
-                                enabled = rules.size > 1,
-                                state = reorderableLazyListState,
-                                onDragStarted = preview.onDragStarted,
-                                onDragStopped = preview.onDragStopped,
-                            ),
-                            onToggle = { enabled ->
-                                updateAppState { state ->
-                                    state.copy(
-                                        routeRules = state.routeRules.map {
-                                            if (it.id == rule.id) it.copy(enabled = enabled) else it
-                                        },
-                                    )
-                                }
+        val showInlineEditor = useInlineEditor && showRuleEditor
+        Row(Modifier.pageReadableWidth(maxWidth = if (showInlineEditor) 1180.dp else 920.dp).fillMaxSize()) {
+            Box(Modifier.weight(1f).fillMaxHeight()) {
+                LazyColumn(
+                    state = lazyListState,
+                    modifier = Modifier
+                        .padding(top = listPadding.calculateTopPadding())
+                        .pageScrollModifiers(topAppBarScrollBehavior),
+                    contentPadding = lazyContentPadding,
+                ) {
+                    item(key = RoutingPolicyItemKey) {
+                        SmallTitle(text = stringResource(R.string.routing_domain_policy))
+                        RoutingPolicyCard(
+                            domainStrategyOptions = DomainStrategyOptions,
+                            selectedDomainStrategy = appState.routeDomainStrategy,
+                            onDomainStrategyChange = { index ->
+                                updateAppState { state -> state.copy(routeDomainStrategy = index) }
                             },
-                            onEdit = {
-                                editingRule = rule
-                                showRuleDialog = true
-                            },
-                            onDelete = { requestRouteDeletion(rule) },
-                            modifier = Modifier.animateItem(
-                                fadeInSpec = null,
-                                fadeOutSpec = null,
-                                placementSpec = folmeSpring(damping = 0.9f, response = 0.38f),
-                            ),
                         )
                     }
-                }
-                item(key = "routing_empty") {
-                    if (rules.isEmpty()) {
-                        RoutingEmptyCard()
+                    item(key = RoutingRulesTitleItemKey) {
+                        SmallTitle(text = stringResource(R.string.routing_title))
+                    }
+                    itemsIndexed(
+                        items = preview.items,
+                        key = { _, rule -> rule.id },
+                    ) { _, rule ->
+                        ReorderableItem(reorderableLazyListState.reorderableState, key = rule.id) { isDragging ->
+                            RouteRuleCard(
+                                rule = rule,
+                                outboundLabel = outboundLabels[rule.outboundTag] ?: rule.outboundTag,
+                                isDragging = isDragging,
+                                dragModifier = Modifier.longPressReorderDragHandle(
+                                    scope = this,
+                                    enabled = rules.size > 1,
+                                    state = reorderableLazyListState,
+                                    onDragStarted = preview.onDragStarted,
+                                    onDragStopped = preview.onDragStopped,
+                                ),
+                                onToggle = { enabled ->
+                                    updateAppState { state ->
+                                        state.copy(
+                                            routeRules = state.routeRules.map {
+                                                if (it.id == rule.id) it.copy(enabled = enabled) else it
+                                            },
+                                        )
+                                    }
+                                },
+                                onEdit = {
+                                    editingRule = rule
+                                    showRuleEditor = true
+                                },
+                                onDelete = { requestRouteDeletion(rule) },
+                                editEnabled = !showRuleEditor,
+                                modifier = Modifier.animateItem(
+                                    fadeInSpec = null,
+                                    fadeOutSpec = null,
+                                    placementSpec = folmeSpring(damping = 0.9f, response = 0.38f),
+                                ),
+                            )
+                        }
+                    }
+                    item(key = "routing_empty") {
+                        if (rules.isEmpty()) {
+                            RoutingEmptyCard()
+                        }
                     }
                 }
+                VerticalScrollBar(
+                    adapter = rememberScrollBarAdapter(lazyListState),
+                    modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
+                    trackPadding = contentPadding,
+                )
             }
-            VerticalScrollBar(
-                adapter = rememberScrollBarAdapter(lazyListState),
-                modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
-                trackPadding = contentPadding,
-            )
+            val editorModifier = if (showInlineEditor) {
+                Modifier.weight(1.1f).fillMaxHeight().padding(
+                    top = listPadding.calculateTopPadding(),
+                    bottom = listPadding.calculateBottomPadding(),
+                    end = 12.dp,
+                )
+            } else Modifier
+            editor(editorModifier)
         }
     }
 
@@ -334,35 +389,6 @@ fun RoutingPage(
             },
         )
     }
-
-    RouteRuleEditorBottomSheet(
-        show = showRuleDialog,
-        initialRule = editingRule,
-        nextRuleId = appState.nextRouteRuleId,
-        outboundOptions = outboundOptions,
-        onDismissRequest = { showRuleDialog = false },
-        onSave = { savedRule ->
-            updateAppState { state ->
-                val exists = state.routeRules.any { it.id == savedRule.id }
-                state.copy(
-                    routeRules = if (exists) {
-                        state.routeRules.map { if (it.id == savedRule.id) savedRule else it }
-                    } else {
-                        state.routeRules + savedRule
-                    },
-                    nextRouteRuleId = if (exists) {
-                        state.nextRouteRuleId
-                    } else {
-                        maxOf(state.nextRouteRuleId, savedRule.id + 1)
-                    },
-                )
-            }
-            showRuleDialog = false
-            scope.launch {
-                tipNotifier.show(savedTemplate.formatTemplate("name" to savedRule.remarks))
-            }
-        },
-    )
 
     val routeImport = pendingRouteImport
     ImportModeDialog(

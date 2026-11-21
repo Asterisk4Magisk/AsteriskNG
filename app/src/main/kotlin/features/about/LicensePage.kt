@@ -32,6 +32,7 @@ import features.about.license.Library
 import features.about.license.decodeAboutLibraries
 import ui.layout.pageContentPaddingWithCutout
 import ui.layout.pageScrollModifiers
+import ui.layout.singleColumnPageWidth
 import app.R
 import androidx.compose.runtime.getValue
 import top.yukonga.miuix.kmp.interfaces.ExperimentalScrollBarApi
@@ -78,7 +79,7 @@ fun LicensePage(
             outerPadding = padding,
             isWideScreen = isWideScreen,
         )
-        Box {
+        Box(Modifier.singleColumnPageWidth()) {
             LazyColumn(
                 state = lazyListState,
                 modifier = Modifier.pageScrollModifiers(

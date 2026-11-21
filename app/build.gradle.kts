@@ -127,6 +127,7 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.work.runtime)
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.window)
     implementation(libs.coil)
     implementation(libs.coil.compose)
     implementation(libs.dexlib2)

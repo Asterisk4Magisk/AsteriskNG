@@ -8,6 +8,7 @@ package features.resources
 import features.resources.runtime.withScannedResourceFiles
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.lazy.LazyColumn
@@ -24,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
 import app.CustomResourceFileState
 import app.CustomResourceFileStatus
@@ -50,6 +52,7 @@ import top.yukonga.miuix.kmp.basic.rememberScrollBarAdapter
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Add
 import top.yukonga.miuix.kmp.interfaces.ExperimentalScrollBarApi
+import ui.layout.pageReadableWidth
 import ui.components.BackNavigationIcon
 import ui.components.DeleteConfirmationDialog
 import ui.components.NavigationIcon
@@ -320,45 +323,122 @@ fun ResourceManagementPage(
             isWideScreen = isWideScreen,
         )
         val listPadding = pageListPadding(contentPadding)
+        val useResourceGrid = useWideResourceLayout()
+        val dataFiles = ResourceFileKind.entries.filterNot { it == ResourceFileKind.XrayCore }
+        val builtInFiles = if (useResourceGrid) listOf(ResourceFileKind.XrayCore) + dataFiles else dataFiles
+        val customFiles = appState.customResourceFiles
+        val largestResourceSectionItemCount = maxOf(builtInFiles.size, customFiles.size)
 
-        Box {
+        @Composable
+        fun CoreFileCard(modifier: Modifier = Modifier) {
+            val kind = ResourceFileKind.XrayCore
+            ResourceFileCard(
+                modifier = modifier,
+                inGrid = useResourceGrid,
+                fileName = kind.displayName,
+                status = status.statusOf(kind),
+                actionsEnabled = !resourceActionRunning,
+                description = stringResource(R.string.settings_resource_files_root_only),
+                onReplace = {
+                    runResourceFileAction(
+                        action = {
+                            resourceFileUseCase.replace(kind)?.also {
+                                services.refreshXrayCoreBoot(appState)
+                            }
+                        },
+                        successMessage = replacedMessage.formatTemplate("name" to kind.displayName),
+                    )
+                },
+                onRestore = {
+                    runResourceFileAction(
+                        action = {
+                            services.restoreSharedXrayCore(
+                                state = appState,
+                                onRootStopped = { updateAppState { it.copy(proxyRunning = false) } },
+                            )
+                        },
+                        successMessage = restoredMessage.formatTemplate("name" to kind.displayName),
+                    )
+                },
+            )
+        }
+
+        @Composable
+        fun BuiltInFileCard(kind: ResourceFileKind, modifier: Modifier = Modifier) {
+            if (kind == ResourceFileKind.XrayCore) {
+                CoreFileCard(modifier)
+                return
+            }
+            ResourceFileCard(
+                modifier = modifier,
+                inGrid = useResourceGrid,
+                fileName = kind.displayName,
+                status = status.statusOf(kind),
+                updateState = updateQueueState.displayStateOf(
+                    ResourceFileUpdateTarget.BuiltIn(kind),
+                ),
+                actionsEnabled = !resourceActionRunning,
+                onUpdate = { updateResourceFile(kind) },
+                onReplace = {
+                    runResourceFileAction(
+                        action = { resourceFileUseCase.replace(kind, appState.customResourceFiles) },
+                        successMessage = replacedMessage.formatTemplate("name" to kind.displayName),
+                    )
+                },
+                onRestore = {
+                    runResourceFileAction(
+                        action = { resourceFileUseCase.restoreBundled(kind, appState.customResourceFiles) },
+                        successMessage = restoredMessage.formatTemplate("name" to kind.displayName),
+                    )
+                },
+            )
+        }
+
+        @Composable
+        fun CustomFileCard(customFile: CustomResourceFileState, modifier: Modifier = Modifier) {
+            CustomResourceFileCard(
+                modifier = modifier,
+                inGrid = useResourceGrid,
+                fileStatus = status.statusOf(customFile),
+                updateState = updateQueueState.displayStateOf(
+                    ResourceFileUpdateTarget.Custom(customFile.id),
+                ),
+                actionsEnabled = !resourceActionRunning,
+                onUpdate = { file -> updateCustomResourceFile(file) },
+                onReplace = { file ->
+                    runResourceFileAction(
+                        action = {
+                            resourceFileUseCase.replaceCustom(
+                                customFile = file,
+                                customResourceFiles = appState.customResourceFiles,
+                            )
+                        },
+                        successMessage = replacedMessage.formatTemplate("name" to file.name),
+                    )
+                },
+                onEdit = { file ->
+                    editCustomResourceFileNameState.setTextAndPlaceCursorAtEnd(file.name)
+                    editCustomResourceFileUrlState.setTextAndPlaceCursorAtEnd(file.url)
+                    editingCustomResourceFile = file
+                },
+                onDelete = ::requestCustomResourceFileDeletion,
+            )
+        }
+
+        Box(Modifier.pageReadableWidth()) {
             LazyColumn(
                 state = lazyListState,
                 modifier = Modifier.pageScrollModifiers(topAppBarScrollBehavior),
                 contentPadding = listPadding,
             ) {
-                item(key = "resource_files_core_title") {
-                    SmallTitle(text = stringResource(R.string.settings_resource_files_core_files))
-                }
-                item(key = ResourceFileKind.XrayCore.fileName) {
-                    val kind = ResourceFileKind.XrayCore
-                    ResourceFileCard(
-                        fileName = kind.displayName,
-                        status = status.statusOf(kind),
-                        actionsEnabled = !resourceActionRunning,
-                        description = stringResource(R.string.settings_resource_files_root_only),
-                        onReplace = {
-                            runResourceFileAction(
-                                action = {
-                                    resourceFileUseCase.replace(kind)?.also {
-                                        services.refreshXrayCoreBoot(appState)
-                                    }
-                                },
-                                successMessage = replacedMessage.formatTemplate("name" to kind.displayName),
-                            )
-                        },
-                        onRestore = {
-                            runResourceFileAction(
-                                action = {
-                                    services.restoreSharedXrayCore(
-                                        state = appState,
-                                        onRootStopped = { updateAppState { it.copy(proxyRunning = false) } },
-                                    )
-                                },
-                                successMessage = restoredMessage.formatTemplate("name" to kind.displayName),
-                            )
-                        },
-                    )
+                if (!useResourceGrid) {
+                    item(key = "resource_files_core_title") {
+                        SmallTitle(text = stringResource(R.string.settings_resource_files_core_files))
+                    }
+
+                    item(key = ResourceFileKind.XrayCore.fileName) {
+                        CoreFileCard()
+                    }
                 }
                 item(key = "resource_files_title") {
                     SmallTitle(text = stringResource(R.string.settings_resource_files_files))
@@ -415,64 +495,35 @@ fun ResourceManagementPage(
                         onCancel = resourceFileUpdateCoordinator::cancelAll,
                     )
                 }
-                listOf(
-                    ResourceFileKind.GeoIp,
-                    ResourceFileKind.GeoSite,
-                    ResourceFileKind.GeoIpOnlyCnPrivate,
-                    ResourceFileKind.DirectCidrIpv4,
-                    ResourceFileKind.DirectCidrIpv6,
-                ).forEach { kind ->
-                    item(key = kind.fileName) {
-                        ResourceFileCard(
-                            fileName = kind.displayName,
-                            status = status.statusOf(kind),
-                            updateState = updateQueueState.displayStateOf(
-                                ResourceFileUpdateTarget.BuiltIn(kind),
-                            ),
-                            actionsEnabled = !resourceActionRunning,
-                            onUpdate = { updateResourceFile(kind) },
-                            onReplace = {
-                                runResourceFileAction(
-                                    action = { resourceFileUseCase.replace(kind, appState.customResourceFiles) },
-                                    successMessage = replacedMessage.formatTemplate("name" to kind.displayName),
-                                )
-                            },
-                            onRestore = {
-                                runResourceFileAction(
-                                    action = { resourceFileUseCase.restoreBundled(kind, appState.customResourceFiles) },
-                                    successMessage = restoredMessage.formatTemplate("name" to kind.displayName),
-                                )
-                            },
-                        )
+                if (useResourceGrid) {
+                    item(key = "built_in_resource_grid") {
+                        ResourceFileGrid(
+                            itemCount = builtInFiles.size,
+                            key = { builtInFiles[it].fileName },
+                            modifier = Modifier.padding(start = 12.dp, end = 12.dp, bottom = 12.dp),
+                            largestSectionItemCount = largestResourceSectionItemCount,
+                        ) { index, cardModifier ->
+                            BuiltInFileCard(builtInFiles[index], cardModifier)
+                        }
                     }
-                }
-                appState.customResourceFiles.forEach { customFile ->
-                    item(key = "custom_resource_file_${customFile.id}") {
-                        CustomResourceFileCard(
-                            fileStatus = status.statusOf(customFile),
-                            updateState = updateQueueState.displayStateOf(
-                                ResourceFileUpdateTarget.Custom(customFile.id),
-                            ),
-                            actionsEnabled = !resourceActionRunning,
-                            onUpdate = { file -> updateCustomResourceFile(file) },
-                            onReplace = { file ->
-                                runResourceFileAction(
-                                    action = {
-                                        resourceFileUseCase.replaceCustom(
-                                            customFile = file,
-                                            customResourceFiles = appState.customResourceFiles,
-                                        )
-                                    },
-                                    successMessage = replacedMessage.formatTemplate("name" to file.name),
-                                )
-                            },
-                            onEdit = { file ->
-                                editCustomResourceFileNameState.setTextAndPlaceCursorAtEnd(file.name)
-                                editCustomResourceFileUrlState.setTextAndPlaceCursorAtEnd(file.url)
-                                editingCustomResourceFile = file
-                            },
-                            onDelete = ::requestCustomResourceFileDeletion,
-                        )
+                    if (customFiles.isNotEmpty()) {
+                        item(key = "custom_resource_grid") {
+                            ResourceFileGrid(
+                                itemCount = customFiles.size,
+                                key = { "custom_resource_file_" + customFiles[it].id },
+                                modifier = Modifier.padding(start = 12.dp, end = 12.dp, bottom = 12.dp),
+                                largestSectionItemCount = largestResourceSectionItemCount,
+                            ) { index, cardModifier ->
+                                CustomFileCard(customFiles[index], cardModifier)
+                            }
+                        }
+                    }
+                } else {
+                    builtInFiles.forEach { kind ->
+                        item(key = kind.fileName) { BuiltInFileCard(kind) }
+                    }
+                    customFiles.forEach { customFile ->
+                        item(key = "custom_resource_file_" + customFile.id) { CustomFileCard(customFile) }
                     }
                 }
             }

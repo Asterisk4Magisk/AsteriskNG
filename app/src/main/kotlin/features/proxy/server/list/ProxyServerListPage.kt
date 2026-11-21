@@ -3,7 +3,13 @@
 
 package features.proxy.server.list
 
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.fillMaxSize
+import ui.layout.pageReadableWidth
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
@@ -20,6 +26,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.res.stringResource
 import app.LocalAppServices
@@ -30,6 +38,7 @@ import app.LocalUpdateAppState
 import app.ProxyServerState
 import app.R
 import app.collectProxyServerListState
+import app.modes.ProxyServerListLayoutAuto
 import engine.proxy.latency.ProxyServerLatencyTestMode
 import engine.proxy.ProxyServiceResult
 import features.proxy.server.usecase.restartProxyServiceAfterSelection
@@ -95,7 +104,8 @@ fun ProxyServerListPage(
     val defaultGroupName = stringResource(R.string.subscription_default_group)
     val unknownGroupName = stringResource(R.string.common_unknown_group)
     val messages = proxyServerListMessages()
-    val columns = proxyListState.proxyServerListLayout.resolvedProxyServerListColumns()
+    val listLayout = proxyListState.proxyServerListLayout
+    val preferredColumns = listLayout.resolvedProxyServerListColumns(isWideScreen)
 
     LaunchedEffect(proxyListState.selectedProxyServerId) {
         selectedServerId = proxyListState.selectedProxyServerId
@@ -297,6 +307,7 @@ fun ProxyServerListPage(
     Scaffold(
         topBar = {
             ProxyServerListTopBar(
+                contentWidth = if (preferredColumns == 1) 800.dp else 1200.dp,
                 isWideScreen = isWideScreen,
                 scrollBehavior = topAppBarScrollBehavior,
                 searchValue = searchValue,
@@ -338,84 +349,97 @@ fun ProxyServerListPage(
         )
         val dragScrollThresholdBottomPadding = pageListPadding(contentPadding).calculateBottomPadding()
 
-        Box {
-            ProxyServerListPager(
-                groupPagerState = groupPagerState,
-                groupState = groupState,
-                searchValue = searchValue,
-                servers = servers,
-                selectedServerId = selectedServerId,
-                columns = columns,
-                sort = proxyListState.proxyServerListSort,
-                unknownGroupName = unknownGroupName,
-                itemTextFormatter = itemTextFormatter,
-                topAppBarScrollBehavior = topAppBarScrollBehavior,
-                listPadding = listPadding,
-                dragScrollThresholdBottomPadding = dragScrollThresholdBottomPadding,
-                contentPadding = contentPadding,
-                stateStore = stateStore,
-                updateAppState = updateAppState,
-                navigator = navigator,
-                clipboard = clipboard,
-                tipNotifier = tipNotifier,
-                scope = scope,
-                messages = messages,
-                resultKey = ProxyServerEditResultKey,
-                onSelectedServerIdChange = { selectedServerId = it },
-                onDeleteServer = ::requestProxyServerDeletion,
-            )
-            ProxyServerListFloatingToolbar(
-                running = proxyRunning,
-                serviceOperationInProgress = serviceOperationInProgress,
-                bottomPadding = floatingToolbarBottomPadding,
-                onToggleRunning = {
-                    runProxyServiceOperation {
-                        when (
-                            val result = proxyServiceUseCase.toggle(
-                                state = stateStore.state.value,
-                                selectedServer = selectedServer,
-                            )
-                        ) {
-                            is ProxyServiceResult.Success -> {
-                                updateAppState { state ->
-                                    state.copy(
-                                        proxyRunning = result.proxyRunning,
-                                        localProxyPort = result.appState?.localProxyPort ?: state.localProxyPort,
+        BoxWithConstraints(Modifier.fillMaxSize()) {
+            val direction = LocalLayoutDirection.current
+            val availableWidth = maxWidth - listPadding.calculateStartPadding(direction) -
+                listPadding.calculateEndPadding(direction)
+            val minCardWidth = 208.dp * LocalDensity.current.fontScale.coerceAtLeast(1f)
+            val fittingColumns = ((availableWidth - 12.dp) / (minCardWidth + 12.dp)).toInt().coerceAtLeast(1)
+            val columns = if (listLayout == ProxyServerListLayoutAuto) {
+                minOf(preferredColumns, fittingColumns)
+            } else {
+                preferredColumns
+            }
+            val contentWidth = if (columns == 1) 800.dp else 1200.dp
+            Box(Modifier.pageReadableWidth(maxWidth = contentWidth).fillMaxSize()) {
+                ProxyServerListPager(
+                    groupPagerState = groupPagerState,
+                    groupState = groupState,
+                    searchValue = searchValue,
+                    servers = servers,
+                    selectedServerId = selectedServerId,
+                    columns = columns,
+                    sort = proxyListState.proxyServerListSort,
+                    unknownGroupName = unknownGroupName,
+                    itemTextFormatter = itemTextFormatter,
+                    topAppBarScrollBehavior = topAppBarScrollBehavior,
+                    listPadding = listPadding,
+                    dragScrollThresholdBottomPadding = dragScrollThresholdBottomPadding,
+                    contentPadding = contentPadding,
+                    stateStore = stateStore,
+                    updateAppState = updateAppState,
+                    navigator = navigator,
+                    clipboard = clipboard,
+                    tipNotifier = tipNotifier,
+                    scope = scope,
+                    messages = messages,
+                    resultKey = ProxyServerEditResultKey,
+                    onSelectedServerIdChange = { selectedServerId = it },
+                    onDeleteServer = ::requestProxyServerDeletion,
+                )
+                ProxyServerListFloatingToolbar(
+                    running = proxyRunning,
+                    serviceOperationInProgress = serviceOperationInProgress,
+                    bottomPadding = floatingToolbarBottomPadding,
+                    onToggleRunning = {
+                        runProxyServiceOperation {
+                            when (
+                                val result = proxyServiceUseCase.toggle(
+                                    state = stateStore.state.value,
+                                    selectedServer = selectedServer,
+                                )
+                            ) {
+                                is ProxyServiceResult.Success -> {
+                                    updateAppState { state ->
+                                        state.copy(
+                                            proxyRunning = result.proxyRunning,
+                                            localProxyPort = result.appState?.localProxyPort ?: state.localProxyPort,
+                                        )
+                                    }
+                                    tipNotifier.show(
+                                        if (result.proxyRunning) messages.serviceStarted else messages.serviceStopped,
                                     )
                                 }
-                                tipNotifier.show(
-                                    if (result.proxyRunning) messages.serviceStarted else messages.serviceStopped,
-                                )
-                            }
 
-                            ProxyServiceResult.MissingServer -> {
+                                ProxyServiceResult.MissingServer -> {
+                                    tipNotifier.show(messages.selectServerFirst)
+                                }
+
+                                is ProxyServiceResult.Failed -> {
+                                    updateAppState { state -> state.copy(proxyRunning = false) }
+                                    tipNotifier.showError(result.error, messages.serviceStopped)
+                                }
+                            }
+                        }
+                    },
+                    onRealConnectionTest = {
+                        val server = servers.firstOrNull { it.id == selectedServerId }
+                        if (server == null) {
+                            scope.launch {
                                 tipNotifier.show(messages.selectServerFirst)
                             }
-
-                            is ProxyServiceResult.Failed -> {
-                                updateAppState { state -> state.copy(proxyRunning = false) }
-                                tipNotifier.showError(result.error, messages.serviceStopped)
-                            }
+                        } else {
+                            testProxyServerLatency(
+                                targetServers = listOf(server),
+                                mode = ProxyServerLatencyTestMode.RealConnection,
+                                doneTemplate = messages.realConnectionDoneTemplate,
+                                showSingleResult = true,
+                            )
                         }
-                    }
-                },
-                onRealConnectionTest = {
-                    val server = servers.firstOrNull { it.id == selectedServerId }
-                    if (server == null) {
-                        scope.launch {
-                            tipNotifier.show(messages.selectServerFirst)
-                        }
-                    } else {
-                        testProxyServerLatency(
-                            targetServers = listOf(server),
-                            mode = ProxyServerLatencyTestMode.RealConnection,
-                            doneTemplate = messages.realConnectionDoneTemplate,
-                            showSingleResult = true,
-                        )
-                    }
-                },
-                modifier = Modifier.align(Alignment.BottomEnd),
-            )
+                    },
+                    modifier = Modifier.align(Alignment.BottomEnd),
+                )
+            }
         }
     }
 

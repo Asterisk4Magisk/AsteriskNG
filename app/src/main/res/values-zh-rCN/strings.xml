@@ -24,6 +24,13 @@
     <string name="common_replace_existing">替换现有</string>
     <string name="common_restore">恢复</string>
     <string name="common_save">保存</string>
+    <string name="editor_switch_unsaved_title">有未保存的修改</string>
+    <string name="editor_switch_unsaved_message">切换到其他条目前，请保存或放弃当前修改。</string>
+    <string name="editor_switch_save">保存并切换</string>
+    <string name="editor_switch_discard">放弃修改并切换</string>
+    <string name="editor_switch_cancel">继续编辑</string>
+    <string name="editor_switch_save_failed">保存失败，当前修改仍保留在编辑页。</string>
+    <string name="editor_switch_target_unavailable">该条目已不可用。</string>
     <string name="common_share">分享</string>
     <string name="common_unknown_group">未知分组</string>
     <string name="common_unsupported">不支持</string>
@@ -85,6 +92,7 @@
     <string name="proxy_server_list_no_subscription_updates">没有可更新的订阅</string>
     <string name="proxy_server_list_no_testable">没有可测试的代理节点</string>
     <string name="proxy_server_list_option_layout">布局</string>
+    <string name="proxy_server_list_option_layout_auto">自动</string>
     <string name="proxy_server_list_option_layout_double">双列</string>
     <string name="proxy_server_list_option_layout_multiple">多列</string>
     <string name="proxy_server_list_option_layout_single">单列</string>

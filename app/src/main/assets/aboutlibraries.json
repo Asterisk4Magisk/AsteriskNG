@@ -404,6 +404,19 @@
             ]
         },
         {
+            "uniqueId": "androidx.window:window",
+            "artifactVersion": "1.5.1",
+            "name": "WindowManager",
+            "description": "WindowManager Jetpack library. Currently only provides additional functionality on foldable devices.",
+            "website": "https://developer.android.com/jetpack/androidx/releases/window#1.5.1",
+            "scm": {
+                "url": "https://cs.android.com/androidx/platform/frameworks/support"
+            },
+            "licenses": [
+                "Apache-2.0"
+            ]
+        },
+        {
             "uniqueId": "androidx.work:work-runtime",
             "artifactVersion": "2.12.0",
             "name": "WorkManager Runtime",

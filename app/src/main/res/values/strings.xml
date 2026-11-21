@@ -24,6 +24,13 @@
     <string name="common_replace_existing">Replace existing</string>
     <string name="common_restore">Restore</string>
     <string name="common_save">Save</string>
+    <string name="editor_switch_unsaved_title">Unsaved changes</string>
+    <string name="editor_switch_unsaved_message">Save or discard your changes before switching to another entry.</string>
+    <string name="editor_switch_save">Save and switch</string>
+    <string name="editor_switch_discard">Discard and switch</string>
+    <string name="editor_switch_cancel">Keep editing</string>
+    <string name="editor_switch_save_failed">Unable to save changes. Your edits are still open.</string>
+    <string name="editor_switch_target_unavailable">This entry is no longer available.</string>
     <string name="common_share">Share</string>
     <string name="common_unknown_group">Unknown group</string>
     <string name="common_unsupported">Unsupported</string>
@@ -85,6 +92,7 @@
     <string name="proxy_server_list_no_subscription_updates">No subscriptions to update</string>
     <string name="proxy_server_list_no_testable">No proxy servers to test</string>
     <string name="proxy_server_list_option_layout">Layout</string>
+    <string name="proxy_server_list_option_layout_auto">Automatic</string>
     <string name="proxy_server_list_option_layout_double">Double</string>
     <string name="proxy_server_list_option_layout_multiple">Multiple</string>
     <string name="proxy_server_list_option_layout_single">Single</string>

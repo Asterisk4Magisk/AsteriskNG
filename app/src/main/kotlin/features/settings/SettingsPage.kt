@@ -6,11 +6,15 @@
 package features.settings
 
 import android.net.VpnService
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -21,8 +25,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import app.LocalAppChromeState
 import app.LocalAppServices
 import app.LocalAppStateStore
@@ -38,8 +46,8 @@ import app.modes.RunModeVpnService
 import app.modes.isRootRunMode
 import app.navigation.Route
 import data.backup.AppBackupRestorePreview
-import engine.proxy.withResolvedDynamicLocalProxyPort
 import engine.proxy.ProxyServiceResult
+import engine.proxy.withResolvedDynamicLocalProxyPort
 import features.settings.sheets.externalInterfacesSummary
 import features.settings.sheets.fragmentSettingsSummary
 import features.settings.sheets.ignoredInterfacesSummary
@@ -49,8 +57,8 @@ import features.settings.sheets.tunSettingsSummary
 import features.settings.usecase.RootBootScriptResult
 import features.settings.usecase.RootEbpfProbeResult
 import features.settings.usecase.SwitchRunModeResult
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
@@ -61,8 +69,10 @@ import top.yukonga.miuix.kmp.basic.rememberScrollBarAdapter
 import top.yukonga.miuix.kmp.interfaces.ExperimentalScrollBarApi
 import ui.KeyColors
 import ui.layout.AdaptiveTopAppBar
+import ui.layout.LocalAdaptiveWindow
 import ui.layout.pageContentPaddingWithCutout
 import ui.layout.pageListPadding
+import ui.layout.pageReadableWidth
 import ui.layout.pageScrollModifiers
 
 @Composable
@@ -78,6 +88,7 @@ fun SettingsPage(
             key(languageMode) {
                 AdaptiveTopAppBar(
                     title = stringResource(R.string.settings_title),
+                    modifier = if (isWideScreen) Modifier.pageReadableWidth() else Modifier,
                     isWideScreen = isWideScreen,
                     scrollBehavior = topAppBarScrollBehavior,
                     subtitle = "v${ProjectInfo.VERSION_NAME} (${ProjectInfo.VERSION_CODE})",
@@ -112,7 +123,8 @@ private fun SettingsContent(
     val proxyServiceUseCase = services.proxyServiceUseCase
     val tipNotifier = services.tipNotifier
     val scope = rememberCoroutineScope()
-    val lazyListState = rememberLazyListState()
+    val gridState = rememberLazyGridState()
+    val wideGridState = rememberLazyGridState()
     var runModeSwitchInProgress by rememberSaveable { mutableStateOf(false) }
     var rootBootScriptSwitchInProgress by rememberSaveable { mutableStateOf(false) }
     var rootEbpfSwitchInProgress by rememberSaveable { mutableStateOf(false) }
@@ -196,15 +208,29 @@ private fun SettingsContent(
     )
     val sheetState = rememberSettingsSheetState(updateAppState)
 
-    Box {
-        LazyColumn(
-            state = lazyListState,
-            modifier = Modifier.pageScrollModifiers(
-                topAppBarScrollBehavior,
-            ),
-            contentPadding = listPadding,
-        ) {
-            item(key = "settings_theme") {
+    BoxWithConstraints(Modifier.pageReadableWidth()) {
+        val direction = LocalLayoutDirection.current
+        val availableWidth = maxWidth - listPadding.calculateStartPadding(direction) -
+            listPadding.calculateEndPadding(direction)
+        val useTwoColumns = LocalAdaptiveWindow.current.showTwoColumns &&
+            availableWidth >= 720.dp && LocalDensity.current.fontScale <= 1.3f
+        val gridPadding = if (isWideScreen) {
+            PaddingValues(
+                start = listPadding.calculateStartPadding(direction),
+                end = listPadding.calculateEndPadding(direction),
+                bottom = listPadding.calculateBottomPadding(),
+            )
+        } else {
+            listPadding
+        }
+        val gridModifier = if (isWideScreen) {
+            Modifier.padding(top = listPadding.calculateTopPadding()).clipToBounds()
+        } else {
+            Modifier
+        }
+        val activeGridState = if (useTwoColumns) wideGridState else gridState
+        val sections = SettingsPageSections().apply {
+            settingsSection("settings_theme") {
                 SettingsThemeSection(
                     colorModeOptions = colorModeOptions,
                     colorMode = appState.colorMode,
@@ -218,7 +244,7 @@ private fun SettingsContent(
                     onLanguageModeChange = { index -> updateAppState { state -> state.copy(languageMode = index) } },
                 )
             }
-            item(key = "settings_general") {
+            settingsSection("settings_general") {
                 SettingsSubscriptionsSection(
                     enableAllProxyGroup = appState.enableAllProxyGroup,
                     enableDeletionConfirmation = appState.enableDeletionConfirmation,
@@ -232,7 +258,7 @@ private fun SettingsContent(
                     },
                 )
             }
-            item(key = "settings_core") {
+            settingsSection("settings_core") {
                 SettingsCoreSection(
                     enableSniffing = appState.enableSniffing,
                     enableSniffingRouteOnly = appState.enableSniffingRouteOnly,
@@ -255,7 +281,7 @@ private fun SettingsContent(
                     },
                 )
             }
-            item(key = "settings_run_mode") {
+            settingsSection("settings_run_mode") {
                 SettingsAdvancedSection(
                     enableBroadcastControl = appState.enableBroadcastControl,
                     enableIpv6 = appState.enableIpv6,
@@ -307,7 +333,7 @@ private fun SettingsContent(
                     },
                 )
             }
-            item(key = "settings_proxy") {
+            settingsSection("settings_proxy") {
                 SettingsProxyModeSections(
                     runMode = appState.runMode,
                     localProxySettingsSummary = localProxySettingsSummary,
@@ -438,7 +464,7 @@ private fun SettingsContent(
                     onOpenPrivateAddresses = { sheetState.openPrivateAddresses(appState) },
                 )
             }
-            item(key = "settings_privacy") {
+            settingsSection("settings_privacy") {
                 SettingsPrivacySection(
                     hideRecentTasks = appState.hideRecentTasks,
                     onHideRecentTasksChange = { hidden -> updateAppState { it.copy(hideRecentTasks = hidden) } },
@@ -448,7 +474,7 @@ private fun SettingsContent(
                     onHideLauncherIconChange = { hidden -> updateAppState { it.copy(hideLauncherIcon = hidden) } },
                 )
             }
-            item(key = "settings_backup_restore") {
+            settingsSection("settings_backup_restore") {
                 SettingsBackupRestoreSection(
                     onBackupUserData = {
                         if (!backupRestoreInProgress) {
@@ -491,7 +517,7 @@ private fun SettingsContent(
                     },
                 )
             }
-            item(key = "settings_logs") {
+            settingsSection("settings_logs") {
                 SettingsLogsSection(
                     enableAccessLog = appState.enableAccessLog,
                     onOpenCoreLogs = { navigator.push(Route.CoreLogs) },
@@ -499,15 +525,23 @@ private fun SettingsContent(
                     onOpenLogcatLogs = { navigator.push(Route.LogcatLogs) },
                 )
             }
-            item(key = "settings_about") {
+            settingsSection("settings_about") {
                 SettingsAboutSection(
                     onOpenAbout = { navigator.push(Route.About) },
                     onOpenLicenses = { navigator.push(Route.License) },
                 )
             }
         }
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(1),
+            state = activeGridState,
+            modifier = gridModifier.pageScrollModifiers(topAppBarScrollBehavior),
+            contentPadding = gridPadding,
+        ) {
+            sections.addTo(this, useTwoColumns)
+        }
         VerticalScrollBar(
-            adapter = rememberScrollBarAdapter(lazyListState),
+            adapter = rememberScrollBarAdapter(activeGridState),
             modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
             trackPadding = contentPadding,
         )

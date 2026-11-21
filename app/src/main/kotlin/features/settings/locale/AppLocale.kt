@@ -6,6 +6,7 @@ package features.settings.locale
 import android.content.Context
 import android.content.res.Configuration
 import android.os.LocaleList
+import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
@@ -38,10 +39,12 @@ fun ProvideAppLanguage(
     content: @Composable () -> Unit,
 ) {
     val context = LocalContext.current
+    val activity = LocalActivity.current
+    val baseConfiguration = LocalConfiguration.current
     val locale = remember(languageMode, systemLocale) {
         resolveAppLocale(languageMode, systemLocale)
     }
-    val configuration = remember(context, locale) { context.localizedConfiguration(locale) }
+    val configuration = remember(context, baseConfiguration, locale) { context.localizedConfiguration(locale) }
     val localizedContext = remember(context, configuration) {
         context.createConfigurationContext(configuration)
     }
@@ -53,6 +56,7 @@ fun ProvideAppLanguage(
     }
 
     CompositionLocalProvider(
+        LocalActivity provides activity,
         LocalContext provides localizedContext,
         LocalConfiguration provides configuration,
         // Dialog and sheet windows use the Activity's Context. Keep resource lookups

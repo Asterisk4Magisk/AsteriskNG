@@ -28,6 +28,7 @@ import top.yukonga.miuix.kmp.basic.rememberScrollBarAdapter
 import ui.layout.AdaptiveTopAppBar
 import ui.layout.pageContentPaddingWithCutout
 import ui.layout.pageScrollModifiers
+import ui.layout.singleColumnPageWidth
 import top.yukonga.miuix.kmp.interfaces.ExperimentalScrollBarApi
 
 @Composable
@@ -59,7 +60,7 @@ fun AboutPage(
             isWideScreen = isWideScreen,
         )
 
-        Box {
+        Box(Modifier.singleColumnPageWidth()) {
             LazyColumn(
                 state = lazyListState,
                 modifier = Modifier.pageScrollModifiers(
