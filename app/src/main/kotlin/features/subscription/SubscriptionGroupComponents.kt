@@ -10,6 +10,14 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.text.input.InputTransformation
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
@@ -18,16 +26,13 @@ import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.foundation.text.input.then
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.verticalScroll
@@ -39,14 +44,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.selected
-import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.Role
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import app.R
 import androidx.compose.ui.res.stringResource
 import top.yukonga.miuix.kmp.basic.Card
@@ -68,6 +71,7 @@ import top.yukonga.miuix.kmp.preference.WindowSpinnerPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowDialog
 import features.proxy.server.display.displayName
+import ui.components.AnimatedFoldDialog
 import ui.components.IconDropdownMenu
 import ui.components.IconDropdownMenuEntry
 import ui.components.WarningConfirmDialog
@@ -75,12 +79,12 @@ import ui.components.animateDraggedCardLift
 import ui.components.draggedCardLift
 import ui.layout.EditorEntryTransition
 import ui.layout.LocalAdaptiveWindow
-import ui.layout.avoidFold
 import ui.text.formatTemplate
 
 @Composable
 internal fun SubscriptionGroupEditorDialog(
     show: Boolean,
+    editorSession: Int,
     group: SubscriptionGroupState?,
     nextGroupId: Int,
     onDismissRequest: () -> Unit,
@@ -95,7 +99,7 @@ internal fun SubscriptionGroupEditorDialog(
     val defaultGroupName = stringResource(R.string.subscription_default_group)
     val unnamedGroupName = stringResource(R.string.subscription_unnamed_group)
 
-    var name by remember(show, group?.id, defaultGroupName, builtIn) {
+    var name by remember(editorSession, group?.id, defaultGroupName, builtIn) {
         mutableStateOf(
             when {
                 builtIn -> group.displayName(defaultGroupName)
@@ -103,28 +107,28 @@ internal fun SubscriptionGroupEditorDialog(
             },
         )
     }
-    var url by remember(show, group?.id) { mutableStateOf(group?.url ?: "") }
-    var hwid by remember(show, group?.id) { mutableStateOf(group?.hwid ?: "") }
-    var ageSecretKey by remember(show, group?.id) { mutableStateOf(group?.ageSecretKey ?: "") }
+    var url by remember(editorSession, group?.id) { mutableStateOf(group?.url ?: "") }
+    var hwid by remember(editorSession, group?.id) { mutableStateOf(group?.hwid ?: "") }
+    var ageSecretKey by remember(editorSession, group?.id) { mutableStateOf(group?.ageSecretKey ?: "") }
     val initialUserAgent = group?.userAgent ?: DefaultSubscriptionUserAgent
-    var userAgentSelection by remember(show, group?.id, initialUserAgent) {
+    var userAgentSelection by remember(editorSession, group?.id, initialUserAgent) {
         mutableStateOf(subscriptionUserAgentSelectionFor(initialUserAgent))
     }
-    var customUserAgent by remember(show, group?.id, initialUserAgent) {
+    var customUserAgent by remember(editorSession, group?.id, initialUserAgent) {
         mutableStateOf(
             initialUserAgent.takeIf {
                 subscriptionUserAgentSelectionFor(it) == SubscriptionUserAgentSelection.Custom
             }.orEmpty(),
         )
     }
-    var interval by remember(show, group?.id) {
+    var interval by remember(editorSession, group?.id) {
         mutableStateOf(sanitizeSubscriptionIntervalInput(group?.updateInterval.orEmpty()))
     }
-    var updateViaProxy by remember(show, group?.id) {
+    var updateViaProxy by remember(editorSession, group?.id) {
         mutableStateOf(group?.updateViaProxy ?: false)
     }
-    var showCustomUserAgentDialog by remember(show, group?.id) { mutableStateOf(false) }
-    var showHttpSubscriptionWarning by remember(show, group?.id) { mutableStateOf(false) }
+    var showCustomUserAgentDialog by remember(editorSession, group?.id) { mutableStateOf(false) }
+    var showHttpSubscriptionWarning by remember(editorSession, group?.id) { mutableStateOf(false) }
     val customUserAgentDraftState = rememberTextFieldState(initialText = customUserAgent)
     val customSummary = customUserAgent.trim().ifBlank {
         stringResource(R.string.subscription_user_agent_custom_summary)
@@ -195,13 +199,16 @@ internal fun SubscriptionGroupEditorDialog(
         selectedId = group?.id,
         modifier = modifier,
     ) {
-        key(show, group?.id, builtIn) {
+        key(editorSession, group?.id, builtIn) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 val scrollState = rememberScrollState()
+                var viewportHeight by remember { mutableIntStateOf(0) }
                 Column(
                     modifier = Modifier
                         .weight(1f, fill = false)
                         .fillMaxWidth()
+                        .onSizeChanged { viewportHeight = it.height }
+                        .clipToBounds()
                         .verticalScroll(scrollState)
                         .padding(bottom = 16.dp),
                 ) {
@@ -218,7 +225,7 @@ internal fun SubscriptionGroupEditorDialog(
                         },
                         lineLimits = TextFieldLineLimits.SingleLine,
                         enabled = !builtIn,
-                        modifier = Modifier.padding(bottom = 12.dp),
+                        modifier = Modifier.padding(bottom = 12.dp).keepSubscriptionFieldVisible(viewportHeight),
                     )
                     TextField(
                         state = rememberTextFieldState(initialText = url),
@@ -227,7 +234,7 @@ internal fun SubscriptionGroupEditorDialog(
                         },
                         label = stringResource(R.string.subscription_url),
                         lineLimits = TextFieldLineLimits.SingleLine,
-                        modifier = Modifier.padding(bottom = 12.dp),
+                        modifier = Modifier.padding(bottom = 12.dp).keepSubscriptionFieldVisible(viewportHeight),
                     )
                     AnimatedVisibility(
                         visible = url.isNotBlank(),
@@ -242,7 +249,7 @@ internal fun SubscriptionGroupEditorDialog(
                                 },
                                 label = stringResource(R.string.subscription_hwid),
                                 lineLimits = TextFieldLineLimits.SingleLine,
-                                modifier = Modifier.padding(bottom = 12.dp),
+                                modifier = Modifier.padding(bottom = 12.dp).keepSubscriptionFieldVisible(viewportHeight),
                             )
                             TextField(
                                 state = rememberTextFieldState(initialText = ageSecretKey),
@@ -251,7 +258,7 @@ internal fun SubscriptionGroupEditorDialog(
                                 },
                                 label = stringResource(R.string.subscription_age_secret_key),
                                 lineLimits = TextFieldLineLimits.SingleLine,
-                                modifier = Modifier.padding(bottom = 12.dp),
+                                modifier = Modifier.padding(bottom = 12.dp).keepSubscriptionFieldVisible(viewportHeight),
                             )
                             WindowSpinnerPreference(
                                 title = stringResource(R.string.subscription_user_agent),
@@ -297,6 +304,7 @@ internal fun SubscriptionGroupEditorDialog(
                                     .then { interval = asCharSequence().toString() },
                                 label = stringResource(R.string.subscription_auto_update_interval),
                                 lineLimits = TextFieldLineLimits.SingleLine,
+                                modifier = Modifier.keepSubscriptionFieldVisible(viewportHeight),
                             )
                         }
                     }
@@ -351,32 +359,36 @@ private fun SubscriptionEditorContainer(
 
     val window = LocalAdaptiveWindow.current
     if (window.hasSeparatingFold) {
-        if (!show) return
-        Dialog(
+        AnimatedFoldDialog(
+            show = show,
+            alignment = Alignment.Center,
             onDismissRequest = onDismissRequest,
-            properties = DialogProperties(
-                usePlatformDefaultWidth = false,
-                decorFitsSystemWindows = false,
-                dismissOnClickOutside = false,
-            ),
         ) {
-            Box(
-                modifier = Modifier.fillMaxSize().avoidFold(window).safeDrawingPadding().imePadding()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                SubscriptionEditorCard(
-                    title = title,
-                    modifier = Modifier.widthIn(max = 460.dp).fillMaxWidth(),
-                    content = content,
-                )
-            }
+            SubscriptionEditorCard(
+                title = title,
+                modifier = Modifier.imePadding().padding(horizontal = 16.dp, vertical = 12.dp)
+                    .widthIn(max = 460.dp).fillMaxWidth(),
+                content = content,
+            )
         }
     } else {
         WindowDialog(show = show, title = title, onDismissRequest = onDismissRequest) {
             content()
         }
     }
+}
+
+@Composable
+private fun Modifier.keepSubscriptionFieldVisible(viewportHeight: Int): Modifier {
+    val requester = remember { BringIntoViewRequester() }
+    var focused by remember { mutableStateOf(false) }
+    LaunchedEffect(focused, viewportHeight) {
+        if (focused && viewportHeight > 0) {
+            withFrameNanos { }
+            requester.bringIntoView()
+        }
+    }
+    return bringIntoViewRequester(requester).onFocusChanged { focused = it.hasFocus }
 }
 
 @Composable
@@ -485,6 +497,7 @@ internal fun SubscriptionGroupCard(
     editing: Boolean = false,
     editEnabled: Boolean = true,
     deleteEnabled: Boolean = true,
+    quickSelection: Boolean = false,
 ) {
     val defaultGroupName = stringResource(R.string.subscription_default_group)
     val dragLift = animateDraggedCardLift(isDragging, label = "subscriptionGroupDrag")
@@ -495,8 +508,17 @@ internal fun SubscriptionGroupCard(
             .padding(horizontal = 12.dp)
             .padding(bottom = 12.dp)
             .draggedCardLift(dragLift)
-            .then(if (editing) Modifier.semantics { selected = true } else Modifier)
-            .then(dragModifier),
+            .then(dragModifier)
+            .then(
+                if (quickSelection) {
+                    Modifier.selectable(
+                        selected = editing,
+                        enabled = editEnabled,
+                        role = Role.Button,
+                        onClick = onEdit,
+                    )
+                } else Modifier,
+            ),
         insideMargin = PaddingValues(16.dp),
     ) {
         Row(

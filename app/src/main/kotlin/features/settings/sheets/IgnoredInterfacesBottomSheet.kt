@@ -11,7 +11,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
 import app.R
 import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.window.WindowBottomSheet
+import ui.components.AdaptiveBottomSheet
 import ui.components.StringListEditor
 
 @Composable
@@ -25,7 +25,7 @@ internal fun IgnoredInterfacesBottomSheet(
     var editorPending by remember(show) { mutableStateOf(false) }
     val invalidMessage = stringResource(R.string.settings_ignored_interfaces_invalid)
 
-    WindowBottomSheet(
+    AdaptiveBottomSheet(
         show = show,
         title = stringResource(R.string.settings_ignored_interfaces),
         startAction = {

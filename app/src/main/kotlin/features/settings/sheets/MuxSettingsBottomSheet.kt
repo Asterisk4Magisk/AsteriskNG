@@ -28,7 +28,7 @@ import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.preference.SwitchPreference
 import top.yukonga.miuix.kmp.preference.WindowDropdownPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.window.WindowBottomSheet
+import ui.components.AdaptiveBottomSheet
 import ui.text.formatTemplate
 import utils.toIntInRangeOrNull
 
@@ -87,7 +87,7 @@ internal fun MuxSettingsBottomSheet(
         }
     }
 
-    WindowBottomSheet(
+    AdaptiveBottomSheet(
         show = show,
         title = stringResource(R.string.settings_mux),
         startAction = {

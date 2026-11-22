@@ -629,6 +629,7 @@
     <string name="proxy_app_list_scan_china_skipped_global">全应用模式下已跳过</string>
     <string name="proxy_app_list_search_label">搜索应用名称</string>
     <string name="proxy_app_list_show_system_apps">显示系统应用</string>
+    <string name="proxy_app_list_selected_apps">已选应用（%1$d）</string>
     <string name="proxy_app_list_title">分应用代理</string>
 
     <!-- Resource management -->

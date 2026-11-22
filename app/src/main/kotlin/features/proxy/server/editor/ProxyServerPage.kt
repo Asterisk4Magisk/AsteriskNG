@@ -331,7 +331,7 @@ fun ProxyServerPage(
             selectedId = activeServerId,
             padding = contentPadding,
             show = !editorFocus.expanded,
-            onSelect = if (editingEntry != null && resultKey != null) {
+            onSelect = if (resultKey != null) {
                 select@{ targetId ->
                     if (saving || targetId == activeServerId) return@select
                     syncCustomDraft()
@@ -392,12 +392,14 @@ fun ProxyServerPage(
                 style = MiuixTheme.textStyles.body2,
                 color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
             )
-            TextButton(
-                text = stringResource(R.string.editor_switch_save),
-                modifier = Modifier.fillMaxWidth(),
-                enabled = !saving,
-                onClick = { pendingSwitchId?.let(::validateAndSave) },
-            )
+            if (editingEntry != null) {
+                TextButton(
+                    text = stringResource(R.string.editor_switch_save),
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !saving,
+                    onClick = { pendingSwitchId?.let(::validateAndSave) },
+                )
+            }
             TextButton(
                 text = stringResource(R.string.editor_switch_discard),
                 modifier = Modifier.fillMaxWidth(),

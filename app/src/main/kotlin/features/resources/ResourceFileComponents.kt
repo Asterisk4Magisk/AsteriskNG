@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -401,7 +400,6 @@ private fun ResourceFileCardSurface(
             )
         }
         BoxWithConstraints(Modifier.fillMaxWidth()) {
-            val actionOffset = if (inGrid) Modifier.offset(y = 16.dp) else Modifier
             val inlineActions = inGrid && maxWidth >= 336.dp && LocalDensity.current.fontScale <= 1.3f
             if (inlineActions) {
                 Row(
@@ -413,7 +411,6 @@ private fun ResourceFileCardSurface(
                     Column(horizontalAlignment = Alignment.End) {
                         readiness()
                         Row(
-                            modifier = actionOffset,
                             verticalAlignment = Alignment.CenterVertically,
                         ) { actions() }
                     }
@@ -429,7 +426,7 @@ private fun ResourceFileCardSurface(
                         readiness()
                     }
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(top = 12.dp).then(actionOffset),
+                        modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
                         horizontalArrangement = Arrangement.End,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {

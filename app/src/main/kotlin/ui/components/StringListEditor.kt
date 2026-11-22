@@ -79,6 +79,7 @@ import top.yukonga.miuix.kmp.icon.extended.Edit
 import top.yukonga.miuix.kmp.icon.extended.Ok
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowDialog
+import ui.layout.LocalAdaptiveWindow
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 
@@ -494,6 +495,18 @@ private fun StringListBulkEditorDialog(
     onDismissRequest: () -> Unit,
     onSave: () -> Unit,
 ) {
+    if (LocalAdaptiveWindow.current.hasSeparatingFold) {
+        AdaptiveBottomSheet(
+            show = show,
+            title = title,
+            startAction = { TextButton(text = stringResource(R.string.common_cancel), onClick = onDismissRequest) },
+            endAction = { TextButton(text = stringResource(R.string.common_save), onClick = onSave) },
+            onDismissRequest = onDismissRequest,
+        ) {
+            StringListBulkTextField(state = state, modifier = Modifier.fillMaxWidth().heightIn(min = 180.dp))
+        }
+        return
+    }
     WindowDialog(
         show = show,
         title = title,

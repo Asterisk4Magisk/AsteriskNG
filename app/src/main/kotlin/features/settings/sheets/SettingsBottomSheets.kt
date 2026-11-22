@@ -11,7 +11,7 @@ import engine.network.isCidrAddress
 import engine.network.isIpAddress
 import engine.vpn.VpnDefaults
 import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.window.WindowBottomSheet
+import ui.components.AdaptiveBottomSheet
 import ui.text.formatTemplate
 import utils.toIntInRangeOrNull
 
@@ -68,7 +68,7 @@ internal fun TunSettingsBottomSheet(
     }
     val canSave = listOf(mtuError, vpnDnsError, ipv4CidrError, ipv6CidrError).all { it == null }
 
-    WindowBottomSheet(
+    AdaptiveBottomSheet(
         show = show,
         title = stringResource(R.string.settings_tun),
         startAction = {

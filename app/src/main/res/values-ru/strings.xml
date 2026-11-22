@@ -630,6 +630,7 @@
     <string name="proxy_app_list_scan_china_skipped_global">Пропущено в режиме всех приложений</string>
     <string name="proxy_app_list_search_label">Поиск приложений</string>
     <string name="proxy_app_list_show_system_apps">Показывать системные приложения</string>
+    <string name="proxy_app_list_selected_apps">Выбранные приложения (%1$d)</string>
     <string name="proxy_app_list_title">Проксирование приложений</string>
 
     <!-- Resource management -->

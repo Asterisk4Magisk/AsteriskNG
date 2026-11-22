@@ -41,7 +41,7 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.preference.SwitchPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.window.WindowBottomSheet
+import ui.components.AdaptiveBottomSheet
 import ui.components.StringListEditor
 
 @Composable
@@ -64,7 +64,7 @@ internal fun ServiceControlBottomSheet(
         parseServiceCron(draft.schedule.stopCron) is ServiceCronParseResult.Invalid
     val canSave = canSaveServiceControlDraft(draft, pendingEditors.isNotEmpty()) && !saving
 
-    WindowBottomSheet(
+    AdaptiveBottomSheet(
         show = show,
         title = stringResource(R.string.settings_service_control),
         startAction = {

@@ -51,9 +51,7 @@ internal fun rememberAdaptiveWindow(): AdaptiveWindow {
     val size = LocalWindowInfo.current.containerSize
     val direction = LocalLayoutDirection.current
     val density = LocalDensity.current
-    val pane = windowLayoutInfo?.displayFeatures?.asSequence()?.filterIsInstance<FoldingFeature>()
-        ?.mapNotNull { it.usablePane(size, direction) }
-        ?.firstOrNull() ?: IntRect(0, 0, size.width, size.height)
+    val pane = usableWindowPane(windowLayoutInfo, size, direction)
 
     return with(density) {
         val left = pane.left.toDp()
@@ -71,6 +69,11 @@ internal fun rememberAdaptiveWindow(): AdaptiveWindow {
         )
     }
 }
+
+internal fun usableWindowPane(info: WindowLayoutInfo?, size: IntSize, direction: LayoutDirection): IntRect =
+    info?.displayFeatures?.asSequence()?.filterIsInstance<FoldingFeature>()
+        ?.mapNotNull { it.usablePane(size, direction) }
+        ?.firstOrNull() ?: IntRect(0, 0, size.width, size.height)
 
 private fun FoldingFeature.usablePane(size: IntSize, direction: LayoutDirection): IntRect? {
     if (!isSeparating && occlusionType != FoldingFeature.OcclusionType.FULL) return null

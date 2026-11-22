@@ -20,7 +20,7 @@ import app.R
 import engine.network.isValidFakeIpIpv4Pool
 import engine.network.isIpAddress
 import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.window.WindowBottomSheet
+import ui.components.AdaptiveBottomSheet
 import top.yukonga.miuix.kmp.preference.SwitchPreference
 import ui.components.StringListEditor
 import utils.toTrimmedNonEmptyDistinctList
@@ -72,7 +72,7 @@ internal fun DnsSettingsBottomSheet(
     val effectiveFakeDnsEnabled = enableVpnLocalDns && enableFakeDns
     val fakeDnsPoolError = stringResource(R.string.settings_fake_ip_pool_invalid)
         .takeIf { effectiveFakeDnsEnabled && !isValidFakeIpIpv4Pool(fakeDnsIpv4Pool) }
-    WindowBottomSheet(
+    AdaptiveBottomSheet(
         show = show,
         title = stringResource(R.string.settings_dns),
         startAction = {

@@ -629,6 +629,7 @@
     <string name="proxy_app_list_scan_china_skipped_global">Bỏ qua trong chế độ tất cả ứng dụng</string>
     <string name="proxy_app_list_search_label">Tìm kiếm tên ứng dụng</string>
     <string name="proxy_app_list_show_system_apps">Hiển thị ứng dụng hệ thống</string>
+    <string name="proxy_app_list_selected_apps">Ứng dụng đã chọn (%1$d)</string>
     <string name="proxy_app_list_title">Proxy theo ứng dụng</string>
 
     <!-- Resource management -->

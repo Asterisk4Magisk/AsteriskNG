@@ -11,7 +11,7 @@ import app.R
 import androidx.compose.ui.res.stringResource
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.window.WindowBottomSheet
+import ui.components.AdaptiveBottomSheet
 import top.yukonga.miuix.kmp.preference.SwitchPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import ui.text.formatTemplate
@@ -66,7 +66,7 @@ internal fun ExternalInterfacesBottomSheet(
     onDismissRequest: () -> Unit,
     onSave: (List<String>) -> Unit,
 ) {
-    WindowBottomSheet(
+    AdaptiveBottomSheet(
         show = show,
         title = stringResource(R.string.settings_external_interfaces),
         startAction = {

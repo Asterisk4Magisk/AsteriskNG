@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -327,7 +328,6 @@ fun ResourceManagementPage(
         val dataFiles = ResourceFileKind.entries.filterNot { it == ResourceFileKind.XrayCore }
         val builtInFiles = if (useResourceGrid) listOf(ResourceFileKind.XrayCore) + dataFiles else dataFiles
         val customFiles = appState.customResourceFiles
-        val largestResourceSectionItemCount = maxOf(builtInFiles.size, customFiles.size)
 
         @Composable
         fun CoreFileCard(modifier: Modifier = Modifier) {
@@ -425,13 +425,92 @@ fun ResourceManagementPage(
             )
         }
 
-        Box(Modifier.pageReadableWidth()) {
-            LazyColumn(
-                state = lazyListState,
-                modifier = Modifier.pageScrollModifiers(topAppBarScrollBehavior),
-                contentPadding = listPadding,
-            ) {
-                if (!useResourceGrid) {
+        @Composable
+        fun SourceCard() {
+            ResourceFileSourceCard(
+                sourceOptions = sourceOptions,
+                selectedSource = appState.resourceFileSource,
+                enableResourceAutoUpdate = appState.enableResourceAutoUpdate,
+                autoUpdateInterval = appState.resourceAutoUpdateInterval,
+                onEnableResourceAutoUpdateChange = { enabled ->
+                    updateAppState { state -> state.copy(enableResourceAutoUpdate = enabled) }
+                },
+                onAutoUpdateIntervalChange = { interval ->
+                    updateAppState { state -> state.copy(resourceAutoUpdateInterval = interval) }
+                },
+                selectedUpdateSource = appState.resourceFileUpdateSource(),
+                customGeoIpUrl = appState.customResourceFileGeoIpUrl,
+                customGeoSiteUrl = appState.customResourceFileGeoSiteUrl,
+                customGeoIpOnlyCnPrivateUrl = appState.customResourceFileGeoIpOnlyCnPrivateUrl,
+                customDirectCidrIpv4Url = appState.customResourceFileDirectCidrIpv4Url,
+                customDirectCidrIpv6Url = appState.customResourceFileDirectCidrIpv6Url,
+                updating = updateQueueState.isBusy,
+                actionsEnabled = !resourceActionRunning,
+                onSourceChange = { index ->
+                    updateAppState { state -> state.copy(resourceFileSource = index.coerceIn(sourceOptions.indices)) }
+                },
+                onCustomSourceChange = {
+                        geoIpUrl,
+                        geoSiteUrl,
+                        geoIpOnlyCnPrivateUrl,
+                        directCidrIpv4Url,
+                        directCidrIpv6Url,
+                    ->
+                    updateAppState { state ->
+                        state.copy(
+                            customResourceFileGeoIpUrl = geoIpUrl,
+                            customResourceFileGeoSiteUrl = geoSiteUrl,
+                            customResourceFileGeoIpOnlyCnPrivateUrl = geoIpOnlyCnPrivateUrl,
+                            customResourceFileDirectCidrIpv4Url = directCidrIpv4Url,
+                            customResourceFileDirectCidrIpv6Url = directCidrIpv6Url,
+                        )
+                    }
+                },
+                onUpdate = {
+                    resourceFileUpdateCoordinator.enqueue(
+                        ResourceFileUpdateRequest.All(
+                            source = appState.resourceFileUpdateSource(),
+                            options = appState.resourceFileUpdateOptions(),
+                            customResourceFiles = appState.customResourceFiles.toList(),
+                        ),
+                    )
+                },
+                onCancel = resourceFileUpdateCoordinator::cancelAll,
+            )
+        }
+
+        if (useResourceGrid) {
+            val gridState = rememberLazyGridState()
+            Box(Modifier.pageReadableWidth()) {
+                ResourceFileGrid(
+                    contentPadding = listPadding,
+                    modifier = Modifier.pageScrollModifiers(topAppBarScrollBehavior),
+                    state = gridState,
+                ) {
+                    resourceGridHeader("resource_files_title") {
+                        SmallTitle(text = stringResource(R.string.settings_resource_files_files))
+                    }
+                    resourceGridHeader("resource_files_source") { SourceCard() }
+                    items(builtInFiles.size, key = { builtInFiles[it].fileName }) { index ->
+                        BuiltInFileCard(builtInFiles[index])
+                    }
+                    items(customFiles.size, key = { "custom_resource_file_" + customFiles[it].id }) { index ->
+                        CustomFileCard(customFiles[index])
+                    }
+                }
+                VerticalScrollBar(
+                    adapter = rememberScrollBarAdapter(gridState),
+                    modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
+                    trackPadding = contentPadding,
+                )
+            }
+        } else {
+            Box(Modifier.pageReadableWidth()) {
+                LazyColumn(
+                    state = lazyListState,
+                    modifier = Modifier.pageScrollModifiers(topAppBarScrollBehavior),
+                    contentPadding = listPadding,
+                ) {
                     item(key = "resource_files_core_title") {
                         SmallTitle(text = stringResource(R.string.settings_resource_files_core_files))
                     }
@@ -439,86 +518,10 @@ fun ResourceManagementPage(
                     item(key = ResourceFileKind.XrayCore.fileName) {
                         CoreFileCard()
                     }
-                }
-                item(key = "resource_files_title") {
-                    SmallTitle(text = stringResource(R.string.settings_resource_files_files))
-                }
-                item(key = "resource_files_source") {
-                    ResourceFileSourceCard(
-                        sourceOptions = sourceOptions,
-                        selectedSource = appState.resourceFileSource,
-                        enableResourceAutoUpdate = appState.enableResourceAutoUpdate,
-                        autoUpdateInterval = appState.resourceAutoUpdateInterval,
-                        onEnableResourceAutoUpdateChange = { enabled ->
-                            updateAppState { state -> state.copy(enableResourceAutoUpdate = enabled) }
-                        },
-                        onAutoUpdateIntervalChange = { interval ->
-                            updateAppState { state -> state.copy(resourceAutoUpdateInterval = interval) }
-                        },
-                        selectedUpdateSource = appState.resourceFileUpdateSource(),
-                        customGeoIpUrl = appState.customResourceFileGeoIpUrl,
-                        customGeoSiteUrl = appState.customResourceFileGeoSiteUrl,
-                        customGeoIpOnlyCnPrivateUrl = appState.customResourceFileGeoIpOnlyCnPrivateUrl,
-                        customDirectCidrIpv4Url = appState.customResourceFileDirectCidrIpv4Url,
-                        customDirectCidrIpv6Url = appState.customResourceFileDirectCidrIpv6Url,
-                        updating = updateQueueState.isBusy,
-                        actionsEnabled = !resourceActionRunning,
-                        onSourceChange = { index ->
-                            updateAppState { state -> state.copy(resourceFileSource = index.coerceIn(sourceOptions.indices)) }
-                        },
-                        onCustomSourceChange = {
-                                geoIpUrl,
-                                geoSiteUrl,
-                                geoIpOnlyCnPrivateUrl,
-                                directCidrIpv4Url,
-                                directCidrIpv6Url,
-                            ->
-                            updateAppState { state ->
-                                state.copy(
-                                    customResourceFileGeoIpUrl = geoIpUrl,
-                                    customResourceFileGeoSiteUrl = geoSiteUrl,
-                                    customResourceFileGeoIpOnlyCnPrivateUrl = geoIpOnlyCnPrivateUrl,
-                                    customResourceFileDirectCidrIpv4Url = directCidrIpv4Url,
-                                    customResourceFileDirectCidrIpv6Url = directCidrIpv6Url,
-                                )
-                            }
-                        },
-                        onUpdate = {
-                            resourceFileUpdateCoordinator.enqueue(
-                                ResourceFileUpdateRequest.All(
-                                    source = appState.resourceFileUpdateSource(),
-                                    options = appState.resourceFileUpdateOptions(),
-                                    customResourceFiles = appState.customResourceFiles.toList(),
-                                ),
-                            )
-                        },
-                        onCancel = resourceFileUpdateCoordinator::cancelAll,
-                    )
-                }
-                if (useResourceGrid) {
-                    item(key = "built_in_resource_grid") {
-                        ResourceFileGrid(
-                            itemCount = builtInFiles.size,
-                            key = { builtInFiles[it].fileName },
-                            modifier = Modifier.padding(start = 12.dp, end = 12.dp, bottom = 12.dp),
-                            largestSectionItemCount = largestResourceSectionItemCount,
-                        ) { index, cardModifier ->
-                            BuiltInFileCard(builtInFiles[index], cardModifier)
-                        }
+                    item(key = "resource_files_title") {
+                        SmallTitle(text = stringResource(R.string.settings_resource_files_files))
                     }
-                    if (customFiles.isNotEmpty()) {
-                        item(key = "custom_resource_grid") {
-                            ResourceFileGrid(
-                                itemCount = customFiles.size,
-                                key = { "custom_resource_file_" + customFiles[it].id },
-                                modifier = Modifier.padding(start = 12.dp, end = 12.dp, bottom = 12.dp),
-                                largestSectionItemCount = largestResourceSectionItemCount,
-                            ) { index, cardModifier ->
-                                CustomFileCard(customFiles[index], cardModifier)
-                            }
-                        }
-                    }
-                } else {
+                    item(key = "resource_files_source") { SourceCard() }
                     builtInFiles.forEach { kind ->
                         item(key = kind.fileName) { BuiltInFileCard(kind) }
                     }
@@ -526,12 +529,12 @@ fun ResourceManagementPage(
                         item(key = "custom_resource_file_" + customFile.id) { CustomFileCard(customFile) }
                     }
                 }
+                VerticalScrollBar(
+                    adapter = rememberScrollBarAdapter(lazyListState),
+                    modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
+                    trackPadding = contentPadding,
+                )
             }
-            VerticalScrollBar(
-                adapter = rememberScrollBarAdapter(lazyListState),
-                modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
-                trackPadding = contentPadding,
-            )
         }
         CustomResourceFileEditorDialog(
             show = showCustomResourceFileDialog.value,

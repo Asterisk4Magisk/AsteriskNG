@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.dp
 import app.R
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.preference.SwitchPreference
-import top.yukonga.miuix.kmp.window.WindowBottomSheet
+import ui.components.AdaptiveBottomSheet
 
 
 @Composable
@@ -52,7 +52,7 @@ internal fun LocalProxySettingsBottomSheet(
     }
     val portError = if (isPort(port)) null else stringResource(R.string.settings_local_proxy_port_invalid)
 
-    WindowBottomSheet(
+    AdaptiveBottomSheet(
         show = show,
         title = stringResource(R.string.settings_local_proxy),
         startAction = {

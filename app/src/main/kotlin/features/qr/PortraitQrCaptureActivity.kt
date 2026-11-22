@@ -4,6 +4,7 @@
 package features.qr
 
 import android.Manifest
+import android.animation.ValueAnimator
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -16,12 +17,23 @@ import android.os.Bundle
 import android.provider.MediaStore
 import android.view.Gravity
 import android.view.KeyEvent
+import android.view.View
 import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.Animatable
+import androidx.compose.ui.platform.AndroidUiDispatcher
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.window.layout.WindowInfoTracker
+import androidx.window.layout.WindowLayoutInfo
 import app.AppState
 import app.R
 import app.applyAppStateWhileStarted
@@ -34,12 +46,15 @@ import features.logs.AndroidAppLogger
 import features.settings.locale.localizedFromSavedLanguage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import system.applyScreenshotProtection
 import ui.feedback.AndroidToastTipNotifier
+import ui.layout.usableWindowPane
+import top.yukonga.miuix.kmp.anim.folmeSpring
 import kotlin.math.min
 import kotlin.math.roundToInt
 
@@ -90,14 +105,91 @@ class PortraitQrCaptureActivity : ComponentActivity() {
     }
 
     private fun initializeContent(): DecoratedBarcodeView {
-        setContentView(com.google.zxing.client.android.R.layout.zxing_capture)
-        val barcodeView = findViewById<DecoratedBarcodeView>(com.google.zxing.client.android.R.id.zxing_barcode_scanner)
-        val metrics = resources.displayMetrics
-        val frameSize = (min(metrics.widthPixels, metrics.heightPixels) * FrameSizeRatio).roundToInt()
-        barcodeView.barcodeView.framingRectSize = Size(frameSize, frameSize)
-        barcodeView.viewFinder.setLaserVisibility(false)
-        addImagePickerButton(frameSize)
-        return barcodeView
+        val root = FrameLayout(this).apply { setBackgroundColor(Color.BLACK) }
+        val scannerPane = FrameLayout(this)
+        root.addView(scannerPane, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
+        layoutInflater.inflate(com.google.zxing.client.android.R.layout.zxing_capture, scannerPane, true)
+        val scanner = scannerPane.findViewById<DecoratedBarcodeView>(
+            com.google.zxing.client.android.R.id.zxing_barcode_scanner,
+        )
+        scanner.barcodeView.isUseTextureView = true
+        scanner.viewFinder.setLaserVisibility(false)
+        val button = addImagePickerButton(scannerPane)
+        var layoutInfo: WindowLayoutInfo? = null
+        var paneAnimation: Job? = null
+
+        fun updatePane() {
+            if (root.width == 0 || root.height == 0) return
+            val decor = window.decorView
+            val direction = if (root.layoutDirection == View.LAYOUT_DIRECTION_RTL) LayoutDirection.Rtl else LayoutDirection.Ltr
+            val pane = usableWindowPane(layoutInfo, IntSize(decor.width, decor.height), direction)
+            val insets = ViewCompat.getRootWindowInsets(root)
+                ?.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+            val location = IntArray(2)
+            root.getLocationInWindow(location)
+            val left = (maxOf(pane.left, insets?.left ?: 0) - location[0]).coerceIn(0, root.width)
+            val top = (maxOf(pane.top, insets?.top ?: 0) - location[1]).coerceIn(0, root.height)
+            val right = (minOf(pane.right, decor.width - (insets?.right ?: 0)) - location[0])
+                .coerceIn(left, root.width)
+            val bottom = (minOf(pane.bottom, decor.height - (insets?.bottom ?: 0)) - location[1])
+                .coerceIn(top, root.height)
+            val width = right - left
+            val height = bottom - top
+            if (width == 0 || height == 0) return
+            val params = scannerPane.layoutParams as FrameLayout.LayoutParams
+            val resized = params.width != width || params.height != height
+            if (!resized && root.paddingLeft == left && root.paddingTop == top) return
+
+            val hadPane = params.width > 0 && params.height > 0
+            root.setPadding(left, top, 0, 0)
+            params.width = width
+            params.height = height
+            scannerPane.layoutParams = params
+            val buttonSize = minOf(AlbumButtonSizeDp.dp(), width, height / 4).coerceAtLeast(1)
+            val controlsSpace = buttonSize + 24.dp()
+            val frameSize = (min(width, height) * FrameSizeRatio).roundToInt()
+                .coerceAtMost(400.dp())
+                .coerceAtMost((height - controlsSpace * 2).coerceAtLeast(height / 3))
+                .coerceAtLeast(1)
+            scanner.barcodeView.framingRectSize = Size(frameSize, frameSize)
+            button.layoutParams = FrameLayout.LayoutParams(buttonSize, buttonSize, Gravity.TOP or Gravity.CENTER_HORIZONTAL).apply {
+                topMargin = minOf((height + frameSize) / 2 + 16.dp(), height - buttonSize - 8.dp()).coerceAtLeast(0)
+            }
+            // Apply the new bounds first so the preview never animates through the hinge.
+            paneAnimation?.cancel()
+            if (hadPane && ValueAnimator.areAnimatorsEnabled()) {
+                scannerPane.alpha = 0f
+                paneAnimation = lifecycleScope.launch(AndroidUiDispatcher.Main) {
+                    Animatable(0f).animateTo(1f, folmeSpring(damping = 0.95f, response = 0.4f)) {
+                        scannerPane.alpha = value.coerceIn(0f, 1f)
+                    }
+                }
+            } else {
+                scannerPane.alpha = 1f
+            }
+            if (resized && scanner.barcodeView.isPreviewActive) {
+                // ZXing calculates its decode rectangle when it configures the preview.
+                scanner.pause()
+                scanner.resume()
+            }
+        }
+
+        root.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ -> updatePane() }
+        ViewCompat.setOnApplyWindowInsetsListener(root) { _, insets ->
+            updatePane()
+            insets
+        }
+        setContentView(root)
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                WindowInfoTracker.getOrCreate(this@PortraitQrCaptureActivity)
+                    .windowLayoutInfo(this@PortraitQrCaptureActivity).collect {
+                        layoutInfo = it
+                        updatePane()
+                    }
+            }
+        }
+        return scanner
     }
 
     override fun onResume() {
@@ -157,8 +249,7 @@ class PortraitQrCaptureActivity : ComponentActivity() {
         }
     }
 
-    private fun addImagePickerButton(frameSize: Int) {
-        val root = findViewById<FrameLayout>(android.R.id.content)
+    private fun addImagePickerButton(root: FrameLayout): TextView {
         val button = TextView(this).apply {
             text = getString(R.string.qr_scan_album_button)
             contentDescription = getString(R.string.qr_scan_choose_image)
@@ -182,14 +273,7 @@ class PortraitQrCaptureActivity : ComponentActivity() {
                 Gravity.TOP or Gravity.CENTER_HORIZONTAL,
             ),
         )
-        root.post {
-            val buttonHeight = button.measuredHeight.takeIf { it > 0 } ?: AlbumButtonSizeDp.dp()
-            val topMargin = (root.height / 2f + frameSize / 2f + AlbumButtonOffsetDp.dp()).roundToInt()
-                .coerceAtMost((root.height - buttonHeight - 24.dp()).coerceAtLeast(0))
-            button.layoutParams = (button.layoutParams as FrameLayout.LayoutParams).apply {
-                this.topMargin = topMargin
-            }
-        }
+        return button
     }
 
     private fun openImagePicker() {
@@ -226,7 +310,6 @@ class PortraitQrCaptureActivity : ComponentActivity() {
         const val CameraPermissionPendingKey = "asterisk.cameraPermissionPending"
         const val FrameSizeRatio = 0.72f
         const val AlbumButtonSizeDp = 92
-        const val AlbumButtonOffsetDp = 78
         const val LogTag = "PortraitQrCapture"
     }
 }

@@ -23,6 +23,7 @@ import androidx.compose.foundation.text.input.InputTransformation
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
@@ -30,6 +31,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.Layout
@@ -62,7 +65,7 @@ import top.yukonga.miuix.kmp.icon.extended.Delete
 import top.yukonga.miuix.kmp.icon.extended.Edit
 import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.window.WindowBottomSheet
+import ui.components.AdaptiveBottomSheet
 import ui.components.IconDropdownMenu
 import ui.components.IconDropdownMenuEntry
 import ui.components.StringListEditor
@@ -109,6 +112,8 @@ internal fun RouteRuleCard(
     modifier: Modifier = Modifier,
     editEnabled: Boolean = true,
     dragModifier: Modifier = Modifier,
+    quickSelection: Boolean = false,
+    editing: Boolean = false,
 ) {
     val dragLift = animateDraggedCardLift(isDragging, label = "routeRuleDrag")
 
@@ -118,7 +123,17 @@ internal fun RouteRuleCard(
             .padding(horizontal = 12.dp)
             .padding(bottom = 12.dp)
             .draggedCardLift(dragLift)
-            .then(dragModifier),
+            .then(dragModifier)
+            .then(
+                if (quickSelection) {
+                    Modifier.selectable(
+                        selected = editing,
+                        enabled = editEnabled,
+                        role = Role.Button,
+                        onClick = onEdit,
+                    )
+                } else Modifier,
+            ),
         insideMargin = PaddingValues(16.dp),
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
@@ -132,7 +147,7 @@ internal fun RouteRuleCard(
                         text = rule.remarks,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = MiuixTheme.colorScheme.onSurface,
+                        color = if (editing) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.onSurface,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
@@ -181,23 +196,25 @@ internal fun RouteRuleCard(
 @Composable
 internal fun RouteRuleEditor(
     show: Boolean,
+    editorSession: Int,
     initialRule: RouteRule?,
     nextRuleId: Int,
     outboundOptions: List<RouteRuleOutboundOption>,
     onDismissRequest: () -> Unit,
+    onDirtyChanged: (Boolean) -> Unit,
     onSave: (RouteRule) -> Unit,
     inline: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val newRuleName = stringResource(R.string.routing_new_rule)
     val unnamedRuleName = stringResource(R.string.routing_unnamed_rule)
-    var remarks by remember(initialRule, show, newRuleName) { mutableStateOf(initialRule?.remarks ?: newRuleName) }
-    var domains by remember(initialRule, show) { mutableStateOf(initialRule?.domain ?: listOf("geosite:category")) }
-    var ips by remember(initialRule, show) { mutableStateOf(initialRule?.ip ?: emptyList()) }
-    var ports by remember(initialRule, show) { mutableStateOf(initialRule?.port ?: "") }
-    var process by remember(initialRule, show) { mutableStateOf(initialRule?.process ?: emptyList()) }
-    var protocol by remember(initialRule, show) { mutableStateOf(initialRule?.protocol ?: "") }
-    var network by remember(initialRule, show) { mutableStateOf(initialRule?.network ?: "") }
+    var remarks by remember(editorSession, initialRule, newRuleName) { mutableStateOf(initialRule?.remarks ?: newRuleName) }
+    var domains by remember(editorSession, initialRule) { mutableStateOf(initialRule?.domain ?: listOf("geosite:category")) }
+    var ips by remember(editorSession, initialRule) { mutableStateOf(initialRule?.ip ?: emptyList()) }
+    var ports by remember(editorSession, initialRule) { mutableStateOf(initialRule?.port ?: "") }
+    var process by remember(editorSession, initialRule) { mutableStateOf(initialRule?.process ?: emptyList()) }
+    var protocol by remember(editorSession, initialRule) { mutableStateOf(initialRule?.protocol ?: "") }
+    var network by remember(editorSession, initialRule) { mutableStateOf(initialRule?.network ?: "") }
     val canSave = isPortList(ports) && isRouteNetworkList(network)
     val currentOutbound = initialRule?.outboundTag?.takeIf { it.isNotBlank() }
     val effectiveOutboundOptions = remember(outboundOptions, currentOutbound) {
@@ -207,11 +224,21 @@ internal fun RouteRuleEditor(
             outboundOptions
         }
     }
-    var outbound by remember(initialRule, show) {
+    var outbound by remember(editorSession, initialRule) {
         val tag = currentOutbound ?: DefaultRouteOutboundTag
         val option = effectiveOutboundOptions.firstOrNull { it.tag == tag }
         mutableStateOf(option ?: RouteRuleOutboundOption(tag = tag, label = tag))
     }
+    var pendingDomains by remember(editorSession) { mutableStateOf(false) }
+    var pendingIps by remember(editorSession) { mutableStateOf(false) }
+    var pendingProcess by remember(editorSession) { mutableStateOf(false) }
+    val dirty = remarks != (initialRule?.remarks ?: newRuleName) ||
+        domains != (initialRule?.domain ?: listOf("geosite:category")) ||
+        ips != initialRule?.ip.orEmpty() || process != initialRule?.process.orEmpty() ||
+        ports != initialRule?.port.orEmpty() || protocol != initialRule?.protocol.orEmpty() ||
+        network != initialRule?.network.orEmpty() || outbound.tag != (currentOutbound ?: DefaultRouteOutboundTag) ||
+        pendingDomains || pendingIps || pendingProcess
+    SideEffect { onDirtyChanged(show && dirty) }
     val saveRule = {
         if (canSave) {
             onSave(
@@ -248,7 +275,7 @@ internal fun RouteRuleEditor(
         ) {
             item {
                 RouteRuleEditorContent(
-                    editorKey = "${initialRule?.id ?: nextRuleId}:$show",
+                    editorKey = "${initialRule?.id ?: nextRuleId}:$editorSession",
                     remarks = remarks,
                     domains = domains,
                     ips = ips,
@@ -266,6 +293,9 @@ internal fun RouteRuleEditor(
                     onProtocolChange = { protocol = it },
                     onNetworkChange = { network = it },
                     onOutboundChange = { outbound = it },
+                    onPendingDomainsChange = { pendingDomains = it },
+                    onPendingIpsChange = { pendingIps = it },
+                    onPendingProcessChange = { pendingProcess = it },
                 )
             }
         }
@@ -273,7 +303,8 @@ internal fun RouteRuleEditor(
     if (inline) {
         BackHandler(onBack = onDismissRequest)
         val alpha = remember { Animatable(0f) }
-        LaunchedEffect(Unit) {
+        LaunchedEffect(editorSession) {
+            alpha.snapTo(0f)
             alpha.animateTo(1f, folmeSpring(damping = 0.95f, response = 0.4f))
         }
         Column(
@@ -286,7 +317,7 @@ internal fun RouteRuleEditor(
             Box(Modifier.weight(1f)) { form() }
         }
     } else {
-        WindowBottomSheet(
+        AdaptiveBottomSheet(
             show = show,
             title = title,
             startAction = cancel,
@@ -398,6 +429,9 @@ private fun RouteRuleEditorContent(
     onProtocolChange: (String) -> Unit,
     onNetworkChange: (String) -> Unit,
     onOutboundChange: (RouteRuleOutboundOption) -> Unit,
+    onPendingDomainsChange: (Boolean) -> Unit,
+    onPendingIpsChange: (Boolean) -> Unit,
+    onPendingProcessChange: (Boolean) -> Unit,
 ) {
     val emptyMessage = stringResource(R.string.routing_list_empty)
     val domainInvalidMessage = stringResource(R.string.routing_domain_invalid)
@@ -426,6 +460,7 @@ private fun RouteRuleEditorContent(
             title = stringResource(R.string.routing_domain_label),
             values = domains,
             onValuesChange = onDomainsChange,
+            onPendingChange = onPendingDomainsChange,
             emptyText = emptyMessage,
             validateInput = { routeDomainInputError(it, domainInvalidMessage) },
             modifier = Modifier.padding(bottom = 12.dp),
@@ -435,6 +470,7 @@ private fun RouteRuleEditorContent(
             title = stringResource(R.string.routing_ip_label),
             values = ips,
             onValuesChange = onIpsChange,
+            onPendingChange = onPendingIpsChange,
             emptyText = emptyMessage,
             validateInput = { routeIpInputError(it, ipInvalidMessage) },
             modifier = Modifier.padding(bottom = 12.dp),
@@ -444,6 +480,7 @@ private fun RouteRuleEditorContent(
             title = stringResource(R.string.routing_process_label),
             values = process,
             onValuesChange = onProcessChange,
+            onPendingChange = onPendingProcessChange,
             emptyText = emptyMessage,
             validateInput = { routeProcessInputError(it, processInvalidMessage) },
             modifier = Modifier.padding(bottom = 12.dp),

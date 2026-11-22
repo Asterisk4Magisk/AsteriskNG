@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -63,6 +64,7 @@ import top.yukonga.miuix.kmp.interfaces.ExperimentalScrollBarApi
 import ui.clipboard.setPlainText
 import ui.components.BackNavigationIcon
 import ui.components.DeleteConfirmationDialog
+import ui.components.WarningConfirmDialog
 import ui.components.NavigationIcon
 import ui.components.longPressReorderDragHandle
 import ui.components.rememberAsteriskReorderableLazyListState
@@ -100,10 +102,11 @@ fun SubscriptionGroupListPage(
     val invalidSubscriptionUrlMessage = stringResource(R.string.subscription_invalid_url)
     var editingGroupId by remember { mutableStateOf<Int?>(null) }
     var showGroupEditor by remember { mutableStateOf(false) }
+    var editorSession by remember { mutableIntStateOf(0) }
     var groupEditorDirty by remember { mutableStateOf(false) }
-    val showInlineEditor = showGroupEditor && LocalAdaptiveWindow.current.showTwoColumns &&
-        LocalDensity.current.fontScale <= 1.3f
-    val canSwitchGroup = !showInlineEditor || !groupEditorDirty
+    val useInlineEditor = LocalAdaptiveWindow.current.showTwoColumns && LocalDensity.current.fontScale <= 1.3f
+    val showInlineEditor = showGroupEditor && useInlineEditor
+    var pendingGroupSwitchId by remember { mutableStateOf<Int?>(null) }
     var pendingGroupDeletion by remember { mutableStateOf<SubscriptionGroupState?>(null) }
     val editingGroup = editingGroupId?.let { id -> groups.firstOrNull { it.id == id } }
     val context = LocalContext.current
@@ -176,6 +179,25 @@ fun SubscriptionGroupListPage(
         }
     }
 
+    fun openGroup(groupId: Int) {
+        editingGroupId = groupId
+        groupEditorDirty = false
+        editorSession += 1
+        showGroupEditor = true
+    }
+
+    fun requestGroupSwitch(groupId: Int) {
+        if (!showGroupEditor) {
+            openGroup(groupId)
+        } else if (useInlineEditor && groupId != editingGroupId) {
+            if (groupEditorDirty) {
+                pendingGroupSwitchId = groupId
+            } else {
+                openGroup(groupId)
+            }
+        }
+    }
+
     fun closeGroupEditor() {
         showGroupEditor = false
     }
@@ -239,9 +261,10 @@ fun SubscriptionGroupListPage(
                 actions = {
                     NavigationIcon(
                         onClick = {
-                            if (canSwitchGroup) {
+                            if (!showInlineEditor || !groupEditorDirty) {
                                 editingGroupId = null
                                 groupEditorDirty = false
+                                editorSession += 1
                                 showGroupEditor = true
                             }
                         },
@@ -337,15 +360,10 @@ fun SubscriptionGroupListPage(
                                     serverCount = serverCountsByGroup[group.id] ?: 0,
                                 ),
                                 onShareAction = { action -> shareGroup(group, action) },
-                                onEdit = {
-                                    if (group.id != editingGroupId || !showGroupEditor) {
-                                        editingGroupId = group.id
-                                        groupEditorDirty = false
-                                        showGroupEditor = true
-                                    }
-                                },
+                                onEdit = { requestGroupSwitch(group.id) },
                                 editing = showInlineEditor && group.id == editingGroupId,
-                                editEnabled = canSwitchGroup || group.id == editingGroupId,
+                                editEnabled = !showGroupEditor || (useInlineEditor && group.id != editingGroupId),
+                                quickSelection = useInlineEditor,
                                 deleteEnabled = !showInlineEditor || group.id != editingGroupId,
                                 onDelete = { requestGroupDeletion(group) },
                                 modifier = Modifier.animateItem(
@@ -365,6 +383,7 @@ fun SubscriptionGroupListPage(
             }
             SubscriptionGroupEditorDialog(
                 show = showGroupEditor,
+                editorSession = editorSession,
                 group = editingGroup,
                 nextGroupId = appState.nextSubscriptionGroupId,
                 onDismissRequest = ::closeGroupEditor,
@@ -390,6 +409,22 @@ fun SubscriptionGroupListPage(
                 title = state.title,
                 text = state.url,
                 onDismissRequest = { shareQrCodeState = null },
+            )
+        }
+        pendingGroupSwitchId?.let { targetId ->
+            WarningConfirmDialog(
+                show = true,
+                title = stringResource(R.string.editor_switch_unsaved_title),
+                summary = stringResource(R.string.editor_switch_unsaved_message),
+                dismissText = stringResource(R.string.editor_switch_cancel),
+                confirmText = stringResource(R.string.editor_switch_discard),
+                onDismissRequest = { pendingGroupSwitchId = null },
+                onConfirm = {
+                    pendingGroupSwitchId = null
+                    if (stateStore.state.value.subscriptionGroups.any { it.id == targetId }) {
+                        openGroup(targetId)
+                    }
+                },
             )
         }
         pendingGroupDeletion?.let { group ->

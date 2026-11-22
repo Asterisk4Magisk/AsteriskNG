@@ -14,7 +14,7 @@ import ui.components.StringListEditor
 import engine.network.isCidrAddress
 import androidx.compose.ui.res.stringResource
 import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.window.WindowBottomSheet
+import ui.components.AdaptiveBottomSheet
 import ui.text.formatTemplate
 import utils.toTrimmedNonEmptyList
 
@@ -45,7 +45,7 @@ internal fun PrivateAddressBottomSheet(
     val sanitizedCidrs = selectedCidrs.sanitizePrivateAddressCidrs()
     val invalidMessage = stringResource(R.string.settings_private_addresses_invalid)
 
-    WindowBottomSheet(
+    AdaptiveBottomSheet(
         show = show,
         title = stringResource(R.string.settings_private_addresses),
         startAction = {

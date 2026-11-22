@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -61,6 +62,7 @@ import ui.clipboard.ClipboardImportMode
 import ui.clipboard.getPlainText
 import ui.clipboard.setPlainText
 import ui.components.DeleteConfirmationDialog
+import ui.components.WarningConfirmDialog
 import ui.components.IconDropdownMenu
 import ui.components.IconDropdownMenuEntry
 import ui.components.ImportModeDialog
@@ -99,7 +101,8 @@ fun RoutingPage(
     padding: PaddingValues,
 ) {
     val isWideScreen = LocalIsWideScreen.current
-    val appState by LocalAppStateStore.current.collectAppState()
+    val stateStore = LocalAppStateStore.current
+    val appState by stateStore.collectAppState()
     val updateAppState = LocalUpdateAppState.current
     val topAppBarScrollBehavior = MiuixScrollBehavior()
     val tipNotifier = LocalAppServices.current.tipNotifier
@@ -150,9 +153,31 @@ fun RoutingPage(
     val useInlineEditor = LocalAdaptiveWindow.current.showTwoColumns && LocalDensity.current.fontScale <= 1.3f
     var editingRule by remember { mutableStateOf<RouteRule?>(null) }
     var showRuleEditor by remember { mutableStateOf(false) }
+    var editorSession by remember { mutableIntStateOf(0) }
+    var ruleEditorDirty by remember { mutableStateOf(false) }
+    var pendingRuleSwitchId by remember { mutableStateOf<Int?>(null) }
     var pendingRouteImport by remember { mutableStateOf<List<RouteRuleClipboardItem>?>(null) }
     var pendingRouteDeletion by remember { mutableStateOf<RouteRule?>(null) }
     val rules = appState.routeRules
+
+    fun openRule(rule: RouteRule) {
+        editingRule = rule
+        ruleEditorDirty = false
+        editorSession += 1
+        showRuleEditor = true
+    }
+
+    fun requestRuleSwitch(rule: RouteRule) {
+        if (!showRuleEditor) {
+            openRule(rule)
+        } else if (useInlineEditor && editingRule?.id != rule.id) {
+            if (ruleEditorDirty) {
+                pendingRuleSwitchId = rule.id
+            } else {
+                openRule(rule)
+            }
+        }
+    }
 
     fun deleteRoute(rule: RouteRule) {
         if (editingRule?.id == rule.id) showRuleEditor = false
@@ -177,12 +202,14 @@ fun RoutingPage(
     val editor: @Composable (Modifier) -> Unit = { modifier ->
         RouteRuleEditor(
             show = showRuleEditor,
+            editorSession = editorSession,
             inline = useInlineEditor,
             modifier = modifier,
             initialRule = editingRule,
             nextRuleId = appState.nextRouteRuleId,
             outboundOptions = outboundOptions,
             onDismissRequest = { showRuleEditor = false },
+            onDirtyChanged = { ruleEditorDirty = it },
             onSave = { savedRule ->
                 updateAppState { state ->
                     val exists = state.routeRules.any { it.id == savedRule.id }
@@ -227,6 +254,7 @@ fun RoutingPage(
                         NavigationIcon(
                             onClick = {
                                 editingRule = null
+                                editorSession += 1
                                 showRuleEditor = true
                             },
                             imageVector = MiuixIcons.Add,
@@ -341,12 +369,11 @@ fun RoutingPage(
                                         )
                                     }
                                 },
-                                onEdit = {
-                                    editingRule = rule
-                                    showRuleEditor = true
-                                },
+                                onEdit = { requestRuleSwitch(rule) },
                                 onDelete = { requestRouteDeletion(rule) },
-                                editEnabled = !showRuleEditor,
+                                editEnabled = !showRuleEditor || (useInlineEditor && editingRule?.id != rule.id),
+                                quickSelection = useInlineEditor,
+                                editing = showInlineEditor && editingRule?.id == rule.id,
                                 modifier = Modifier.animateItem(
                                     fadeInSpec = null,
                                     fadeOutSpec = null,
@@ -378,6 +405,20 @@ fun RoutingPage(
         }
     }
 
+    pendingRuleSwitchId?.let { targetId ->
+        WarningConfirmDialog(
+            show = true,
+            title = stringResource(R.string.editor_switch_unsaved_title),
+            summary = stringResource(R.string.editor_switch_unsaved_message),
+            dismissText = stringResource(R.string.editor_switch_cancel),
+            confirmText = stringResource(R.string.editor_switch_discard),
+            onDismissRequest = { pendingRuleSwitchId = null },
+            onConfirm = {
+                pendingRuleSwitchId = null
+                stateStore.state.value.routeRules.firstOrNull { it.id == targetId }?.let(::openRule)
+            },
+        )
+    }
     pendingRouteDeletion?.let { rule ->
         DeleteConfirmationDialog(
             show = true,
