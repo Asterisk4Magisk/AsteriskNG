@@ -43,11 +43,6 @@ internal fun Long.toReadableDateTimeOrDash(): String {
     return DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(this))
 }
 
-internal fun Long.toReadableDateOrDash(): String {
-    if (this <= 0L) return "-"
-    return DateFormat.getDateInstance(DateFormat.MEDIUM).format(Date(this))
-}
-
 private fun Double.toOneDecimalText(keepTrailingZero: Boolean): String {
     val rounded = round(this * 10.0) / 10.0
     if (keepTrailingZero) {

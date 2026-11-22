@@ -4,7 +4,7 @@ package engine.root.dns
 import engine.root.daemon.config.AsteriskdDnsEnhancementConfig
 import engine.root.daemon.config.AsteriskdMode
 import java.nio.ByteBuffer
-import java.security.MessageDigest
+import utils.sha256Digest
 
 // Pure configuration planning: VPN never enters the ROOT compiler and core-managed
 // modes produce no request. Capability is checked again by the listener-owning daemon.
@@ -15,7 +15,7 @@ internal fun rootDnsEnhancementConfig(
     coreConfig: ByteArray,
 ): AsteriskdDnsEnhancementConfig? {
     if (!requested || !enableLocalDns || mode == AsteriskdMode.Tun || mode == AsteriskdMode.Ebpf) return null
-    val digest = MessageDigest.getInstance("SHA-256").digest(coreConfig)
+    val digest = coreConfig.sha256Digest()
     val generation = (ByteBuffer.wrap(digest).long and Long.MAX_VALUE).coerceAtLeast(1L)
     return AsteriskdDnsEnhancementConfig(coreDnsGeneration = generation)
 }

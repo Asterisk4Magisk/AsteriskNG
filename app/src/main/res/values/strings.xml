@@ -4,6 +4,9 @@
 
     <!-- Common -->
     <string name="app_name">AsteriskNG</string>
+    <string name="common_refresh_complete">Refresh complete</string>
+    <string name="common_release_to_refresh">Release to refresh</string>
+    <string name="common_pull_to_refresh">Pull down to refresh</string>
     <string name="common_add">Add</string>
     <string name="common_cancel">Cancel</string>
     <string name="common_clipboard_empty">Clipboard is empty</string>
@@ -583,7 +586,6 @@
     <string name="settings_traffic_stats_notification_summary">Show current speed and total traffic in notifications and the status bar</string>
 
     <!-- Quick settings tile -->
-    <string name="quick_settings_tile_label">AsteriskNG</string>
     <string name="quick_settings_tile_processing">Processing…</string>
     <string name="quick_settings_tile_running">Proxy running</string>
     <string name="quick_settings_tile_stopped">Proxy stopped</string>
@@ -618,10 +620,7 @@
     <string name="proxy_app_list_more_actions">More actions</string>
     <string name="proxy_app_list_pick_installed_apps">Choose from installed apps</string>
     <string name="proxy_app_list_picker_title">Select apps</string>
-    <string name="proxy_app_list_pull_to_refresh">Pull down to refresh</string>
-    <string name="proxy_app_list_refreshed">Refresh complete</string>
     <string name="proxy_app_list_refreshing">Refreshing…</string>
-    <string name="proxy_app_list_release_to_refresh">Release to refresh</string>
     <string name="proxy_app_list_scan_china_apps">Scan Chinese apps</string>
     <string name="proxy_app_list_scan_china_done">Apps scanned: %1$d; Chinese apps found: %2$d</string>
     <string name="proxy_app_list_scan_china_no_match">Scanned {scanned} apps, no Chinese apps found</string>
@@ -770,10 +769,7 @@
     <string name="logs_output">Log output</string>
     <string name="logs_pause">Pause log updates</string>
     <string name="logs_paused">Paused</string>
-    <string name="logs_pull_to_refresh">Pull down to refresh</string>
-    <string name="logs_refreshed">Refresh complete</string>
     <string name="logs_refreshing">Refreshing…</string>
-    <string name="logs_release_to_refresh">Release to refresh</string>
     <string name="logs_resume">Resume log updates</string>
     <string name="settings_access_logs">Access logs</string>
     <string name="settings_log_level">Log level</string>

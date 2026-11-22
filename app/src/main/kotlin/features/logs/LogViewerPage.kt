@@ -231,10 +231,10 @@ private fun LogViewerPage(
                         topAppBarScrollBehavior = topAppBarScrollBehavior,
                         color = MiuixTheme.colorScheme.onSurfaceVariantActions,
                         refreshTexts = listOf(
-                            stringResource(R.string.logs_pull_to_refresh),
-                            stringResource(R.string.logs_release_to_refresh),
+                            stringResource(R.string.common_pull_to_refresh),
+                            stringResource(R.string.common_release_to_refresh),
                             stringResource(R.string.logs_refreshing),
-                            stringResource(R.string.logs_refreshed),
+                            stringResource(R.string.common_refresh_complete),
                         ),
                     ) {
                         LazyColumn(

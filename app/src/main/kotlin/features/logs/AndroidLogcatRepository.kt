@@ -7,7 +7,6 @@ import android.content.Context
 import android.os.FileObserver
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -46,7 +45,6 @@ internal object AndroidLogcatRepository : InMemoryCoreLogRepository() {
      * Writes the `:service` process' lines in order without ever blocking a caller on the file
      * lock, which the app process may hold.
      */
-    @OptIn(ExperimentalCoroutinesApi::class)
     private val serviceProcessWriter = Dispatchers.IO.limitedParallelism(1)
 
     fun initialize(context: Context) {

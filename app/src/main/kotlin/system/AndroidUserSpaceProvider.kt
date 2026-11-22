@@ -4,8 +4,6 @@
 package system
 
 import android.content.Context
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import system.user.AndroidUserSpace
 import system.user.AndroidUserSpaceRepository
 
@@ -15,10 +13,6 @@ class AndroidUserSpaceProvider(
 ) {
     private val appContext = context.applicationContext
     private val userSpaceRepository = AndroidUserSpaceRepository(appContext)
-
-    suspend fun getCurrentAndroidUser(): AndroidUser = withContext(Dispatchers.Default) {
-        appContext.currentAndroidUser()
-    }
 
     suspend fun listAndroidUsers(): List<AndroidUser> {
         val result = rootAccess.exec("cmd user list", ShellExecOptions(logFailure = false))

@@ -167,7 +167,7 @@ class ProxyQuickSettingsTileService : TileService() {
 
     private fun updateTile(running: Boolean?) {
         val tile = qsTile ?: return
-        tile.label = getString(R.string.quick_settings_tile_label)
+        tile.label = getString(R.string.app_name)
         tile.state = when {
             running == null -> Tile.STATE_UNAVAILABLE
             running -> Tile.STATE_ACTIVE

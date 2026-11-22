@@ -3,6 +3,7 @@
 
 package features.proxy.server.usecase.importer
 
+import utils.putIfNotBlank
 import utils.toJsonStringArray
 import engine.network.toPortOrNull
 import features.proxy.server.model.VLESS
@@ -75,7 +76,7 @@ private fun MihomoYamlMap.toXrayDownloadSettings(
     }
     val downloadXhttpOpts = downloadSettings.map("xhttp-opts") ?: downloadSettings
     return buildJsonObject {
-        putStringIfNotBlank("address", downloadSettings.string("server", "address") ?: string("server", "address"))
+        putIfNotBlank("address", downloadSettings.string("server", "address") ?: string("server", "address"))
         putXrayPort("port", downloadSettings.string("port") ?: string("port"))
         put("network", "xhttp")
 
@@ -94,9 +95,9 @@ private fun MihomoYamlMap.toXrayDownloadSettings(
         }
 
         putJsonObject("xhttpSettings") {
-            putStringIfNotBlank("path", downloadXhttpOpts.string("path") ?: uploadXhttpOpts.string("path"))
-            putStringIfNotBlank("host", downloadXhttpOpts.xhttpHost(uploadXhttpOpts))
-            putStringIfNotBlank("mode", downloadXhttpOpts.string("mode") ?: uploadXhttpOpts.string("mode"))
+            putIfNotBlank("path", downloadXhttpOpts.string("path") ?: uploadXhttpOpts.string("path"))
+            putIfNotBlank("host", downloadXhttpOpts.xhttpHost(uploadXhttpOpts))
+            putIfNotBlank("mode", downloadXhttpOpts.string("mode") ?: uploadXhttpOpts.string("mode"))
             val extra = downloadXhttpOpts.toXrayXhttpExtra(
                 parentNode = this@toXrayDownloadSettings,
                 fallback = uploadXhttpOpts,
@@ -184,8 +185,8 @@ private fun JsonObjectBuilder.putXrayTlsSettings(
     primary: MihomoYamlMap,
     fallback: MihomoYamlMap,
 ) {
-    putStringIfNotBlank("serverName", primary.string("servername", "sni") ?: fallback.string("servername", "sni"))
-    putStringIfNotBlank(
+    putIfNotBlank("serverName", primary.string("servername", "sni") ?: fallback.string("servername", "sni"))
+    putIfNotBlank(
         "fingerprint",
         (primary.string("client-fingerprint") ?: fallback.string("client-fingerprint"))?.lowercase(),
     )
@@ -193,8 +194,8 @@ private fun JsonObjectBuilder.putXrayTlsSettings(
     if (alpn.isNotEmpty()) {
         put("alpn", alpn.toJsonStringArray())
     }
-    putStringIfNotBlank("echConfigList", (primary.map("ech-opts") ?: fallback.map("ech-opts"))?.string("config"))
-    putStringIfNotBlank("pinnedPeerCertSha256", primary.string("fingerprint") ?: fallback.string("fingerprint"))
+    putIfNotBlank("echConfigList", (primary.map("ech-opts") ?: fallback.map("ech-opts"))?.string("config"))
+    putIfNotBlank("pinnedPeerCertSha256", primary.string("fingerprint") ?: fallback.string("fingerprint"))
     if ((primary.boolean("skip-cert-verify") ?: fallback.boolean("skip-cert-verify")) == true) {
         unsupported("skip-cert-verify is not supported")
     }
@@ -205,21 +206,15 @@ private fun JsonObjectBuilder.putXrayRealitySettings(
     fallback: MihomoYamlMap,
 ) {
     val realityOpts = primary.map("reality-opts") ?: fallback.map("reality-opts") ?: emptyMap()
-    putStringIfNotBlank("serverName", primary.string("servername", "sni") ?: fallback.string("servername", "sni"))
-    putStringIfNotBlank(
+    putIfNotBlank("serverName", primary.string("servername", "sni") ?: fallback.string("servername", "sni"))
+    putIfNotBlank(
         "fingerprint",
         (primary.string("client-fingerprint") ?: fallback.string("client-fingerprint"))?.lowercase(),
     )
-    putStringIfNotBlank("password", realityOpts.string("public-key", "publicKey"))
-    putStringIfNotBlank("shortId", realityOpts.string("short-id", "shortId"))
-    putStringIfNotBlank("mldsa65Verify", realityOpts.string("mldsa65-verify", "mldsa65Verify"))
-    putStringIfNotBlank("spiderX", realityOpts.string("spider-x", "spiderX"))
-}
-
-private fun JsonObjectBuilder.putStringIfNotBlank(name: String, value: String?) {
-    if (!value.isNullOrBlank()) {
-        put(name, value)
-    }
+    putIfNotBlank("password", realityOpts.string("public-key", "publicKey"))
+    putIfNotBlank("shortId", realityOpts.string("short-id", "shortId"))
+    putIfNotBlank("mldsa65Verify", realityOpts.string("mldsa65-verify", "mldsa65Verify"))
+    putIfNotBlank("spiderX", realityOpts.string("spider-x", "spiderX"))
 }
 
 private fun JsonObjectBuilder.putXrayPort(name: String, value: String?) {

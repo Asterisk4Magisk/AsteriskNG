@@ -4,6 +4,9 @@
 
     <!-- Common -->
     <string name="app_name">AsteriskNG</string>
+    <string name="common_refresh_complete">Làm mới xong</string>
+    <string name="common_release_to_refresh">Thả ra để làm mới</string>
+    <string name="common_pull_to_refresh">Kéo xuống để làm mới</string>
     <string name="common_add">Thêm</string>
     <string name="common_cancel">Hủy</string>
     <string name="common_clipboard_empty">Khay nhớ tạm trống</string>
@@ -583,7 +586,6 @@
     <string name="settings_traffic_stats_notification_summary">Hiển thị tốc độ hiện tại và tổng lưu lượng trong thông báo và trên thanh trạng thái</string>
 
     <!-- Quick settings tile -->
-    <string name="quick_settings_tile_label">AsteriskNG</string>
     <string name="quick_settings_tile_processing">Đang xử lý…</string>
     <string name="quick_settings_tile_running">Proxy đang chạy</string>
     <string name="quick_settings_tile_stopped">Proxy đã dừng</string>
@@ -618,10 +620,7 @@
     <string name="proxy_app_list_more_actions">Thêm thao tác</string>
     <string name="proxy_app_list_pick_installed_apps">Chọn từ ứng dụng đã cài đặt</string>
     <string name="proxy_app_list_picker_title">Chọn ứng dụng</string>
-    <string name="proxy_app_list_pull_to_refresh">Kéo xuống để làm mới</string>
-    <string name="proxy_app_list_refreshed">Làm mới xong</string>
     <string name="proxy_app_list_refreshing">Đang làm mới…</string>
-    <string name="proxy_app_list_release_to_refresh">Thả ra để làm mới</string>
     <string name="proxy_app_list_scan_china_apps">Quét ứng dụng Trung Quốc</string>
     <string name="proxy_app_list_scan_china_done">Đã quét %1$d ứng dụng, tìm thấy %2$d ứng dụng Trung Quốc</string>
     <string name="proxy_app_list_scan_china_no_match">Đã quét {scanned} ứng dụng, không tìm thấy ứng dụng Trung Quốc</string>
@@ -770,10 +769,7 @@
     <string name="logs_output">Đầu ra nhật ký</string>
     <string name="logs_pause">Tạm dừng cập nhật nhật ký</string>
     <string name="logs_paused">Đã tạm dừng</string>
-    <string name="logs_pull_to_refresh">Kéo xuống để làm mới</string>
-    <string name="logs_refreshed">Làm mới xong</string>
     <string name="logs_refreshing">Đang làm mới…</string>
-    <string name="logs_release_to_refresh">Thả ra để làm mới</string>
     <string name="logs_resume">Tiếp tục cập nhật nhật ký</string>
     <string name="settings_access_logs">Nhật ký truy cập</string>
     <string name="settings_log_level">Cấp độ nhật ký</string>

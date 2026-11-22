@@ -10,6 +10,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import system.applyScreenshotProtection
 
 /**
  * Apply [select] of the app state to this activity now, then again on every distinct change
@@ -28,4 +29,8 @@ internal fun <T> ComponentActivity.applyAppStateWhileStarted(
                 .collect { value -> apply(value) }
         }
     }
+}
+
+internal fun ComponentActivity.observeScreenshotProtection() {
+    applyAppStateWhileStarted(AppState::allowScreenshots) { allowed -> applyScreenshotProtection(allowed) }
 }

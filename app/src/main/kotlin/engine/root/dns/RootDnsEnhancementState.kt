@@ -28,8 +28,4 @@ internal data class RootDnsEnhancementState(
     val active: Boolean get() = phase == RootDnsEnhancementPhase.Active
 
     val ready: Boolean get() = active || phase == RootDnsEnhancementPhase.WaitingNetwork
-
-    fun requireToken() {
-        require(required && instanceId != "0" && cycleId != "0" && generation != "0")
-    }
 }

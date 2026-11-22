@@ -33,7 +33,6 @@ import features.settings.usecase.SwitchRunModeUseCase
 import features.settings.usecase.ApplyServiceControlUseCase
 import features.settings.usecase.RootBootScriptUseCase
 import features.settings.usecase.RootEbpfProbeUseCase
-import system.AndroidNetworkInterfaceProvider
 import system.AndroidPackageProvider
 import system.AndroidRootShellGateway
 import system.AndroidUserSpaceProvider
@@ -68,9 +67,6 @@ fun App(
             rootAccess = rootAccess,
             userSpaces = userSpaces,
         )
-    }
-    val networkInterfaces = remember(rootAccess) {
-        AndroidNetworkInterfaceProvider(rootAccess)
     }
     val resourceFileUseCase = remember(appContext, resourceFilePicker, rootAccess, stateStore) {
         ResourceFileUseCase(
@@ -138,7 +134,6 @@ fun App(
         rootAccess,
         userSpaces,
         packageCatalog,
-        networkInterfaces,
         resourceFileUseCase,
         resourceFileUpdateCoordinator,
         appBackupUseCase,
@@ -162,7 +157,6 @@ fun App(
             rootAccess = rootAccess,
             userSpaces = userSpaces,
             packageCatalog = packageCatalog,
-            networkInterfaces = networkInterfaces,
             resourceFileUseCase = resourceFileUseCase,
             resourceFileUpdateCoordinator = resourceFileUpdateCoordinator,
             appBackupUseCase = appBackupUseCase,

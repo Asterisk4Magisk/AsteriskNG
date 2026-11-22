@@ -162,7 +162,7 @@ internal fun Url.proxyUrlHost(): String {
     return host.toProxyUrlHost()
 }
 
-private fun String.toProxyUrlHost(): String {
+internal fun String.toProxyUrlHost(): String {
     return trim().removeSurrounding("[", "]")
 }
 

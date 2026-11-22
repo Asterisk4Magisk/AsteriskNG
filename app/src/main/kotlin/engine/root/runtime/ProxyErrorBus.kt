@@ -28,7 +28,6 @@ internal data class ProxyErrorExplanation(
     /** Logs written by the failed start attempt; empty when unavailable. */
     val serviceLog: String = "",
 ) {
-    val hasDiagnostics: Boolean get() = diagnostics.isNotEmpty()
     val hasDeviceInfo: Boolean get() = deviceInfo.isNotBlank()
     val hasServiceLog: Boolean get() = serviceLog.isNotBlank()
 }

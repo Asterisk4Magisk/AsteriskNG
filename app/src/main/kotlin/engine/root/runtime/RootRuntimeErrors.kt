@@ -3,8 +3,6 @@
 
 package engine.root.runtime
 
-import engine.root.daemon.control.AsteriskdFailureCode
-import engine.root.daemon.control.AsteriskdPhase
 import engine.root.daemon.control.AsteriskdSnapshot
 
 internal class RootRuntimeConflictException(
@@ -15,20 +13,4 @@ internal class RootRuntimeBusyException(
     val snapshot: AsteriskdSnapshot,
 ) : IllegalStateException("AsteriskNG ROOT runtime is ${snapshot.phase.wireValue} in ${snapshot.mode.wireValue} mode")
 
-internal class RootProtocolException(
-    operation: String,
-    cause: Throwable,
-) : IllegalStateException("Invalid asteriskd response for $operation", cause)
-
-internal class RootPublicationException(
-    stage: String,
-    cause: Throwable,
-) : IllegalStateException("ROOT publication failed during $stage", cause)
-
 internal class RootPrivateDnsException(reason: String) : IllegalStateException(reason)
-
-internal class RootStartFailedException(
-    val code: AsteriskdFailureCode?,
-    val phase: AsteriskdPhase?,
-    cause: Throwable,
-) : IllegalStateException("ROOT supervisor failed to start", cause)

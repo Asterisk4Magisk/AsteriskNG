@@ -34,9 +34,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.window.layout.WindowInfoTracker
 import androidx.window.layout.WindowLayoutInfo
-import app.AppState
 import app.R
-import app.applyAppStateWhileStarted
+import app.observeScreenshotProtection
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.client.android.Intents
 import com.journeyapps.barcodescanner.CaptureManager
@@ -51,7 +50,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import system.applyScreenshotProtection
 import ui.feedback.AndroidToastTipNotifier
 import ui.layout.usableWindowPane
 import top.yukonga.miuix.kmp.anim.folmeSpring
@@ -98,10 +96,6 @@ class PortraitQrCaptureActivity : ComponentActivity() {
         capture = CaptureManager(this, barcodeView)
         capture.initializeFromIntent(intent, savedInstanceState)
         capture.decode()
-    }
-
-    private fun observeScreenshotProtection() {
-        applyAppStateWhileStarted(AppState::allowScreenshots) { value -> applyScreenshotProtection(value) }
     }
 
     private fun initializeContent(): DecoratedBarcodeView {

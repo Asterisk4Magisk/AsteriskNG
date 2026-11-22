@@ -592,10 +592,10 @@ private fun ProxyAppListContent(
             topAppBarScrollBehavior = scrollBehavior,
             color = MiuixTheme.colorScheme.onSurfaceVariantActions,
             refreshTexts = listOf(
-                stringResource(R.string.proxy_app_list_pull_to_refresh),
-                stringResource(R.string.proxy_app_list_release_to_refresh),
+                stringResource(R.string.common_pull_to_refresh),
+                stringResource(R.string.common_release_to_refresh),
                 stringResource(R.string.proxy_app_list_refreshing),
-                stringResource(R.string.proxy_app_list_refreshed),
+                stringResource(R.string.common_refresh_complete),
             ),
         ) {
             HorizontalPager(

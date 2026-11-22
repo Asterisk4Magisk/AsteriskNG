@@ -69,7 +69,7 @@ internal class RootQuickSettingsOperationService : Service() {
     }
 
     private fun promoteToForeground() {
-        val title = getString(R.string.quick_settings_tile_label)
+        val title = getString(R.string.app_name)
         getSystemService(NotificationManager::class.java).createNotificationChannel(
             NotificationChannel(ChannelId, title, NotificationManager.IMPORTANCE_LOW),
         )

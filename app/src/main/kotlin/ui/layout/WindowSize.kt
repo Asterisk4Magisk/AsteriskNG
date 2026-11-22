@@ -111,10 +111,3 @@ internal fun Modifier.avoidFold(window: AdaptiveWindow): Modifier {
         bottom = padding.calculateBottomPadding(),
     ).consumeWindowInsets(padding)
 }
-
-@Composable
-internal fun rememberPageGutter(): Dp = when {
-    LocalAdaptiveWindow.current.width >= 840.dp -> 24.dp
-    LocalAdaptiveWindow.current.width >= 600.dp -> 20.dp
-    else -> 16.dp
-}

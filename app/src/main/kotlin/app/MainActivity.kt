@@ -28,9 +28,7 @@ import data.AndroidAppStateStore
 import data.AppSettingsPreferences
 import engine.vpn.AndroidVpnPermissionRequester
 import features.boot.BootAutoConnect
-import features.logs.AndroidLogFileCreator
 import features.qr.AndroidQrCodeScanRequester
-import features.resources.runtime.AndroidResourceFilePicker
 import features.settings.locale.localizedAppContext
 import features.subscription.SubscriptionInstallConfigUseCase
 import features.subscription.isSubscriptionInstallConfigUri
@@ -38,8 +36,8 @@ import features.subscription.runtime.AndroidSubscriptionFetcher
 import features.subscription.subscriptionInstallMessage
 import features.subscription.toSubscriptionInstallConfigOrNull
 import kotlinx.coroutines.launch
+import system.AndroidDocumentLauncher
 import system.AndroidLauncherIcon
-import system.applyScreenshotProtection
 import system.setRecentTasksHidden
 import ui.feedback.AndroidToastTipNotifier
 import system.currentSystemUiSnapshot
@@ -63,13 +61,13 @@ class MainActivity : ComponentActivity() {
         },
     )
 
-    private val resourceFilePicker = AndroidResourceFilePicker(
+    private val resourceFilePicker = AndroidDocumentLauncher<Array<String>>(
         missingLauncherMessage = {
             appString(R.string.error_resource_file_picker_missing)
         },
     )
 
-    private val logFileCreator = AndroidLogFileCreator(
+    private val logFileCreator = AndroidDocumentLauncher<String>(
         missingLauncherMessage = {
             appString(R.string.error_log_export_launcher_missing)
         },
@@ -189,10 +187,6 @@ class MainActivity : ComponentActivity() {
         applyAppStateWhileStarted(AppState::hideRecentTasks) { value -> setRecentTasksHidden(value) }
     }
 
-    private fun observeScreenshotProtection() {
-        applyAppStateWhileStarted(AppState::allowScreenshots) { value -> applyScreenshotProtection(value) }
-    }
-
     private fun observeLauncherIconVisibility() {
         applyAppStateWhileStarted(AppState::hideLauncherIcon) { hidden ->
             AndroidLauncherIcon.setHidden(applicationContext, hidden)
@@ -213,9 +207,7 @@ class MainActivity : ComponentActivity() {
         qrCodeScanRequester.completeScan(null)
         qrCodeScanRequester.registerPermissionLauncher(null)
         qrCodeScanRequester.registerScanLauncher(null)
-        resourceFilePicker.complete(null)
         resourceFilePicker.registerLauncher(null)
-        logFileCreator.complete(null)
         logFileCreator.registerLauncher(null)
         super.onDestroy()
     }
@@ -247,8 +239,8 @@ class MainActivity : ComponentActivity() {
             App(
                 padding = WindowInsets.systemBars.union(WindowInsets.displayCutout).asPaddingValues(),
                 qrCodeScanner = qrCodeScanRequester::scan,
-                resourceFilePicker = resourceFilePicker::pick,
-                logFileCreator = logFileCreator::create,
+                resourceFilePicker = { resourceFilePicker.request(arrayOf("*/*")) },
+                logFileCreator = logFileCreator::request,
                 requestVpnPermission = vpnPermissionRequester::request,
             )
         }

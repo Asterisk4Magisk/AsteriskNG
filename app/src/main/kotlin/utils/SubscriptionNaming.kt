@@ -4,8 +4,6 @@
 package utils
 
 import java.net.URI
-import java.net.URLDecoder
-import java.nio.charset.StandardCharsets
 
 /**
  * Resolve a display name for a subscription group from a remote HTTP response.
@@ -103,7 +101,7 @@ internal fun decodeContentDispositionFilename(headerValue: String?): String? {
     // 1) Prefer RFC 5987 extended form: filename*=UTF-8''<percent-encoded>
     val extended = FilenameExtendedRegex.find(raw)
     if (extended != null) {
-        val decoded = decodePercent(extended.groupValues[1])
+        val decoded = extended.groupValues[1].decodeUrlComponentPreservingPlus()
         if (decoded.isNotBlank()) return decoded.trim()
     }
 
@@ -116,11 +114,6 @@ internal fun decodeContentDispositionFilename(headerValue: String?): String? {
     }
     return null
 }
-
-private fun decodePercent(value: String): String =
-    runCatching {
-        URLDecoder.decode(value, StandardCharsets.UTF_8.name())
-    }.getOrDefault(value)
 
 private val FilenameExtendedRegex = Regex("""filename\*=(?:UTF-8|utf-8)''([^;]+)""")
 private val FilenameBareRegex = Regex("""filename\s*=\s*("([^"]*)"|([^;]+))""", RegexOption.IGNORE_CASE)

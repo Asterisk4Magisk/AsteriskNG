@@ -138,7 +138,7 @@ private fun JsonArray.customProxyServerHosts(): List<String> {
     return filterIsInstance<JsonObject>()
         .filter { outbound -> outbound.stringValue("tag") !in CustomInfrastructureOutboundTags }
         .flatMap { outbound -> outbound.proxyServerHosts() }
-        .map { host -> host.normalizedHostAddress() }
+        .map { host -> host.toProxyUrlHost() }
         .toTrimmedNonEmptyDistinctList()
 }
 
@@ -228,7 +228,7 @@ private fun JsonArray.firstEndpoint(): CustomProxyOutboundEndpoint? {
 
 private fun JsonObject.addressPortEndpoint(): CustomProxyOutboundEndpoint? {
     val address = stringValue("address")
-        ?.normalizedHostAddress()
+        ?.toProxyUrlHost()
         ?.takeIf(String::isNotEmpty)
         ?: return null
     return endpoint(address, stringValue("port") ?: return null)
@@ -263,7 +263,7 @@ private fun String.endpointHostOrNull(): String? {
 }
 
 private fun endpoint(host: String, port: String): CustomProxyOutboundEndpoint? {
-    val normalizedHost = host.normalizedHostAddress().takeIf(String::isNotEmpty) ?: return null
+    val normalizedHost = host.toProxyUrlHost().takeIf(String::isNotEmpty) ?: return null
     val parsedPort = port.toPortOrNull() ?: return null
     return CustomProxyOutboundEndpoint(normalizedHost, parsedPort)
 }
@@ -274,10 +274,6 @@ private fun JsonArray.firstObject(): JsonObject? {
 
 private fun CustomProxyOutboundEndpoint.toDisplayAddress(): String {
     return "${host.toHostPortAddress()}:$port"
-}
-
-private fun String.normalizedHostAddress(): String {
-    return trim().removeSurrounding("[", "]")
 }
 
 private fun String.toHostPortAddress(): String {

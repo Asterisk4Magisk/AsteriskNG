@@ -341,9 +341,9 @@ private fun SubscriptionEditorContainer(
     show: Boolean,
     title: String,
     onDismissRequest: () -> Unit,
+    modifier: Modifier = Modifier,
     inline: Boolean = false,
     selectedId: Int? = null,
-    modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
     if (inline) {

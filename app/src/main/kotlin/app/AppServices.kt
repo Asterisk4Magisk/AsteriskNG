@@ -21,7 +21,6 @@ import features.settings.usecase.RootBootScriptUseCase
 import features.settings.usecase.RootEbpfProbeUseCase
 import features.subscription.runtime.AndroidSubscriptionFetcher
 import kotlinx.coroutines.CoroutineScope
-import system.AndroidNetworkInterfaceProvider
 import system.AndroidPackageProvider
 import system.AndroidRootShellGateway
 import system.AndroidUserSpaceProvider
@@ -34,7 +33,6 @@ internal data class AppServices(
     val rootAccess: AndroidRootShellGateway,
     val userSpaces: AndroidUserSpaceProvider,
     val packageCatalog: AndroidPackageProvider,
-    val networkInterfaces: AndroidNetworkInterfaceProvider,
     val resourceFileUseCase: ResourceFileUseCase,
     val resourceFileUpdateCoordinator: ResourceFileUpdateCoordinator,
     val appBackupUseCase: AppBackupUseCase,

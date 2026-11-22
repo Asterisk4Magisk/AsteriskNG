@@ -4,6 +4,9 @@
 
     <!-- Common -->
     <string name="app_name">AsteriskNG</string>
+    <string name="common_refresh_complete">刷新完成</string>
+    <string name="common_release_to_refresh">松开刷新</string>
+    <string name="common_pull_to_refresh">下拉刷新</string>
     <string name="common_add">添加</string>
     <string name="common_cancel">取消</string>
     <string name="common_clipboard_empty">剪贴板为空</string>
@@ -583,7 +586,6 @@
     <string name="settings_traffic_stats_notification_summary">在通知和状态栏中显示当前速度和累计流量</string>
 
     <!-- Quick settings tile -->
-    <string name="quick_settings_tile_label">AsteriskNG</string>
     <string name="quick_settings_tile_processing">正在处理…</string>
     <string name="quick_settings_tile_running">代理运行中</string>
     <string name="quick_settings_tile_stopped">代理已停止</string>
@@ -618,10 +620,7 @@
     <string name="proxy_app_list_more_actions">更多操作</string>
     <string name="proxy_app_list_pick_installed_apps">从已安装应用中选择</string>
     <string name="proxy_app_list_picker_title">选择应用</string>
-    <string name="proxy_app_list_pull_to_refresh">下拉刷新</string>
-    <string name="proxy_app_list_refreshed">刷新完成</string>
     <string name="proxy_app_list_refreshing">正在刷新…</string>
-    <string name="proxy_app_list_release_to_refresh">松开刷新</string>
     <string name="proxy_app_list_scan_china_apps">扫描中国应用</string>
     <string name="proxy_app_list_scan_china_done">已扫描 %1$d 个应用，发现 %2$d 个中国应用</string>
     <string name="proxy_app_list_scan_china_no_match">已扫描 {scanned} 个应用，未发现中国应用</string>
@@ -770,10 +769,7 @@
     <string name="logs_output">日志输出</string>
     <string name="logs_pause">暂停日志更新</string>
     <string name="logs_paused">已暂停</string>
-    <string name="logs_pull_to_refresh">下拉刷新</string>
-    <string name="logs_refreshed">刷新完成</string>
     <string name="logs_refreshing">正在刷新…</string>
-    <string name="logs_release_to_refresh">松开刷新</string>
     <string name="logs_resume">恢复日志更新</string>
     <string name="settings_access_logs">访问日志</string>
     <string name="settings_log_level">日志等级</string>
