@@ -12,7 +12,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -119,22 +118,37 @@ internal fun EditorListPane(
                 }
             }
         }
-        Box(Modifier.weight(1f).fillMaxHeight()) {
-            var previousId by remember { mutableStateOf(selectedId) }
-            val detailVisibility = remember(selectedId) {
-                val animate = visible && onSelect != null && selectedId != previousId
-                MutableTransitionState(!animate).apply { targetState = true }
-            }
-            SideEffect { previousId = selectedId }
+        EditorEntryTransition(
+            selectedId = selectedId,
+            animateChanges = visible && onSelect != null,
+            modifier = Modifier.weight(1f).fillMaxHeight(),
+            content = content,
+        )
+    }
+}
 
-            androidx.compose.animation.AnimatedVisibility(
-                visibleState = detailVisibility,
-                enter = fadeIn(fadeMotion),
-                exit = ExitTransition.None,
-                label = "editorEntryChange",
-            ) {
-                content()
-            }
-        }
+@Composable
+internal fun EditorEntryTransition(
+    selectedId: Int?,
+    animateChanges: Boolean,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    var previousId by remember { mutableStateOf(selectedId) }
+    val visibility = remember(selectedId) {
+        val animate = animateChanges && selectedId != previousId
+        MutableTransitionState(!animate).apply { targetState = true }
+    }
+    SideEffect { previousId = selectedId }
+
+    val fadeMotion = remember { folmeSpring<Float>(damping = 0.95f, response = 0.4f) }
+    AnimatedVisibility(
+        visibleState = visibility,
+        modifier = modifier,
+        enter = fadeIn(fadeMotion),
+        exit = ExitTransition.None,
+        label = "editorEntryChange",
+    ) {
+        content()
     }
 }

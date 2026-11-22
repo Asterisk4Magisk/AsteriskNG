@@ -54,6 +54,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 import ui.layout.AdaptiveTopAppBar
 import ui.text.formatTemplate
 import ui.layout.pageContentPaddingWithCutout
+import ui.layout.pageReadableWidth
 import ui.layout.pageScrollModifiers
 import ui.clipboard.setPlainText
 import androidx.compose.runtime.getValue
@@ -202,6 +203,7 @@ private fun LogViewerPage(
         Box {
             Column(
                 modifier = Modifier
+                    .pageReadableWidth()
                     .fillMaxSize()
                     .padding(contentPadding),
             ) {

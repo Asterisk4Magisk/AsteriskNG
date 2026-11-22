@@ -5,9 +5,12 @@
 
 package features.subscription
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -22,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import app.AppServices
@@ -67,6 +71,7 @@ import ui.components.rememberReorderableLazyListContentPaddingWithoutTop
 import ui.components.rememberReorderableScrollThresholdPadding
 import ui.components.reorderByIds
 import ui.layout.AdaptiveTopAppBar
+import ui.layout.LocalAdaptiveWindow
 import ui.layout.pageContentPaddingWithCutout
 import ui.layout.pageListPadding
 import ui.layout.pageReadableWidth
@@ -95,6 +100,10 @@ fun SubscriptionGroupListPage(
     val invalidSubscriptionUrlMessage = stringResource(R.string.subscription_invalid_url)
     var editingGroupId by remember { mutableStateOf<Int?>(null) }
     var showGroupEditor by remember { mutableStateOf(false) }
+    var groupEditorDirty by remember { mutableStateOf(false) }
+    val showInlineEditor = showGroupEditor && LocalAdaptiveWindow.current.showTwoColumns &&
+        LocalDensity.current.fontScale <= 1.3f
+    val canSwitchGroup = !showInlineEditor || !groupEditorDirty
     var pendingGroupDeletion by remember { mutableStateOf<SubscriptionGroupState?>(null) }
     val editingGroup = editingGroupId?.let { id -> groups.firstOrNull { it.id == id } }
     val context = LocalContext.current
@@ -171,9 +180,7 @@ fun SubscriptionGroupListPage(
         showGroupEditor = false
     }
 
-    fun clearGroupEditor() {
-        editingGroupId = null
-    }
+    BackHandler(enabled = showInlineEditor, onBack = ::closeGroupEditor)
 
     fun saveGroup(group: SubscriptionGroupState, isNew: Boolean) {
         updateAppState { state ->
@@ -226,14 +233,17 @@ fun SubscriptionGroupListPage(
                 scrollBehavior = topAppBarScrollBehavior,
                 navigationIcon = {
                     BackNavigationIcon(
-                        onClick = { navigator.pop() },
+                        onClick = { if (showInlineEditor) closeGroupEditor() else navigator.pop() },
                     )
                 },
                 actions = {
                     NavigationIcon(
                         onClick = {
-                            editingGroupId = null
-                            showGroupEditor = true
+                            if (canSwitchGroup) {
+                                editingGroupId = null
+                                groupEditorDirty = false
+                                showGroupEditor = true
+                            }
                         },
                         imageVector = MiuixIcons.Add,
                     )
@@ -267,92 +277,114 @@ fun SubscriptionGroupListPage(
             onMove = preview.onMove,
         )
 
-        Box(Modifier.pageReadableWidth(maxWidth = 920.dp)) {
-            LazyColumn(
-                state = lazyListState,
-                modifier = Modifier
-                    .padding(top = listPadding.calculateTopPadding())
-                    .pageScrollModifiers(topAppBarScrollBehavior),
-                contentPadding = lazyContentPadding,
-            ) {
-                item(key = "subscription_title") {
-                    SmallTitle(text = stringResource(R.string.subscription_group_list))
-                }
-                items(
-                    items = preview.items,
-                    key = { it.id },
-                ) { group ->
-                    ReorderableItem(reorderableLazyListState.reorderableState, key = group.id) { isDragging ->
-                        SubscriptionGroupCard(
-                            group = group,
-                            isDragging = isDragging,
-                            dragModifier = Modifier.longPressReorderDragHandle(
-                                scope = this,
-                                enabled = groups.size > 1,
-                                state = reorderableLazyListState,
-                                onDragStarted = preview.onDragStarted,
-                                onDragStopped = preview.onDragStopped,
-                            ),
-                            onToggle = { enabled ->
-                                updateAppState { state ->
-                                    state.copy(
-                                        subscriptionGroups = state.subscriptionGroups.map {
-                                            if (it.id == group.id) it.copy(enabled = enabled) else it
-                                        },
-                                    )
-                                }
-                            },
-                            onUpdate = if (group.url.isNotBlank()) {
-                                {
-                                    updateSubscriptionGroup(
-                                        group = group,
-                                        stateStore = stateStore,
-                                        services = services,
-                                        updateAppState = updateAppState,
-                                        successTemplate = subscriptionUpdateResultTemplate,
-                                        failedTemplate = subscriptionUpdateResultWithFailedTemplate,
-                                        duplicateNameTemplate = duplicateNameTemplate,
-                                    )
-                                }
-                            } else {
-                                null
-                            },
-                            shareActions = subscriptionGroupShareActions(
+        Row(
+            modifier = Modifier
+                .pageReadableWidth(maxWidth = if (showInlineEditor) 1180.dp else 920.dp)
+                .fillMaxSize(),
+        ) {
+            Box(if (showInlineEditor) Modifier.weight(1f) else Modifier.fillMaxSize()) {
+                LazyColumn(
+                    state = lazyListState,
+                    modifier = Modifier
+                        .padding(top = listPadding.calculateTopPadding())
+                        .pageScrollModifiers(topAppBarScrollBehavior),
+                    contentPadding = lazyContentPadding,
+                ) {
+                    item(key = "subscription_title") {
+                        SmallTitle(text = stringResource(R.string.subscription_group_list))
+                    }
+                    items(
+                        items = preview.items,
+                        key = { it.id },
+                    ) { group ->
+                        ReorderableItem(reorderableLazyListState.reorderableState, key = group.id) { isDragging ->
+                            SubscriptionGroupCard(
                                 group = group,
-                                serverCount = serverCountsByGroup[group.id] ?: 0,
-                            ),
-                            onShareAction = { action -> shareGroup(group, action) },
-                            onEdit = {
-                                editingGroupId = group.id
-                                showGroupEditor = true
-                            },
-                            onDelete = { requestGroupDeletion(group) },
-                            modifier = Modifier.animateItem(
-                                fadeInSpec = null,
-                                fadeOutSpec = null,
-                                placementSpec = folmeSpring(damping = 0.9f, response = 0.38f),
-                            ),
-                        )
+                                isDragging = isDragging,
+                                dragModifier = Modifier.longPressReorderDragHandle(
+                                    scope = this,
+                                    enabled = groups.size > 1,
+                                    state = reorderableLazyListState,
+                                    onDragStarted = preview.onDragStarted,
+                                    onDragStopped = preview.onDragStopped,
+                                ),
+                                onToggle = { enabled ->
+                                    updateAppState { state ->
+                                        state.copy(
+                                            subscriptionGroups = state.subscriptionGroups.map {
+                                                if (it.id == group.id) it.copy(enabled = enabled) else it
+                                            },
+                                        )
+                                    }
+                                },
+                                onUpdate = if (group.url.isNotBlank()) {
+                                    {
+                                        updateSubscriptionGroup(
+                                            group = group,
+                                            stateStore = stateStore,
+                                            services = services,
+                                            updateAppState = updateAppState,
+                                            successTemplate = subscriptionUpdateResultTemplate,
+                                            failedTemplate = subscriptionUpdateResultWithFailedTemplate,
+                                            duplicateNameTemplate = duplicateNameTemplate,
+                                        )
+                                    }
+                                } else {
+                                    null
+                                },
+                                shareActions = subscriptionGroupShareActions(
+                                    group = group,
+                                    serverCount = serverCountsByGroup[group.id] ?: 0,
+                                ),
+                                onShareAction = { action -> shareGroup(group, action) },
+                                onEdit = {
+                                    if (group.id != editingGroupId || !showGroupEditor) {
+                                        editingGroupId = group.id
+                                        groupEditorDirty = false
+                                        showGroupEditor = true
+                                    }
+                                },
+                                editing = showInlineEditor && group.id == editingGroupId,
+                                editEnabled = canSwitchGroup || group.id == editingGroupId,
+                                deleteEnabled = !showInlineEditor || group.id != editingGroupId,
+                                onDelete = { requestGroupDeletion(group) },
+                                modifier = Modifier.animateItem(
+                                    fadeInSpec = null,
+                                    fadeOutSpec = null,
+                                    placementSpec = folmeSpring(damping = 0.9f, response = 0.38f),
+                                ),
+                            )
+                        }
                     }
                 }
+                VerticalScrollBar(
+                    adapter = rememberScrollBarAdapter(lazyListState),
+                    modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
+                    trackPadding = contentPadding,
+                )
             }
-            VerticalScrollBar(
-                adapter = rememberScrollBarAdapter(lazyListState),
-                modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
-                trackPadding = contentPadding,
+            SubscriptionGroupEditorDialog(
+                show = showGroupEditor,
+                group = editingGroup,
+                nextGroupId = appState.nextSubscriptionGroupId,
+                onDismissRequest = ::closeGroupEditor,
+                onDirtyChanged = { groupEditorDirty = it },
+                inline = showInlineEditor,
+                modifier = if (showInlineEditor) {
+                    Modifier.weight(1.12f).padding(
+                        top = listPadding.calculateTopPadding() + 12.dp,
+                        end = 12.dp,
+                        bottom = listPadding.calculateBottomPadding(),
+                    )
+                } else {
+                    Modifier
+                },
+                onSave = ::saveGroup,
+                onInvalidUrl = {
+                    scope.launch { services.tipNotifier.show(invalidSubscriptionUrlMessage) }
+                },
             )
         }
-        SubscriptionGroupEditorDialog(
-            show = showGroupEditor,
-            group = editingGroup,
-            nextGroupId = appState.nextSubscriptionGroupId,
-            onDismissRequest = ::closeGroupEditor,
-            onDismissFinished = ::clearGroupEditor,
-            onSave = ::saveGroup,
-            onInvalidUrl = {
-                scope.launch { services.tipNotifier.show(invalidSubscriptionUrlMessage) }
-            },
-        )
         shareQrCodeState?.let { state ->
             ProxyServerQrCodeDialog(
                 title = state.title,

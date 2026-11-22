@@ -18,28 +18,39 @@ import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.foundation.text.input.then
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import app.R
 import androidx.compose.ui.res.stringResource
 import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
@@ -62,6 +73,9 @@ import ui.components.IconDropdownMenuEntry
 import ui.components.WarningConfirmDialog
 import ui.components.animateDraggedCardLift
 import ui.components.draggedCardLift
+import ui.layout.EditorEntryTransition
+import ui.layout.LocalAdaptiveWindow
+import ui.layout.avoidFold
 import ui.text.formatTemplate
 
 @Composable
@@ -70,9 +84,11 @@ internal fun SubscriptionGroupEditorDialog(
     group: SubscriptionGroupState?,
     nextGroupId: Int,
     onDismissRequest: () -> Unit,
-    onDismissFinished: () -> Unit,
     onSave: (SubscriptionGroupState, isNew: Boolean) -> Unit,
     onInvalidUrl: () -> Unit,
+    onDirtyChanged: (Boolean) -> Unit,
+    inline: Boolean,
+    modifier: Modifier = Modifier,
 ) {
     val isEditing = group != null
     val builtIn = group?.builtIn == true
@@ -107,8 +123,8 @@ internal fun SubscriptionGroupEditorDialog(
     var updateViaProxy by remember(show, group?.id) {
         mutableStateOf(group?.updateViaProxy ?: false)
     }
-    var showCustomUserAgentDialog by remember { mutableStateOf(false) }
-    var showHttpSubscriptionWarning by remember { mutableStateOf(false) }
+    var showCustomUserAgentDialog by remember(show, group?.id) { mutableStateOf(false) }
+    var showHttpSubscriptionWarning by remember(show, group?.id) { mutableStateOf(false) }
     val customUserAgentDraftState = rememberTextFieldState(initialText = customUserAgent)
     val customSummary = customUserAgent.trim().ifBlank {
         stringResource(R.string.subscription_user_agent_custom_summary)
@@ -123,6 +139,12 @@ internal fun SubscriptionGroupEditorDialog(
         .indexOf(userAgentSelection)
         .coerceAtLeast(0)
     val resolvedUserAgent = userAgentSelection.resolveUserAgent(customUserAgent)
+    val dirty = (!builtIn && name != group?.name.orEmpty()) || url != group?.url.orEmpty() ||
+        hwid != group?.hwid.orEmpty() || ageSecretKey != group?.ageSecretKey.orEmpty() ||
+        resolvedUserAgent != initialUserAgent ||
+        interval != sanitizeSubscriptionIntervalInput(group?.updateInterval.orEmpty()) ||
+        updateViaProxy != (group?.updateViaProxy ?: false)
+    SideEffect { onDirtyChanged(show && dirty) }
 
     fun saveGroup(allowPlainHttp: Boolean = false) {
         if (!isValidSubscriptionIntervalInput(interval)) return
@@ -165,21 +187,22 @@ internal fun SubscriptionGroupEditorDialog(
         onDismissRequest()
     }
 
-    WindowDialog(
+    SubscriptionEditorContainer(
         show = show,
         title = if (isEditing) stringResource(R.string.subscription_edit) else stringResource(R.string.subscription_add),
         onDismissRequest = onDismissRequest,
-        onDismissFinished = onDismissFinished,
+        inline = inline,
+        selectedId = group?.id,
+        modifier = modifier,
     ) {
         key(show, group?.id, builtIn) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState()),
-            ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                val scrollState = rememberScrollState()
                 Column(
                     modifier = Modifier
+                        .weight(1f, fill = false)
                         .fillMaxWidth()
+                        .verticalScroll(scrollState)
                         .padding(bottom = 16.dp),
                 ) {
                     TextField(
@@ -306,6 +329,81 @@ internal fun SubscriptionGroupEditorDialog(
 }
 
 @Composable
+private fun SubscriptionEditorContainer(
+    show: Boolean,
+    title: String,
+    onDismissRequest: () -> Unit,
+    inline: Boolean = false,
+    selectedId: Int? = null,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    if (inline) {
+        EditorEntryTransition(
+            selectedId = selectedId,
+            animateChanges = true,
+            modifier = modifier,
+        ) {
+            SubscriptionEditorCard(title, Modifier.fillMaxWidth(), content)
+        }
+        return
+    }
+
+    val window = LocalAdaptiveWindow.current
+    if (window.hasSeparatingFold) {
+        if (!show) return
+        Dialog(
+            onDismissRequest = onDismissRequest,
+            properties = DialogProperties(
+                usePlatformDefaultWidth = false,
+                decorFitsSystemWindows = false,
+                dismissOnClickOutside = false,
+            ),
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize().avoidFold(window).safeDrawingPadding().imePadding()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                SubscriptionEditorCard(
+                    title = title,
+                    modifier = Modifier.widthIn(max = 460.dp).fillMaxWidth(),
+                    content = content,
+                )
+            }
+        }
+    } else {
+        WindowDialog(show = show, title = title, onDismissRequest = onDismissRequest) {
+            content()
+        }
+    }
+}
+
+@Composable
+private fun SubscriptionEditorCard(
+    title: String,
+    modifier: Modifier,
+    content: @Composable () -> Unit,
+) {
+    Card(
+        modifier = modifier,
+        insideMargin = PaddingValues(20.dp),
+        colors = CardDefaults.defaultColors(
+            color = MiuixTheme.colorScheme.background,
+            contentColor = MiuixTheme.colorScheme.onBackground,
+        ),
+    ) {
+        Text(
+            text = title,
+            style = MiuixTheme.textStyles.title4,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(bottom = 16.dp),
+        )
+        content()
+    }
+}
+
+@Composable
 private fun HttpSubscriptionWarningDialog(
     show: Boolean,
     onDismissRequest: () -> Unit,
@@ -329,7 +427,7 @@ private fun CustomUserAgentDialog(
     onDismissRequest: () -> Unit,
     onSave: () -> Unit,
 ) {
-    WindowDialog(
+    SubscriptionEditorContainer(
         show = show,
         title = stringResource(R.string.subscription_custom_user_agent),
         onDismissRequest = onDismissRequest,
@@ -384,6 +482,9 @@ internal fun SubscriptionGroupCard(
     onDelete: () -> Unit,
     modifier: Modifier = Modifier,
     dragModifier: Modifier = Modifier,
+    editing: Boolean = false,
+    editEnabled: Boolean = true,
+    deleteEnabled: Boolean = true,
 ) {
     val defaultGroupName = stringResource(R.string.subscription_default_group)
     val dragLift = animateDraggedCardLift(isDragging, label = "subscriptionGroupDrag")
@@ -394,6 +495,7 @@ internal fun SubscriptionGroupCard(
             .padding(horizontal = 12.dp)
             .padding(bottom = 12.dp)
             .draggedCardLift(dragLift)
+            .then(if (editing) Modifier.semantics { selected = true } else Modifier)
             .then(dragModifier),
         insideMargin = PaddingValues(16.dp),
     ) {
@@ -407,7 +509,7 @@ internal fun SubscriptionGroupCard(
                     text = group.displayName(defaultGroupName),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = MiuixTheme.colorScheme.onSurface,
+                    color = if (editing) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -467,21 +569,22 @@ internal fun SubscriptionGroupCard(
                     onAction = onShareAction,
                 )
             }
-            IconButton(onClick = onEdit) {
+            IconButton(onClick = onEdit, enabled = editEnabled) {
                 Icon(
                     imageVector = MiuixIcons.Edit,
                     contentDescription = stringResource(R.string.subscription_edit_group),
-                    tint = MiuixTheme.colorScheme.onSurface,
+                    tint = if (editEnabled) MiuixTheme.colorScheme.onSurface
+                    else MiuixTheme.colorScheme.disabledOnSecondaryVariant,
                 )
             }
             IconButton(
                 onClick = onDelete,
-                enabled = !group.builtIn,
+                enabled = !group.builtIn && deleteEnabled,
             ) {
                 Icon(
                     imageVector = MiuixIcons.Delete,
                     contentDescription = stringResource(R.string.subscription_delete_group),
-                    tint = if (group.builtIn) {
+                    tint = if (group.builtIn || !deleteEnabled) {
                         MiuixTheme.colorScheme.disabledOnSecondaryVariant
                     } else {
                         MiuixTheme.colorScheme.onSurface
