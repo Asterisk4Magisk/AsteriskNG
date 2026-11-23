@@ -43,14 +43,14 @@ import features.proxy.server.usecase.withDeletedProxyServers
 import features.proxy.server.usecase.withImportedProxyServers
 import features.proxy.server.usecase.withUpdatedSubscriptionServers
 import features.subscription.DefaultSubscriptionGroupId
-import features.subscription.SubscriptionInstallConfigUseCase
 import features.subscription.runtime.AndroidSubscriptionFetchOptions
 import features.subscription.runtime.AndroidSubscriptionFetcher
-import features.subscription.subscriptionInstallMessage
+import features.subscription.toSubscriptionInstallConfigOrNull
+import features.subscription.usecase.SubscriptionInstallConfigUseCase
+import features.subscription.usecase.subscriptionInstallMessage
 import features.subscription.usecase.subscriptionUpdateMessage
 import features.subscription.usecase.toSubscriptionFetchOptions
 import features.subscription.usecase.updateSubscriptions
-import features.subscription.toSubscriptionInstallConfigOrNull
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.ScrollBehavior

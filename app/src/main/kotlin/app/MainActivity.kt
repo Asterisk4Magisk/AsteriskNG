@@ -30,11 +30,11 @@ import engine.vpn.AndroidVpnPermissionRequester
 import features.boot.BootAutoConnect
 import features.qr.AndroidQrCodeScanRequester
 import features.settings.locale.localizedAppContext
-import features.subscription.SubscriptionInstallConfigUseCase
 import features.subscription.isSubscriptionInstallConfigUri
 import features.subscription.runtime.AndroidSubscriptionFetcher
-import features.subscription.subscriptionInstallMessage
 import features.subscription.toSubscriptionInstallConfigOrNull
+import features.subscription.usecase.SubscriptionInstallConfigUseCase
+import features.subscription.usecase.subscriptionInstallMessage
 import kotlinx.coroutines.launch
 import system.AndroidDocumentLauncher
 import system.AndroidLauncherIcon
