@@ -17,7 +17,9 @@ import androidx.compose.foundation.MutatePriority
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -27,12 +29,15 @@ import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.exclude
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
@@ -54,7 +59,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.dp
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
@@ -78,6 +85,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.anim.folmeSpring
+import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.NavigationBar
 import top.yukonga.miuix.kmp.basic.NavigationBarDisplayMode
 import top.yukonga.miuix.kmp.basic.NavigationBarItem
@@ -85,6 +93,7 @@ import top.yukonga.miuix.kmp.basic.NavigationItem
 import top.yukonga.miuix.kmp.basic.NavigationRail
 import top.yukonga.miuix.kmp.basic.NavigationRailItem
 import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.AppRecording
 import top.yukonga.miuix.kmp.icon.extended.Layers
@@ -95,6 +104,7 @@ import top.yukonga.miuix.kmp.nav.core.NavDisplayEffects
 import top.yukonga.miuix.kmp.nav.core.rememberNavBackStack
 import top.yukonga.miuix.kmp.nav.core.rememberNavSystemCornerRadius
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import ui.layout.FoldCompanionPane
 import ui.layout.LocalAdaptiveWindow
 import ui.layout.LocalRailHandlesHorizontalInsets
 import ui.layout.avoidFold
@@ -164,74 +174,115 @@ fun AppContent(
             )
         }
 
-        NavDisplay(
-            backStack = backStack,
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MiuixTheme.colorScheme.surface)
-                .avoidFold(window)
-                .clipToBounds()
-                .imePadding(),
-            onBack = { navigator.pop() },
-            effects = effects,
-        ) {
-            entry<Route.Main> {
-                key(languageMode) {
-                    Home(
-                        padding = padding,
-                        mainPagerState = mainPagerState,
-                    )
+        Box(Modifier.fillMaxSize()) {
+            NavDisplay(
+                backStack = backStack,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MiuixTheme.colorScheme.surface)
+                    .avoidFold(window)
+                    .clipToBounds()
+                    .imePadding(),
+                onBack = { navigator.pop() },
+                effects = effects,
+            ) {
+                entry<Route.Main> {
+                    key(languageMode) {
+                        Home(
+                            padding = padding,
+                            mainPagerState = mainPagerState,
+                        )
+                    }
+                }
+                entry<Route.About> {
+                    key(languageMode) {
+                        AboutPage(padding = padding)
+                    }
+                }
+                entry<Route.License> {
+                    key(languageMode) {
+                        LicensePage(padding = padding)
+                    }
+                }
+                entry<Route.CoreLogs> {
+                    key(languageMode) {
+                        CoreLogsPage(padding = padding)
+                    }
+                }
+                entry<Route.AccessLogs> {
+                    key(languageMode) {
+                        AccessLogsPage(padding = padding)
+                    }
+                }
+                entry<Route.LogcatLogs> {
+                    key(languageMode) {
+                        LogcatLogsPage(padding = padding)
+                    }
+                }
+                entry<Route.ResourceManagement> {
+                    key(languageMode) {
+                        ResourceManagementPage(padding = padding)
+                    }
+                }
+                entry<Route.SubscriptionGroupList> {
+                    key(languageMode) {
+                        SubscriptionGroupListPage(padding = padding)
+                    }
+                }
+                entry<Route.ProxyServerEditor>(contentKey = { it.entryId }) {
+                    key(languageMode) {
+                        ProxyServerPage(
+                            padding = padding,
+                            ps = it.ps,
+                            serverId = it.serverId,
+                            groupId = it.groupId,
+                            returnGroupId = it.returnGroupId,
+                            resultKey = it.resultKey,
+                        )
+                    }
                 }
             }
-            entry<Route.About> {
-                key(languageMode) {
-                    AboutPage(padding = padding)
-                }
+            features.proxy.ProxyErrorHost()
+            FoldCompanionPane(window) {
+                AppFoldOverview()
             }
-            entry<Route.License> {
-                key(languageMode) {
-                    LicensePage(padding = padding)
-                }
-            }
-            entry<Route.CoreLogs> {
-                key(languageMode) {
-                    CoreLogsPage(padding = padding)
-                }
-            }
-            entry<Route.AccessLogs> {
-                key(languageMode) {
-                    AccessLogsPage(padding = padding)
-                }
-            }
-            entry<Route.LogcatLogs> {
-                key(languageMode) {
-                    LogcatLogsPage(padding = padding)
-                }
-            }
-            entry<Route.ResourceManagement> {
-                key(languageMode) {
-                    ResourceManagementPage(padding = padding)
-                }
-            }
-            entry<Route.SubscriptionGroupList> {
-                key(languageMode) {
-                    SubscriptionGroupListPage(padding = padding)
-                }
-            }
-            entry<Route.ProxyServerEditor>(contentKey = { it.entryId }) {
-                key(languageMode) {
-                    ProxyServerPage(
-                        padding = padding,
-                        ps = it.ps,
-                        serverId = it.serverId,
-                        groupId = it.groupId,
-                        returnGroupId = it.returnGroupId,
-                        resultKey = it.resultKey,
-                    )
+        }
+    }
+}
+
+@Composable
+private fun AppFoldOverview() {
+    val state by LocalAppStateStore.current.collectAppState()
+    val status = stringResource(
+        if (state.proxyRunning) R.string.quick_settings_tile_running else R.string.quick_settings_tile_stopped,
+    )
+    val proxy = state.proxyServers.firstOrNull { it.id == state.selectedProxyServerId }
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        item(key = "status") {
+            Card(modifier = Modifier.fillMaxWidth(), insideMargin = PaddingValues(16.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(status, style = MiuixTheme.textStyles.title4)
+                    proxy?.let { Text(it.displayTitle(), maxLines = 2, overflow = TextOverflow.Ellipsis) }
                 }
             }
         }
-        features.proxy.ProxyErrorHost()
+        item(key = "title") {
+            Text(stringResource(R.string.routing_title), style = MiuixTheme.textStyles.title4)
+        }
+        items(state.routeRules, key = { it.id }) { rule ->
+            Card(modifier = Modifier.fillMaxWidth(), insideMargin = PaddingValues(12.dp)) {
+                Text(
+                    text = rule.remarks,
+                    color = if (rule.enabled) MiuixTheme.colorScheme.onSurface else MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
     }
 }
 

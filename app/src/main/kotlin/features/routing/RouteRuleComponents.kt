@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.text.input.InputTransformation
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -26,9 +27,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.movableContentOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
@@ -51,6 +55,8 @@ import engine.xray.isValidXrayExternalDomainRule
 import engine.xray.isXrayExternalDomainRuleCandidate
 import features.proxy.app.AppPackagePickerAction
 import features.routing.model.RouteRule
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.filter
 import top.yukonga.miuix.kmp.anim.folmeSpring
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Icon
@@ -266,8 +272,21 @@ internal fun RouteRuleEditor(
     val save: @Composable () -> Unit = {
         TextButton(text = stringResource(R.string.common_save), onClick = saveRule, enabled = !inline || canSave)
     }
-    val form: @Composable () -> Unit = {
+    val inlineFormState = remember(editorSession) { LazyListState() }
+    val sheetFormState = remember(editorSession) { LazyListState() }
+    val formState = if (inline) inlineFormState else sheetFormState
+    val otherFormState = if (inline) sheetFormState else inlineFormState
+    LaunchedEffect(show, formState) {
+        if (!show) return@LaunchedEffect
+        // A taller presentation can fit the whole form. Its layout must not erase the scroll
+        // position needed when returning to the shorter presentation.
+        snapshotFlow { formState.isScrollInProgress }.drop(1).filter { !it }.collect {
+            otherFormState.requestScrollToItem(formState.firstVisibleItemIndex, formState.firstVisibleItemScrollOffset)
+        }
+    }
+    val formContent = rememberUpdatedState<@Composable () -> Unit> {
         LazyColumn(
+            state = formState,
             modifier = Modifier.fillMaxWidth().padding(bottom = if (inline) 0.dp else 24.dp),
             contentPadding = if (inline) {
                 PaddingValues(start = 12.dp, end = 12.dp, bottom = 24.dp)
@@ -300,6 +319,7 @@ internal fun RouteRuleEditor(
             }
         }
     }
+    val form = remember(editorSession) { movableContentOf { formContent.value() } }
     if (inline) {
         BackHandler(onBack = onDismissRequest)
         val alpha = remember { Animatable(0f) }
