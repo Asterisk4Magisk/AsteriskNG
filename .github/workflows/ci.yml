@@ -38,29 +38,18 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
 
-      - name: Set up Android SDK
+      - name: Set up Android command-line tools
         uses: android-actions/setup-android@v4
         with:
-          # The action defaults to `tools platform-tools`, but the legacy `tools`
-          # package is no longer published: sdkmanager now fails with
-          # "Failed to find package 'tools'" and the job never reaches Gradle.
-          # The step below installs whatever platform, build-tools and NDK the
-          # project asks for, so only platform-tools is needed here.
-          packages: platform-tools
+          accept-android-sdk-licenses: false
+          packages: ""
 
       - name: Install Android SDK packages
         shell: bash
         run: |
           set -euo pipefail
 
-          set +o pipefail
-          yes | sdkmanager --licenses >/dev/null
-          licenses_status="${PIPESTATUS[1]}"
-          set -o pipefail
-          if [ "$licenses_status" -ne 0 ]; then
-            echo "::error::Failed to accept Android SDK licenses."
-            exit "$licenses_status"
-          fi
+          android_sdk=(android --no-metrics --sdk="$ANDROID_HOME" sdk)
 
           build_tools_version="$(sed -n 's/^[[:space:]]*const val BUILD_TOOLS_VERSION = "\([^"]\+\)".*/\1/p' buildSrc/src/main/kotlin/BuildConfig.kt | head -n 1)"
           target_sdk="$(sed -n 's/^[[:space:]]*const val TARGET_SDK = \([0-9]\+\).*/\1/p' buildSrc/src/main/kotlin/BuildConfig.kt | head -n 1)"
@@ -81,30 +70,30 @@ jobs:
             exit 1
           fi
 
-          available_packages="$(sdkmanager --list | awk '{ print $1 }')"
-          platform_package="platforms;android-${target_sdk}"
+          available_packages="$("${android_sdk[@]}" list --all | awk '{ print $1 }')"
+          platform_package="platforms/android-${target_sdk}"
           if ! grep -Fxq "$platform_package" <<< "$available_packages"; then
-            if grep -Fxq "platforms;android-${target_sdk}.0" <<< "$available_packages"; then
-              platform_package="platforms;android-${target_sdk}.0"
+            if grep -Fxq "platforms/android-${target_sdk}.0" <<< "$available_packages"; then
+              platform_package="platforms/android-${target_sdk}.0"
             else
               echo "::error::No Android SDK platform package is available for TARGET_SDK=$target_sdk."
               exit 1
             fi
           fi
 
-          build_tools_package="build-tools;$build_tools_version"
-          ndk_package="ndk;$ndk_version"
+          build_tools_package="build-tools/$build_tools_version"
+          ndk_package="ndk/$ndk_version"
 
           if ! grep -Fxq "$build_tools_package" <<< "$available_packages"; then
-            echo "::error::Android build-tools package $build_tools_package requested by ProjectConfig.BUILD_TOOLS_VERSION is not available from sdkmanager."
+            echo "::error::Android build-tools package $build_tools_package requested by ProjectConfig.BUILD_TOOLS_VERSION is not available from Android CLI."
             exit 1
           fi
           if ! grep -Fxq "$ndk_package" <<< "$available_packages"; then
-            echo "::error::Android NDK package $ndk_package requested by ProjectConfig.NDK_VERSION is not available from sdkmanager."
+            echo "::error::Android NDK package $ndk_package requested by ProjectConfig.NDK_VERSION is not available from Android CLI."
             exit 1
           fi
 
-          sdkmanager --install "$platform_package" "platforms;android-${target_sdk}.${target_sdk_minor}" "$build_tools_package" "$ndk_package"
+          "${android_sdk[@]}" install platform-tools "$platform_package" "platforms/android-${target_sdk}.${target_sdk_minor}" "$build_tools_package" "$ndk_package"
 
           echo "ANDROID_BUILD_TOOLS_VERSION=$build_tools_version" >> "$GITHUB_ENV"
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/$ndk_version" >> "$GITHUB_ENV"
