@@ -140,10 +140,7 @@ private fun LogViewerPage(
         topBar = {
             AdaptiveTopAppBar(
                 title = title,
-                subtitle = listOf(
-                    stringResource(R.string.logs_count).formatTemplate("count" to logEntries.size),
-                    stringResource(if (paused) R.string.logs_paused else R.string.logs_live),
-                ).joinToString(" · "),
+                subtitle = stringResource(R.string.logs_count).formatTemplate("count" to logEntries.size),
                 isWideScreen = isWideScreen,
                 scrollBehavior = topAppBarScrollBehavior,
                 navigationIcon = {

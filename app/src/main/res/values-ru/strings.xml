@@ -766,10 +766,8 @@
     <string name="logs_export">Экспорт логов</string>
     <string name="logs_export_failed">Не удалось экспортировать логи</string>
     <string name="logs_exported">Логи успешно экспортированы</string>
-    <string name="logs_live">В реальном времени</string>
     <string name="logs_output">Вывод журнала</string>
     <string name="logs_pause">Приостановить обновление журнала</string>
-    <string name="logs_paused">Приостановлено</string>
     <string name="logs_refreshing">Обновление…</string>
     <string name="logs_resume">Возобновить обновление журнала</string>
     <string name="settings_access_logs">Логи доступа</string>

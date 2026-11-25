@@ -765,10 +765,8 @@
     <string name="logs_export">Export logs</string>
     <string name="logs_export_failed">Failed to export logs</string>
     <string name="logs_exported">Logs exported</string>
-    <string name="logs_live">Live</string>
     <string name="logs_output">Log output</string>
     <string name="logs_pause">Pause log updates</string>
-    <string name="logs_paused">Paused</string>
     <string name="logs_refreshing">Refreshing…</string>
     <string name="logs_resume">Resume log updates</string>
     <string name="settings_access_logs">Access logs</string>

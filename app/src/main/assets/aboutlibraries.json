@@ -28,7 +28,7 @@
         },
         {
             "uniqueId": "github:Asterisk4Magisk/AsteriskEnhance",
-            "artifactVersion": "v1.0.8",
+            "artifactVersion": "v1.0.9",
             "name": "Asterisk Enhance",
             "description": "System DNS enhancement for Asterisk apps, powered by Zygisk Next.",
             "website": "https://github.com/Asterisk4Magisk/AsteriskEnhance",
@@ -41,7 +41,7 @@
         },
         {
             "uniqueId": "github:Asterisk4Magisk/asteriskd",
-            "artifactVersion": "v2.3.1",
+            "artifactVersion": "v2.3.2",
             "name": "asteriskd",
             "description": "A root Android daemon that synchronizes local-address bypass rules and pinned eBPF maps.",
             "website": "https://github.com/Asterisk4Magisk/asteriskd",
@@ -67,7 +67,7 @@
         },
         {
             "uniqueId": "github:Asterisk4Magisk/bpfmatcher",
-            "artifactVersion": "v1.0.2",
+            "artifactVersion": "v1.0.3",
             "name": "bpfmatcher",
             "description": "An eBPF socket-filter loader for iptables xt_bpf matching.",
             "website": "https://github.com/Asterisk4Magisk/bpfmatcher",

@@ -765,10 +765,8 @@
     <string name="logs_export">Xuất nhật ký</string>
     <string name="logs_export_failed">Xuất nhật ký thất bại</string>
     <string name="logs_exported">Đã xuất nhật ký</string>
-    <string name="logs_live">Trực tiếp</string>
     <string name="logs_output">Đầu ra nhật ký</string>
     <string name="logs_pause">Tạm dừng cập nhật nhật ký</string>
-    <string name="logs_paused">Đã tạm dừng</string>
     <string name="logs_refreshing">Đang làm mới…</string>
     <string name="logs_resume">Tiếp tục cập nhật nhật ký</string>
     <string name="settings_access_logs">Nhật ký truy cập</string>
