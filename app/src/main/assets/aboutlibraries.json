@@ -171,7 +171,7 @@
         },
         {
             "uniqueId": "io.grpc:grpc-okhttp",
-            "artifactVersion": "1.85.1",
+            "artifactVersion": "1.86.0",
             "name": "io.grpc:grpc-okhttp",
             "description": "gRPC: OkHttp",
             "website": "https://github.com/grpc/grpc-java",
@@ -184,7 +184,7 @@
         },
         {
             "uniqueId": "io.grpc:grpc-protobuf-lite",
-            "artifactVersion": "1.85.1",
+            "artifactVersion": "1.86.0",
             "name": "io.grpc:grpc-protobuf-lite",
             "description": "gRPC: Protobuf Lite",
             "website": "https://github.com/grpc/grpc-java",
@@ -197,7 +197,7 @@
         },
         {
             "uniqueId": "io.grpc:grpc-stub",
-            "artifactVersion": "1.85.1",
+            "artifactVersion": "1.86.0",
             "name": "io.grpc:grpc-stub",
             "description": "gRPC: Stub",
             "website": "https://github.com/grpc/grpc-java",
@@ -262,7 +262,7 @@
         },
         {
             "uniqueId": "io.ktor:ktor-http",
-            "artifactVersion": "3.6.1",
+            "artifactVersion": "3.6.2",
             "name": "ktor-http",
             "description": "Ktor is a framework for quickly creating web applications in Kotlin with minimal effort.",
             "website": "https://github.com/ktorio/ktor",
