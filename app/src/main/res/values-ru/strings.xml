@@ -269,7 +269,8 @@
     <string name="subscription_http_warning_confirm">Все равно сохранить</string>
     <string name="subscription_http_warning_message">Данный URL использует незащищенную передачу данных по HTTP cleartext. Содержимое конфигураций может быть перехвачено или изменено злоумышленниками в процессе транспортировки. Сохраняйте подписку только в том случае, если полностью доверяете этому источнику.</string>
     <string name="subscription_http_warning_title">Предупреждение: незащищенный протокол HTTP</string>
-    <string name="subscription_hwid">HWID</string>
+    <string name="subscription_request_headers">Пользовательские заголовки запроса (JSON)</string>
+    <string name="subscription_request_headers_invalid">Введите объект JSON с уникальными допустимыми именами заголовков и строковыми значениями.</string>
     <string name="subscription_install_config_failed">Не удалось импортировать подписку</string>
     <string name="subscription_install_config_invalid">Недопустимая ссылка на подписку</string>
     <string name="subscription_install_existing_url">Совпадающий URL подписки уже найден в группе «{name}»; обновляем эту группу</string>

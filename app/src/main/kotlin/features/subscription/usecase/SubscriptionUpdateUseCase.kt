@@ -83,7 +83,11 @@ private suspend fun updateSubscriptionGroup(
             text = text,
             source = ProxyServerImportSource.SubscriptionUrl,
             providerUrlFetcher = { request ->
-                fetchResponse(request.url, group.userAgent, fetchOptions.copy(headers = request.headers)).text
+                fetchResponse(
+                    request.url,
+                    group.userAgent,
+                    fetchOptions.forProvider(request.headers),
+                ).text
             },
         )
         ProxyServerListSubscriptionUpdate(
@@ -127,7 +131,7 @@ internal fun AppState.toSubscriptionFetchOptions(group: SubscriptionGroupState):
     return AndroidSubscriptionFetchOptions(
         useRunningProxy = group.updateViaProxy,
         fallbackProxy = toLocalProxyOptions(),
-        hwid = group.hwid,
+        requestHeaders = group.requestHeaders,
         ageSecretKey = group.ageSecretKey,
     )
 }

@@ -3,6 +3,8 @@
 
 package data
 
+import features.subscription.encodeSubscriptionRequestHeaders
+import features.subscription.decodeSubscriptionRequestHeaders
 import androidx.room.Entity
 import androidx.room.ColumnInfo
 import androidx.room.Index
@@ -23,7 +25,7 @@ internal data class SubscriptionGroupEntity(
     val url: String,
     val userAgent: String,
     val updateInterval: String,
-    @ColumnInfo(defaultValue = "''") val hwid: String,
+    val requestHeaders: String?,
     @ColumnInfo(defaultValue = "''") val ageSecretKey: String,
     val updateViaProxy: Boolean,
     val enabled: Boolean,
@@ -37,7 +39,7 @@ internal data class SubscriptionGroupEntity(
             url = url,
             userAgent = userAgent,
             updateInterval = updateInterval,
-            hwid = hwid,
+            requestHeaders = requestHeaders?.let(::decodeSubscriptionRequestHeaders),
             ageSecretKey = ageSecretKey,
             updateViaProxy = updateViaProxy,
             enabled = enabled,
@@ -55,7 +57,7 @@ internal data class SubscriptionGroupEntity(
                 url = group.url,
                 userAgent = group.userAgent,
                 updateInterval = group.updateInterval,
-                hwid = group.hwid,
+                requestHeaders = group.requestHeaders?.let(::encodeSubscriptionRequestHeaders),
                 ageSecretKey = group.ageSecretKey,
                 updateViaProxy = group.updateViaProxy,
                 enabled = group.enabled,

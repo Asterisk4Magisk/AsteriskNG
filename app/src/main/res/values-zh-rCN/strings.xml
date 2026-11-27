@@ -268,7 +268,8 @@
     <string name="subscription_http_warning_confirm">仍然保存</string>
     <string name="subscription_http_warning_message">当前订阅 URL 使用 HTTP 明文传输，配置内容可能在传输过程中被读取或篡改。仅在你信任该来源时继续保存。</string>
     <string name="subscription_http_warning_title">HTTP 订阅警告</string>
-    <string name="subscription_hwid">HWID</string>
+    <string name="subscription_request_headers">自定义请求头（JSON）</string>
+    <string name="subscription_request_headers_invalid">请输入 JSON 对象，使用有效且不重复的请求头名称和字符串值。</string>
     <string name="subscription_install_config_failed">导入订阅失败</string>
     <string name="subscription_install_config_invalid">无效的订阅链接</string>
     <string name="subscription_install_existing_url">订阅地址已存在于“{name}”，正在更新该分组</string>

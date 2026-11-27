@@ -35,7 +35,7 @@ data class SubscriptionGroupState(
     val url: String,
     val userAgent: String,
     val updateInterval: String,
-    val hwid: String = "",
+    val requestHeaders: Map<String, String>? = null,
     val ageSecretKey: String = "",
     val updateViaProxy: Boolean = false,
     val enabled: Boolean,

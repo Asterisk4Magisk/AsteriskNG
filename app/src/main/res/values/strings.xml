@@ -268,7 +268,8 @@
     <string name="subscription_http_warning_confirm">Save anyway</string>
     <string name="subscription_http_warning_message">This subscription URL uses HTTP cleartext transport. The configuration content may be read or modified in transit. Save only if you trust this source.</string>
     <string name="subscription_http_warning_title">HTTP subscription warning</string>
-    <string name="subscription_hwid">HWID</string>
+    <string name="subscription_request_headers">Custom request headers (JSON)</string>
+    <string name="subscription_request_headers_invalid">Enter a JSON object with unique, valid header names and string values.</string>
     <string name="subscription_install_config_failed">Failed to import subscription</string>
     <string name="subscription_install_config_invalid">Invalid subscription link</string>
     <string name="subscription_install_existing_url">A matching subscription URL already exists in {name}; updating that group</string>

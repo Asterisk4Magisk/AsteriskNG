@@ -3,6 +3,8 @@
 
 package features.subscription
 
+import androidx.compose.ui.platform.LocalContext
+import data.AppSettingsPreferences
 import androidx.compose.runtime.getValue
 import app.SubscriptionGroupState
 import androidx.compose.animation.AnimatedVisibility
@@ -108,7 +110,15 @@ internal fun SubscriptionGroupEditorDialog(
         )
     }
     var url by remember(editorSession, group?.id) { mutableStateOf(group?.url ?: "") }
-    var hwid by remember(editorSession, group?.id) { mutableStateOf(group?.hwid ?: "") }
+    val context = LocalContext.current.applicationContext
+    val defaultRequestHeaders = remember(context) {
+        defaultSubscriptionRequestHeaders(AppSettingsPreferences(context).getOrCreateSubscriptionHwid())
+    }
+    val initialRequestHeaders = remember(editorSession, group?.id, defaultRequestHeaders) {
+        formatSubscriptionRequestHeaders(group?.requestHeaders ?: defaultRequestHeaders)
+    }
+    var requestHeadersInput by remember(editorSession, group?.id) { mutableStateOf(initialRequestHeaders) }
+    val requestHeaders = remember(requestHeadersInput) { parseSubscriptionRequestHeaders(requestHeadersInput) }
     var ageSecretKey by remember(editorSession, group?.id) { mutableStateOf(group?.ageSecretKey ?: "") }
     val initialUserAgent = group?.userAgent ?: DefaultSubscriptionUserAgent
     var userAgentSelection by remember(editorSession, group?.id, initialUserAgent) {
@@ -144,7 +154,8 @@ internal fun SubscriptionGroupEditorDialog(
         .coerceAtLeast(0)
     val resolvedUserAgent = userAgentSelection.resolveUserAgent(customUserAgent)
     val dirty = (!builtIn && name != group?.name.orEmpty()) || url != group?.url.orEmpty() ||
-        hwid != group?.hwid.orEmpty() || ageSecretKey != group?.ageSecretKey.orEmpty() ||
+        requestHeadersInput != initialRequestHeaders ||
+        ageSecretKey != group?.ageSecretKey.orEmpty() ||
         resolvedUserAgent != initialUserAgent ||
         interval != sanitizeSubscriptionIntervalInput(group?.updateInterval.orEmpty()) ||
         updateViaProxy != (group?.updateViaProxy ?: false)
@@ -153,6 +164,7 @@ internal fun SubscriptionGroupEditorDialog(
     fun saveGroup(allowPlainHttp: Boolean = false) {
         if (!isValidSubscriptionIntervalInput(interval)) return
         val savedUrl = url.trim()
+        if (savedUrl.isNotBlank() && requestHeaders == null) return
         if (savedUrl.isNotBlank() && !savedUrl.isValidManualSubscriptionUrl()) {
             onInvalidUrl()
             return
@@ -163,6 +175,9 @@ internal fun SubscriptionGroupEditorDialog(
         }
 
         showHttpSubscriptionWarning = false
+        val storedRequestHeaders = requestHeaders?.withoutImplicitSubscriptionHeaders(
+            group?.requestHeaders, defaultRequestHeaders,
+        )
         val savedUserAgent = userAgentSelection.resolveUserAgent(customUserAgent)
         // A blank name on a URL group is auto-assigned on its first sync.
         val savedName = name.trim().ifBlank {
@@ -171,7 +186,7 @@ internal fun SubscriptionGroupEditorDialog(
         val savedGroup = group?.copy(
             name = if (group.builtIn) group.name else savedName,
             url = savedUrl,
-            hwid = hwid.trim(),
+            requestHeaders = storedRequestHeaders,
             ageSecretKey = ageSecretKey.trim(),
             userAgent = savedUserAgent,
             updateInterval = interval.trim().takeIf { savedUrl.isNotBlank() }.orEmpty(),
@@ -180,7 +195,7 @@ internal fun SubscriptionGroupEditorDialog(
                 id = nextGroupId,
                 name = savedName,
                 url = savedUrl,
-                hwid = hwid.trim(),
+                requestHeaders = storedRequestHeaders,
                 ageSecretKey = ageSecretKey.trim(),
                 userAgent = savedUserAgent,
                 updateInterval = interval.trim().takeIf { savedUrl.isNotBlank() }.orEmpty(),
@@ -243,15 +258,6 @@ internal fun SubscriptionGroupEditorDialog(
                     ) {
                         Column {
                             TextField(
-                                state = rememberTextFieldState(initialText = hwid),
-                                inputTransformation = InputTransformation {
-                                    hwid = asCharSequence().toString()
-                                },
-                                label = stringResource(R.string.subscription_hwid),
-                                lineLimits = TextFieldLineLimits.SingleLine,
-                                modifier = Modifier.padding(bottom = 12.dp).keepSubscriptionFieldVisible(viewportHeight),
-                            )
-                            TextField(
                                 state = rememberTextFieldState(initialText = ageSecretKey),
                                 inputTransformation = InputTransformation {
                                     ageSecretKey = asCharSequence().toString()
@@ -260,6 +266,22 @@ internal fun SubscriptionGroupEditorDialog(
                                 lineLimits = TextFieldLineLimits.SingleLine,
                                 modifier = Modifier.padding(bottom = 12.dp).keepSubscriptionFieldVisible(viewportHeight),
                             )
+                            TextField(
+                                state = rememberTextFieldState(initialText = requestHeadersInput),
+                                inputTransformation = InputTransformation {
+                                    requestHeadersInput = asCharSequence().toString()
+                                },
+                                label = stringResource(R.string.subscription_request_headers),
+                                lineLimits = TextFieldLineLimits.MultiLine(maxHeightInLines = 5),
+                                modifier = Modifier.padding(bottom = 12.dp).keepSubscriptionFieldVisible(viewportHeight),
+                            )
+                            if (requestHeaders == null) {
+                                Text(
+                                    text = stringResource(R.string.subscription_request_headers_invalid),
+                                    color = MiuixTheme.colorScheme.error,
+                                    modifier = Modifier.padding(bottom = 12.dp),
+                                )
+                            }
                             WindowSpinnerPreference(
                                 title = stringResource(R.string.subscription_user_agent),
                                 summary = resolvedUserAgent,
@@ -322,7 +344,7 @@ internal fun SubscriptionGroupEditorDialog(
                     TextButton(
                         text = stringResource(R.string.common_save),
                         onClick = { saveGroup() },
-                        enabled = isValidSubscriptionIntervalInput(interval),
+                        enabled = isValidSubscriptionIntervalInput(interval) && (url.isBlank() || requestHeaders != null),
                         modifier = Modifier.weight(1f),
                     )
                 }

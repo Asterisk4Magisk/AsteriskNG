@@ -389,7 +389,7 @@ private suspend fun importProxyServers(
             subscriptionFetcher.fetch(
                 url = request.url,
                 userAgent = "",
-                options = AndroidSubscriptionFetchOptions(headers = request.headers),
+                options = AndroidSubscriptionFetchOptions().forProvider(request.headers),
             )
         },
     )

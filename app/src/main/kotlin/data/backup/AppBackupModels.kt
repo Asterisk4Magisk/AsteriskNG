@@ -4,6 +4,7 @@
 package data.backup
 
 import app.AppState
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -151,7 +152,9 @@ internal data class AppBackupSubscriptionGroup(
     val url: String = "",
     val userAgent: String = "",
     val updateInterval: String = "",
-    val hwid: String = "",
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    val hwid: String? = null,
+    val requestHeaders: Map<String, String>? = null,
     val ageSecretKey: String = "",
     val updateViaProxy: Boolean = false,
     val enabled: Boolean = true,

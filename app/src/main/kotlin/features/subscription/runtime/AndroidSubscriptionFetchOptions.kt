@@ -17,10 +17,13 @@ import kotlinx.coroutines.withContext
 internal data class AndroidSubscriptionFetchOptions(
     val useRunningProxy: Boolean = false,
     val fallbackProxy: LocalProxyOptions? = null,
-    val hwid: String = "",
+    val requestHeaders: Map<String, String>? = null,
     val ageSecretKey: String = "",
     val headers: Map<String, List<String>> = emptyMap(),
-)
+) {
+    fun forProvider(headers: Map<String, List<String>>): AndroidSubscriptionFetchOptions =
+        copy(requestHeaders = emptyMap(), headers = headers)
+}
 
 internal data class AndroidSubscriptionProxy(
     override val host: String,

@@ -3,6 +3,7 @@
 
 package data.backup
 
+import features.subscription.legacySubscriptionRequestHeaders
 import app.withCompatibleProxyAppListMode
 import app.AppState
 import features.settings.servicecontrol.ServiceControlSchedule
@@ -193,7 +194,7 @@ private fun SubscriptionGroupState.toBackup(): AppBackupSubscriptionGroup {
         url = url,
         userAgent = userAgent,
         updateInterval = updateInterval,
-        hwid = hwid,
+        requestHeaders = requestHeaders,
         ageSecretKey = ageSecretKey,
         updateViaProxy = updateViaProxy,
         enabled = enabled,
@@ -362,7 +363,7 @@ private fun AppBackupSubscriptionGroup.toState(): SubscriptionGroupState {
         url = url,
         userAgent = userAgent,
         updateInterval = updateInterval,
-        hwid = hwid,
+        requestHeaders = requestHeaders ?: legacySubscriptionRequestHeaders(hwid),
         ageSecretKey = ageSecretKey,
         updateViaProxy = updateViaProxy,
         enabled = enabled,

@@ -268,7 +268,8 @@
     <string name="subscription_http_warning_confirm">Vẫn lưu</string>
     <string name="subscription_http_warning_message">URL đăng ký hiện tại sử dụng truyền tải HTTP dạng văn bản thuần, nội dung cấu hình có thể bị đọc hoặc giả mạo trong quá trình truyền tải. Chỉ tiếp tục lưu nếu bạn tin tưởng nguồn này.</string>
     <string name="subscription_http_warning_title">Cảnh báo đăng ký HTTP</string>
-    <string name="subscription_hwid">HWID</string>
+    <string name="subscription_request_headers">Tiêu đề yêu cầu tùy chỉnh (JSON)</string>
+    <string name="subscription_request_headers_invalid">Nhập một đối tượng JSON có tên tiêu đề hợp lệ, không trùng lặp và giá trị dạng chuỗi.</string>
     <string name="subscription_install_config_failed">Nhập đăng ký thất bại</string>
     <string name="subscription_install_config_invalid">Liên kết đăng ký không hợp lệ</string>
     <string name="subscription_install_existing_url">Địa chỉ đăng ký đã tồn tại trong "{name}", đang cập nhật nhóm này</string>
