@@ -178,6 +178,7 @@
     <string name="proxy_editor_strategy_group_filter">别名正则过滤</string>
     <string name="proxy_editor_strategy_group_least_load">最低负载</string>
     <string name="proxy_editor_strategy_group_least_ping">最低延迟</string>
+    <string name="proxy_editor_strategy_group_failover">故障转移（按节点顺序）</string>
     <string name="proxy_editor_strategy_group_random">随机选择</string>
     <string name="proxy_editor_strategy_group_round_robin">轮询</string>
     <string name="proxy_editor_strategy_group_source_group">订阅分组</string>

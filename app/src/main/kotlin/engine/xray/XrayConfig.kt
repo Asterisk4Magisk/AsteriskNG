@@ -67,7 +67,11 @@ internal object XraySpeedTestConfigFactory {
             return XrayConfigPrettyJson.encodeToString(speedTestConfig).withSingleTrailingLf()
         }
 
-        val speedTestState = request.appState.copy(enableMux = false)
+        val speedTestState = request.appState.copy(
+            enableMux = false,
+            defaultRouteOutboundTag = XrayTags.PROXY,
+            routeRules = emptyList(),
+        )
         val outboundPlan = speedTestState.buildXrayOutboundPlan(request.selectedServer)
         return GeneratedXrayConfig(
             log = logConfig,
@@ -77,8 +81,6 @@ internal object XraySpeedTestConfigFactory {
                 proxyOutbounds = outboundPlan.proxyOutbounds,
                 primaryOutboundTag = XrayTags.PROXY,
             ),
-            observatory = buildXrayObservatory(outboundPlan.observatorySelectors),
-            burstObservatory = buildXrayBurstObservatory(outboundPlan.burstObservatorySelectors),
             statsApiConfig = request.statsApiConfig,
         ).encodeToJsonString()
     }
@@ -98,6 +100,7 @@ private fun buildGeneratedXrayConfig(
     val routingPlan = request.appState.buildXrayRoutingPlan(
         routeTargets = outboundPlan.routeTargets,
         balancers = buildXrayBalancers(outboundPlan.balancers),
+        failoverRoutes = outboundPlan.failoverRoutes,
         routeProxyDns = dnsPlan.routingOptions.routeProxyDns,
         routeDirectDns = dnsPlan.routingOptions.routeDirectDns,
         dnsHijackInboundTags = request.dnsHijackInboundTags,
@@ -111,10 +114,11 @@ private fun buildGeneratedXrayConfig(
             appState = request.appState,
             proxyOutbounds = outboundPlan.proxyOutbounds,
             primaryOutboundTag = routingPlan.primaryOutboundTag,
+            failoverRoutes = outboundPlan.failoverRoutes,
         ),
         routing = buildXrayRouting(routingPlan),
         fakeDns = dnsPlan.fakeDns,
-        observatory = buildXrayObservatory(outboundPlan.observatorySelectors),
+        observatory = buildXrayObservatory(outboundPlan.observatorySelectors, outboundPlan.hasFailover),
         burstObservatory = buildXrayBurstObservatory(outboundPlan.burstObservatorySelectors),
         statsApiConfig = request.statsApiConfig,
     )

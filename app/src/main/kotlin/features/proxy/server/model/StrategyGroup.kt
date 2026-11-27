@@ -10,12 +10,14 @@ object StrategyGroupConstants {
     const val TYPE_LEAST_LOAD = "leastLoad"
     const val TYPE_RANDOM = "random"
     const val TYPE_ROUND_ROBIN = "roundRobin"
+    const val TYPE_FAILOVER = "failover"
 
     val TYPES = setOf(
         TYPE_LEAST_PING,
         TYPE_LEAST_LOAD,
         TYPE_RANDOM,
         TYPE_ROUND_ROBIN,
+        TYPE_FAILOVER,
     )
 }
 

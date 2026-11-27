@@ -179,6 +179,7 @@
     <string name="proxy_editor_strategy_group_filter">Фильтр имен по регулярному выражению (Regex)</string>
     <string name="proxy_editor_strategy_group_least_load">Наименьшая нагрузка (Least Load)</string>
     <string name="proxy_editor_strategy_group_least_ping">Наименьший пинг (Least ping)</string>
+    <string name="proxy_editor_strategy_group_failover">Переключение при сбое (по порядку узлов)</string>
     <string name="proxy_editor_strategy_group_random">Случайный выбор (Random)</string>
     <string name="proxy_editor_strategy_group_round_robin">Циклический перебор (Round robin)</string>
     <string name="proxy_editor_strategy_group_source_group">Группа подписки</string>

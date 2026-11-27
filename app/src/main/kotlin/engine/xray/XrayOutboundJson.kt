@@ -28,13 +28,17 @@ internal fun buildXrayOutbounds(
     appState: AppState,
     proxyOutbounds: List<XrayProxyOutboundServer>,
     primaryOutboundTag: String? = appState.defaultRouteOutboundTag,
+    failoverRoutes: List<XrayFailoverRoute> = emptyList(),
 ): JsonArray {
     val outbounds = buildJsonArray {
         if (primaryOutboundTag?.trim() == XrayTags.DEFAULT_ROUTE_LOOPBACK) {
-            add(buildDefaultRouteOutbound())
+            add(buildLoopbackOutbound(XrayTags.DEFAULT_ROUTE_LOOPBACK, XrayTags.DEFAULT_ROUTE_LOOPBACK_INBOUND))
         }
         proxyOutbounds.forEach { outboundServer ->
             add(buildProxyOutbound(appState, outboundServer))
+        }
+        failoverRoutes.forEach { route ->
+            add(buildLoopbackOutbound(route.loopbackTag, route.inboundTag))
         }
         add(buildFreedomOutbound(XrayTags.DIRECT, appState.xrayDirectOutboundDomainStrategy()))
         add(buildSimpleOutbound(XrayTags.BLOCK, XrayProtocols.BLACKHOLE))
@@ -75,12 +79,12 @@ internal fun buildXrayBalancers(plans: List<XrayBalancerPlan>): List<JsonObject>
     }
 }
 
-internal fun buildXrayObservatory(selectors: List<String>): JsonObject? {
+internal fun buildXrayObservatory(selectors: List<String>, hasFailover: Boolean): JsonObject? {
     if (selectors.isEmpty()) return null
     return buildJsonObject {
         put("subjectSelector", selectors.distinct().toJsonStringArray())
         put("probeURL", XrayObservatoryProbeUrl)
-        put("probeInterval", "3m")
+        put("probeInterval", if (hasFailover) XrayFailoverProbeInterval else "3m")
         put("enableConcurrency", true)
     }
 }
@@ -194,14 +198,14 @@ internal fun buildFreedomOutbound(tag: String, domainStrategy: String): JsonObje
     }
 }
 
-private fun buildDefaultRouteOutbound(): JsonObject {
+private fun buildLoopbackOutbound(tag: String, inboundTag: String): JsonObject {
     return buildJsonObject {
-        put("tag", XrayTags.DEFAULT_ROUTE_LOOPBACK)
+        put("tag", tag)
         put("protocol", XrayProtocols.LOOPBACK)
         put(
             "settings",
             buildJsonObject {
-                put("inboundTag", XrayTags.DEFAULT_ROUTE_LOOPBACK_INBOUND)
+                put("inboundTag", inboundTag)
             },
         )
     }
@@ -285,3 +289,4 @@ private fun Int.toMuxUdp443Mode(): String {
 }
 
 private const val XrayObservatoryProbeUrl = NetworkDefaults.CONNECTIVITY_CHECK_URL
+private const val XrayFailoverProbeInterval = "10s"

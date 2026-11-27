@@ -7,9 +7,9 @@ import app.ProxyServerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import app.R
+import features.proxy.server.display.strategyGroupLabels
 import features.proxy.server.model.ChainProxy
 import features.proxy.server.model.StrategyGroup
-import features.proxy.server.model.StrategyGroupConstants
 import androidx.compose.ui.res.stringResource
 import ui.text.formatTemplate
 
@@ -23,10 +23,7 @@ internal class ProxyServerListItemTextFormatter(
     private val groupNames: Map<Int, String>,
     private val unknownGroupName: String,
     private val allGroupsName: String,
-    private val leastPingName: String,
-    private val leastLoadName: String,
-    private val randomName: String,
-    private val roundRobinName: String,
+    private val strategyLabels: Map<String, String>,
     private val strategyGroupSummaryTemplate: String,
     private val strategyGroupSummaryWithFilterTemplate: String,
     private val chainProxySummaryTemplate: String,
@@ -74,20 +71,10 @@ internal class ProxyServerListItemTextFormatter(
             strategyGroupSummaryWithFilterTemplate
         }
         return template.formatTemplate(
-            "strategy" to strategyDisplayName(),
+            "strategy" to (strategyLabels[strategy] ?: strategy),
             "group" to sourceGroupName(),
             "filter" to filter,
         )
-    }
-
-    private fun StrategyGroup.strategyDisplayName(): String {
-        return when (strategy) {
-            StrategyGroupConstants.TYPE_LEAST_PING -> leastPingName
-            StrategyGroupConstants.TYPE_LEAST_LOAD -> leastLoadName
-            StrategyGroupConstants.TYPE_RANDOM -> randomName
-            StrategyGroupConstants.TYPE_ROUND_ROBIN -> roundRobinName
-            else -> strategy
-        }
     }
 
     private fun StrategyGroup.sourceGroupName(): String {
@@ -101,10 +88,7 @@ internal fun rememberProxyServerListItemTextFormatter(
     unknownGroupName: String,
 ): ProxyServerListItemTextFormatter {
     val allGroupsName = stringResource(R.string.proxy_editor_strategy_group_all_groups)
-    val leastPingName = stringResource(R.string.proxy_editor_strategy_group_least_ping)
-    val leastLoadName = stringResource(R.string.proxy_editor_strategy_group_least_load)
-    val randomName = stringResource(R.string.proxy_editor_strategy_group_random)
-    val roundRobinName = stringResource(R.string.proxy_editor_strategy_group_round_robin)
+    val strategyLabels = strategyGroupLabels()
     val strategyGroupSummaryTemplate = stringResource(R.string.proxy_server_list_strategy_group_summary)
     val strategyGroupSummaryWithFilterTemplate =
         stringResource(R.string.proxy_server_list_strategy_group_summary_with_filter)
@@ -114,10 +98,7 @@ internal fun rememberProxyServerListItemTextFormatter(
         groupNames,
         unknownGroupName,
         allGroupsName,
-        leastPingName,
-        leastLoadName,
-        randomName,
-        roundRobinName,
+        strategyLabels,
         strategyGroupSummaryTemplate,
         strategyGroupSummaryWithFilterTemplate,
         chainProxySummaryTemplate,
@@ -126,10 +107,7 @@ internal fun rememberProxyServerListItemTextFormatter(
             groupNames = groupNames,
             unknownGroupName = unknownGroupName,
             allGroupsName = allGroupsName,
-            leastPingName = leastPingName,
-            leastLoadName = leastLoadName,
-            randomName = randomName,
-            roundRobinName = roundRobinName,
+            strategyLabels = strategyLabels,
             strategyGroupSummaryTemplate = strategyGroupSummaryTemplate,
             strategyGroupSummaryWithFilterTemplate = strategyGroupSummaryWithFilterTemplate,
             chainProxySummaryTemplate = chainProxySummaryTemplate,

@@ -178,6 +178,7 @@
     <string name="proxy_editor_strategy_group_filter">Remarks regex filter</string>
     <string name="proxy_editor_strategy_group_least_load">Least Load</string>
     <string name="proxy_editor_strategy_group_least_ping">Least ping</string>
+    <string name="proxy_editor_strategy_group_failover">Failover (node order)</string>
     <string name="proxy_editor_strategy_group_random">Random</string>
     <string name="proxy_editor_strategy_group_round_robin">Round robin</string>
     <string name="proxy_editor_strategy_group_source_group">Subscription group</string>

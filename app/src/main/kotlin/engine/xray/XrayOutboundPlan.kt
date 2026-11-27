@@ -32,9 +32,18 @@ internal data class XrayBalancerPlan(
     val fallbackTag: String,
 )
 
+internal data class XrayFailoverRoute(
+    val loopbackTag: String,
+    val balancerTag: String,
+) {
+    val inboundTag: String get() = "$loopbackTag-in"
+}
+
 internal data class XrayOutboundPlan(
     val proxyOutbounds: List<XrayProxyOutboundServer>,
     val balancers: List<XrayBalancerPlan>,
+    val failoverRoutes: List<XrayFailoverRoute>,
+    val hasFailover: Boolean,
     val observatorySelectors: List<String>,
     val burstObservatorySelectors: List<String>,
     val routeTargets: Map<String, XrayRouteTarget>,

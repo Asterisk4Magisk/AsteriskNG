@@ -26,6 +26,7 @@ internal data class XrayRoutingPlan(
 internal fun AppState.buildXrayRoutingPlan(
     routeTargets: Map<String, XrayRouteTarget>,
     balancers: List<JsonObject>,
+    failoverRoutes: List<XrayFailoverRoute>,
     routeProxyDns: Boolean,
     routeDirectDns: Boolean,
     dnsHijackInboundTags: List<String>,
@@ -40,6 +41,7 @@ internal fun AppState.buildXrayRoutingPlan(
             routeDirectDns = routeDirectDns,
             dnsHijackInboundTags = dnsHijackInboundTags,
             defaultTarget = defaultTarget,
+            failoverRoutes = failoverRoutes,
         ),
         balancers = balancers,
         primaryOutboundTag = when (defaultTarget?.kind) {
@@ -66,31 +68,28 @@ private fun AppState.routingRules(
     routeDirectDns: Boolean,
     dnsHijackInboundTags: List<String>,
     defaultTarget: XrayRouteTarget?,
+    failoverRoutes: List<XrayFailoverRoute>,
 ): JsonArray {
     return buildJsonArray {
         defaultTarget
             ?.takeIf { target -> target.kind == XrayRouteTargetKind.Balancer }
-            ?.let { target -> add(buildDefaultBalancerRoute(target)) }
+            ?.let { target -> add(buildInboundRoute(XrayTags.DEFAULT_ROUTE_LOOPBACK_INBOUND, target)) }
+        failoverRoutes.forEach { route ->
+            add(buildInboundRoute(route.inboundTag, XrayRouteTarget(route.balancerTag, XrayRouteTargetKind.Balancer)))
+        }
         if (effectiveLocalDnsEnabled) {
             buildXrayDnsHijackRule(dnsHijackInboundTags)?.let(::add)
         }
         if (routeDirectDns) {
-            routeTargets[XrayTags.DIRECT]?.let { target -> add(buildDnsUpstreamRoute(XrayTags.DIRECT_DNS, target)) }
+            routeTargets[XrayTags.DIRECT]?.let { target -> add(buildInboundRoute(XrayTags.DIRECT_DNS, target)) }
         }
         if (routeProxyDns) {
-            routeTargets[XrayTags.PROXY]?.let { target -> add(buildDnsUpstreamRoute(XrayTags.PROXY_DNS, target)) }
+            routeTargets[XrayTags.PROXY]?.let { target -> add(buildInboundRoute(XrayTags.PROXY_DNS, target)) }
         }
         routeRules
             .filter(RouteRule::enabled)
             .mapNotNull { rule -> rule.toXrayRule(routeTargets) }
             .forEach(::add)
-    }
-}
-
-private fun buildDefaultBalancerRoute(target: XrayRouteTarget): JsonObject {
-    return buildJsonObject {
-        target.applyTo(this)
-        put("inboundTag", listOf(XrayTags.DEFAULT_ROUTE_LOOPBACK_INBOUND).toJsonStringArray())
     }
 }
 
@@ -113,7 +112,7 @@ internal fun buildXrayDnsHijackRule(inboundTags: List<String>): JsonObject? {
     }
 }
 
-private fun buildDnsUpstreamRoute(
+private fun buildInboundRoute(
     inboundTag: String,
     target: XrayRouteTarget,
 ): JsonObject {

@@ -23,9 +23,9 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import app.R
+import features.proxy.server.display.strategyGroupLabels
 import features.proxy.server.model.ChainProxy
 import features.proxy.server.model.StrategyGroup
-import features.proxy.server.model.StrategyGroupConstants
 import androidx.compose.ui.res.stringResource
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
@@ -40,8 +40,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 
 internal fun CharSequence.isDigitsOnly(): Boolean {
-    if (isEmpty()) return true
-    return all { char -> char.isDigit() }
+    return isEmpty() || all { char -> char.isDigit() }
 }
 
 internal data class ProxyServerEditorGroupOption(
@@ -59,20 +58,8 @@ internal fun LazyListScope.strategyGroupProxyServer(
     groupOptions: List<ProxyServerEditorGroupOption>,
 ) {
     item(key = "properties") {
-        val strategyValues = remember {
-            listOf(
-                StrategyGroupConstants.TYPE_LEAST_PING,
-                StrategyGroupConstants.TYPE_LEAST_LOAD,
-                StrategyGroupConstants.TYPE_RANDOM,
-                StrategyGroupConstants.TYPE_ROUND_ROBIN,
-            )
-        }
-        val strategyLabels = listOf(
-            stringResource(R.string.proxy_editor_strategy_group_least_ping),
-            stringResource(R.string.proxy_editor_strategy_group_least_load),
-            stringResource(R.string.proxy_editor_strategy_group_random),
-            stringResource(R.string.proxy_editor_strategy_group_round_robin),
-        )
+        val strategyLabels = strategyGroupLabels()
+        val strategyValues = strategyLabels.keys.toList()
         val effectiveGroupOptions = groupOptions.ifEmpty {
             listOf(ProxyServerEditorGroupOption(null, stringResource(R.string.proxy_editor_strategy_group_all_groups)))
         }
@@ -91,7 +78,7 @@ internal fun LazyListScope.strategyGroupProxyServer(
         ProxyEditorTextField(stringResource(R.string.proxy_editor_remarks), strategyGroupEdit.remarks) { strategyGroupEdit.remarks = it }
         OverlayDropdownPreference(
             title = stringResource(R.string.proxy_editor_strategy_group_type),
-            items = strategyLabels,
+            items = strategyLabels.values.toList(),
             selectedIndex = strategyIndex.intValue,
             modifier = Modifier
                 .padding(horizontal = 12.dp)

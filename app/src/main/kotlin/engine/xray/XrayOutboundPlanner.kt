@@ -27,6 +27,8 @@ private class XrayOutboundPlanner(
 ) {
     private val proxyOutbounds = mutableListOf<XrayProxyOutboundServer>()
     private val balancers = mutableListOf<XrayBalancerPlan>()
+    private val failoverRoutes = mutableListOf<XrayFailoverRoute>()
+    private val failoverSelectors = mutableListOf<String>()
     private val observatorySelectors = mutableListOf<String>()
     private val burstObservatorySelectors = mutableListOf<String>()
     private val routeTargets = linkedMapOf<String, XrayRouteTarget>()
@@ -39,11 +41,21 @@ private class XrayOutboundPlanner(
             addRouteTarget(server.proxyServerOutboundTag(), server)
         }
         addFixedRouteTargets()
+        // Both observer types expose the same Xray feature. Reuse burst when leastLoad needs its samples.
+        val hasFailover = failoverSelectors.isNotEmpty()
+        val useBurstForFailover = hasFailover && burstObservatorySelectors.isNotEmpty()
+        val sharedSelectors = observatorySelectors + failoverSelectors
         return XrayOutboundPlan(
             proxyOutbounds = proxyOutbounds,
             balancers = balancers,
-            observatorySelectors = observatorySelectors.distinct(),
-            burstObservatorySelectors = burstObservatorySelectors.distinct(),
+            failoverRoutes = failoverRoutes,
+            hasFailover = hasFailover,
+            observatorySelectors = if (useBurstForFailover) emptyList() else sharedSelectors.distinct(),
+            burstObservatorySelectors = if (useBurstForFailover) {
+                (burstObservatorySelectors + sharedSelectors).distinct()
+            } else {
+                burstObservatorySelectors.distinct()
+            },
             routeTargets = routeTargets,
             dnsHostServers = dnsHostServers.distinct(),
         )
@@ -98,24 +110,55 @@ private class XrayOutboundPlanner(
         if (members.isEmpty()) {
             error("Strategy group '${strategyGroup.remarks}' has no available proxy servers")
         }
-        val selector = "$tag-policy-"
-        members.forEach { member ->
-            addNormalOutbound(
-                tag = "$selector${member.id}",
-                server = member,
-            )
+        val isFailover = strategyGroup.strategy == StrategyGroupConstants.TYPE_FAILOVER
+        if (isFailover && members.size == 1) {
+            addNormalOutbound(tag, members.single())
+            return
         }
-        balancers += XrayBalancerPlan(
-            tag = tag,
-            selector = selector,
-            strategy = strategyGroup.strategy,
-            fallbackTag = "$selector${members.first().id}",
-        )
-        when (strategyGroup.strategy) {
-            StrategyGroupConstants.TYPE_LEAST_LOAD -> burstObservatorySelectors += selector
-            StrategyGroupConstants.TYPE_LEAST_PING -> observatorySelectors += selector
+        val selector = "$tag-policy-"
+        val memberTags = members.map { member ->
+            // The trailing separator keeps a singleton prefix selector from matching another member ID.
+            val memberTag = "$selector${member.id}" + if (isFailover) "-" else ""
+            addNormalOutbound(tag = memberTag, server = member)
+            memberTag
+        }
+        if (isFailover) {
+            addFailoverBalancers(tag, memberTags)
+            failoverSelectors += selector
+        } else {
+            balancers += XrayBalancerPlan(
+                tag = tag,
+                selector = selector,
+                strategy = strategyGroup.strategy,
+                fallbackTag = memberTags.first(),
+            )
+            when (strategyGroup.strategy) {
+                StrategyGroupConstants.TYPE_LEAST_LOAD -> burstObservatorySelectors += selector
+                StrategyGroupConstants.TYPE_LEAST_PING -> observatorySelectors += selector
+            }
         }
         routeTargets[tag] = XrayRouteTarget(tag, XrayRouteTargetKind.Balancer)
+    }
+
+    private fun addFailoverBalancers(tag: String, memberTags: List<String>) {
+        memberTags.forEachIndexed { index, memberTag ->
+            val fallbackTag = if (index < memberTags.lastIndex) {
+                val nextBalancerTag = "$tag-failover-${index + 1}"
+                val loopbackTag = "$nextBalancerTag-loopback"
+                failoverRoutes += XrayFailoverRoute(loopbackTag, nextBalancerTag)
+                loopbackTag
+            } else {
+                // When every member has failed, try the primary outbound directly.
+                memberTags.first()
+            }
+            balancers += XrayBalancerPlan(
+                tag = if (index == 0) tag else "$tag-failover-$index",
+                selector = memberTag,
+                // A single candidate stays eligible until the observer records a failure.
+                strategy = StrategyGroupConstants.TYPE_RANDOM,
+                fallbackTag = fallbackTag,
+            )
+        }
     }
 
     private fun addChainProxy(tag: String, chainProxy: ChainProxy) {

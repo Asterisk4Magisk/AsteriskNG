@@ -178,6 +178,7 @@
     <string name="proxy_editor_strategy_group_filter">Lọc theo biểu thức chính quy tên gợi nhớ</string>
     <string name="proxy_editor_strategy_group_least_load">Tải thấp nhất</string>
     <string name="proxy_editor_strategy_group_least_ping">Độ trễ thấp nhất</string>
+    <string name="proxy_editor_strategy_group_failover">Chuyển đổi dự phòng (theo thứ tự máy chủ)</string>
     <string name="proxy_editor_strategy_group_random">Chọn ngẫu nhiên</string>
     <string name="proxy_editor_strategy_group_round_robin">Luân phiên</string>
     <string name="proxy_editor_strategy_group_source_group">Nhóm đăng ký</string>
