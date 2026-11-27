@@ -74,6 +74,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowDialog
 import features.proxy.server.display.displayName
 import ui.components.AnimatedFoldDialog
+import ui.components.AsteriskNoWrapTextField
 import ui.components.IconDropdownMenu
 import ui.components.IconDropdownMenuEntry
 import ui.components.WarningConfirmDialog
@@ -266,13 +267,13 @@ internal fun SubscriptionGroupEditorDialog(
                                 lineLimits = TextFieldLineLimits.SingleLine,
                                 modifier = Modifier.padding(bottom = 12.dp).keepSubscriptionFieldVisible(viewportHeight),
                             )
-                            TextField(
+                            AsteriskNoWrapTextField(
                                 state = rememberTextFieldState(initialText = requestHeadersInput),
                                 inputTransformation = InputTransformation {
                                     requestHeadersInput = asCharSequence().toString()
                                 },
                                 label = stringResource(R.string.subscription_request_headers),
-                                lineLimits = TextFieldLineLimits.MultiLine(maxHeightInLines = 5),
+                                maxLines = 5,
                                 modifier = Modifier.padding(bottom = 12.dp).keepSubscriptionFieldVisible(viewportHeight),
                             )
                             if (requestHeaders == null) {

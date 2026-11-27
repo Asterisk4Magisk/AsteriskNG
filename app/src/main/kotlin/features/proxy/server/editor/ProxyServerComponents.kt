@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.InputTransformation
+import androidx.compose.foundation.text.input.KeyboardActionHandler
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
@@ -35,6 +36,7 @@ import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Delete
 import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
+import ui.components.AsteriskNoWrapTextField
 import ui.text.formatTemplate
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -186,25 +188,37 @@ internal fun ProxyEditorTextField(
     onValueChange: (String) -> Unit,
 ) {
     val focusManager = LocalFocusManager.current
-    TextField(
-        label = label,
-        state = rememberTextFieldState(initialText = initialText),
-        lineLimits = if (multiLine) {
-            TextFieldLineLimits.MultiLine(minHeightInLines = 5, maxHeightInLines = 20)
-        } else {
-            TextFieldLineLimits.SingleLine
-        },
-        inputTransformation = InputTransformation {
-            if (digitsOnly && !asCharSequence().isDigitsOnly()) {
-                revertAllChanges()
-                return@InputTransformation
-            }
-            onValueChange(asCharSequence().toString())
-        },
-        modifier = Modifier
-            .padding(horizontal = 12.dp)
-            .padding(bottom = 12.dp),
-        onKeyboardAction = { focusManager.clearFocus() },
-        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-    )
+    val state = rememberTextFieldState(initialText = initialText)
+    val modifier = Modifier.padding(horizontal = 12.dp).padding(bottom = 12.dp)
+    val keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
+    val onKeyboardAction = KeyboardActionHandler { focusManager.clearFocus() }
+    val inputTransformation = InputTransformation {
+        if (digitsOnly && !asCharSequence().isDigitsOnly()) {
+            revertAllChanges()
+            return@InputTransformation
+        }
+        onValueChange(asCharSequence().toString())
+    }
+    if (multiLine) {
+        AsteriskNoWrapTextField(
+            state = state,
+            label = label,
+            minLines = 5,
+            maxLines = 20,
+            modifier = modifier,
+            inputTransformation = inputTransformation,
+            onKeyboardAction = onKeyboardAction,
+            keyboardOptions = keyboardOptions,
+        )
+    } else {
+        TextField(
+            state = state,
+            label = label,
+            lineLimits = TextFieldLineLimits.SingleLine,
+            modifier = modifier,
+            inputTransformation = inputTransformation,
+            onKeyboardAction = onKeyboardAction,
+            keyboardOptions = keyboardOptions,
+        )
+    }
 }

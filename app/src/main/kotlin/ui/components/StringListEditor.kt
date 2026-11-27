@@ -5,21 +5,14 @@ package ui.components
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -31,9 +24,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.InputTransformation
 import androidx.compose.foundation.text.input.TextFieldLineLimits
@@ -51,11 +41,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpSize
@@ -547,106 +533,13 @@ private fun StringListBulkTextField(
     state: TextFieldState,
     modifier: Modifier = Modifier,
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isFocused by interactionSource.collectIsFocusedAsState()
-    val horizontalScrollState = rememberScrollState()
-    val density = LocalDensity.current
-    var textLayoutResult by remember {
-        mutableStateOf<TextLayoutResult?>(null)
-    }
-    var textViewportWidth by remember {
-        mutableIntStateOf(0)
-    }
-    val shape = RoundedCornerShape(StringListBulkTextFieldCornerRadius)
-    val borderWidth by animateDpAsState(
-        targetValue = if (isFocused) StringListBulkTextFieldBorderWidth else 0.dp,
-        label = "stringListBulkTextFieldBorderWidth",
+    AsteriskNoWrapTextField(
+        state = state,
+        modifier = modifier,
+        minLines = 8,
+        maxLines = 20,
+        textStyle = MiuixTheme.textStyles.main.copy(color = MiuixTheme.colorScheme.onSurface, fontSize = 14.sp),
     )
-    val borderColor by animateColorAsState(
-        targetValue = if (isFocused) {
-            MiuixTheme.colorScheme.primary
-        } else {
-            MiuixTheme.colorScheme.secondaryContainer
-        },
-        label = "stringListBulkTextFieldBorderColor",
-    )
-    val resolvedTextStyle = MiuixTheme.textStyles.main.copy(
-        color = MiuixTheme.colorScheme.onSurface,
-        fontSize = 14.sp,
-    )
-
-    LaunchedEffect(
-        state.selection,
-        state.text,
-        textLayoutResult,
-        textViewportWidth,
-        horizontalScrollState.maxValue,
-    ) {
-        val layoutResult = textLayoutResult ?: return@LaunchedEffect
-        // TextFieldState can advance before the next text layout is measured.
-        if (layoutResult.layoutInput.text.text != state.text.toString()) return@LaunchedEffect
-        if (textViewportWidth <= 0 || horizontalScrollState.maxValue <= 0) {
-            return@LaunchedEffect
-        }
-
-        val cursorOffset = state.selection.end.coerceIn(0, state.text.length)
-        val cursorRect = layoutResult.getCursorRect(cursorOffset)
-        val cursorPaddingPx = with(density) { StringListBulkTextFieldCursorScrollPadding.toPx() }
-        val nextHorizontalScroll = scrollToVisible(
-            current = horizontalScrollState.value,
-            viewportSize = textViewportWidth,
-            targetStart = cursorRect.left - cursorPaddingPx,
-            targetEnd = cursorRect.right + cursorPaddingPx,
-            maxValue = horizontalScrollState.maxValue,
-        )
-        if (nextHorizontalScroll != horizontalScrollState.value) {
-            horizontalScrollState.scrollTo(nextHorizontalScroll)
-        }
-    }
-
-    BoxWithConstraints(modifier = modifier) {
-        val contentMinWidth = (maxWidth - StringListBulkTextFieldHorizontalPadding * 2)
-            .coerceAtLeast(0.dp)
-
-        BasicTextField(
-            state = state,
-            textStyle = resolvedTextStyle,
-            lineLimits = TextFieldLineLimits.MultiLine(
-                minHeightInLines = StringListBulkTextFieldMinLines,
-                maxHeightInLines = StringListBulkTextFieldMaxLines,
-            ),
-            onTextLayout = { getResult -> textLayoutResult = getResult() },
-            interactionSource = interactionSource,
-            cursorBrush = SolidColor(MiuixTheme.colorScheme.primary),
-            decorator = { innerTextField ->
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(shape)
-                        .background(MiuixTheme.colorScheme.secondaryContainer)
-                        .border(borderWidth, borderColor, shape)
-                        .padding(
-                            horizontal = StringListBulkTextFieldHorizontalPadding,
-                            vertical = StringListBulkTextFieldVerticalPadding,
-                        ),
-                    contentAlignment = Alignment.TopStart,
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .onSizeChanged { size ->
-                                textViewportWidth = size.width
-                            }
-                            .horizontalScroll(horizontalScrollState),
-                    ) {
-                        Box(modifier = Modifier.widthIn(min = contentMinWidth)) {
-                            innerTextField()
-                        }
-                    }
-                }
-            },
-        )
-    }
 }
 
 private fun validateStringListItem(
@@ -694,23 +587,6 @@ private data class StringListLineError(
     val message: String,
 )
 
-private fun scrollToVisible(
-    current: Int,
-    viewportSize: Int,
-    targetStart: Float,
-    targetEnd: Float,
-    maxValue: Int,
-): Int {
-    if (viewportSize <= 0 || maxValue <= 0) return current
-
-    val next = when {
-        targetStart < current -> targetStart.toInt()
-        targetEnd > current + viewportSize -> (targetEnd - viewportSize + 1f).toInt()
-        else -> current
-    }
-    return next.coerceIn(0, maxValue)
-}
-
 private val StringListItemActionSpacing = 2.dp
 private val StringListItemRowHeight = 34.dp
 private val StringListItemActionButtonSize = 30.dp
@@ -721,11 +597,4 @@ private val StringListItemEditFieldCornerRadius = 6.dp
 private val StringListTitleFontSize = 17.sp
 private val StringListBulkEditButtonSize = 38.dp
 private val StringListBulkEditIconSize = 20.dp
-private val StringListBulkTextFieldCornerRadius = 16.dp
-private val StringListBulkTextFieldBorderWidth = 2.dp
-private val StringListBulkTextFieldHorizontalPadding = 16.dp
-private val StringListBulkTextFieldVerticalPadding = 16.dp
-private val StringListBulkTextFieldCursorScrollPadding = 24.dp
-private const val StringListBulkTextFieldMinLines = 8
-private const val StringListBulkTextFieldMaxLines = 20
 private const val NoEditingIndex = -1
