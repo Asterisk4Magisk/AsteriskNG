@@ -193,11 +193,17 @@
     <string name="proxy_editor_transport_raw">传输配置（rawSettings）</string>
     <string name="proxy_editor_transport_type">传输协议</string>
     <string name="proxy_editor_transport_ws">传输配置（wsSettings）</string>
+    <string name="proxy_editor_transport_xdrive">传输配置（xdriveSettings）</string>
     <string name="proxy_editor_transport_xhttp">传输配置（xhttpSettings）</string>
     <string name="proxy_editor_up_bandwidth">上行带宽（单位：k/m/g/t）</string>
     <string name="proxy_editor_user_id">用户 ID</string>
     <string name="proxy_editor_username_optional">用户名（可选）</string>
     <string name="proxy_editor_xhttp_extra">XHTTP Extra 原始 JSON，格式：{ XHTTPObject }</string>
+    <string name="proxy_editor_xdrive_service">存储服务</string>
+    <string name="proxy_editor_xdrive_service_default">默认</string>
+    <string name="proxy_editor_xdrive_remote_folder">远程目录</string>
+    <string name="proxy_editor_xdrive_secrets">密钥（逗号分隔）</string>
+    <string name="proxy_editor_xdrive_extra">XDRIVE Extra 原始 JSON，格式：{ XDRIVEObject }</string>
     <string name="proxy_editor_xhttp_mode">XHTTP 模式</string>
     <string name="proxy_validation_chain_proxy_member_count_invalid">代理链至少需要两个成员</string>
     <string name="proxy_validation_hysteria_obfs_type_required">设置混淆密码时必须填写混淆类型</string>

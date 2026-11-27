@@ -193,11 +193,17 @@
     <string name="proxy_editor_transport_raw">Cấu hình truyền tải (rawSettings)</string>
     <string name="proxy_editor_transport_type">Giao thức truyền tải</string>
     <string name="proxy_editor_transport_ws">Cấu hình truyền tải (wsSettings)</string>
+    <string name="proxy_editor_transport_xdrive">Cấu hình truyền tải (xdriveSettings)</string>
     <string name="proxy_editor_transport_xhttp">Cấu hình truyền tải (xhttpSettings)</string>
     <string name="proxy_editor_up_bandwidth">Băng thông chiều lên (đơn vị hỗ trợ k/m/g/t)</string>
     <string name="proxy_editor_user_id">ID người dùng</string>
     <string name="proxy_editor_username_optional">Tên đăng nhập (tùy chọn)</string>
     <string name="proxy_editor_xhttp_extra">JSON gốc XHTTP Extra, định dạng: { XHTTPObject }</string>
+    <string name="proxy_editor_xdrive_service">Dịch vụ lưu trữ</string>
+    <string name="proxy_editor_xdrive_service_default">Mặc định</string>
+    <string name="proxy_editor_xdrive_remote_folder">Thư mục từ xa</string>
+    <string name="proxy_editor_xdrive_secrets">Khóa bí mật (phân cách bằng dấu phẩy)</string>
+    <string name="proxy_editor_xdrive_extra">JSON gốc XDRIVE Extra, định dạng: { XDRIVEObject }</string>
     <string name="proxy_editor_xhttp_mode">Chế độ XHTTP</string>
     <string name="proxy_validation_chain_proxy_member_count_invalid">Chuỗi proxy cần ít nhất hai thành viên</string>
     <string name="proxy_validation_hysteria_obfs_type_required">Phải điền loại obfuscate khi đặt mật khẩu obfuscate</string>

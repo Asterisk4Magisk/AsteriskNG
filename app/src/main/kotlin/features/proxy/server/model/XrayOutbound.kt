@@ -87,6 +87,7 @@ internal fun V2RayParameters.toXrayStreamSettings(): JsonObject {
             "grpc" -> putGrpcSettings(this@toXrayStreamSettings)
             "httpupgrade" -> putHttpUpgradeSettings(this@toXrayStreamSettings)
             "xhttp" -> putXhttpSettings(this@toXrayStreamSettings)
+            "xdrive" -> putXdriveSettings(this@toXrayStreamSettings)
             "mkcp" -> {
                 putKcpSettings(this@toXrayStreamSettings)
                 putKcpFinalMask(this@toXrayStreamSettings)
@@ -108,8 +109,20 @@ private fun String.toXrayNetwork(): String {
         V2RayTransportGrpc -> "grpc"
         V2RayTransportHttpUpgrade -> "httpupgrade"
         V2RayTransportXhttp -> "xhttp"
+        V2RayTransportXdrive -> "xdrive"
         "http", "h2", "h3" -> throw UnsupportedOperationException("Unsupported Xray transport type: $this")
         else -> throw UnsupportedOperationException("Unknown Xray transport type: $this")
+    }
+}
+
+private fun JsonObjectBuilder.putXdriveSettings(params: V2RayParameters) {
+    val extra = params.xdriveExtra.toXrayJsonObjectOrNull("XDRIVE Extra")
+    putJsonObject("xdriveSettings") {
+        put("service", DefaultXdriveService)
+        extra?.forEach { (key, value) -> put(key, value) }
+        putIfNotBlank("service", params.xdriveService)
+        putIfNotBlank("remoteFolder", params.xdriveRemoteFolder)
+        putJsonArrayIfNotBlank("secrets", params.xdriveSecrets)
     }
 }
 

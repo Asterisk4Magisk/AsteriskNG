@@ -193,11 +193,17 @@
     <string name="proxy_editor_transport_raw">RAW settings</string>
     <string name="proxy_editor_transport_type">Transport protocol</string>
     <string name="proxy_editor_transport_ws">WebSocket settings</string>
+    <string name="proxy_editor_transport_xdrive">XDRIVE settings</string>
     <string name="proxy_editor_transport_xhttp">XHTTP settings</string>
     <string name="proxy_editor_up_bandwidth">Upload bandwidth (supports k/m/g/t)</string>
     <string name="proxy_editor_user_id">User ID</string>
     <string name="proxy_editor_username_optional">Username (optional)</string>
     <string name="proxy_editor_xhttp_extra">XHTTP Extra raw JSON, format: { XHTTPObject }</string>
+    <string name="proxy_editor_xdrive_service">Storage service</string>
+    <string name="proxy_editor_xdrive_service_default">Default</string>
+    <string name="proxy_editor_xdrive_remote_folder">Remote folder</string>
+    <string name="proxy_editor_xdrive_secrets">Secrets (comma-separated)</string>
+    <string name="proxy_editor_xdrive_extra">XDRIVE Extra raw JSON, format: { XDRIVEObject }</string>
     <string name="proxy_editor_xhttp_mode">XHTTP mode</string>
     <string name="proxy_validation_chain_proxy_member_count_invalid">Proxy chain requires at least two members</string>
     <string name="proxy_validation_hysteria_obfs_type_required">Obfs type is required when obfs password is set</string>

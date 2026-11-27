@@ -303,17 +303,19 @@ internal fun List<ProxyServerState>.deleteDuplicateServersInGroup(
     currentGroupServerIds: Set<Int>,
     selectedProxyServerId: Int,
 ): ProxyServerListDuplicateDeleteResult {
-    val keptServerIdsByUrl = mutableMapOf<String, Int>()
+    val keptServerIds = mutableMapOf<Pair<String, VLESS?>, Int>()
     val duplicateServerIds = mutableSetOf<Int>()
     forEach { server ->
         val url = runCatching { server.server.getUrlOrNull() }.getOrNull()
         if (server.id in currentGroupServerIds && url != null) {
-            val keptServerId = keptServerIdsByUrl[url]
+            // XDRIVE shares only the basic fields, so different storage configurations can have the same URL.
+            val key = url to (server.server as? VLESS)?.takeIf(VLESS::usesXdrive)
+            val keptServerId = keptServerIds[key]
             if (keptServerId == null) {
-                keptServerIdsByUrl[url] = server.id
+                keptServerIds[key] = server.id
             } else if (server.id == selectedProxyServerId) {
                 duplicateServerIds += keptServerId
-                keptServerIdsByUrl[url] = server.id
+                keptServerIds[key] = server.id
             } else {
                 duplicateServerIds += server.id
             }

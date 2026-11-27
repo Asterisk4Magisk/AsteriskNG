@@ -101,7 +101,7 @@ private fun v2RayTarget(host: String, port: String, params: V2RayParameters): Ha
         } else {
             HandshakeLatencyTarget.UdpMasked
         }
-        ProxyTransportHandshake.WireGuard -> HandshakeLatencyTarget.NoSingleEndpoint
+        ProxyTransportHandshake.WireGuard, ProxyTransportHandshake.NoSingleEndpoint -> HandshakeLatencyTarget.NoSingleEndpoint
     }
 }
 
@@ -118,6 +118,7 @@ private fun customTarget(configJson: String): HandshakeLatencyTarget {
             endpoint.port,
             endpoint.serverName ?: endpoint.host,
         )
+        ProxyTransportHandshake.NoSingleEndpoint -> HandshakeLatencyTarget.NoSingleEndpoint
         else -> endpoint.wireGuardKeys
             ?.let { keys -> HandshakeLatencyTarget.WireGuardEndpoint(endpoint.host, endpoint.port, keys) }
             ?: HandshakeLatencyTarget.InvalidEndpoint

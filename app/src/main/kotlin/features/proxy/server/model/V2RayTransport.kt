@@ -9,6 +9,9 @@ internal const val V2RayTransportWebSocket = "websocket"
 internal const val V2RayTransportHttpUpgrade = "httpupgrade"
 internal const val V2RayTransportXhttp = "xhttp"
 internal const val V2RayTransportGrpc = "grpc"
+internal const val V2RayTransportXdrive = "xdrive"
+
+internal const val DefaultXdriveService = "google-drive"
 
 internal data class V2RayTransportOption(
     val value: String,
@@ -23,6 +26,7 @@ internal val V2RayTransportOptions = listOf(
     V2RayTransportOption(V2RayTransportHttpUpgrade),
     V2RayTransportOption(V2RayTransportXhttp),
     V2RayTransportOption(V2RayTransportGrpc),
+    V2RayTransportOption(V2RayTransportXdrive),
 )
 
 internal fun String?.toCanonicalV2RayTransportType(defaultType: String = V2RayTransportRaw): String {
@@ -50,12 +54,6 @@ internal fun String.toV2RayTransportUrlType(): String {
     }
 }
 
-internal fun v2RayTransportOptionIndex(type: String?): Int {
-    val canonicalType = type.toCanonicalV2RayTransportType()
-    val index = V2RayTransportOptions.indexOfFirst { option -> option.value == canonicalType }
-    return if (index >= 0) index else 0
-}
-
 /** The handshake a client performs with the server before relaying traffic. */
 internal enum class ProxyTransportHandshake {
     Tcp,
@@ -64,12 +62,16 @@ internal enum class ProxyTransportHandshake {
 
     /** mKCP is connectionless: no exchange happens until traffic is sent. */
     Connectionless,
+
+    /** XDRIVE exchanges data through a storage service. */
+    NoSingleEndpoint,
 }
 
 // XHTTP pinned to the "h3" ALPN runs over QUIC; mKCP runs over UDP without a handshake.
 internal fun v2RayTransportHandshake(type: String?, alpn: List<String>): ProxyTransportHandshake {
     return when (type.toCanonicalV2RayTransportType()) {
         V2RayTransportMkcp -> ProxyTransportHandshake.Connectionless
+        V2RayTransportXdrive -> ProxyTransportHandshake.NoSingleEndpoint
         V2RayTransportXhttp -> if (alpn.map { value -> value.trim().lowercase() } == listOf("h3")) {
             ProxyTransportHandshake.Quic
         } else {

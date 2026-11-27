@@ -12,6 +12,7 @@ import app.effectiveLocalDnsEnabled
 import engine.network.NetworkDefaults
 import features.proxy.server.model.Hysteria2
 import features.proxy.server.model.ProxyServerConstants
+import features.proxy.server.model.V2RayTransportXdrive
 import features.proxy.server.model.Wireguard
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -134,9 +135,10 @@ private fun buildProxyOutbound(appState: AppState, outboundServer: XrayProxyOutb
         }
     }
     // A MASQUE outbound relays flows through its own CONNECT-IP tunnel; Mux.Cool cannot ride on it.
+    val requiresMux = outbound.objectValue("streamSettings")?.stringValue("network") == V2RayTransportXdrive
     if (appState.enableMux && outbound.stringValue("protocol") != ProxyServerConstants.PROTOCOL_MASQUE) {
         outbound = outbound.updated {
-            put("mux", buildMuxConfig(appState))
+            put("mux", buildMuxConfig(appState, requiresMux))
         }
     }
     return outbound
@@ -233,12 +235,15 @@ private fun buildFragmentOutbound(appState: AppState): JsonObject {
     }
 }
 
-private fun buildMuxConfig(appState: AppState): JsonObject {
+private fun buildMuxConfig(appState: AppState, requiresMux: Boolean): JsonObject {
+    val concurrency = appState.muxConcurrency.toXrayMuxConcurrency()
+    val xudpConcurrency = appState.muxXudpConcurrency.toMuxXudpConcurrency()
+    val udp443Mode = appState.muxXudpProxyUdp443.toMuxUdp443Mode()
     return buildJsonObject {
         put("enabled", true)
-        put("concurrency", appState.muxConcurrency.toXrayMuxConcurrency())
-        put("xudpConcurrency", appState.muxXudpConcurrency.toMuxXudpConcurrency())
-        put("xudpProxyUDP443", appState.muxXudpProxyUdp443.toMuxUdp443Mode())
+        put("concurrency", if (requiresMux && concurrency < 0) DefaultMuxConcurrency.toInt() else concurrency)
+        put("xudpConcurrency", if (requiresMux && xudpConcurrency < 0) DefaultMuxXudpConcurrency.toInt() else xudpConcurrency)
+        put("xudpProxyUDP443", if (requiresMux && udp443Mode == "skip") "reject" else udp443Mode)
     }
 }
 

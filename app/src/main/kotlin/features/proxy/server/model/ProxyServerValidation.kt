@@ -133,14 +133,18 @@ internal fun MutableList<ProxyServerValidationIssue>.validateOptionalUserPasswor
     }
 }
 
-internal fun MutableList<ProxyServerValidationIssue>.validateV2RayParameters(params: V2RayParameters) {
+internal fun MutableList<ProxyServerValidationIssue>.validateV2RayParameters(
+    params: V2RayParameters,
+    allowXdrive: Boolean = false,
+) {
     val type = params.type.ifBlank { "raw" }
     val security = params.security.ifBlank { "none" }
     validateOptionalJsonObject(params.fm, "FinalMask")
+    val transports = setOf("tcp", "raw", "kcp", "mkcp", "ws", "websocket", "httpupgrade", "xhttp", "splithttp", "grpc")
     validateAllowed(
         type,
         "transport protocol",
-        setOf("tcp", "raw", "kcp", "mkcp", "ws", "websocket", "httpupgrade", "xhttp", "splithttp", "grpc"),
+        if (allowXdrive) transports + "xdrive" else transports,
     )
     validateAllowed(security, "transport security", setOf("none", "tls", "reality"))
 
@@ -153,6 +157,7 @@ internal fun MutableList<ProxyServerValidationIssue>.validateV2RayParameters(par
 
         "ws", "websocket", "httpupgrade", "xhttp", "splithttp" -> validateOptionalPath(params.path, "$type path")
         "grpc" -> validateAllowed(params.mode ?: "gun", "gRPC mode", setOf("gun", "multi"))
+        "xdrive" -> validateOptionalJsonObject(params.xdriveExtra, "XDRIVE Extra")
     }
     if (type in setOf("ws", "websocket", "httpupgrade")) {
         validateOptionalJsonObject(params.headers, "$type headers")

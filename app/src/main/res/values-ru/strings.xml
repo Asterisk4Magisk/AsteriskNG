@@ -194,11 +194,17 @@
     <string name="proxy_editor_transport_raw">Настройки RAW</string>
     <string name="proxy_editor_transport_type">Протокол транспорта</string>
     <string name="proxy_editor_transport_ws">Настройки WebSocket</string>
+    <string name="proxy_editor_transport_xdrive">Настройки XDRIVE</string>
     <string name="proxy_editor_transport_xhttp">Настройки XHTTP</string>
     <string name="proxy_editor_up_bandwidth">Исходящая пропускная способность (поддерживает k/m/g/t)</string>
     <string name="proxy_editor_user_id">ID пользователя (UUID)</string>
     <string name="proxy_editor_username_optional">Имя пользователя (опционально)</string>
     <string name="proxy_editor_xhttp_extra">Дополнительный сырой JSON для XHTTP, формат: { XHTTPObject }</string>
+    <string name="proxy_editor_xdrive_service">Сервис хранения</string>
+    <string name="proxy_editor_xdrive_service_default">По умолчанию</string>
+    <string name="proxy_editor_xdrive_remote_folder">Удалённая папка</string>
+    <string name="proxy_editor_xdrive_secrets">Секреты (через запятую)</string>
+    <string name="proxy_editor_xdrive_extra">Сырой JSON для XDRIVE Extra, формат: { XDRIVEObject }</string>
     <string name="proxy_editor_xhttp_mode">Режим XHTTP</string>
     <string name="proxy_validation_chain_proxy_member_count_invalid">Цепочка прокси должна состоять как минимум из двух участников</string>
     <string name="proxy_validation_hysteria_obfs_type_required">Тип обфускации (obfs type) обязателен, если задан пароль маскировки</string>

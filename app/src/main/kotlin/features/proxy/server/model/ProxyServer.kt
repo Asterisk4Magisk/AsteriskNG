@@ -202,6 +202,11 @@ data class V2RayParameters(
     var spx: String? = null,
     // v2rayN
     var headerType: String? = "none",
+    // XDRIVE
+    var xdriveService: String? = null,
+    var xdriveRemoteFolder: String? = null,
+    var xdriveSecrets: String? = null,
+    var xdriveExtra: String? = null,
 ) {
     fun parse(url: Url, defaultType: String, defaultSecurity: String): V2RayParameters {
         this.type = url.parameters["type"].toCanonicalV2RayTransportType(defaultType)
@@ -317,6 +322,7 @@ data class V2RayParameters(
                     appendIfNotBlank("extra", this@V2RayParameters.extra)
                 }
 
+                "xdrive" -> Unit
                 else -> throw ParseException("Unknown v2ray transport type: $type")
             }
             when (securityType) {

@@ -22,6 +22,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import app.R
+import features.proxy.server.model.DefaultXdriveService
 import features.proxy.server.model.V2RayParameters
 import features.proxy.server.model.V2RayTransportGrpc
 import features.proxy.server.model.V2RayTransportHttpUpgrade
@@ -29,28 +30,28 @@ import features.proxy.server.model.V2RayTransportMkcp
 import features.proxy.server.model.V2RayTransportOptions
 import features.proxy.server.model.V2RayTransportRaw
 import features.proxy.server.model.V2RayTransportWebSocket
+import features.proxy.server.model.V2RayTransportXdrive
 import features.proxy.server.model.V2RayTransportXhttp
-import features.proxy.server.model.v2RayTransportOptionIndex
+import features.proxy.server.model.toCanonicalV2RayTransportType
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 
 
-internal fun LazyListScope.v2rayServerTransport(params: V2RayParameters) {
+internal fun LazyListScope.v2rayServerTransport(params: V2RayParameters, allowXdrive: Boolean = false) {
     item(key = "transport") {
         val focusManager = LocalFocusManager.current
-        val typeOptions = remember {
-            V2RayTransportOptions
+        val typeOptions = remember(allowXdrive) {
+            V2RayTransportOptions.filter { allowXdrive || it.value != V2RayTransportXdrive }
         }
-        val typeLabels = remember {
+        val typeLabels = remember(typeOptions) {
             typeOptions.map { option -> option.label }
         }
         val securityOptions = remember { listOf("none", "tls", "reality") }
 
-        val type = remember {
-            mutableIntStateOf(
-                v2RayTransportOptionIndex(params.type)
-            )
+        val type = remember(typeOptions) {
+            val canonicalType = params.type.toCanonicalV2RayTransportType()
+            mutableIntStateOf(typeOptions.indexOfFirst { it.value == canonicalType }.coerceAtLeast(0))
         }
         val security = remember {
             mutableIntStateOf(
@@ -215,6 +216,39 @@ internal fun LazyListScope.v2rayServerTransport(params: V2RayParameters) {
                 )
                 ProxyEditorTextField("gRPC authority", params.authority ?: "") { params.authority = it }
                 ProxyEditorTextField("gRPC serviceName", params.serviceName ?: "") { params.serviceName = it }
+            }
+        }
+        AnimatedVisibility(
+            visible = selectedTransportType == V2RayTransportXdrive,
+            enter = fadeIn() + expandVertically(),
+            exit = ExitTransition.None,
+        ) {
+            Column {
+                val serviceOptions = remember {
+                    val options = listOf("", DefaultXdriveService, "s3", "template", "local")
+                    val current = params.xdriveService.orEmpty()
+                    if (current.isNotBlank() && current !in options) listOf(current) + options else options
+                }
+                val service = remember {
+                    mutableIntStateOf(serviceOptions.indexOf(params.xdriveService.orEmpty()).coerceAtLeast(0))
+                }
+                val defaultServiceLabel = stringResource(R.string.proxy_editor_xdrive_service_default)
+                SmallTitle(text = stringResource(R.string.proxy_editor_transport_xdrive))
+                OverlayDropdownPreference(
+                    title = stringResource(R.string.proxy_editor_xdrive_service),
+                    items = serviceOptions.map { option -> option.ifEmpty { defaultServiceLabel } },
+                    selectedIndex = service.intValue,
+                    modifier = Modifier
+                        .padding(horizontal = 12.dp)
+                        .padding(bottom = 12.dp),
+                    onSelectedIndexChange = { newService ->
+                        service.intValue = newService
+                        params.xdriveService = serviceOptions[newService].ifEmpty { null }
+                    },
+                )
+                ProxyEditorTextField(stringResource(R.string.proxy_editor_xdrive_remote_folder), params.xdriveRemoteFolder.orEmpty()) { params.xdriveRemoteFolder = it }
+                ProxyEditorTextField(stringResource(R.string.proxy_editor_xdrive_secrets), params.xdriveSecrets.orEmpty()) { params.xdriveSecrets = it }
+                ProxyEditorTextField(stringResource(R.string.proxy_editor_xdrive_extra), params.xdriveExtra ?: "", multiLine = true) { params.xdriveExtra = it }
             }
         }
         ProxyEditorTextField(stringResource(R.string.proxy_editor_final_mask), params.fm ?: "", multiLine = true) { params.fm = it }

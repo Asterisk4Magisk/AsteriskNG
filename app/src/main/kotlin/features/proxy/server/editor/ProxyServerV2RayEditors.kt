@@ -98,5 +98,5 @@ internal fun LazyListScope.vlessProxyServer(vlessEdit: VLESS) {
             },
         )
     }
-    v2rayServerTransport(vlessEdit.parms)
+    v2rayServerTransport(vlessEdit.parms, allowXdrive = true)
 }

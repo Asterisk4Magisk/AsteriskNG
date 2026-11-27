@@ -3,7 +3,6 @@
 
 package features.proxy.server.model
 
-import utils.putIfNotBlank
 import io.ktor.http.URLBuilder
 import io.ktor.http.URLProtocol
 import io.ktor.http.Url
@@ -11,6 +10,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import utils.proxyUrlRemarks
+import utils.putIfNotBlank
 
 @Serializable
 data class VLESS(
@@ -22,6 +22,9 @@ data class VLESS(
     var flow: String = "",
     var parms: V2RayParameters = V2RayParameters(),
 ) : UrlProxyServer<VLESS> {
+    internal val usesXdrive: Boolean
+        get() = parms.type.toCanonicalV2RayTransportType() == V2RayTransportXdrive
+
     override fun getInfo(): ProxyServerInfo {
         return ProxyServerInfo(this.remarks, "${this.server}:${this.port}", "VLESS")
     }
@@ -35,9 +38,13 @@ data class VLESS(
                 put("port", port.toXrayPort())
                 put("id", id)
                 put("encryption", encryption.ifBlank { "none" })
-                putIfNotBlank("flow", flow)
+                if (!usesXdrive) putIfNotBlank("flow", flow)
             },
             streamSettings = parms.toXrayStreamSettings(),
+            mux = if (usesXdrive) buildJsonObject {
+                put("enabled", true)
+                put("xudpProxyUDP443", "reject")
+            } else null,
         )
     }
 
@@ -95,14 +102,21 @@ data class VLESS(
         addAll(validateBasic())
         validateOptionalXrayUserId(id)
         validateVlessEncryption(encryption)
-        if (flow.isNotBlank()) {
-            val usesVlessEncryption = encryption.isNotBlank() && encryption != "none"
-            val transport = parms.type.ifBlank { "raw" }
-            if (!usesVlessEncryption && (transport !in setOf("tcp", "raw") || parms.security !in setOf("tls", "reality"))) {
-                addIssue(ProxyServerValidationError.VlessVisionFlowUnsupported)
+        if (usesXdrive) {
+            val value = encryption.takeUnless { it.equals("none", ignoreCase = true) }
+            validateRequired(value, "encryption method")
+        } else {
+            if (flow.isNotBlank()) {
+                val usesVlessEncryption = encryption.isNotBlank() && encryption != "none"
+                val transport = parms.type.ifBlank { "raw" }
+                val usesRawTransport = transport in setOf("tcp", "raw")
+                val usesSecureTransport = parms.security in setOf("tls", "reality")
+                if (!usesVlessEncryption && (!usesRawTransport || !usesSecureTransport)) {
+                    addIssue(ProxyServerValidationError.VlessVisionFlowUnsupported)
+                }
             }
+            validateAllowed(flow, "flow", setOf("xtls-rprx-vision", "xtls-rprx-vision-udp443"), allowBlank = true)
         }
-        validateAllowed(flow, "flow", setOf("xtls-rprx-vision", "xtls-rprx-vision-udp443"), allowBlank = true)
-        validateV2RayParameters(parms)
+        validateV2RayParameters(parms, allowXdrive = true)
     }
 }
