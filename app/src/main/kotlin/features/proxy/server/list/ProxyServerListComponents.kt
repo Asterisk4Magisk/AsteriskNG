@@ -373,7 +373,7 @@ private fun ProxyServerListExpandedItemCard(
                 MiuixTheme.colorScheme.surface
             },
         ),
-        insideMargin = PaddingValues(16.dp),
+        insideMargin = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 10.dp),
         onClick = onSelect,
     ) {
         Row(
@@ -409,7 +409,7 @@ private fun ProxyServerListExpandedItemCard(
                 )
             }
         }
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(18.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
