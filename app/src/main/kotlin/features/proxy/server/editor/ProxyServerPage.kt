@@ -331,6 +331,7 @@ fun ProxyServerPage(
             selectedId = activeServerId,
             padding = contentPadding,
             show = !editorFocus.expanded,
+            animateFocusLayout = configJsonState != null,
             onSelect = if (resultKey != null) {
                 select@{ targetId ->
                     if (saving || targetId == activeServerId) return@select

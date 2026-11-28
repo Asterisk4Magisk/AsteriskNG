@@ -3,18 +3,11 @@
 
 package features.proxy.server.editor
 
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -41,6 +34,7 @@ import app.R
 import features.proxy.server.model.Custom
 import features.proxy.server.model.formatCustomXrayConfigJson
 import kotlinx.coroutines.launch
+import ui.layout.CodeEditorFocusLayout
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.SmallTitle
@@ -94,55 +88,48 @@ internal fun CustomProxyServerEditor(
         }
     }
 
-    Column(
+    CodeEditorFocusLayout(
+        expanded = editorExpanded,
         modifier = modifier
             .fillMaxSize()
-            .padding(contentPadding),
-    ) {
-        AnimatedVisibility(
-            visible = !editorExpanded,
-            enter = fadeIn() + expandVertically(),
-            exit = fadeOut() + shrinkVertically(),
-        ) {
-            Column {
-                SmallTitle(text = stringResource(R.string.proxy_editor_properties))
-                TextField(
-                    label = stringResource(R.string.proxy_editor_remarks),
-                    state = remarksState,
-                    lineLimits = TextFieldLineLimits.SingleLine,
-                    inputTransformation = InputTransformation {
-                        remarks = asCharSequence().toString()
-                        customEdit.remarks = remarks
-                    },
-                    modifier = Modifier
-                        .padding(horizontal = 12.dp)
-                        .padding(bottom = 12.dp),
-                    onKeyboardAction = { focusManager.clearFocus() },
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                )
-                SwitchPreference(
-                    title = stringResource(R.string.proxy_editor_custom_override_inbound_dns),
-                    summary = stringResource(R.string.proxy_editor_custom_override_inbound_dns_summary),
-                    checked = overrideAsteriskInboundAndDns,
-                    onCheckedChange = { checked ->
-                        overrideAsteriskInboundAndDns = checked
-                        customEdit.overrideAsteriskInboundAndDns = checked
-                    },
-                    modifier = Modifier
-                        .padding(horizontal = 12.dp)
-                        .padding(bottom = 12.dp),
-                )
+            .padding(contentPadding)
+            .consumeWindowInsets(contentPadding),
+        supportingContent = {
+            SmallTitle(text = stringResource(R.string.proxy_editor_properties))
+            TextField(
+                label = stringResource(R.string.proxy_editor_remarks),
+                state = remarksState,
+                lineLimits = TextFieldLineLimits.SingleLine,
+                inputTransformation = InputTransformation {
+                    remarks = asCharSequence().toString()
+                    customEdit.remarks = remarks
+                },
+                modifier = Modifier
+                    .padding(horizontal = 12.dp)
+                    .padding(bottom = 12.dp),
+                onKeyboardAction = { focusManager.clearFocus() },
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+            )
+            SwitchPreference(
+                title = stringResource(R.string.proxy_editor_custom_override_inbound_dns),
+                summary = stringResource(R.string.proxy_editor_custom_override_inbound_dns_summary),
+                checked = overrideAsteriskInboundAndDns,
+                onCheckedChange = { checked ->
+                    overrideAsteriskInboundAndDns = checked
+                    customEdit.overrideAsteriskInboundAndDns = checked
+                },
+                modifier = Modifier
+                    .padding(horizontal = 12.dp)
+                    .padding(bottom = 12.dp),
+            )
 
-                SmallTitle(text = stringResource(R.string.proxy_editor_custom_json))
-            }
-        }
+            SmallTitle(text = stringResource(R.string.proxy_editor_custom_json))
+        },
+    ) { editorModifier ->
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
+            modifier = editorModifier
                 .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp)
-                .imePadding(),
+                .padding(bottom = 12.dp),
         ) {
             JsonCodeEditor(
                 state = configJsonState,
