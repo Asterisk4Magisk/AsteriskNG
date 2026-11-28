@@ -26,6 +26,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -69,6 +70,7 @@ import ui.layout.pageScrollModifiers
 @Composable
 internal fun AppPackagePickerAction(
     values: List<String>,
+    excludeSelf: Boolean = false,
     onValuesChange: (List<String>) -> Unit,
 ) {
     var showPicker by rememberSaveable { mutableStateOf(false) }
@@ -86,6 +88,7 @@ internal fun AppPackagePickerAction(
     if (showPicker) {
         AppPackagePickerDialog(
             initialValues = values,
+            excludedPackageName = if (excludeSelf) LocalContext.current.applicationContext.packageName else "",
             onDismissRequest = { showPicker = false },
             onConfirm = { nextValues ->
                 showPicker = false
@@ -99,6 +102,7 @@ internal fun AppPackagePickerAction(
 @Composable
 internal fun AppPackagePickerDialog(
     initialValues: List<String>,
+    excludedPackageName: String,
     onDismissRequest: () -> Unit,
     onConfirm: (List<String>) -> Unit,
 ) {
@@ -115,14 +119,14 @@ internal fun AppPackagePickerDialog(
     var loading by remember { mutableStateOf(true) }
     val iconSizePx = with(LocalDensity.current) { ANDROID_APP_ICON_SIZE_DP.dp.roundToPx() }
 
-    LaunchedEffect(showSystemApps) {
+    LaunchedEffect(showSystemApps, excludedPackageName) {
         loading = true
         val selectedOnLoad = selectedPackages.toSet()
         try {
             apps = packageCatalog.loadProxyAppListPackages(
                 showSystemApps = showSystemApps,
                 currentUserOnly = true,
-                excludedPackageName = "",
+                excludedPackageName = excludedPackageName,
             )
                 .distinctBy(AppPackageEntry::packageName)
                 .sortedBy { app -> app.packageName !in selectedOnLoad }

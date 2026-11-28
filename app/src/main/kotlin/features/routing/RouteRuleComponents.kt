@@ -507,6 +507,7 @@ private fun RouteRuleEditorContent(
             headerActions = {
                 AppPackagePickerAction(
                     values = process,
+                    excludeSelf = true,
                     onValuesChange = onProcessChange,
                 )
             },
